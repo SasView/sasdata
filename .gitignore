@@ -1,2 +1,60 @@
-/.idea/
-/build/
+# It is actually possible to list all the old svn ignore properties:
+#
+# svn pg -R svn:ignore .
+#
+# But there's a whole load of useless stuff in there that is no longer used.
+# Instead I did a clean build including the docs, ran the tests, and then ran
+# sasview for a bit and then did a git status to see what extra stuff was being
+# generated.
+#
+# Feel free to add more stuff to this as and when it becomes an issue.
+
+# stack dumps due to Git Bash internal crashes
+*.stackdump
+
+# Editor files
+*.pyproj
+*.sln
+.*.swp
+.DS_Store
+/.settings
+/.vscode
+/.project
+/.pydevproject
+/.idea
+/.vs
+
+# Build and run files
+**/__pycache__
+*.pyc
+*.so
+*.exe
+
+/build
+/dist
+.mplconfig
+
+# doc build
+/docs/sphinx-docs/build
+/docs/sphinx-docs/source-temp
+/docs/sphinx-docs/source/dev/api
+/docs/sphinx-docs/source/user/guiframe
+/docs/sphinx-docs/source/user/models
+/docs/sphinx-docs/source/user/sasview
+/docs/sphinx-docs/source/user/perspectives
+/docs/sphinx-docs/katex*.zip
+/docs/sphinx-docs/node_modules
+/docs/sphinx-docs/node-package.json
+
+# test outputs
+/test/sasdataloader/data/test_log.txt
+/test/sasdataloader/data/isis_1_0_write_test.xml
+/test/sasdataloader/data/isis_1_1_write_test.xml
+/test/sasdataloader/data/write_test.xml
+**/logs
+tests.log
+
+# Installer files
+/installers/build
+/installers/dist
+*.exe
