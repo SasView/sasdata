@@ -23,7 +23,7 @@ import logging
 import time
 from zipfile import ZipFile
 
-from sas.sascalc.data_util.registry import ExtensionRegistry
+from .registry import ExtensionRegistry
 
 # Default readers are defined in the readers sub-module
 from . import readers

@@ -19,11 +19,12 @@ import logging
 from lxml import etree
 from lxml.builder import E
 
-from src.file_reader_base_class import FileReader, decode
+from ..file_reader_base_class import FileReader, decode
 
 logger = logging.getLogger(__name__)
 
 PARSER = etree.ETCompatXMLParser(remove_comments=True, remove_pis=False)
+
 
 class XMLreader(FileReader):
     """

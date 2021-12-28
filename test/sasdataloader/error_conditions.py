@@ -1,5 +1,6 @@
-from sas.sascalc.dataloader.loader import Loader
+from sasdata.dataloader.loader import Loader
 import unittest
+
 
 class testLoader(unittest.TestCase):
     def setUp(self):

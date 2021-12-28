@@ -1,7 +1,6 @@
-from sas.sascalc.dataloader.readers.cansas_reader import Reader as CansasReader
-from sas.sascalc.dataloader.data_info import Data1D
+from sasdata.dataloader.readers.cansas_reader import Reader as CansasReader
+from sasdata.dataloader.data_info import Data1D
 
-import inspect
 
 class CansasWriter(CansasReader):
 

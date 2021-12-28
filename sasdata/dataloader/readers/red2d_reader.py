@@ -13,7 +13,7 @@ import time
 
 import numpy as np
 
-from sas.sascalc.data_util.nxsunit import Converter
+from sasdata.dataloader.nxsunit import Converter
 
 from ..data_info import plottable_2D, DataInfo, Detector
 from ..file_reader_base_class import FileReader

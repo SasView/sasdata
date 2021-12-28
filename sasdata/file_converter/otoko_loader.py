@@ -14,18 +14,22 @@ except ImportError:
 
 import numpy as np
 
+
 class CStyleStruct:
     """A nice and easy way to get "C-style struct" functionality."""
     def __init__(self, **kwds):
         self.__dict__.update(kwds)
 
+
 class OTOKOParsingError(Exception):
     pass
+
 
 class OTOKOData:
     def __init__(self, q_axis, data_axis):
         self.q_axis = q_axis
         self.data_axis = data_axis
+
 
 class OTOKOLoader(object):
 

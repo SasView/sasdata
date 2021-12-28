@@ -9,11 +9,11 @@ import re
 import os
 import traceback
 
-from sas.sascalc.dataloader.data_info import plottable_1D, plottable_2D,\
+from sasdata.dataloader.data_info import plottable_1D, plottable_2D,\
     Data1D, Data2D, DataInfo, Process, Aperture, Collimation, \
     TransmissionSpectrum, Detector
-from sas.sascalc.dataloader.loader_exceptions import FileContentsException, DefaultReaderException
-from sas.sascalc.dataloader.file_reader_base_class import FileReader, decode
+from sasdata.dataloader.loader_exceptions import FileContentsException, DefaultReaderException
+from sasdata.dataloader.file_reader_base_class import FileReader, decode
 
 try:
   basestring

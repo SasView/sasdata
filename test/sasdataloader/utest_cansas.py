@@ -6,21 +6,18 @@ import sys
 import unittest
 import logging
 import warnings
-if sys.version_info[0] >= 3:
-    from io import StringIO
-else:
-    from StringIO import StringIO
+from io import StringIO
 
 from lxml import etree
 from lxml.etree import XMLSyntaxError
 from xml.dom import minidom
 
-from sas.sascalc.dataloader.file_reader_base_class import decode
-from sas.sascalc.dataloader.loader import Loader
-from sas.sascalc.dataloader.data_info import Data1D, Data2D
-from sas.sascalc.dataloader.readers.xml_reader import XMLreader
-from sas.sascalc.dataloader.readers.cansas_reader import Reader
-from sas.sascalc.dataloader.readers.cansas_constants import CansasConstants
+from sasdata.dataloader.file_reader_base_class import decode
+from sasdata.dataloader.loader import Loader
+from sasdata.dataloader.data_info import Data1D, Data2D
+from sasdata.dataloader.readers.xml_reader import XMLreader
+from sasdata.dataloader.readers.cansas_reader import Reader
+from sasdata.dataloader.readers.cansas_constants import CansasConstants
 
 logger = logging.getLogger(__name__)
 

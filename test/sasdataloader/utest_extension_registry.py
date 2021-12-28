@@ -8,7 +8,7 @@ import os
 import shutil
 import numpy as np
 
-from sas.sascalc.dataloader.loader import Registry as Loader
+from sasdata.dataloader.loader import Registry as Loader
 
 logger = logging.getLogger(__name__)
 

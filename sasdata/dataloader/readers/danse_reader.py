@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 # Look for unit converter
 has_converter = True
 try:
-    from sas.sascalc.data_util.nxsunit import Converter
+    from sasdata.dataloader.nxsunit import Converter
 except:
     has_converter = False
 

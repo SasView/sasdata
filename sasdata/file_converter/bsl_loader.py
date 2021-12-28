@@ -2,10 +2,12 @@ import os
 
 import numpy as np
 
-from ..dataloader.data_info import Data2D
+from sasdata.dataloader.data_info import Data2D
+
 
 class BSLParsingError(Exception):
     pass
+
 
 class BSLLoader:
     """

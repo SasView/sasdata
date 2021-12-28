@@ -13,7 +13,7 @@ from xml.dom.minidom import parseString
 
 from lxml import etree
 
-from sas.sascalc.data_util.nxsunit import Converter
+from sasdata.dataloader.nxsunit import Converter
 
 # For saving individual sections of data
 from ..data_info import Data1D, Data2D, DataInfo, plottable_1D, plottable_2D, \
@@ -38,6 +38,7 @@ CONSTANTS = CansasConstants()
 CANSAS_FORMAT = CONSTANTS.format
 CANSAS_NS = CONSTANTS.names
 ALLOW_ALL = True
+
 
 class Reader(XMLreader):
     cansas_version = "1.1"

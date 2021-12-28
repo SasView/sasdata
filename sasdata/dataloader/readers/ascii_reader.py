@@ -14,10 +14,9 @@
 
 import os
 import logging
-from sas.sascalc.dataloader.file_reader_base_class import FileReader
-from sas.sascalc.dataloader.data_info import DataInfo, plottable_1D
-from sas.sascalc.dataloader.loader_exceptions import FileContentsException,\
-    DefaultReaderException
+from sasdata.dataloader.file_reader_base_class import FileReader
+from sasdata.dataloader.data_info import DataInfo, plottable_1D
+from sasdata.dataloader.loader_exceptions import FileContentsException, DefaultReaderException
 
 logger = logging.getLogger(__name__)
 

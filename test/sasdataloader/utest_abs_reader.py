@@ -4,12 +4,9 @@
 from __future__ import print_function
 
 import unittest
-import numpy as np
-from sas.sascalc.dataloader.loader import Loader
-from sas.sascalc.dataloader.readers.abs_reader import Reader as AbsReader
-from sas.sascalc.dataloader.readers.danse_reader import Reader as DANSEReader
-
-from sas.sascalc.dataloader.data_info import Data1D
+from sasdata.dataloader.loader import Loader
+from sasdata.dataloader.readers.abs_reader import Reader as AbsReader
+from sasdata.dataloader.readers.danse_reader import Reader as DANSEReader
 
 import os.path
 

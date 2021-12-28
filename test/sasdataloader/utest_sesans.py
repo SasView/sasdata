@@ -4,10 +4,10 @@
 
 import os.path
 import unittest
-from sas.sascalc.dataloader.loader_exceptions import FileContentsException,\
+from sasdata.dataloader.loader_exceptions import FileContentsException,\
     DefaultReaderException
-from sas.sascalc.dataloader.readers.sesans_reader import Reader
-from sas.sascalc.dataloader.loader import  Loader
+from sasdata.dataloader.readers.sesans_reader import Reader
+from sasdata.dataloader.loader import Loader
 
 
 def find(filename):

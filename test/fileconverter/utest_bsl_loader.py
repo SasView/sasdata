@@ -5,10 +5,12 @@ import unittest
 from xml.etree import ElementTree as ET
 import numpy as np
 
-from sas.sascalc.file_converter.bsl_loader import BSLLoader
+from sasdata.file_converter.bsl_loader import BSLLoader
+
 
 def find(filename):
     return os.path.join(os.path.dirname(__file__), 'data', filename)
+
 
 class bsl_test(unittest.TestCase):
 

@@ -1,17 +1,12 @@
-
 import math
 import os
 import unittest
-from scipy.stats import binned_statistic_2d
 import numpy as np
 
-import sas.sascalc.dataloader.data_info as data_info
-from sas.sascalc.dataloader.loader import Loader
-from sas.sascalc.dataloader.manipulations import (Boxavg, Boxsum,
-                                                  CircularAverage, Ring,
-                                                  SectorPhi, SectorQ, SlabX,
-                                                  SlabY, get_q,
-                                                  reader2D_converter)
+import sasdata.dataloader.data_info as data_info
+from sasdata.dataloader.loader import Loader
+from sasdata.dataloader.manipulations import (Boxavg, Boxsum, CircularAverage, Ring, SectorPhi, SectorQ, SlabX,
+                                              SlabY, get_q, reader2D_converter)
 
 
 def find(filename):

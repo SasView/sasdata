@@ -7,10 +7,11 @@ import re
 import os
 import sys
 
-from sas.sascalc.dataloader.readers.xml_reader import XMLreader
-from sas.sascalc.dataloader.data_info import plottable_1D, Data1D, DataInfo, Sample, Source
-from sas.sascalc.dataloader.data_info import Process, Aperture, Collimation, TransmissionSpectrum, Detector
-from sas.sascalc.dataloader.loader_exceptions import FileContentsException, DataReaderException
+from sasdata.dataloader.readers.xml_reader import XMLreader
+from sasdata.dataloader.data_info import plottable_1D, Data1D, DataInfo, Sample, Source
+from sasdata.dataloader.data_info import Process, Aperture, Collimation, TransmissionSpectrum, Detector
+from sasdata.dataloader.loader_exceptions import FileContentsException, DataReaderException
+
 
 class Reader(XMLreader):
     """

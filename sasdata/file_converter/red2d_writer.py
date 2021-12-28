@@ -1,6 +1,7 @@
 import os
 import time
-from sas.sascalc.dataloader.readers.red2d_reader import Reader as Red2DReader
+from sasdata.dataloader.readers.red2d_reader import Reader as Red2DReader
+
 
 class Red2DWriter(Red2DReader):
 

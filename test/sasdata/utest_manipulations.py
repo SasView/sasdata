@@ -1,7 +1,6 @@
 """
     Unit tests for data manipulations
 """
-# TODO: what happens if you add a Data1D to a Data2D?
 
 import math
 import os.path
@@ -10,13 +9,15 @@ import unittest
 import numpy as np
 from numpy.testing import assert_allclose
 
-from sasdata.loader import Loader
-from sas.sascalc.dataloader.data_info import Data1D, Data2D
+from sasdata.dataloader.loader import Loader
+from sasdata.dataloader.data_info import Data1D, Data2D
 
 RTOL = 1e-12
 
+
 def find(filename):
     return os.path.join(os.path.dirname(__file__), 'data', filename)
+
 
 class DataInfoTests(unittest.TestCase):
 

@@ -1,5 +1,5 @@
-from sas.sascalc.file_converter.nxcansas_writer import NXcanSASWriter
-from sas.sascalc.dataloader.loader import Loader
+from sasdata.file_converter.nxcansas_writer import NXcanSASWriter
+from sasdata.dataloader.loader import Loader
 
 import os
 import os.path

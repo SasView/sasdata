@@ -5,11 +5,10 @@ Module with file loader specific static utilities.
 import os
 import numpy as np
 
-from sas.sascalc.dataloader.data_info import Data1D
-from sas.sascalc.file_converter.nxcansas_writer import NXcanSASWriter
-from sas.sascalc.file_converter.bsl_loader import BSLLoader
-from sas.sascalc.file_converter.otoko_loader import OTOKOLoader
-from sas.sascalc.file_converter.cansas_writer import CansasWriter
+from sasdata.file_converter.nxcansas_writer import NXcanSASWriter
+from sasdata.file_converter.otoko_loader import OTOKOLoader
+from sasdata.file_converter.cansas_writer import CansasWriter
+
 
 def extract_ascii_data(filename):
     """
@@ -54,6 +53,7 @@ def extract_ascii_data(filename):
 
     return np.array(data, dtype=np.float32)
 
+
 def extract_otoko_data(qfile, ifile):
     """
     Extracts data from a 1D OTOKO file
@@ -73,6 +73,7 @@ def extract_otoko_data(qfile, ifile):
     qdata = qdata[0]
     return qdata, iqdata
 
+
 def convert_2d_data(dataset, output, metadata):
     """
     Wrapper for the NX SAS writer call
@@ -83,6 +84,7 @@ def convert_2d_data(dataset, output, metadata):
 
     w = NXcanSASWriter()
     w.write(dataset, output)
+
 
 def convert_to_cansas(frame_data, filepath, run_name, single_file):
     """
@@ -114,6 +116,7 @@ def convert_to_cansas(frame_data, filepath, run_name, single_file):
             destination = os.path.join(group_path, filename)
             writer.write(destination, [frame_d],
                          sasentry_attrs=entry_attrs)
+
 
 def toFloat(text):
     """

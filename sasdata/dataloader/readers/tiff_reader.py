@@ -13,8 +13,8 @@ import math
 import logging
 import os
 import numpy as np
-from sas.sascalc.dataloader.data_info import Data2D
-from sas.sascalc.dataloader.manipulations import reader2D_converter
+from ..data_info import Data2D
+from ..manipulations import reader2D_converter
 
 logger = logging.getLogger(__name__)
 

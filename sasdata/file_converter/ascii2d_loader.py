@@ -1,8 +1,7 @@
 """
 ASCII 2D Loader
 """
-from sas.sascalc.dataloader.data_info import Data2D
-from sas.sascalc.file_converter.nxcansas_writer import NXcanSASWriter
+from sasdata.dataloader.data_info import Data2D
 import numpy as np
 
 # ISIS 2D ASCII File Format

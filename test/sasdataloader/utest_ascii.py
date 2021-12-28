@@ -8,8 +8,8 @@ import math
 warnings.simplefilter("ignore")
 
 import unittest
-from sas.sascalc.dataloader.loader import Loader
-from sas.sascalc.dataloader.data_info import Data2D
+from sasdata.dataloader.loader import Loader
+from sasdata.dataloader.data_info import Data2D
 
 
 def find(filename):

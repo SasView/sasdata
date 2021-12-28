@@ -15,7 +15,7 @@ from .loader_exceptions import NoKnownLoaderException, FileContentsException,\
     DataReaderException, DefaultReaderException
 from .data_info import Data1D, Data2D, DataInfo, plottable_1D, plottable_2D,\
     combine_data_info_with_plottable
-from sas.sascalc.data_util.nxsunit import Converter
+from .nxsunit import Converter
 
 logger = logging.getLogger(__name__)
 

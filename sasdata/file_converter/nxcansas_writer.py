@@ -5,7 +5,7 @@
 import h5py
 import numpy as np
 
-from sas.sascalc.dataloader.data_info import Data1D, Data2D
+from sasdata.dataloader.data_info import Data1D, Data2D
 
 PROBES = ['neutron', 'x-ray', 'muon', 'electron', 'ultraviolet',
           'visible light', 'positron', 'proton']
