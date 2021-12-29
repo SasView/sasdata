@@ -76,12 +76,11 @@ package_dir["sasdata.dataloader"] = os.path.join("sasdata", "dataloader")
 package_data["sasdata.dataloader.readers"] = ['schema/*.xsd']
 packages.extend(["sasdata.dataloader", "sasdata.dataloader.readers", "sasdata.dataloader.readers.schema"])
 
-
 # sas.sascalc.file_converter
 package_dir["sasdata.file_converter"] = os.path.join("sasdata", "file_converter")
 packages.append("sasdata.file_converter")
 
-required = ['lxml', 'h5py']
+required = ['lxml', 'h5py', 'numpy']
 
 if os.name == 'nt':
     required.extend(['html5lib', 'reportlab'])
@@ -89,11 +88,16 @@ else:
     # 'pil' is now called 'pillow'
     required.extend(['pillow'])
 
+with open('README.md', encoding='utf-8') as f:
+    long_description = f.read()
+
 # Set up SasView
 setup(
     name="sasdata",
     version=VERSION,
-    description="SasData Loader application",
+    description="Sas Data Loader application",
+    long_description=long_description,
+    long_description_content_type='text/x-rst',
     author="SasView Team",
     author_email="developers@sasview.org",
     url="http://sasview.org",

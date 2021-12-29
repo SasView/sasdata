@@ -2,10 +2,9 @@
 
 A package for loading and handling reduced small angle scattering data.
 
-The data loaders provided are usable as a standalone package, in conjunction with the sasmodels fitting package, or
-in conjunction with the sasview analysis package.
+The data loaders provided are usable as a standalone package, or in conjunction with the sasview analysis package.
 
-### *The following instructions are a work in progress and will be updated as this package progresses.*
+### *This stand-alone package is a work in progress.*
 
 ## Install
 The easiest way to use sasdata is by using [SasView](http://www.sasview.org).
@@ -30,8 +29,9 @@ View the latest release on the [sasdata pypi page](https://pypi.org/project/sasd
 
 ## Usage
 
-*Usage instructions coming soon.*
+Loading data sets:
 
-## Data Loading Example
-
-*Examples coming soon.*
+    (sasdata) $ python
+    >>> from sasdata.dataloader.loader import Loader
+    >>> loader_module = Loader()
+    >>> loaded_data_sets = loader_module.load("/path/to/file.ext")
