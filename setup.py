@@ -97,7 +97,7 @@ setup(
     version=VERSION,
     description="Sas Data Loader application",
     long_description=long_description,
-    long_description_content_type='text/x-rst',
+    long_description_content_type='text/markdown',
     author="SasView Team",
     author_email="developers@sasview.org",
     url="http://sasview.org",
