@@ -6,7 +6,6 @@ import subprocess
 import re
 import sys
 
-import logging
 import logging.config
 LOGGER_CONFIG_FILE = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'logging.ini')
 logging.config.fileConfig(LOGGER_CONFIG_FILE)
@@ -27,9 +26,6 @@ try:
 except ImportError:
     HAS_MPL_WX = False
 
-#COMMAND_SEP = ';'
-#if os.name == 'nt':
-#    COMMAND_SEP = '&'
 
 def run_tests(dirs=None, run_all=False):
     test_root = os.path.abspath(os.path.dirname(__file__))
@@ -52,7 +48,7 @@ def run_tests(dirs=None, run_all=False):
                 if os.path.isfile(file_path) and f.startswith("utest_") and f.endswith(".py"):
                     module_name,_ = os.path.splitext(f)
                     code = '"%s" %s %s'%(sys.executable, run_one_py, file_path)
-                    proc = subprocess.Popen(code, shell=True, stdout=subprocess.PIPE, stderr = subprocess.STDOUT)
+                    proc = subprocess.Popen(code, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                     std_out, std_err = proc.communicate()
                     std_out, std_err = std_out.decode(), (std_err.decode() if std_err else None)
                     #print(">>>>>> standard out", file_path, "\n", std_out, "\n>>>>>>>>> end stdout", file_path)
@@ -110,8 +106,9 @@ def run_tests(dirs=None, run_all=False):
 
     return failed
 
+
 if __name__ == '__main__':
     run_all = (len(sys.argv) > 1 and sys.argv[1] == '-all')
     dirs = sys.argv[1:] if not run_all else sys.argv[2:]
-    if run_tests(dirs=dirs, run_all=run_all)>0:
+    if run_tests(dirs=dirs, run_all=run_all) > 0:
         sys.exit(1)

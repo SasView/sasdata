@@ -5,8 +5,8 @@ import os
 import sys
 import xmlrunner
 import unittest
-import imp
-from os.path import abspath, dirname, split as splitpath, join as joinpath
+import importlib.util
+from os.path import abspath, split as splitpath
 
 import logging
 logger = logging.getLogger(__name__)
@@ -16,18 +16,20 @@ if not logger.root.handlers:
     logging.config.fileConfig(LOGGER_CONFIG_FILE, disable_existing_loggers=False)
 
 if len(sys.argv) < 2:
-    logger.error("Use %s <filename to test>",sys.argv[0])
+    logger.error("Use %s <filename to test>", sys.argv[0])
     sys.exit(-1)
 
-run_py = joinpath(dirname(dirname(abspath(__file__))), 'run.py')
-run = imp.load_source('sasview_run', run_py)
-run.prepare()
-#print("\n".join(sys.path))
-test_path,test_file = splitpath(abspath(sys.argv[1]))
-print("=== testing:",sys.argv[1])
-#print(test_path, test_file)
+test_path_abs = abspath(sys.argv[1])
+test_path, f_name_full = splitpath(abspath(sys.argv[1]))
+f_name = f_name_full.split('.')[0]
+#print("=== testing:", sys.argv[1])
 sys.argv = [sys.argv[0]]
 os.chdir(test_path)
 sys.path.insert(0, test_path)
-test = imp.load_source('tests',test_file)
+#print("\n".join(sys.path))
+foo = importlib.util.spec_from_file_location('tests', f_name_full)
+test = importlib.util.module_from_spec(foo)
+sys.modules['tests'] = test
+foo.loader.exec_module(test)
+#print(test)
 unittest.main(test, testRunner=xmlrunner.XMLTestRunner(output='logs'))
