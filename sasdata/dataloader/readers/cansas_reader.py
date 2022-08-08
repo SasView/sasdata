@@ -3,14 +3,10 @@ import os
 import sys
 import datetime
 import inspect
+from inspect import FrameInfo
 
 import numpy as np
-
-# The following 2 imports *ARE* used. Do not remove either.
-import xml.dom.minidom
 from xml.dom.minidom import parseString
-# The preceding 2 imports *ARE* used. Do not remove either.
-
 from lxml import etree
 
 from sasdata.dataloader.nxsunit import Converter
@@ -172,8 +168,8 @@ class Reader(XMLreader):
     def set_default_schema(self):
         base_name = xml_reader.__file__
         base_name = base_name.replace("\\", "/")
-        base = base_name.split("/sas/")[0]
-        schema_path = "{}/sas/sascalc/dataloader/readers/schema/{}".format(
+        base = base_name.split("xml_reader.py")[0]
+        schema_path = "{}schema/{}".format(
             base, self.cansas_defaults.get("schema").replace("\\", "/")
         )
         self.set_schema(schema_path)
@@ -607,16 +603,19 @@ class Reader(XMLreader):
         self.current_datainfo.meta_data[new_key] = data_point
 
     def _is_call_local(self):
-        if self.frm == "":
-            inter = inspect.stack()
-            self.frm = inter[2]
-        mod_name = self.frm[1].replace("\\", "/").replace(".pyc", "")
+        mod_name = self._define_mod_name()
         mod_name = mod_name.replace(".py", "")
-        mod = mod_name.split("sas/")
-        mod_name = mod[1]
-        if mod_name != "sascalc/dataloader/readers/cansas_reader":
+        mod = mod_name.split("sasdata/")
+        mod_name = mod[-1]
+        if mod_name != "dataloader/readers/cansas_reader":
             return False
         return True
+
+    def _define_mod_name(self):
+        if not isinstance(self.frm, FrameInfo):
+            inter = inspect.stack()
+            self.frm = inter[2]
+        return self.frm.filename.replace("\\", "/").replace(".pyc", "")
 
     def _add_intermediate(self):
         """
@@ -834,7 +833,7 @@ class Reader(XMLreader):
         #      the data we just wrote
         # If the calling function was not the cansas reader, return a minidom
         #      object rather than an lxml object.
-        self.frm = inspect.stack()[1]
+        self._define_mod_name()
         doc, entry_node = self._check_origin(entry_node, doc)
         return doc, entry_node
 
@@ -1290,13 +1289,7 @@ class Reader(XMLreader):
         :param entry_node: lxml node ElementTree object to be appended to
         :param doc: entire xml tree
         """
-        if not self.frm:
-            self.frm = inspect.stack()[1]
-        mod_name = self.frm[1].replace("\\", "/").replace(".pyc", "")
-        mod_name = mod_name.replace(".py", "")
-        mod = mod_name.split("sas/")
-        mod_name = mod[1]
-        if mod_name != "sascalc/dataloader/readers/cansas_reader":
+        if not self._is_call_local():
             string = self.to_string(doc, pretty_print=False)
             doc = parseString(string)
             node_name = entry_node.tag
