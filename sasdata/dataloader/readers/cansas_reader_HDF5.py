@@ -769,6 +769,6 @@ class Reader(FileReader):
         :param dataset: DataInfo object that will be converted to NXcanSAS
         :return: None
         """
-        from sas.sascalc.file_converter.nxcansas_writer import NXcanSASWriter
+        from sasdata.file_converter.nxcansas_writer import NXcanSASWriter
         writer = NXcanSASWriter()
         writer.write(dataset=[dataset], filename=filename)

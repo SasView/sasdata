@@ -5,7 +5,6 @@
     Setup for SasData
 """
 import os
-import subprocess
 import shutil
 import sys
 from distutils.core import Command
@@ -71,12 +70,12 @@ build_commands = [
 package_dir["sasdata"] = os.path.join("sasdata")
 packages.append("sasdata")
 
-# sas.sascalc.dataloader
+# sasdata.dataloader
 package_dir["sasdata.dataloader"] = os.path.join("sasdata", "dataloader")
 package_data["sasdata.dataloader.readers"] = ['schema/*.xsd']
 packages.extend(["sasdata.dataloader", "sasdata.dataloader.readers", "sasdata.dataloader.readers.schema"])
 
-# sas.sascalc.file_converter
+# sasdata.file_converter
 package_dir["sasdata.file_converter"] = os.path.join("sasdata", "file_converter")
 packages.append("sasdata.file_converter")
 

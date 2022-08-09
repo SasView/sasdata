@@ -256,9 +256,6 @@ def reader2D_converter(data2d=None):
         new_err_data = data2d.err_data.flatten()
     mask = np.ones(len(new_data), dtype=bool)
 
-    # TODO: make sense of the following two lines...
-    #from sas.sascalc.dataloader.data_info import Data2D
-    #output = Data2D()
     output = data2d
     output.data = new_data
     output.err_data = new_err_data

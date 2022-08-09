@@ -25,8 +25,8 @@ logger = logging.getLogger(__name__)
 PREPROCESS = "xmlpreprocess"
 ENCODING = "encoding"
 RUN_NAME_DEFAULT = "None"
-INVALID_SCHEMA_PATH_1_1 = "{0}/sas/sascalc/dataloader/readers/schema/cansas1d_invalid_v1_1.xsd"
-INVALID_SCHEMA_PATH_1_0 = "{0}/sas/sascalc/dataloader/readers/schema/cansas1d_invalid_v1_0.xsd"
+INVALID_SCHEMA_PATH_1_1 = "schema/cansas1d_invalid_v1_1.xsd"
+INVALID_SCHEMA_PATH_1_0 = "schema/cansas1d_invalid_v1_0.xsd"
 INVALID_XML = "\n\nThe loaded xml file, {0} does not fully meet the CanSAS v1.x specification. SasView loaded " + \
               "as much of the data as possible.\n\n"
 
@@ -152,13 +152,11 @@ class Reader(XMLreader):
         # File doesn't meet schema - try loading with a less strict schema
         base_name = xml_reader.__file__
         base_name = base_name.replace("\\", "/")
-        base = base_name.split("/sas/")[0]
+        base = base_name.split("xml_reader.py")[0]
         if self.cansas_version == "1.1":
-            invalid_schema = INVALID_SCHEMA_PATH_1_1.format(
-                base, self.cansas_defaults.get("schema"))
+            invalid_schema = f"{base}{INVALID_SCHEMA_PATH_1_1}"
         else:
-            invalid_schema = INVALID_SCHEMA_PATH_1_0.format(
-                base, self.cansas_defaults.get("schema"))
+            invalid_schema = f"{base}{INVALID_SCHEMA_PATH_1_0}"
         self.set_schema(invalid_schema)
         if self.validate_xml():
             return False
