@@ -15,7 +15,7 @@ class CansasConstants:
         self.names = self.CANSAS_NS
         self.format = self.CANSAS_FORMAT
 
-    def iterate_namespace(self, namespace: list[str]):
+    def iterate_namespace(self, namespace):
         """
         Method to iterate through a cansas constants tree based on a list of
         names
