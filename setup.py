@@ -19,13 +19,12 @@ with open(os.path.join("sasdata", "__init__.py")) as fid:
             VERSION = line.split('"')[1]
             break
     else:
-        raise ValueError("Could not find version in src/sas/sasview/__init__.py")
+        raise ValueError("Could not find version in sasdata/__init__.py")
 ##############################################################
 
 package_dir = {}
 package_data = {}
 packages = []
-ext_modules = []
 
 # Remove all files that should be updated by this setup
 # We do this here because application updates these files from .sasdata
@@ -79,13 +78,7 @@ packages.extend(["sasdata.dataloader", "sasdata.dataloader.readers", "sasdata.da
 package_dir["sasdata.file_converter"] = os.path.join("sasdata", "file_converter")
 packages.append("sasdata.file_converter")
 
-required = ['lxml', 'h5py', 'numpy']
-
-if os.name == 'nt':
-    required.extend(['html5lib', 'reportlab'])
-else:
-    # 'pil' is now called 'pillow'
-    required.extend(['pillow'])
+required = ['lxml', 'h5py', 'numpy', 'pytest<6', 'xmlrunner']
 
 with open('README.md', encoding='utf-8') as f:
     long_description = f.read()
@@ -106,7 +99,6 @@ setup(
     package_dir=package_dir,
     packages=packages,
     package_data=package_data,
-    ext_modules=ext_modules,
     install_requires=required,
     zip_safe=False,
     entry_points={
