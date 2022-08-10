@@ -13,10 +13,9 @@ import logging
 
 import numpy as np
 
-from sasdata.dataloader.nxsunit import Converter
-from sasdata.dataloader.file_reader_base_class import FileReader
-from sasdata.dataloader.data_info import DataInfo, plottable_1D, Data1D, Detector
-from sasdata.dataloader.loader_exceptions import FileContentsException, DefaultReaderException
+from sasdata.data_util.nxsunit import Converter
+from sasdata.dataloader.filereader import FileReader
+from sasdata.dataloader.data_info import DataInfo, Detector
 
 logger = logging.getLogger(__name__)
 

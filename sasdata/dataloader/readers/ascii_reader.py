@@ -12,11 +12,12 @@
 # copyright 2008, University of Tennessee
 #############################################################################
 
-import os
 import logging
-from sasdata.dataloader.file_reader_base_class import FileReader
+from typing import Optional
+
+from sasdata.dataloader.filereader import FileReader
 from sasdata.dataloader.data_info import DataInfo, plottable_1D
-from sasdata.dataloader.loader_exceptions import FileContentsException, DefaultReaderException
+from sasdata.data_util.loader_exceptions import FileContentsException, DefaultReaderException
 
 logger = logging.getLogger(__name__)
 
@@ -162,7 +163,7 @@ class Reader(FileReader):
         self.current_datainfo.meta_data['loader'] = self.type_name
         self.send_to_output()
 
-    def write(self, filename, dataset, sep=" "):
+    def write(self, filename: str, dataset: plottable_1D, sep: Optional[str] = " "):
         """
         Output data in ascii or similar format, depending on the separator provided
 

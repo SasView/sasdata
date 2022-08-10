@@ -1,4 +1,3 @@
-from __future__ import division
 """
 Data manipulations for 2D data sets.
 Using the meta data information, various types of averaging
@@ -22,26 +21,27 @@ PYTHONPATH=../src/ python2  -m sasdataloader.test.utest_averaging DataInfoTests.
 # TODO: copy the meta data from the 2D object to the resulting 1D object
 import math
 import numpy as np
-import sys
+from typing import Optional, Union
 
-#from data_info import plottable_2D
-from .data_info import Data1D
+from sasdata.dataloader.data_info import Data1D, Data2D
 
 
-def get_q(dx, dy, det_dist, wavelength):
+def position_and_wavelength_to_q(dx: float, dy: float, detector_distance: float, wavelength: float) -> float:
     """
     :param dx: x-distance from beam center [mm]
     :param dy: y-distance from beam center [mm]
+    :param detector_distance: sample to detector distance [mm]
+    :param wavelength: neutron wavelength [nm]
     :return: q-value at the given position
     """
     # Distance from beam center in the plane of detector
     plane_dist = math.sqrt(dx * dx + dy * dy)
     # Half of the scattering angle
-    theta = 0.5 * math.atan(plane_dist / det_dist)
+    theta = 0.5 * math.atan(plane_dist / detector_distance)
     return (4.0 * math.pi / wavelength) * math.sin(theta)
 
 
-def get_q_compo(dx, dy, det_dist, wavelength, compo=None):
+def get_q_compo(dx: float, dy: float, detector_distance: float, wavelength: float, compo: Optional[str] = None) -> float:
     """
     This reduces tiny error at very large q.
     Implementation of this func is not started yet.<--ToDo
@@ -55,30 +55,30 @@ def get_q_compo(dx, dy, det_dist, wavelength, compo=None):
         angle_xy = math.atan(dx / dy)
 
     if compo == "x":
-        out = get_q(dx, dy, det_dist, wavelength) * math.cos(angle_xy)
+        out = position_and_wavelength_to_q(dx, dy, detector_distance, wavelength) * math.cos(angle_xy)
     elif compo == "y":
-        out = get_q(dx, dy, det_dist, wavelength) * math.sin(angle_xy)
+        out = position_and_wavelength_to_q(dx, dy, detector_distance, wavelength) * math.sin(angle_xy)
     else:
-        out = get_q(dx, dy, det_dist, wavelength)
+        out = position_and_wavelength_to_q(dx, dy, detector_distance, wavelength)
     return out
 
 
-def flip_phi(phi):
+def flip_phi(phi: float) -> float:
     """
     Correct phi to within the 0 <= to <= 2pi range
 
     :return: phi in >=0 and <=2Pi
     """
-    Pi = math.pi
     if phi < 0:
-        phi_out = phi + (2 * Pi)
-    elif phi > (2 * Pi):
-        phi_out = phi - (2 * Pi)
+        phi_out = phi + (2 * math.pi)
+    elif phi > (2 * math.pi):
+        phi_out = phi - (2 * math.pi)
     else:
         phi_out = phi
     return phi_out
 
-def get_pixel_fraction_square(x, xmin, xmax):
+
+def get_pixel_fraction_square(x: float, x_min: float, x_max: float) -> float:
     """
     Return the fraction of the length
     from xmin to x.::
@@ -88,19 +88,20 @@ def get_pixel_fraction_square(x, xmin, xmax):
        xmin        x         xmax
 
     :param x: x-value
-    :param xmin: minimum x for the length considered
-    :param xmax: minimum x for the length considered
+    :param x_min: minimum x for the length considered
+    :param x_max: minimum x for the length considered
     :return: (x-xmin)/(xmax-xmin) when xmin < x < xmax
 
     """
-    if x <= xmin:
+    if x <= x_min:
         return 0.0
-    if x > xmin and x < xmax:
-        return (x - xmin) / (xmax - xmin)
+    if x_min < x < x_max:
+        return (x - x_min) / (x_max - x_min)
     else:
         return 1.0
 
-def get_intercept(q, q_0, q_1):
+
+def get_intercept(q: float, q_0: float, q_1: float) -> Union[float, None]:
     """
     Returns the fraction of the side at which the
     q-value intercept the pixel, None otherwise.
@@ -117,18 +118,19 @@ def get_intercept(q, q_0, q_1):
 
     """
     if q_1 > q_0:
-        if q > q_0 and q <= q_1:
+        if q_0 < q <= q_1:
             return (q - q_0) / (q_1 - q_0)
     else:
-        if q > q_1 and q <= q_0:
+        if q_1 < q <= q_0:
             return (q - q_1) / (q_0 - q_1)
     return None
 
-def get_pixel_fraction(qmax, q_00, q_01, q_10, q_11):
+
+def get_pixel_fraction(q_max: float, q_00: float, q_01: float, q_10: float, q_11: float) -> float:
     """
     Returns the fraction of the pixel defined by
     the four corners (q_00, q_01, q_10, q_11) that
-    has q < qmax.::
+    has q < q_max.::
 
                 q_01                q_11
         y=1         +--------------+
@@ -142,14 +144,14 @@ def get_pixel_fraction(qmax, q_00, q_01, q_10, q_11):
 
     """
     # y side for x = minx
-    x_0 = get_intercept(qmax, q_00, q_01)
+    x_0 = get_intercept(q_max, q_00, q_01)
     # y side for x = maxx
-    x_1 = get_intercept(qmax, q_10, q_11)
+    x_1 = get_intercept(q_max, q_10, q_11)
 
     # x side for y = miny
-    y_0 = get_intercept(qmax, q_00, q_10)
+    y_0 = get_intercept(q_max, q_00, q_10)
     # x side for y = maxy
-    y_1 = get_intercept(qmax, q_01, q_11)
+    y_1 = get_intercept(q_max, q_01, q_11)
 
     # surface fraction for a 1x1 pixel
     frac_max = 0
@@ -182,12 +184,13 @@ def get_pixel_fraction(qmax, q_00, q_01, q_10, q_11):
     # If we make it here, there is no intercept between
     # this pixel and the constant-q ring. We only need
     # to know if we have to include it or exclude it.
-    elif (q_00 + q_01 + q_10 + q_11) / 4.0 < qmax:
+    elif (q_00 + q_01 + q_10 + q_11) / 4.0 < q_max:
         frac_max = 1.0
 
     return frac_max
 
-def get_dq_data(data2D):
+
+def get_dq_data(data2d: Data2D) -> np.array:
     '''
     Get the dq for resolution averaging
     The pinholes and det. pix contribution present
@@ -196,23 +199,23 @@ def get_dq_data(data2D):
     q = 0. Note This method works on only pinhole geometry.
     Extrapolate dqx(r) and dqy(phi) at q = 0, and take an average.
     '''
-    z_max = max(data2D.q_data)
-    z_min = min(data2D.q_data)
-    dqx_at_z_max = data2D.dqx_data[np.argmax(data2D.q_data)]
-    dqx_at_z_min = data2D.dqx_data[np.argmin(data2D.q_data)]
-    dqy_at_z_max = data2D.dqy_data[np.argmax(data2D.q_data)]
-    dqy_at_z_min = data2D.dqy_data[np.argmin(data2D.q_data)]
+    z_max = max(data2d.q_data)
+    z_min = min(data2d.q_data)
+    dqx_at_z_max = data2d.dqx_data[np.argmax(data2d.q_data)]
+    dqx_at_z_min = data2d.dqx_data[np.argmin(data2d.q_data)]
+    dqy_at_z_max = data2d.dqy_data[np.argmax(data2d.q_data)]
+    dqy_at_z_min = data2d.dqy_data[np.argmin(data2d.q_data)]
     # Find qdx at q = 0
     dq_overlap_x = (dqx_at_z_min * z_max - dqx_at_z_max * z_min) / (z_max - z_min)
     # when extrapolation goes wrong
-    if dq_overlap_x > min(data2D.dqx_data):
-        dq_overlap_x = min(data2D.dqx_data)
+    if dq_overlap_x > min(data2d.dqx_data):
+        dq_overlap_x = min(data2d.dqx_data)
     dq_overlap_x *= dq_overlap_x
     # Find qdx at q = 0
     dq_overlap_y = (dqy_at_z_min * z_max - dqy_at_z_max * z_min) / (z_max - z_min)
     # when extrapolation goes wrong
-    if dq_overlap_y > min(data2D.dqy_data):
-        dq_overlap_y = min(data2D.dqy_data)
+    if dq_overlap_y > min(data2d.dqy_data):
+        dq_overlap_y = min(data2d.dqy_data)
     # get dq at q=0.
     dq_overlap_y *= dq_overlap_y
 
@@ -220,9 +223,9 @@ def get_dq_data(data2D):
     # Final protection of dq
     if dq_overlap < 0:
         dq_overlap = dqy_at_z_min
-    dqx_data = data2D.dqx_data[np.isfinite(data2D.data)]
-    dqy_data = data2D.dqy_data[np.isfinite(
-        data2D.data)] - dq_overlap
+    dqx_data = data2d.dqx_data[np.isfinite(data2d.data)]
+    dqy_data = data2d.dqy_data[np.isfinite(
+        data2d.data)] - dq_overlap
     # def; dqx_data = dq_r dqy_data = dq_phi
     # Convert dq 2D to 1D here
     dq_data = np.sqrt(dqx_data**2 + dqx_data**2)
@@ -230,7 +233,8 @@ def get_dq_data(data2D):
 
 ################################################################################
 
-def reader2D_converter(data2d=None):
+
+def reader2D_converter(data2d: Optional[Data2D] = None) -> Data2D:
     """
     convert old 2d format opened by IhorReader or danse_reader
     to new Data2D format
@@ -268,26 +272,27 @@ def reader2D_converter(data2d=None):
 
 ################################################################################
 
-class Binning(object):
-    '''
+
+class Binning:
+    """
     This class just creates a binning object
     either linear or log
-    '''
+    """
 
     def __init__(self, min_value, max_value, n_bins, base=None):
-        '''
+        """
         if base is None: Linear binning
-        '''
+        """
         self.min = min_value if min_value > 0 else 0.0001
         self.max = max_value
         self.n_bins = n_bins
         self.base = base
 
     def get_bin_index(self, value):
-        '''
+        """
         The general formula logarithm binning is:
         bin = floor(N * (log(x) - log(min)) / (log(max) - log(min)))
-        '''
+        """
         if self.base:
             temp_x = self.n_bins * (math.log(value, self.base) - math.log(self.min, self.base))
             temp_y = math.log(self.max, self.base) - math.log(self.min, self.base)
@@ -300,7 +305,7 @@ class Binning(object):
 
 ################################################################################
 
-class _Slab(object):
+class _Slab:
     """
     Compute average I(Q) for a region of interest
     """
@@ -458,7 +463,8 @@ class SlabX(_Slab):
 
 ################################################################################
 
-class Boxsum(object):
+
+class Boxsum:
     """
     Perform the sum of counts in a 2D region of interest.
     """
@@ -573,7 +579,8 @@ class Boxavg(Boxsum):
 
 ################################################################################
 
-class CircularAverage(object):
+
+class CircularAverage:
     """
     Perform circular averaging on 2D data
 
@@ -689,7 +696,8 @@ class CircularAverage(object):
 
 ################################################################################
 
-class Ring(object):
+
+class Ring:
     """
     Defines a ring on a 2D data set.
     The ring is defined by r_min, r_max, and
@@ -796,7 +804,7 @@ class Ring(object):
         return Data1D(x=phi_values[idx], y=phi_bins[idx], dy=phi_err[idx])
 
 
-class _Sector(object):
+class _Sector:
     """
     Defines a sector region on a 2D data set.
     The sector is defined by r_min, r_max, phi_min, phi_max,
@@ -1014,7 +1022,8 @@ class SectorQ(_Sector):
 
 ################################################################################
 
-class Ringcut(object):
+
+class Ringcut:
     """
     Defines a ring on a 2D data set.
     The ring is defined by r_min, r_max, and
@@ -1059,7 +1068,8 @@ class Ringcut(object):
 
 ################################################################################
 
-class Boxcut(object):
+
+class Boxcut:
     """
     Find a rectangular 2D region of interest.
     """
@@ -1109,7 +1119,8 @@ class Boxcut(object):
 
 ################################################################################
 
-class Sectorcut(object):
+
+class Sectorcut:
     """
     Defines a sector (major + minor) region on a 2D data set.
     The sector is defined by phi_min, phi_max,

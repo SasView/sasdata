@@ -3,14 +3,13 @@
 """
 
 import numpy as np
-import re
-import os
-import sys
+from typing import Optional
+from lxml.etree import Element
 
 from sasdata.dataloader.readers.xml_reader import XMLreader
 from sasdata.dataloader.data_info import plottable_1D, Data1D, DataInfo, Sample, Source
 from sasdata.dataloader.data_info import Process, Aperture, Collimation, TransmissionSpectrum, Detector
-from sasdata.dataloader.loader_exceptions import FileContentsException, DataReaderException
+from sasdata.data_util.loader_exceptions import FileContentsException, DataReaderException
 
 
 class Reader(XMLreader):
@@ -18,21 +17,21 @@ class Reader(XMLreader):
     A class for reading in Anton Paar .pdh files
     """
 
-    ## Logged warnings or messages
+    # Logged warnings or messages
     logging = None
-    ## List of errors for the current data set
+    # List of errors for the current data set
     errors = None
-    ## Raw file contents to be processed
+    # Raw file contents to be processed
     raw_data = None
-    ## For recursion and saving purposes, remember parent objects
+    # For recursion and saving purposes, remember parent objects
     parent_list = None
-    ## Data type name
+    # Data type name
     type_name = "Anton Paar SAXSess"
-    ## Wildcards
+    # Wildcards
     type = ["Anton Paar SAXSess Files (*.pdh)|*.pdh"]
-    ## List of allowed extensions
+    # List of allowed extensions
     ext = ['.pdh', '.PDH']
-    ## Flag to bypass extension check
+    # Flag to bypass extension check
     allow_all = False
 
     def reset_state(self):
@@ -61,7 +60,7 @@ class Reader(XMLreader):
             :return: List of Data1D objects or a list of errors.
             """
 
-        ## Reinitialize the class when loading a new data file to reset all class variables
+        # Reinitialize the class when loading a new data file to reset all class variables
         self.reset_state()
         buff = self.readall()
         self.raw_data = buff.splitlines()
@@ -128,7 +127,7 @@ class Reader(XMLreader):
         if not correctly_loaded:
             raise DataReaderException(error_message)
 
-    def _parse_child(self, dom, parent=''):
+    def _parse_child(self, dom: Element, parent: Optional[str] = ''):
         """
         Recursive method for stepping through the embedded XML
         :param dom: XML node with or without children

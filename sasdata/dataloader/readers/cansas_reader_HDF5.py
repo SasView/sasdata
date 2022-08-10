@@ -8,24 +8,18 @@ import numpy as np
 import re
 import os
 import traceback
+from typing import Any, Union, Optional
 
-from sasdata.dataloader.data_info import plottable_1D, plottable_2D,\
-    Data1D, Data2D, DataInfo, Process, Aperture, Collimation, \
-    TransmissionSpectrum, Detector
-from sasdata.dataloader.loader_exceptions import FileContentsException, DefaultReaderException
-from sasdata.dataloader.file_reader_base_class import FileReader, decode
-
-try:
-  basestring
-except NameError:  # CRUFT: python 2 support
-  basestring = str
+from sasdata.dataloader.data_info import plottable_1D, plottable_2D, Data1D, Data2D, DataInfo, Process, Aperture,\
+    Collimation, TransmissionSpectrum, Detector
+from sasdata.data_util.loader_exceptions import FileContentsException, DefaultReaderException
+from sasdata.dataloader.filereader import FileReader, decode
 
 logger = logging.getLogger(__name__)
 
 
 def h5attr(node, key, default=None):
     value = node.attrs.get(key, default)
-    #print("h5attr", node, key, value, type(value))
     if isinstance(value, np.ndarray) and value.dtype.char == 'S':
         return [decode(el) for el in value]
     elif isinstance(value, list):
@@ -135,7 +129,7 @@ class Reader(FileReader):
         self.process = Process()
         self.trans_spectrum = TransmissionSpectrum()
 
-    def read_children(self, data, parent_list):
+    def read_children(self, data: dict, parent_list: list):
         """
         A recursive method for stepping through the hierarchical data file.
 
@@ -165,7 +159,7 @@ class Reader(FileReader):
                 # If a new sasentry, store the current data sets and create
                 # a fresh Data1D/2D object
                 if class_prog.match(u'SASentry'):
-                    self.add_data_set(key)
+                    self.add_data_set()
                 elif class_prog.match(u'SASdata'):
                     self._find_data_attributes(value)
                     self._initialize_new_data_set(value)
@@ -196,7 +190,7 @@ class Reader(FileReader):
                         data_point = decode(data_point)
                     # Top Level Meta Data
                     if key == u'definition':
-                        if isinstance(data_set, basestring):
+                        if isinstance(data_set, str):
                             self.current_datainfo.meta_data['reader'] = data_set
                             break
                         else:
@@ -210,14 +204,14 @@ class Reader(FileReader):
                             self.current_datainfo.run_name = run_dict
                         except Exception:
                             pass
-                        if isinstance(data_set, basestring):
+                        if isinstance(data_set, str):
                             self.current_datainfo.run.append(data_set)
                             break
                         else:
                             self.current_datainfo.run.append(data_point)
                     # Title
                     elif key == u'title':
-                        if isinstance(data_set, basestring):
+                        if isinstance(data_set, str):
                             self.current_datainfo.title = data_set
                             break
                         else:
@@ -268,7 +262,7 @@ class Reader(FileReader):
                 # I don't know if this reachable code
                 self.errors.append("ShouldNeverHappenException")
 
-    def process_1d_data_object(self, data_set, key, unit):
+    def process_1d_data_object(self, data_set: np.array, key: str, unit: str):
         """
         SASdata processor method for 1d data items
         :param data_set: data from HDF5 file
@@ -314,7 +308,7 @@ class Reader(FileReader):
             self.current_datainfo.source.wavelength = data_set[0]
             self.current_datainfo.source.wavelength_unit = unit
 
-    def process_2d_data_object(self, data_set, key, unit):
+    def process_2d_data_object(self, data_set: np.array, key: str, unit: str):
         if key == self.i_name:
             self.current_dataset.data = data_set
             self.current_dataset.zaxis("Intensity", unit)
@@ -364,7 +358,7 @@ class Reader(FileReader):
         elif key == u'Qxdev':
             self.current_dataset.dqx_data = data_set.flatten()
 
-    def process_trans_spectrum(self, data_set, key):
+    def process_trans_spectrum(self, data_set: np.array, key: str):
         """
         SAStransmission_spectrum processor
         :param data_set: data from HDF5 file
@@ -377,7 +371,7 @@ class Reader(FileReader):
         elif key == u'lambda':
             self.trans_spectrum.wavelength = data_set.flatten()
 
-    def process_sample(self, data_point, key):
+    def process_sample(self, data_point: Any, key: str):
         """
         SASsample processor
         :param data_point: Single point from an HDF5 data file
@@ -408,7 +402,7 @@ class Reader(FileReader):
         elif key == u'details':
             self.current_datainfo.sample.details.append(data_point)
 
-    def process_detector(self, data_point, key, unit):
+    def process_detector(self, data_point: Any, key: str, unit: str):
         """
         SASdetector processor
         :param data_point: Single point from an HDF5 data file
@@ -451,7 +445,7 @@ class Reader(FileReader):
             self.detector.pixel_size.y = float(data_point)
             self.detector.pixel_size_unit = unit
 
-    def process_collimation(self, data_point, key, unit):
+    def process_collimation(self, data_point: Any, key: str, unit: str):
         """
         SAScollimation processor
         :param data_point: Single point from an HDF5 data file
@@ -464,7 +458,7 @@ class Reader(FileReader):
         elif key == u'name':
             self.collimation.name = data_point
 
-    def process_aperture(self, data_point, key):
+    def process_aperture(self, data_point: Any, key: str):
         """
         SASaperture processor
         :param data_point: Single point from an HDF5 data file
@@ -477,7 +471,7 @@ class Reader(FileReader):
         elif key == u'y_gap':
             self.aperture.size.y = data_point
 
-    def process_source(self, data_point, key, unit):
+    def process_source(self, data_point: Any, key: str, unit: str):
         """
         SASsource processor
         :param data_point: Single point from an HDF5 data file
@@ -511,7 +505,7 @@ class Reader(FileReader):
         elif key == u'probe':
             self.current_datainfo.source.probe = data_point
 
-    def process_process(self, data_point, key):
+    def process_process(self, data_point: Any, key: str):
         """
         SASprocess processor
         :param data_point: Single point from an HDF5 data file
@@ -623,13 +617,11 @@ class Reader(FileReader):
             self.current_dataset = dataset
             self.send_to_output()
 
-    def add_data_set(self, key=""):
+    def add_data_set(self):
         """
         Adds the current_dataset to the list of outputs after preforming final
         processing on the data and then calls a private method to generate a
         new data set.
-
-        :param key: NeXus group name for current tree level
         """
 
         if self.current_datainfo and self.current_dataset:
@@ -657,16 +649,15 @@ class Reader(FileReader):
         self.current_datainfo.filename = self.raw_data.filename
 
     @staticmethod
-    def as_list_or_array(iterable):
+    def as_list_or_array(data: Any) -> Union[list, np.ndarray]:
         """
         Return value as a list if not already a list or array.
         :param iterable:
         :return:
         """
-        if not (isinstance(iterable, np.ndarray) or isinstance(iterable, list)):
-            iterable = iterable.split(",") if isinstance(iterable, basestring)\
-                else [iterable]
-        return iterable
+        if not (isinstance(data, np.ndarray) or isinstance(data, list)):
+            data = data.split(",") if isinstance(data, str) else [data]
+        return data
 
     def _find_data_attributes(self, value):
         """
@@ -699,12 +690,12 @@ class Reader(FileReader):
                 uncertainties = h5attr(q_vals, "uncertainties")
                 if uncertainties is None:
                     uncertainties = h5attr(q_vals, "uncertainty")
-                if isinstance(uncertainties, basestring):
+                if isinstance(uncertainties, str):
                     uncertainties = uncertainties.split(",")
                 if uncertainties is not None:
                     self.q_uncertainty_names = uncertainties
                 resolutions = h5attr(q_vals, "resolutions")
-                if isinstance(resolutions, basestring):
+                if isinstance(resolutions, str):
                     resolutions = resolutions.split(",")
                 if resolutions is not None:
                     self.q_resolution_names = resolutions
@@ -732,7 +723,7 @@ class Reader(FileReader):
         return (i_vals is not None and len(i_vals.shape) != 1
                 and not self.multi_frame)
 
-    def _create_unique_key(self, dictionary, name, numb=0):
+    def _create_unique_key(self, dictionary: dict, name: str, numb: Optional[int] = 0) -> str:
         """
         Create a unique key value for any dictionary to prevent overwriting
         Recurses until a unique key value is found.
@@ -749,7 +740,7 @@ class Reader(FileReader):
             name = self._create_unique_key(dictionary, name, numb)
         return name
 
-    def _get_unit(self, value):
+    def _get_unit(self, value: h5py.Dataset) -> str:
         """
         Find the unit for a particular value within the h5py dictionary
 
@@ -761,7 +752,7 @@ class Reader(FileReader):
             unit = h5attr(value, u'unit')
         return unit
 
-    def write(self, filename, dataset):
+    def write(self, filename: str, dataset: Union[Data1D, Data2D]):
         """
         Export data in NXcanSAS format
 

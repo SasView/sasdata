@@ -4,8 +4,7 @@
 
 import os.path
 import unittest
-from sasdata.dataloader.loader_exceptions import FileContentsException,\
-    DefaultReaderException
+from sasdata.data_util.loader_exceptions import FileContentsException
 from sasdata.dataloader.readers.sesans_reader import Reader
 from sasdata.dataloader.loader import Loader
 
@@ -98,6 +97,7 @@ class sesans_reader(unittest.TestCase):
             FileContentsException,
             self.loader,
             find("too_many_headers.ses"))
+
 
 if __name__ == "__main__":
     unittest.main()

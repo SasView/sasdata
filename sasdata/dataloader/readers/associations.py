@@ -52,7 +52,6 @@ GENERIC_READERS = [
 
 
 def read_associations(loader, settings=None):
-    # type: (Registry, {str: FileReader}) -> None
     """
     Use the specified settings dictionary to associate readers to file extension.
     :param loader: Loader object

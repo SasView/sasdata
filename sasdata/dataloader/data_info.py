@@ -19,15 +19,13 @@
 # TODO: This module should be independent of plottables. We should write
 #        an adapter class for plottables when needed.
 
-from __future__ import print_function
-
 import math
 from math import fabs
 import copy
 
 import numpy as np
 
-from .uncertainty import Uncertainty
+from sasdata.data_util.uncertainty import Uncertainty
 
 
 class plottable_1D(object):

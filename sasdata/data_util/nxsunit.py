@@ -48,7 +48,6 @@ inferring the dimension from an example unit.
 # UDUnits:
 #  http://www.unidata.ucar.edu/software/udunits/udunits-1/udunits.txt
 
-from __future__ import division
 import math
 
 __all__ = ['Converter']

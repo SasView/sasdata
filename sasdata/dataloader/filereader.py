@@ -5,43 +5,40 @@ class
 """
 
 import os
-import sys
 import codecs
 import logging
 from abc import abstractmethod
+from typing import List, Union
 
 import numpy as np
-from .loader_exceptions import NoKnownLoaderException, FileContentsException,\
-    DataReaderException, DefaultReaderException
-from .data_info import Data1D, Data2D, DataInfo, plottable_1D, plottable_2D,\
+from sasdata.data_util.loader_exceptions import NoKnownLoaderException, FileContentsException,\
+    DataReaderException
+from sasdata.dataloader.data_info import Data1D, Data2D, DataInfo, plottable_1D, plottable_2D,\
     combine_data_info_with_plottable
-from .nxsunit import Converter
+from sasdata.data_util.nxsunit import Converter
 
 logger = logging.getLogger(__name__)
 
-if sys.version_info[0] < 3:
-    def decode(s):
-        return s
-else:
-    def decode(s):
-        # Attempt to decode files using common encodings
-        # *NB* windows-1252, aka cp1252, overlaps with most ASCII-style encodings
-        for codec in ['utf-8', 'windows-1252']:
-            try:
-                return codecs.decode(s, codec) if isinstance(s, bytes) else s
-            except (ValueError, UnicodeError):
-                # If the specific codec fails, try the next one.
-                pass
-            except Exception as e:
-                logger.warning(e)
-        # Give warning if unable to decode the item using the codecs
-        logger.warning(f"Unable to decode {s}")
+
+def decode(s):
+    # Attempt to decode files using common encodings
+    # *NB* windows-1252, aka cp1252, overlaps with most ASCII-style encodings
+    for codec in ['utf-8', 'windows-1252']:
+        try:
+            return codecs.decode(s, codec) if isinstance(s, bytes) else s
+        except (ValueError, UnicodeError):
+            # If the specific codec fails, try the next one.
+            pass
+        except Exception as e:
+            logger.warning(e)
+    # Give warning if unable to decode the item using the codecs
+    logger.warning(f"Unable to decode {s}")
+
 
 # Data 1D fields for iterative purposes
-FIELDS_1D = ('x', 'y', 'dx', 'dy', 'dxl', 'dxw')
+FIELDS_1D = 'x', 'y', 'dx', 'dy', 'dxl', 'dxw'
 # Data 2D fields for iterative purposes
-FIELDS_2D = ('data', 'qx_data', 'qy_data', 'q_data', 'err_data',
-                 'dqx_data', 'dqy_data', 'mask')
+FIELDS_2D = 'data', 'qx_data', 'qy_data', 'q_data', 'err_data', 'dqx_data', 'dqy_data', 'mask'
 DEPRECATION_MESSAGE = ("\rThe extension of this file suggests the data set migh"
                        "t not be fully reduced. Support for the reader associat"
                        "ed with this file type has been removed. An attempt to "
@@ -49,21 +46,24 @@ DEPRECATION_MESSAGE = ("\rThe extension of this file suggests the data set migh"
                        "SasView cannot guarantee the accuracy of the data.")
 
 
-class FileReader(object):
+class FileReader:
     # String to describe the type of data this reader can load
     type_name = "ASCII"
+
     # Wildcards to display
     type = ["Text files (*.txt|*.TXT)"]
+
     # List of allowed extensions
     ext = ['.txt']
+
     # Deprecated extensions
     deprecated_extensions = ['.asc']
+
     # Bypass extension check and try to load anyway
     allow_all = False
+
     # Able to import the unit converter
     has_converter = True
-    # Default value of zero
-    _ZERO = 1e-16
 
     def __init__(self):
         # List of Data1D and Data2D objects to be sent back to data_loader
@@ -77,7 +77,7 @@ class FileReader(object):
         # Open file handle
         self.f_open = None
 
-    def read(self, filepath):
+    def read(self, filepath: str) -> List[Union[Data1D, Data2D]]:
         """
         Basic file reader
 
@@ -133,14 +133,14 @@ class FileReader(object):
         self.ind = None
         self.output = []
 
-    def nextline(self):
+    def nextline(self) -> str:
         """
         Returns the next line in the file as a string.
         """
         #return self.f_open.readline()
         return decode(self.f_open.readline())
 
-    def nextlines(self):
+    def nextlines(self) -> str:
         """
         Returns the next line in the file as a string.
         """
@@ -148,13 +148,13 @@ class FileReader(object):
             #yield line
             yield decode(line)
 
-    def readall(self):
+    def readall(self) -> str:
         """
         Returns the entire file as a string.
         """
         return decode(self.f_open.read())
 
-    def handle_error_message(self, msg):
+    def handle_error_message(self, msg: str):
         """
         Generic error handler to add an error to the current datainfo to
         propagate the error up the error chain.
@@ -259,7 +259,7 @@ class FileReader(object):
                     data.ymax = np.max(data.qy_data)
 
     @staticmethod
-    def _reorder_1d_array(array, ind):
+    def _reorder_1d_array(array: np.array, ind: int) -> np.array:
         """
         Reorders a 1D array based on the indices passed as ind
         :param array: Array to be reordered
@@ -270,7 +270,7 @@ class FileReader(object):
         return array[ind]
 
     @staticmethod
-    def _remove_nans_in_data(data):
+    def _remove_nans_in_data(data: Union[Data1D, Data2D]) -> Union[Data1D, Data2D]:
         """
         Remove data points where nan is loaded
         :param data: 1D or 2D data object
@@ -297,7 +297,7 @@ class FileReader(object):
         return data
 
     @staticmethod
-    def set_default_1d_units(data):
+    def set_default_1d_units(data: Union[Data1D, Data2D]) -> Union[Data1D, Data2D]:
         """
         Set the x and y axes to the default 1D units
         :param data: 1D data set
@@ -308,7 +308,7 @@ class FileReader(object):
         return data
 
     @staticmethod
-    def set_default_2d_units(data):
+    def set_default_2d_units(data: Union[Data1D, Data2D]) -> Union[Data1D, Data2D]:
         """
         Set the x and y axes to the default 2D units
         :param data: 2D data set
@@ -319,7 +319,7 @@ class FileReader(object):
         data.zaxis("\\rm{Intensity}", "1/cm")
         return data
 
-    def convert_data_units(self, default_q_unit="1/A"):
+    def convert_data_units(self, default_q_unit: str = "1/A"):
         """
         Converts al; data to the sasview default of units of A^{-1} for Q and
         cm^{-1} for I.
@@ -335,25 +335,24 @@ class FileReader(object):
                 file_x_unit = data._xunit
                 data_conv_x = Converter(file_x_unit)
             except KeyError:
-                logger.info("Unrecognized Q units in data file. No data "
-                            "conversion attempted")
+                logger.info("Unrecognized Q units in data file. No data conversion attempted")
                 convert_q = False
             try:
 
                 if isinstance(data, Data1D):
-                        if convert_q:
-                            data.x = data_conv_x(data.x, units=default_q_unit)
-                            data._xunit = default_q_unit
-                            data.x_unit = default_q_unit
-                            if data.dx is not None:
-                                data.dx = data_conv_x(data.dx,
-                                                      units=default_q_unit)
-                            if data.dxl is not None:
-                                data.dxl = data_conv_x(data.dxl,
-                                                       units=default_q_unit)
-                            if data.dxw is not None:
-                                data.dxw = data_conv_x(data.dxw,
-                                                       units=default_q_unit)
+                    if convert_q:
+                        data.x = data_conv_x(data.x, units=default_q_unit)
+                        data._xunit = default_q_unit
+                        data.x_unit = default_q_unit
+                        if data.dx is not None:
+                            data.dx = data_conv_x(data.dx,
+                                                  units=default_q_unit)
+                        if data.dxl is not None:
+                            data.dxl = data_conv_x(data.dxl,
+                                                   units=default_q_unit)
+                        if data.dxw is not None:
+                            data.dxw = data_conv_x(data.dxw,
+                                                   units=default_q_unit)
                 elif isinstance(data, Data2D):
                     if convert_q:
                         data.qx_data = data_conv_x(data.qx_data,
@@ -379,7 +378,7 @@ class FileReader(object):
             new_output.append(data)
         self.output = new_output
 
-    def format_unit(self, unit=None):
+    def format_unit(self, unit: str = None) -> str:
         """
         Format units a common way
         :param unit:
@@ -390,9 +389,9 @@ class FileReader(object):
             if len(split) == 1:
                 return unit
             elif split[0] == '1':
-                return "{0}^".format(split[1]) + "{-1}"
+                return f"{split[1]}^{{-1}}"
             else:
-                return "{0}*{1}^".format(split[0], split[1]) + "{-1}"
+                return f"{split[0]}*{split[1]}^{{-1}}"
 
     def set_all_to_none(self):
         """
@@ -479,7 +478,7 @@ class FileReader(object):
             if has_mask:
                 self.current_dataset.mask = self.current_dataset.mask[x != 0]
 
-    def reset_data_list(self, no_lines=0):
+    def reset_data_list(self, no_lines: int = 0):
         """
         Reset the plottable_1D object
         """
@@ -491,7 +490,7 @@ class FileReader(object):
         self.current_dataset = plottable_1D(x, y, dx, dy)
 
     @staticmethod
-    def splitline(line):
+    def splitline(line: str) -> List[str]:
         """
         Splits a line into pieces based on common delimiters
         :param line: A single line of text

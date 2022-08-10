@@ -14,8 +14,6 @@ By contrast, *c = a\*b* uses four intermediate vectors, so shouldn't be used
 for huge arrays.
 """
 
-from __future__ import division
-
 import numpy as np
 
 from . import err1d

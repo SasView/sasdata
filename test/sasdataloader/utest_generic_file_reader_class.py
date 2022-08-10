@@ -9,8 +9,8 @@ import numpy as np
 
 from sasdata.dataloader.data_info import DataInfo, plottable_1D, Data1D
 from sasdata.dataloader.loader import Loader
-from sasdata.dataloader.loader_exceptions import NoKnownLoaderException
-from sasdata.dataloader.file_reader_base_class import FileReader
+from sasdata.data_util.loader_exceptions import NoKnownLoaderException
+from sasdata.dataloader.filereader import FileReader
 
 logger = logging.getLogger(__name__)
 

@@ -8,34 +8,35 @@
 """
     Image reader. Untested.
 """
-#TODO: load and check data and orientation of the image (needs rendering)
+# TODO: load and check data and orientation of the image (needs rendering)
 import math
 import logging
 import os
 import numpy as np
-from ..data_info import Data2D
-from ..manipulations import reader2D_converter
+from sasdata.dataloader.data_info import Data2D
+from sasdata.data_util.manipulations import reader2D_converter
 
 logger = logging.getLogger(__name__)
+
 
 class Reader:
     """
     Example data manipulation
     """
-    ## File type
+    # File type
     type_name = "TIF"
-    ## Wildcards
+    # Wildcards
     type = ["TIF files (*.tif)|*.tif",
             "TIFF files (*.tiff)|*.tiff",
             ]
-    ## Extension
+    # Extension
     ext = ['.tif', '.tiff']
 
-    def read(self, filename=None):
+    def read(self, filename: str = None):
         """
         Open and read the data in a file
 
-        :param file: path of the file
+        :param filename: path of the file
         """
         try:
             import Image

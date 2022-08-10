@@ -5,11 +5,12 @@
 import os.path
 import warnings
 import math
-warnings.simplefilter("ignore")
 
 import unittest
 from sasdata.dataloader.loader import Loader
 from sasdata.dataloader.data_info import Data2D
+
+warnings.simplefilter("ignore")
 
 
 def find(filename):

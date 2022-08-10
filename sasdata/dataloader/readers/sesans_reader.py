@@ -9,17 +9,16 @@ import os
 
 import numpy as np
 
-from ..file_reader_base_class import FileReader
-from ..data_info import plottable_1D, DataInfo
-from ..loader_exceptions import FileContentsException
+from sasdata.dataloader.filereader import FileReader
+from sasdata.dataloader.data_info import plottable_1D, DataInfo
+from sasdata.data_util.loader_exceptions import FileContentsException
 
 # Check whether we have a converter available
 has_converter = True
 try:
-    from ..nxsunit import Converter
+    from sasdata.data_util.nxsunit import Converter
 except ImportError:
     has_converter = False
-_ZERO = 1e-16
 
 
 class Reader(FileReader):
@@ -29,7 +28,7 @@ class Reader(FileReader):
     # File type
     type_name = "SESANS"
 
-    ## Wildcards
+    # Wildcards
     type = ["SESANS files (*.ses)|*.ses",
             "SESANS files (*..sesans)|*.sesans"]
     # List of allowed extensions
@@ -81,10 +80,7 @@ class Reader(FileReader):
         data = np.loadtxt(self.f_open)
 
         if data.shape[1] != len(headers):
-            raise FileContentsException(
-                "File has {} headers, but {} columns".format(
-                    len(headers),
-                    data.shape[1]))
+            raise FileContentsException(f"File has {len(headers)} headers, but {data.shape[1]} columns")
 
         if not data.size:
             raise FileContentsException("{} is empty".format(self.filepath))
@@ -148,13 +144,12 @@ class Reader(FileReader):
         self.send_to_output()
 
     @staticmethod
-    def _insist_header(headers, name):
+    def _insist_header(headers: list, name: str):
         if name not in headers:
-            raise FileContentsException(
-                "Missing {} column in spin echo data".format(name))
+            raise FileContentsException(f"Missing {name} column in spin echo data")
 
     @staticmethod
-    def _unit_conversion(value, value_unit, default_unit):
+    def _unit_conversion(value: float, value_unit: str, default_unit: str) -> (float, str):
         """
         Performs unit conversion on a measurement.
 
@@ -172,5 +167,5 @@ class Reader(FileReader):
             new_unit = value_unit
         return value, new_unit
 
-    def _unit_fetch(self, unit):
+    def _unit_fetch(self, unit: str) -> str:
         return self.params[unit+"_unit"]

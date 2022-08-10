@@ -10,17 +10,18 @@
 ######################################################################
 import os
 import time
+from typing import Any
 
 import numpy as np
 
-from sasdata.dataloader.nxsunit import Converter
+from sasdata.data_util.nxsunit import Converter
 
-from ..data_info import plottable_2D, DataInfo, Detector
-from ..file_reader_base_class import FileReader
-from ..loader_exceptions import FileContentsException
+from sasdata.dataloader.data_info import plottable_2D, Data2D, DataInfo, Detector
+from sasdata.dataloader.filereader import FileReader
+from sasdata.data_util.loader_exceptions import FileContentsException
 
 
-def check_point(x_point):
+def check_point(x_point: Any):
     """
     check point validity
     """
@@ -33,14 +34,14 @@ def check_point(x_point):
 
 class Reader(FileReader):
     """ Simple data reader for Igor data files """
-    ## File type
+    # File type
     type_name = "IGOR/DAT 2D Q_map"
-    ## Wildcards
+    # Wildcards
     type = ["IGOR/DAT 2D file in Q_map (*.dat)|*.DAT"]
-    ## Extension
+    # Extension
     ext = ['.DAT', '.dat']
 
-    def write(self, filename, data):
+    def write(self, filename: str, data: Data2D):
         """
         Write to .dat
 
@@ -63,7 +64,8 @@ class Reader(FileReader):
                                             data.qy_data[i],
                                            data.data[i]))
         finally:
-            fd.close()
+            if fd and not fd.closed:
+                fd.close()
 
     def get_file_contents(self):
         # Read file
@@ -78,7 +80,7 @@ class Reader(FileReader):
         # Get content
         data_started = False
 
-        ## Defaults
+        # Defaults
         lines = buf.split('\n')
         x = []
         y = []
@@ -100,13 +102,13 @@ class Reader(FileReader):
             del lines[len(lines) - (count + 1)]
             count = count + 1
 
-        #Read Header and find the dimensions of 2D data
+        # Read Header and find the dimensions of 2D data
         line_num = 0
         # Old version NIST files: 0
         ver = 0
         for line in lines:
             line_num += 1
-            ## Reading the header applies only to IGOR/NIST 2D q_map data files
+            # Reading the header applies only to IGOR/NIST 2D q_map data files
             # Find setup info line
             if is_info:
                 is_info = False
@@ -158,7 +160,7 @@ class Reader(FileReader):
                 data_started = True
                 continue
 
-            ## Read and get data.
+            # Read and get data.
             if data_started:
                 line_toks = line.split()
                 if len(line_toks) == 0:
@@ -184,27 +186,27 @@ class Reader(FileReader):
         data_list = data_list.split()
 
         # Check if the size is consistent with data, otherwise
-        #try the tab(\t) separator
+        # try the tab(\t) separator
         # (this may be removed once get the confidence
-        #the former working all cases).
+        # the former working all cases).
         if len(data_list) != (len(data_lines)) * col_num:
             data_list = "\t".join(data_lines.tolist())
             data_list = data_list.split()
 
         # Change it(string) into float
-        #data_list = map(float,data_list)
+        # data_list = map(float,data_list)
         data_list1 = list(map(check_point, data_list))
 
         # numpy array form
         data_array = np.array(data_list1)
         # Redimesion based on the row_num and col_num,
-        #otherwise raise an error.
+        # otherwise raise an error.
         try:
             data_point = data_array.reshape(row_num, col_num).transpose()
         except Exception:
             msg = "red2d_reader can't read this file: Incorrect number of data points provided."
             raise FileContentsException(msg)
-        ## Get the all data: Let's HARDcoding; Todo find better way
+        # Get the all data: Let's HARDcoding; Todo find better way
         # Defaults
         dqx_data = np.zeros(0)
         dqy_data = np.zeros(0)

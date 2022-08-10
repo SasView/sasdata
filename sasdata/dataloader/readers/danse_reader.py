@@ -17,17 +17,16 @@ import logging
 
 import numpy as np
 
-from ..data_info import plottable_2D, DataInfo, Detector
-from ..manipulations import reader2D_converter
-from ..file_reader_base_class import FileReader
-from ..loader_exceptions import FileContentsException, DataReaderException
+from sasdata.dataloader.data_info import plottable_2D, DataInfo, Detector
+from sasdata.dataloader.filereader import FileReader
+from sasdata.data_util.loader_exceptions import FileContentsException, DataReaderException
 
 logger = logging.getLogger(__name__)
 
 # Look for unit converter
 has_converter = True
 try:
-    from sasdata.dataloader.nxsunit import Converter
+    from sasdata.data_util.nxsunit import Converter
 except:
     has_converter = False
 
@@ -36,11 +35,11 @@ class Reader(FileReader):
     """
     Example data manipulation
     """
-    ## File type
+    # File type
     type_name = "DANSE"
-    ## Wildcards
+    # Wildcards
     type = ["DANSE files (*.sans)|*.sans"]
-    ## Extension
+    # Extension
     ext  = ['.sans', '.SANS']
 
     def get_file_contents(self):

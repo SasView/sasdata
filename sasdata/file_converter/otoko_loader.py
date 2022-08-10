@@ -31,7 +31,7 @@ class OTOKOData:
         self.data_axis = data_axis
 
 
-class OTOKOLoader(object):
+class OTOKOLoader:
 
     def __init__(self, qaxis_path, data_path):
         self.qaxis_path = qaxis_path

@@ -6,7 +6,6 @@ Warning: like the underlying numpy library, the inplace operations
 may return values of the wrong type if some of the arguments are
 integers, so be sure to create them with floating point inputs.
 """
-from __future__ import division  # Get true division
 import numpy as np
 
 

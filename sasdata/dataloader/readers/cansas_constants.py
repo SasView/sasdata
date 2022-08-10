@@ -2,10 +2,11 @@
 Information relating to the CanSAS data format. These constants are used in
 the cansas_reader.py file to read in any version of the cansas format.
 """
-class CansasConstants(object):
+
+
+class CansasConstants:
     """
-    The base class to define where all of the data is to be saved by
-    cansas_reader.py.
+    The base class to define where all of the data is to be saved by cansas_reader.py.
     """
     names = ''
     format = ''
@@ -14,7 +15,7 @@ class CansasConstants(object):
         self.names = self.CANSAS_NS
         self.format = self.CANSAS_FORMAT
 
-    def iterate_namespace(self, namespace):
+    def iterate_namespace(self, namespace: list[str]):
         """
         Method to iterate through a cansas constants tree based on a list of
         names
@@ -415,7 +416,7 @@ class CansasConstants(object):
                     }
 
 
-class CurrentLevel(object):
+class CurrentLevel:
     """
     A helper class to hold information on where you are in the constants tree
     """
@@ -440,9 +441,3 @@ class CurrentLevel(object):
         Helper method to get the ns_datatype label
         """
         return self.ns_datatype
-
-    def get_variable(self):
-        """
-        Helper method to get the ns_variable label
-        """
-        return self.ns_variable

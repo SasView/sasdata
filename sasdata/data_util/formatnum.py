@@ -36,8 +36,6 @@ Example::
 UncertaintyFormatter() returns a private formatter with its own
 formatter.compact flag.
 """
-from __future__ import division, print_function
-
 import math
 import numpy as np
 __all__ = ['format_uncertainty', 'format_uncertainty_pm',

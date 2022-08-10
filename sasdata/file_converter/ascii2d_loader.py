@@ -19,7 +19,7 @@ import numpy as np
 # List of qy points
 # numqx numqy scale
 
-class ASCII2DLoader(object):
+class ASCII2DLoader:
 
     def __init__(self, data_path):
         """

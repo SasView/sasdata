@@ -12,7 +12,7 @@ from lxml import etree
 from lxml.etree import XMLSyntaxError
 from xml.dom import minidom
 
-from sasdata.dataloader.file_reader_base_class import decode
+from sasdata.dataloader.filereader import decode
 from sasdata.dataloader.loader import Loader
 from sasdata.dataloader.data_info import Data1D, Data2D
 from sasdata.dataloader.readers.xml_reader import XMLreader

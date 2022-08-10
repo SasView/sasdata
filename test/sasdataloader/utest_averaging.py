@@ -5,8 +5,8 @@ import numpy as np
 
 import sasdata.dataloader.data_info as data_info
 from sasdata.dataloader.loader import Loader
-from sasdata.dataloader.manipulations import (Boxavg, Boxsum, CircularAverage, Ring, SectorPhi, SectorQ, SlabX,
-                                              SlabY, get_q, reader2D_converter)
+from sasdata.data_util.manipulations import (Boxavg, Boxsum, CircularAverage, Ring, SectorPhi, SectorQ, SlabX,
+                                              SlabY, position_and_wavelength_to_q, reader2D_converter)
 
 
 def find(filename):
@@ -43,8 +43,8 @@ class Averaging(unittest.TestCase):
 
         # get_q(dx, dy, det_dist, wavelength) where units are mm,mm,mm,and A
         # respectively.
-        self.qmin = get_q(1.0, 1.0, detector.distance, source.wavelength)
-        self.qmax = get_q(49.5, 49.5, detector.distance, source.wavelength)
+        self.qmin = position_and_wavelength_to_q(1.0, 1.0, detector.distance, source.wavelength)
+        self.qmax = position_and_wavelength_to_q(49.5, 49.5, detector.distance, source.wavelength)
 
         self.qstep = len(x_0)
         x = np.linspace(start=-1 * self.qmax,

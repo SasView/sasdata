@@ -1,8 +1,6 @@
 """
     Unit tests for data manipulations
 """
-from __future__ import print_function
-
 import unittest
 from sasdata.dataloader.loader import Loader
 from sasdata.dataloader.readers.abs_reader import Reader as AbsReader
