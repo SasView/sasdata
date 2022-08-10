@@ -34,6 +34,7 @@
 /test/sasdataloader/data/write_test.xml
 **/logs
 tests.log
+/.pytest_cache
 
 # Installer files
 /installers/build
