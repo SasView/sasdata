@@ -78,6 +78,10 @@ packages.extend(["sasdata.dataloader", "sasdata.dataloader.readers", "sasdata.da
 package_dir["sasdata.file_converter"] = os.path.join("sasdata", "file_converter")
 packages.append("sasdata.file_converter")
 
+# sasdata.data_util
+package_dir["sasdata.data_util"] = os.path.join("sasdata", "data_util")
+packages.append("sasdata.data_util")
+
 required = ['lxml', 'h5py', 'numpy', 'pytest<6', 'xmlrunner']
 
 with open('README.md', encoding='utf-8') as f:
