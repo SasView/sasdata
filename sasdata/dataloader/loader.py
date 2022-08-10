@@ -395,7 +395,7 @@ class Loader:
         """
         return self.__registry.find_plugins(directory)
 
-    def get_wildcards(self) -> list[str]:
+    def get_wildcards(self):
         """
         Return the list of wildcards
         """
