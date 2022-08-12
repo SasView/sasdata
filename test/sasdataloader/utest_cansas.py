@@ -2,7 +2,7 @@
     Unit tests for the new recursive cansas reader
 """
 import os
-import sys
+import math
 import unittest
 import logging
 import warnings
@@ -339,8 +339,8 @@ class cansas_reader_xml(unittest.TestCase):
             self.assertEqual(item.size_unit,'mm')
             self.assertEqual(item.distance_unit,'mm')
 
-            if item.size.x == 50 \
-                and item.distance == 11000.0 \
+            if round(item.size.x, 1) == 50.0 \
+                and round(item.distance, 1) == 11000.0 \
                 and item.name == 'source' \
                 and item.type == 'radius':
                 _found1 = True
