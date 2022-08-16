@@ -43,12 +43,13 @@ allow the application to set the dimension for the unit rather than
 inferring the dimension from an example unit.
 """
 
-from __future__ import division
 import math
 import re
-
+from typing import Dict, Union, TypeVar, Tuple, Sequence, Optional, List
 
 __all__ = ['Converter']
+T = TypeVar('T')
+ConversionType = Union[float, Tuple[float, float]]
 DIMENSIONS = {}  # type: Dict[str, Dict[str, ConversionType]]
 AMBIGUITIES = {}  # type: Dict[str, str]
 PREFIX = dict(peta=1e15, tera=1e12, giga=1e9, mega=1e6, kilo=1e3, deci=1e-1, centi=1e-2, milli=1e-3, mili=1e-3,
@@ -59,8 +60,7 @@ SHORT_PREFIX = dict(P=1e15, T=1e12, G=1e9, M=1e6, k=1e3, d=1e-1, c=1e-2, m=1e-3,
 # Limited form of units for returning objects of a specific type.
 # Maybe want to do full units handling with e.g., pyre's
 # unit class. For now lets keep it simple.  Note that
-def _build_metric_units(unit, abbr):
-    # type: (str, str) -> dict[str, float]
+def _build_metric_units(unit: str, abbr: str) -> Dict[str, float]:
     """
     Construct standard SI names for the given unit.
     Builds e.g.,
@@ -74,7 +74,7 @@ def _build_metric_units(unit, abbr):
 
     Returns a dictionary of names and scales.
     """
-    map = {}
+    units = {}
     for name in [unit, unit.capitalize(), unit.lower(), abbr]:
         for items in [PREFIX, SHORT_PREFIX]:
             names = {}
@@ -85,73 +85,68 @@ def _build_metric_units(unit, abbr):
             # Exclude pluralized abbrevs., e.g. create m(illi)(?)(*|_)(?)meters, but not milli(*|_)(?)ms or m(*|_)(?)ms
             if name != abbr:
                 names.update(_build_plural_units(**names))
-            map.update(names)
-    return map
+            units.update(names)
+    return units
 
 
-def _build_plural_units(**kw):
-    # type: (dict[str, float]) -> dict[str, float]
+def _build_plural_units(**kw: Dict[str, ConversionType]) -> Dict[str, ConversionType]:
     """
     Construct names for the given units.  Builds singular and plural form.
     """
-    map = {}
-    map.update([(name, scale) for name, scale in kw.items()])
-    map.update([(name + 's', scale) for name, scale in kw.items()])
-    return map
+    units = {}
+    units.update([(name, scale) for name, scale in kw.items()])
+    units.update([(name + 's', scale) for name, scale in kw.items()])
+    return units
 
 
-def _build_degree_units(name, symbol, conversion):
-    # type: (str, str, ConversionType) -> Dict[str, ConversionType]
+def _build_degree_units(name: str, symbol: str, conversion: ConversionType) -> Dict[str, ConversionType]:
     """
     Builds variations on the temperature unit name, including the degree
     symbol or the word degree.
     """
-    map = {}  # type: Dict[str, ConversionType]
-    map[symbol] = conversion
+    units = {symbol: conversion}
     for s in symbol, symbol.lower():
-        map['deg' + s] = conversion
-        map['deg_' + s] = conversion
-        map['°' + s] = conversion
+        units['deg' + s] = conversion
+        units['deg_' + s] = conversion
+        units['°' + s] = conversion
     for s in name, name.capitalize(), symbol, symbol.lower():
-        map[s] = conversion
-        map['degree_' + s] = conversion
-        map['degree' + s] = conversion
-        map['degrees' + s] = conversion
-    return map
+        units[s] = conversion
+        units['degree_' + s] = conversion
+        units['degree' + s] = conversion
+        units['degrees' + s] = conversion
+    return units
 
 
-def _build_inv_n_units(names, conversion, n=2):
-    # type: (Sequence[str], ConversionType, int) -> Dict[str, ConversionType]
+def _build_inv_n_units(names: Sequence[str], conversion: ConversionType,
+                       n: int = 2) -> Dict[str, ConversionType]:
     """
     Builds variations on inverse x to the nth power units, including 1/x^n, invx^n, x^-n and x^{-n}.
     """
-    map = {}  # type: Dict[str, ConversionType]
+    units = {}
     n = int(n)
     for s in names:
-        map[f'1/{s}^{n}'] = conversion
-        map[f'inv{s}^{n}'] = conversion
-        map[f'{s}^-{n}'] = conversion
-        map[s + '^{-' + str(n) + '}'] = conversion
-    return map
+        units[f'1/{s}^{n}'] = conversion
+        units[f'inv{s}^{n}'] = conversion
+        units[f'{s}^-{n}'] = conversion
+        units[s + '^{-' + str(n) + '}'] = conversion
+    return units
 
 
-def _build_inv_n_metric_units(unit, abbr, n=2):
-    # type: (Sequence[str], ConversionType, int) -> Dict[str, ConversionType]
+def _build_inv_n_metric_units(unit: str, abbr: str, n: int = 2) -> Dict[str, ConversionType]:
     """
     Using the return from _build_metric_units, build inverse to the nth power variations on all units
     (1/x^n, invx^n, x^{-n} and x^-n)
     """
-    map = {}  # type: Dict[str, ConversionType]
+    units = {}
     meter_map = _build_metric_units(unit, abbr)
     n = int(n)
     for s, c in meter_map.items():
         conversion = 1/(math.pow(float(c), n))
-        map.update(_build_inv_n_units([s], conversion, n))
-    return map
+        units.update(_build_inv_n_units([s], conversion, n))
+    return units
 
 
 def _build_all_units():
-    # type: () -> None
     """
     Fill in the global variables DIMENSIONS and AMBIGUITIES for all available
     dimensions.
@@ -274,8 +269,7 @@ def _build_all_units():
     DIMENSIONS['dimensionless'] = unknown
 
 
-def standardize_units(unit):
-    # type: (str) -> str
+def standardize_units(unit: str) -> str:
     """
     Convert supplied units to a standard format for maintainability
     :param unit: Raw unit as supplied
@@ -311,7 +305,7 @@ def standardize_units(unit):
     return _format_unit_structure(unit)
 
 
-def _format_unit_structure(unit=None):
+def _format_unit_structure(unit: str = None) -> str:
     """
     Format units a common way
     :param unit: Unit string to be formatted
@@ -357,7 +351,7 @@ def _format_unit_structure(unit=None):
 _build_all_units()
 
 
-class Converter(object):
+class Converter:
     """
     Unit converter for NeXus style units.
 
@@ -373,10 +367,10 @@ class Converter(object):
     #: for temperature units.
     scalemap = None  # type: Dict[str, ConversionType]
     #: Scale base for the source units
-    scalebase = None  # type: ConversionType
+    scalebase = None  # type: float
+    scaleoffset = None  # type: float
 
-    def __init__(self, units=None, dimension=None):
-        # type: (Optional[str], Optional[str]) -> self
+    def __init__(self, units: Optional[str] = None, dimension: Optional[str] = None):
         self.units = standardize_units(units) if units is not None else ''  # type: str
 
         # Lookup dimension if not given
@@ -394,32 +388,30 @@ class Converter(object):
 
         # Find the scale for the given units - default to dimensionless
         self.scalemap = DIMENSIONS.get(self.dimension, DIMENSIONS['dimensionless'])
-        self.scalebase = self.scalemap.get(self.units) if self.scalemap else 1.0
+        base = self.scalemap.get(self.units) if self.scalemap else 1.0
+        if not isinstance(base, tuple):
+            base = [base]
+        self.scalebase = base[0]
+        self.scaleoffset = base[1] if len(base) > 1 else 0.0
 
-    def scale(self, units="", value=None):
-        # type: (str, T) -> T
+    def scale(self, units: str = "", value: T = None) -> Union[List[float], T]:
         """Scale the given value using the units string supplied"""
         units = standardize_units(units) if units is not None else ''
         if units and units not in self.scalemap or value is None:
             return value
         if isinstance(value, list):
             return [self.scale(units, i) for i in value]
-        return value * self.scalebase / self.scalemap[units]
+        return self._scale_with_offset(units, value)
 
-    def scale_with_offset(self, units="", value=None):
-        # type: (str, T) -> T
+    def _scale_with_offset(self, units: str = "", value: float = None) -> float:
         """Scale the given value and add the offset using the units string supplied"""
         units = standardize_units(units) if units is not None else ''
-        if units and units not in self.scalemap or value is None:
-            return value
-        if isinstance(value, list):
-            return [self.scale_with_offset(units, i) for i in value]
-        inscale, inoffset = self.scalebase
-        outscale, outoffset = self.scalemap[units]
+        inscale, inoffset = self.scalebase, self.scaleoffset
+        scale_units = self.scalemap[units]
+        outscale, outoffset = scale_units if isinstance(scale_units, tuple) else (scale_units, 0.0)
         return (value + inoffset) * inscale / outscale - outoffset
 
-    def get_compatible_units(self):
-        # type: () -> [str]
+    def get_compatible_units(self) -> List[str]:
         """Return a list of compatible units for the current Convertor object"""
         unique_units = []
         conv_list = []
@@ -431,8 +423,7 @@ class Converter(object):
         unique_units = [x for _, x in sorted(zip(conv_list, unique_units))]
         return unique_units
 
-    def __call__(self, value, units=""):
-        # type: (T, str) -> T
+    def __call__(self, value: T, units: Optional[str] = "") -> Union[List[float], T]:
         # Note: calculating a*1 rather than simply returning a would produce
         # an unnecessary copy of the array, which in the case of the raw
         # counts array would be bad.  Sometimes copying and other times
@@ -440,13 +431,4 @@ class Converter(object):
         # supported.
         if not units:
             return value
-        try:
-            return self.scale(units, value)  # type: ignore
-        except KeyError:
-            exc = KeyError("%s is not a %s" % (units, self.dimension))
-            exc.__cause__ = None
-            raise exc
-        except TypeError:
-            # For temperatures, a type error is raised because the conversion
-            # factor is (scale, offset) rather than scale.
-            return self.scale_with_offset(units, value)  # type: ignore
+        return self.scale(units, value)

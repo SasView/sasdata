@@ -19,7 +19,8 @@ class NXSUnitTests(unittest.TestCase):
         self.assertTrue(isinstance(self.converter.scalemap, dict))
         self.assertIn('None', self.converter.scalemap.keys())
         self.assertEqual(self.k_conv.units, 'nanoK')
-        self.assertEqual(self.k_conv.scalebase, (1e-9, 0.0))
+        self.assertEqual(self.k_conv.scalebase, 1e-9)
+        self.assertEqual(self.k_conv.scaleoffset, 0.0)
         self.assertEqual(len(self.k_conv.scalemap.keys()), 456)
 
     def testBasicUnits(self):
