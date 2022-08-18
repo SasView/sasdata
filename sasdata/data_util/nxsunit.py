@@ -47,7 +47,7 @@ import math
 import re
 from typing import Dict, Union, TypeVar, Tuple, Sequence, Optional, List
 
-__all__ = ['Converter']
+__all__ = ['Converter', 'standardize_units']
 T = TypeVar('T')
 ConversionType = Union[float, Tuple[float, float]]
 DIMENSIONS = {}  # type: Dict[str, Dict[str, ConversionType]]
@@ -240,10 +240,6 @@ def _build_all_units():
     scattering_volume.update(_build_inv_n_units(('Å', 'A', 'Ang', 'Angstrom', 'ang', 'angstrom'), 1.0e10, 3))
     DIMENSIONS['scattering_volume'] = scattering_volume
 
-    # TODO: break into separate dimension blocks to allow scaling of complex units
-    #  SANS units => ['A^{-2}']
-    #  SESANS units => ['A^{-2}', 'cm^{-1}']
-    #  Will require more complexity to scale calculations
     DIMENSIONS['SESANS'] = {'Å^{-2} cm^{-1}': 1, 'A^{-2} cm^{-1}': 1}
 
     # Energy units
@@ -269,7 +265,7 @@ def _build_all_units():
     DIMENSIONS['dimensionless'] = unknown
 
 
-def standardize_units(unit: str) -> str:
+def standardize_units(unit: Union[str, None]) -> List[str]:
     """
     Convert supplied units to a standard format for maintainability
     :param unit: Raw unit as supplied
@@ -305,7 +301,7 @@ def standardize_units(unit: str) -> str:
     return _format_unit_structure(unit)
 
 
-def _format_unit_structure(unit: str = None) -> str:
+def _format_unit_structure(unit: Optional[str] = None) -> List[str]:
     """
     Format units a common way
     :param unit: Unit string to be formatted
@@ -329,22 +325,21 @@ def _format_unit_structure(unit: str = None) -> str:
     # (a_m^2 b_n^-3) -> am^2 bn^-3
     for x in ['_', '(', ')']:
         unit = unit.replace(x, '')
-    final = ''
+    final = []
     factors = unit.split('/')
-    # am^2/bn^2 c -> am^{{2}} bn^{{-2}} c^{{-1}}
+    # am^2/bn^2 c -> [am^{{2}}, bn^{{-2}}, c^{{-1}}]
     for i in range(len(factors)):
         sign = '-' if i > 0 else ''
         for item in factors[i].split():
             if item == '':
                 continue
             ct_split = item.split('^')
-            final += f"{ct_split[0]}"
+            f_item = f"{ct_split[0]}"
             number = 1 if len(ct_split) == 1 else ct_split[1]
-            final += (f"^{{{sign}{number}}} "
-                      if len(ct_split) > 1 or sign == '-'
-                      else " ")
+            f_item += (f"^{{{sign}{number}}}" if len(ct_split) > 1 or sign == '-' else " ")
+            final.append(f_item.strip().replace('{{', '{').replace('}}', '}'))
     # ' am^{{2}} bn^{{-2}} c^{{-1}} ' -> 'am^{2} bn^{-2} c^{-1}'
-    return final.strip().replace('{{', '{').replace('}}', '}')
+    return final
 
 
 # Initialize DIMENSIONS and AMBIGUITIES
@@ -360,7 +355,7 @@ class Converter:
     value name.
     """
     #: Name of the source units (km, Ang, us, ...)
-    units = None  # type: str
+    _units = None  # type: List[str]
     #: Type of the source units (distance, time, frequency, ...)
     dimension = None  # type: str
     #: Scale converter, mapping unit name to scale factor or (scale, offset)
@@ -370,8 +365,16 @@ class Converter:
     scalebase = None  # type: float
     scaleoffset = None  # type: float
 
+    @property
+    def units(self) -> str:
+        return ' '.join(self._units)
+
+    @units.setter
+    def units(self, unit: str):
+        self._units = standardize_units(unit)
+
     def __init__(self, units: Optional[str] = None, dimension: Optional[str] = None):
-        self.units = standardize_units(units) if units is not None else ''  # type: str
+        self.units = units if units is not None else ''  # type: str
 
         # Lookup dimension if not given
         if dimension:
@@ -397,15 +400,16 @@ class Converter:
     def scale(self, units: str = "", value: T = None) -> Union[List[float], T]:
         """Scale the given value using the units string supplied"""
         units = standardize_units(units) if units is not None else ''
-        if units and units not in self.scalemap or value is None:
-            return value
-        if isinstance(value, list):
-            return [self.scale(units, i) for i in value]
-        return self._scale_with_offset(units, value)
+        for unit in units:
+            if unit and unit not in self.scalemap or value is None:
+                continue
+            if isinstance(value, list):
+                return [self.scale(unit, i) for i in value]
+            value = self._scale_with_offset(unit, value)
+        return value
 
     def _scale_with_offset(self, units: str = "", value: float = None) -> float:
         """Scale the given value and add the offset using the units string supplied"""
-        units = standardize_units(units) if units is not None else ''
         inscale, inoffset = self.scalebase, self.scaleoffset
         scale_units = self.scalemap[units]
         outscale, outoffset = scale_units if isinstance(scale_units, tuple) else (scale_units, 0.0)
@@ -413,6 +417,9 @@ class Converter:
 
     def get_compatible_units(self) -> List[str]:
         """Return a list of compatible units for the current Convertor object"""
+        # FIXME: This needs to provide a list of lists
+        #  SESANS units will have two scalable objects
+        #  A^2 cm^-2 => [[A^2 scalable values], [cm^-2 scalable values]]
         unique_units = []
         conv_list = []
         for item, conv in self.scalemap.items():

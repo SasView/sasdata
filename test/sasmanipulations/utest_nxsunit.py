@@ -72,7 +72,7 @@ class NXSUnitTests(unittest.TestCase):
         # Both should return None
         self.assertEqual(standardize_units(None), standardize_units('None'))
         # Test substitutions
-        self.assertEqual('nK', standardize_units('nKelvin'))
+        self.assertEqual(['nK'], standardize_units('nKelvin'))
         # Capitalization standardization
         self.assertEqual(standardize_units('seconds'),
                          standardize_units('SECONDS'))
@@ -88,13 +88,13 @@ class NXSUnitTests(unittest.TestCase):
         self.assertEqual(standardize_units('meters'),
                          standardize_units('metres'))
         # Multiple units
-        self.assertEqual('nanoK^{-4} cm^{-1} Å^{-2}',
+        self.assertEqual(['nanoK^{-4}', 'cm^{-1}', 'Å^{-2}'],
                          standardize_units('nanoKelvin-4 invcm/angstrom^2'))
         # Numerator vs. Denominator
         self.assertEqual(standardize_units('A^2/nanoKelvin^4'),
-                         'A^{2} nanoK^{-4}')
+                         ['A^{2}', 'nanoK^{-4}'])
         # Tackle parentheses
         self.assertEqual(standardize_units('(A^2 B^2)/(C^2)'),
-                         'A^{2} B^{2} C^{-2}')
+                         ['A^{2}', 'B^{2}', 'C^{-2}'])
         # Multiple divisions
-        self.assertEqual(standardize_units('A/B/C'), 'A B^{-1} C^{-1}')
+        self.assertEqual(standardize_units('A/B/C'), ['A', 'B^{-1}', 'C^{-1}'])
