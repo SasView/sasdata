@@ -104,10 +104,5 @@ setup(
     packages=packages,
     package_data=package_data,
     install_requires=required,
-    zip_safe=False,
-    entry_points={
-        'console_scripts': [
-            "sasview=sasdata.loader.Loader:load",
-        ]
-    }
+    zip_safe=False
 )
