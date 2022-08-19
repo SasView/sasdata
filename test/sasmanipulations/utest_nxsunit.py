@@ -14,14 +14,15 @@ class NXSUnitTests(unittest.TestCase):
         self.base_value = 123
 
     def test_initialization(self):
-        self.assertEqual(self.converter.units, '')
+        self.assertEqual(self.converter.units, 'a.u.')
         self.assertEqual(self.converter.scalebase, 1)
-        self.assertTrue(isinstance(self.converter.scalemap, dict))
-        self.assertIn('None', self.converter.scalemap.keys())
+        self.assertTrue(isinstance(self.converter.scalemap, list))
+        self.assertEqual(len(self.converter.scalemap), 1)
+        self.assertIn('None', self.converter.scalemap[0].keys())
         self.assertEqual(self.k_conv.units, 'nanoK')
         self.assertEqual(self.k_conv.scalebase, 1e-9)
         self.assertEqual(self.k_conv.scaleoffset, 0.0)
-        self.assertEqual(len(self.k_conv.scalemap.keys()), 456)
+        self.assertEqual(len(self.k_conv.scalemap[0].keys()), 456)
 
     def testBasicUnits(self):
         # 10 nm^-1 = 1 inv Angstroms

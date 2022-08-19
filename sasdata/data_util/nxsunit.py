@@ -357,10 +357,10 @@ class Converter:
     #: Name of the source units (km, Ang, us, ...)
     _units = None  # type: List[str]
     #: Type of the source units (distance, time, frequency, ...)
-    dimension = None  # type: str
+    dimension = None  # type: List[str]
     #: Scale converter, mapping unit name to scale factor or (scale, offset)
     #: for temperature units.
-    scalemap = None  # type: Dict[str, ConversionType]
+    scalemap = None  # type: List[Dict[str, ConversionType]]
     #: Scale base for the source units
     scalebase = None  # type: float
     scaleoffset = None  # type: float
@@ -373,61 +373,65 @@ class Converter:
     def units(self, unit: str):
         self._units = standardize_units(unit)
 
-    def __init__(self, units: Optional[str] = None, dimension: Optional[str] = None):
-        self.units = units if units is not None else ''  # type: str
+    def __init__(self, units: Optional[str] = None, dimension: Optional[List[str]] = None):
+        self.units = units if units is not None else 'a.u.'  # type: str
 
         # Lookup dimension if not given
         if dimension:
             self.dimension = dimension
-        elif self.units in AMBIGUITIES:
-            self.dimension = AMBIGUITIES[self.units]
         else:
-            for k, v in DIMENSIONS.items():
-                if self.units in v:
-                    self.dimension = k
-                    break
-            else:
-                self.dimension = 'dimensionless'
+            self.dimension = []
+            for unit in self._units:
+                if unit in AMBIGUITIES:
+                    self.dimension.append(AMBIGUITIES[self.units])
+                else:
+                    for k, v in DIMENSIONS.items():
+                        if unit in v:
+                            self.dimension.append(k)
+                            break
+                    else:
+                        self.dimension.append('dimensionless')
 
         # Find the scale for the given units - default to dimensionless
-        self.scalemap = DIMENSIONS.get(self.dimension, DIMENSIONS['dimensionless'])
-        base = self.scalemap.get(self.units) if self.scalemap else 1.0
-        if not isinstance(base, tuple):
-            base = [base]
+        self.scalemap = [DIMENSIONS.get(dimension, DIMENSIONS['dimensionless']) for dimension in self.dimension]
+        base = self._get_scale_for_units(self._units)
         self.scalebase = base[0]
-        self.scaleoffset = base[1] if len(base) > 1 else 0.0
+        self.scaleoffset = base[1]
 
     def scale(self, units: str = "", value: T = None) -> Union[List[float], T]:
         """Scale the given value using the units string supplied"""
-        units = standardize_units(units) if units is not None else ''
-        for unit in units:
-            if unit and unit not in self.scalemap or value is None:
-                continue
-            if isinstance(value, list):
-                return [self.scale(unit, i) for i in value]
-            value = self._scale_with_offset(unit, value)
+        units = standardize_units(units) if units is not None else ['']
+        base = self._get_scale_for_units(units)
+        value = self._scale_with_offset(value, base)
         return value
 
-    def _scale_with_offset(self, units: str = "", value: float = None) -> float:
+    def _scale_with_offset(self, value: float, scale_base: Tuple[float, float]) -> float:
         """Scale the given value and add the offset using the units string supplied"""
         inscale, inoffset = self.scalebase, self.scaleoffset
-        scale_units = self.scalemap[units]
-        outscale, outoffset = scale_units if isinstance(scale_units, tuple) else (scale_units, 0.0)
+        outscale, outoffset = scale_base
         return (value + inoffset) * inscale / outscale - outoffset
+
+    def _get_scale_for_units(self, units: List[str]):
+        """Protected method to get scale factor and scale offset as a combined value"""
+        base = (1.0, 0.0)
+        for scalemap, unit in zip(self.scalemap, units):
+            unit_scale = scalemap.get(unit)
+            if not isinstance(unit_scale, tuple):
+                unit_scale = (unit_scale, 0.0)
+            base = (base[0] * unit_scale[0], base[1] + unit_scale[1])
+        return base
 
     def get_compatible_units(self) -> List[str]:
         """Return a list of compatible units for the current Convertor object"""
-        # FIXME: This needs to provide a list of lists
-        #  SESANS units will have two scalable objects
-        #  A^2 cm^-2 => [[A^2 scalable values], [cm^-2 scalable values]]
         unique_units = []
         conv_list = []
-        for item, conv in self.scalemap.items():
-            unit = standardize_units(item)
-            if unit not in unique_units and unit is not None:
-                unique_units.append(unit)
-                conv_list.append(conv)
-        unique_units = [x for _, x in sorted(zip(conv_list, unique_units))]
+        for scalemap in self.scalemap:
+            for item, conv in scalemap.items():
+                unit = standardize_units(item)
+                if unit not in unique_units and unit is not None:
+                    unique_units.append(unit)
+                    conv_list.append(conv)
+            unique_units = [x for _, x in sorted(zip(conv_list, unique_units))]
         return unique_units
 
     def __call__(self, value: T, units: Optional[str] = "") -> Union[List[float], T]:
