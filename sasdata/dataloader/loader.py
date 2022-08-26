@@ -21,6 +21,7 @@ import os
 import sys
 import logging
 import time
+import traceback
 from zipfile import ZipFile
 from collections import defaultdict
 from types import ModuleType
@@ -31,7 +32,7 @@ from sasdata.data_util.util import unique_preserve_order
 
 # Default readers are defined in the readers sub-module
 from . import readers
-from sasdata.data_util.loader_exceptions import NoKnownLoaderException, DefaultReaderException
+from sasdata.data_util.loader_exceptions import NoKnownLoaderException, DefaultReaderException, FileContentsException
 
 logger = logging.getLogger(__name__)
 
@@ -72,22 +73,30 @@ class Registry(ExtensionRegistry):
         Defaults to the ascii (multi-column), cansas XML, and cansas NeXuS
         readers if no reader was registered for the file's extension.
         """
-        import traceback
 
-        # Gets set to a string if the file has an associated reader that fails
+        if not os.path.isfile(os.path.abspath(path.replace("\\\\", "\\"))):
+            logger.error(f"The file path '{path}' does not exist.")
+            return None
+
         try:
+            # Load the data using one of the readers associated with the data type or extension
             data_list = super().load(path, ext=ext)
             if data_list:
+                # Return early if data loads properly
                 return data_list
-            if ext:
-                logger.debug(f"No data returned from '{path}' for format {ext}")
-            else:
-                logger.debug(f"No data returned from '{path}'")
+
+            msg = f"No data returned from '{path}'"
+            msg += f" for format {ext}." if ext else "."
+            logger.debug(msg)
+        except FileContentsException as e:
+            msg = f"While loading file {e.path} using the default reader {e.loader}, an error occured.\n{e.message}"
+            logger.warning(msg)
         except Exception as e:
             logger.debug(traceback.print_exc())
             if not use_defaults:
                 raise
         # Use backup readers
+        # TODO: Combine this with above so there is only a single try/except clause
         try:
             return self.load_using_generic_loaders(path)
         except (NoKnownLoaderException, DefaultReaderException) as e:
@@ -116,6 +125,7 @@ class Registry(ExtensionRegistry):
                     return data_list
             except Exception as e:
                 # Cycle through all generic readers
+                # TODO: Capture these somehow...
                 pass
         # Only throw exception if all generic readers fail
         raise NoKnownLoaderException(f"Generic readers failed to load {path}")
@@ -336,7 +346,7 @@ class Registry(ExtensionRegistry):
                 return writing_function(path, data)
             except Exception as exc:
                 msg = f"Saving file {path} using the {type(writing_function).__name__} writer failed.\n {str(exc)}"
-                logger.exception(msg)  # give other loaders a chance to succeed
+                logger.exception(msg)
 
 
 class Loader:

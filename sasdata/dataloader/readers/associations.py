@@ -14,6 +14,7 @@ The readers are tried in order they appear when reading a file.
 #copyright 2009, University of Tennessee
 #############################################################################
 import logging
+from typing import Optional, List, Dict
 
 from . import abs_reader
 from . import anton_paar_saxs_reader
@@ -52,6 +53,8 @@ GENERIC_READERS = [
 
 
 def read_associations(loader, settings=None):
+    # type: (Registry, Optional[Dict[str, FileReader]]) -> None
+    # NOTE - Registry and FileReader classes cannot be imported due to circular imports. Use old-style typing.
     """
     Use the specified settings dictionary to associate readers to file extension.
     :param loader: Loader object
@@ -70,7 +73,8 @@ def read_associations(loader, settings=None):
 
 
 def get_generic_readers(settings=None, use_generic_readers=True):
-    # type: ([FileReader], bool) -> []
+    # type: (Optional[List[FileReader]], Optional[bool]) -> List[FileReader]
+    # NOTE - FileReader class cannot be imported due to a circular import. Use old-style typing.
     """
     Returns a list of default readers that the data loader system will use in an attempt to load a data file.
     A list of loaders can be passed as an argument which will be appended to (if use_generic is True) or override the

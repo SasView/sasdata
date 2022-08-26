@@ -90,7 +90,7 @@ class ExtensionRegistry:
         exts.sort()
         return exts
 
-    def lookup(self, path: str) -> List[str]:
+    def lookup(self, path: str) -> List[callable]:
         """
         Return the loader associated with the file type of path.
 
