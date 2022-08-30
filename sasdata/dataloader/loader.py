@@ -91,14 +91,6 @@ class Registry(ExtensionRegistry):
         except FileContentsException as e:
             msg = f"While loading file {e.path} using the default reader {e.loader}, an error occured.\n{e.message}"
             logger.warning(msg)
-        except Exception as e:
-            logger.debug(traceback.print_exc())
-            if not use_defaults:
-                raise
-        # Use backup readers
-        # TODO: Combine this with above so there is only a single try/except clause
-        try:
-            return self.load_using_generic_loaders(path)
         except (NoKnownLoaderException, DefaultReaderException) as e:
             logger.debug(traceback.print_exc())
             # No known reader available. Give up and throw an error
@@ -108,27 +100,6 @@ class Registry(ExtensionRegistry):
         except Exception as e:
             logger.debug(traceback.print_exc())
             raise
-
-    def load_using_generic_loaders(self, path: str) -> list:
-        """
-        If the expected reader cannot load the file or no known loader exists,
-        attempt to load the file using a few defaults readers
-        :param path: file path
-        :return: List of Data1D and Data2D objects
-        """
-        module_list = readers.get_generic_readers()
-        for module in module_list:
-            reader = module.Reader()
-            try:
-                data_list = reader.read(path)
-                if data_list:
-                    return data_list
-            except Exception as e:
-                # Cycle through all generic readers
-                # TODO: Capture these somehow...
-                pass
-        # Only throw exception if all generic readers fail
-        raise NoKnownLoaderException(f"Generic readers failed to load {path}")
 
     def find_plugins(self, dir: str):
         """

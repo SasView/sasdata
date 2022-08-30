@@ -10,6 +10,7 @@ from collections import defaultdict
 from sasdata.data_util.loader_exceptions import NoKnownLoaderException
 from sasdata.data_util.util import unique_preserve_order
 from sasdata.dataloader.filereader import FileReader
+from sasdata.dataloader.readers.associations import get_generic_readers
 
 
 class ExtensionRegistry:
@@ -64,6 +65,7 @@ class ExtensionRegistry:
     """
     def __init__(self):
         self.readers = defaultdict(list)
+        self.exceptions = []
 
     def __setitem__(self, ext: str, loader: FileReader):
         self.readers[ext].insert(0, loader)
@@ -104,6 +106,14 @@ class ExtensionRegistry:
         extensions.sort(key=len)
         # Combine readers for matching extensions into one big list
         readers = [reader for ext in extensions for reader in self.readers[ext]]
+        # Add generic readers to list (if not already there)
+        for module in get_generic_readers():
+            if hasattr(module, "Reader"):
+                # Find supported extensions
+                loader = module.Reader()
+                # Append the new reader to the list
+                if callable(loader.read):
+                    readers.append(loader.read)
         return unique_preserve_order(readers)
 
     def load(self, path: str, ext: Optional[str] = None) -> Union[List[FileReader], Exception]:
@@ -123,12 +133,14 @@ class ExtensionRegistry:
             if not loaders:
                 raise NoKnownLoaderException("No loaders match format %r"
                                              % ext)
-        last_exc = None
         for load_function in loaders:
             try:
-                return load_function(path)
+                # Load the data using one of the readers associated with the data type or extension
+                data_list = load_function(path)
+                if data_list:
+                    # Return early if data loads properly
+                    return data_list
             except Exception as e:
-                last_exc = e
-                pass  # give other loaders a chance to succeed
+                self.exceptions.append(e)
         # If we get here it is because all loaders failed
-        raise last_exc
+        raise
