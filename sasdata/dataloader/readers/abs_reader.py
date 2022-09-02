@@ -61,6 +61,7 @@ class Reader(FileReader):
         data_conv_i = Converter(base_i_unit)
 
         for line in lines:
+            # TODO: Add try/catch here to catch any file read issues
             # Information line 1
             if line.find(".bt5") > 0:
                 x_index = 0

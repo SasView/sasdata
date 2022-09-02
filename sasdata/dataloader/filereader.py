@@ -137,7 +137,6 @@ class FileReader:
         """
         Returns the next line in the file as a string.
         """
-        #return self.f_open.readline()
         return decode(self.f_open.readline())
 
     def nextlines(self) -> str:
@@ -145,7 +144,6 @@ class FileReader:
         Returns the next line in the file as a string.
         """
         for line in self.f_open:
-            #yield line
             yield decode(line)
 
     def readall(self) -> str:

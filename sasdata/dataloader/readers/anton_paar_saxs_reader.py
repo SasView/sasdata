@@ -95,6 +95,7 @@ class Reader(XMLreader):
                 yvals.insert(index, float(data[1]))
                 dyvals.insert(index, float(data[2]))
         except Exception as e:
+            # TODO: Make error message more explicit
             error_message = f"Couldn't load {self.f_open.name}.\n{e}"
             raise FileContentsException(error_message)
         self.current_dataset.x = np.append(self.current_dataset.x, xvals)

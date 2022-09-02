@@ -79,17 +79,18 @@ class Reader(FileReader):
                 try:
                     self.raw_data = h5py.File(filename, 'r')
                 except Exception as exc:
+                    msg = f"NXcanSAS Reader could not open the file {basename + extension}"
                     if extension not in self.ext:
-                        msg = "NXcanSAS Reader could not load file {}".format(
-                            basename + extension)
-                        raise DefaultReaderException(msg)
-                    raise FileContentsException(exc)
+                        raise DefaultReaderException(f"{msg}.\n{str(exc)}")
+                    # TODO: Write alternate message here
+                    raise FileContentsException(f"Despite the file extension, {msg}.\n{str(exc)}")
                 try:
                     # Read in all child elements of top level SASroot
                     self.read_children(self.raw_data, [])
                     # Add the last data set to the list of outputs
                     self.add_data_set()
                 except Exception as exc:
+                    msg = "A "
                     raise FileContentsException(exc)
                 finally:
                     # Close the data file
@@ -139,128 +140,134 @@ class Reader(FileReader):
 
         # Loop through each element of the parent and process accordingly
         for key in data.keys():
-            # Get all information for the current key
-            value = data.get(key)
-            class_name = h5attr(value, u'canSAS_class')
-            if isinstance(class_name, (list, tuple, np.ndarray)):
-                class_name = class_name[0]
-            if class_name is None:
-                class_name = h5attr(value, u'NX_class')
-            if class_name is not None:
-                class_prog = re.compile(class_name)
-            else:
-                class_prog = re.compile(value.name)
+            try:
+                # Get all information for the current key
+                # TODO: Initialize value and class_name to empty strings each iteration in case of errors
+                value = data.get(key)
+                class_name = h5attr(value, u'canSAS_class')
+                if isinstance(class_name, (list, tuple, np.ndarray)):
+                    class_name = class_name[0]
+                if class_name is None:
+                    class_name = h5attr(value, u'NX_class')
+                if class_name is not None:
+                    class_prog = re.compile(class_name)
+                else:
+                    class_prog = re.compile(value.name)
 
-            if isinstance(value, h5py.Group):
-                # Set parent class before recursion
-                last_parent_class = self.parent_class
-                self.parent_class = class_name
-                parent_list.append(key)
-                # If a new sasentry, store the current data sets and create
-                # a fresh Data1D/2D object
-                if class_prog.match(u'SASentry'):
-                    self.add_data_set()
-                elif class_prog.match(u'SASdata'):
-                    self._find_data_attributes(value)
-                    self._initialize_new_data_set(value)
-                # Recursion step to access data within the group
-                try:
-                    self.read_children(value, parent_list)
-                    self.add_intermediate()
-                except Exception as e:
-                    self.current_datainfo.errors.append(str(e))
-                    logger.debug(traceback.format_exc())
-                # Reset parent class when returning from recursive method
-                self.parent_class = last_parent_class
-                parent_list.remove(key)
+                if isinstance(value, h5py.Group):
+                    # Set parent class before recursion
+                    last_parent_class = self.parent_class
+                    self.parent_class = class_name
+                    parent_list.append(key)
+                    # If a new sasentry, store the current data sets and create
+                    # a fresh Data1D/2D object
+                    if class_prog.match(u'SASentry'):
+                        self.add_data_set()
+                    elif class_prog.match(u'SASdata'):
+                        self._find_data_attributes(value)
+                        self._initialize_new_data_set(value)
+                    # Recursion step to access data within the group
+                    try:
+                        self.read_children(value, parent_list)
+                        self.add_intermediate()
+                    except Exception as e:
+                        self.current_datainfo.errors.append(str(e))
+                        logger.debug(traceback.format_exc())
+                    # Reset parent class when returning from recursive method
+                    self.parent_class = last_parent_class
+                    parent_list.remove(key)
 
-            elif isinstance(value, h5py.Dataset):
-                # If this is a dataset, store the data appropriately
-                data_set = value[()]
-                unit = self._get_unit(value)
-                # Put scalars into lists to be sure they are iterable
-                if np.isscalar(data_set):
-                    data_set = [data_set]
+                elif isinstance(value, h5py.Dataset):
+                    # If this is a dataset, store the data appropriately
+                    data_set = value[()]
+                    unit = self._get_unit(value)
+                    # Put scalars into lists to be sure they are iterable
+                    if np.isscalar(data_set):
+                        data_set = [data_set]
 
-                for data_point in data_set:
-                    if isinstance(data_point, np.ndarray):
-                        if data_point.dtype.char == 'S':
-                            data_point = decode(bytes(data_point))
-                    else:
-                        data_point = decode(data_point)
-                    # Top Level Meta Data
-                    if key == u'definition':
-                        if isinstance(data_set, str):
-                            self.current_datainfo.meta_data['reader'] = data_set
+                    for data_point in data_set:
+                        if isinstance(data_point, np.ndarray):
+                            if data_point.dtype.char == 'S':
+                                data_point = decode(bytes(data_point))
+                        else:
+                            data_point = decode(data_point)
+                        # Top Level Meta Data
+                        if key == u'definition':
+                            if isinstance(data_set, str):
+                                self.current_datainfo.meta_data['reader'] = data_set
+                                break
+                            else:
+                                self.current_datainfo.meta_data[
+                                    'reader'] = data_point
+                        # Run
+                        elif key == u'run':
+                            try:
+                                run_name = h5attr(value, 'name', default='name')
+                                run_dict = {data_point: run_name}
+                                self.current_datainfo.run_name = run_dict
+                            except Exception:
+                                pass
+                            if isinstance(data_set, str):
+                                self.current_datainfo.run.append(data_set)
+                                break
+                            else:
+                                self.current_datainfo.run.append(data_point)
+                        # Title
+                        elif key == u'title':
+                            if isinstance(data_set, str):
+                                self.current_datainfo.title = data_set
+                                break
+                            else:
+                                self.current_datainfo.title = data_point
+                        # Note
+                        elif key == u'SASnote':
+                            self.current_datainfo.notes.append(data_set)
+                            break
+                        # Sample Information
+                        elif self.parent_class == u'SASsample':
+                            self.process_sample(data_point, key)
+                        # Instrumental Information
+                        elif (key == u'name'
+                              and self.parent_class == u'SASinstrument'):
+                            self.current_datainfo.instrument = data_point
+                        # Detector
+                        elif self.parent_class == u'SASdetector':
+                            self.process_detector(data_point, key, unit)
+                        # Collimation
+                        elif self.parent_class == u'SAScollimation':
+                            self.process_collimation(data_point, key, unit)
+                        # Aperture
+                        elif self.parent_class == u'SASaperture':
+                            self.process_aperture(data_point, key)
+                        # Process Information
+                        elif self.parent_class == u'SASprocess': # CanSAS 2.0
+                            self.process_process(data_point, key)
+                        # Source
+                        elif self.parent_class == u'SASsource':
+                            self.process_source(data_point, key, unit)
+                        # Everything else goes in meta_data
+                        elif self.parent_class == u'SASdata':
+                            if isinstance(self.current_dataset, plottable_2D):
+                                self.process_2d_data_object(data_set, key, unit)
+                            else:
+                                self.process_1d_data_object(data_set, key, unit)
+
+                            break
+                        elif self.parent_class == u'SAStransmission_spectrum':
+                            self.process_trans_spectrum(data_set, key)
                             break
                         else:
-                            self.current_datainfo.meta_data[
-                                'reader'] = data_point
-                    # Run
-                    elif key == u'run':
-                        try:
-                            run_name = h5attr(value, 'name', default='name')
-                            run_dict = {data_point: run_name}
-                            self.current_datainfo.run_name = run_dict
-                        except Exception:
-                            pass
-                        if isinstance(data_set, str):
-                            self.current_datainfo.run.append(data_set)
-                            break
-                        else:
-                            self.current_datainfo.run.append(data_point)
-                    # Title
-                    elif key == u'title':
-                        if isinstance(data_set, str):
-                            self.current_datainfo.title = data_set
-                            break
-                        else:
-                            self.current_datainfo.title = data_point
-                    # Note
-                    elif key == u'SASnote':
-                        self.current_datainfo.notes.append(data_set)
-                        break
-                    # Sample Information
-                    elif self.parent_class == u'SASsample':
-                        self.process_sample(data_point, key)
-                    # Instrumental Information
-                    elif (key == u'name'
-                          and self.parent_class == u'SASinstrument'):
-                        self.current_datainfo.instrument = data_point
-                    # Detector
-                    elif self.parent_class == u'SASdetector':
-                        self.process_detector(data_point, key, unit)
-                    # Collimation
-                    elif self.parent_class == u'SAScollimation':
-                        self.process_collimation(data_point, key, unit)
-                    # Aperture
-                    elif self.parent_class == u'SASaperture':
-                        self.process_aperture(data_point, key)
-                    # Process Information
-                    elif self.parent_class == u'SASprocess': # CanSAS 2.0
-                        self.process_process(data_point, key)
-                    # Source
-                    elif self.parent_class == u'SASsource':
-                        self.process_source(data_point, key, unit)
-                    # Everything else goes in meta_data
-                    elif self.parent_class == u'SASdata':
-                        if isinstance(self.current_dataset, plottable_2D):
-                            self.process_2d_data_object(data_set, key, unit)
-                        else:
-                            self.process_1d_data_object(data_set, key, unit)
+                            new_key = self._create_unique_key(
+                                self.current_datainfo.meta_data, key)
+                            self.current_datainfo.meta_data[new_key] = data_point
 
-                        break
-                    elif self.parent_class == u'SAStransmission_spectrum':
-                        self.process_trans_spectrum(data_set, key)
-                        break
-                    else:
-                        new_key = self._create_unique_key(
-                            self.current_datainfo.meta_data, key)
-                        self.current_datainfo.meta_data[new_key] = data_point
+                else:
+                    # I don't know if this reachable code
+                    self.errors.append("ShouldNeverHappenException")
 
-            else:
-                # I don't know if this reachable code
-                self.errors.append("ShouldNeverHappenException")
+            except Exception as e:
+                # TODO: Write more explicit error message (e.g. Unable to load {class_name} of {value})
+                self.errors.append(e)
 
     def process_1d_data_object(self, data_set: np.array, key: str, unit: str):
         """
