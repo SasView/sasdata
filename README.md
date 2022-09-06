@@ -1,31 +1,28 @@
 # Sasdata
 
-A package for loading and handling reduced small angle scattering data.
+A package for importing and exporting reduced small angle scattering data.
 
 The data loaders provided are usable as a standalone package, or in conjunction with the sasview analysis package.
 
 ## Install
 The easiest way to use sasdata is by using [SasView](http://www.sasview.org).
 
-You can also install sasdata as a standalone package in python. To create a python environment with the sasdata dependencies
- - Using a python virtual environment::
+View the latest release on the [sasdata pypi page](https://pypi.org/project/sasdata/) and install using `pip install sasdata`.
 
-    $ python -m venv sasdata
-    $ python -m pip install numpy lxml h5py xmlrunner "pytest<6"
-   - Activate the environment::
-       $ .\sasdata\Scripts\activate
+To run sasdata from the source, create a python environment using python 3.7 or higher and install all dependencies
+ - Using a [python virtual environment](https://packaging.python.org/en/latest/guides/installing-using-pip-and-virtual-environments/)::
+
+       $ python -m venv sasdata
+       $ .\sasdata\Scripts\activate (Windows) -or- source sasdata/bin/activate (Mac/Linux)
+       (sasdata) $ python -m pip install numpy lxml h5py xmlrunner "pytest<6"
+       (sasdata) $ python /path/to/sasdata/setup.py clean build install
  
  - Using [miniconda](https://docs.conda.io/en/latest/miniconda.html)
 or [anaconda](https://www.anaconda.com/)::
-
-    $ conda create -n sasdata -c conda-forge numpy lxml h5py xmlrunner "pytest<6"
- 
-   - Activate the environment and install sasdata::
-
-        $ conda activate sasdata
-        $ (sasdata) $ pip install sasdata
-
-View the latest release on the [sasdata pypi page](https://pypi.org/project/sasdata/).
+   
+       $ conda create -n sasdata -c conda-forge numpy lxml h5py xmlrunner "pytest<6"
+       $ conda activate sasdata
+       (sasdata) $ python /path/to/sasdata/setup.py clean build install
 
 ## Usage
 
