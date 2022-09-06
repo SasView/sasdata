@@ -82,16 +82,15 @@ class Reader(FileReader):
                     msg = f"NXcanSAS Reader could not open the file {basename + extension}"
                     if extension not in self.ext:
                         raise DefaultReaderException(f"{msg}.\n{str(exc)}")
-                    # TODO: Write alternate message here
-                    raise FileContentsException(f"Despite the file extension, {msg}.\n{str(exc)}")
+                    raise FileContentsException(f"Despite the expected file extension, {msg}.\n{str(exc)}")
                 try:
                     # Read in all child elements of top level SASroot
                     self.read_children(self.raw_data, [])
                     # Add the last data set to the list of outputs
                     self.add_data_set()
                 except Exception as exc:
-                    msg = "A "
-                    raise FileContentsException(exc)
+                    msg = f"An unexpected error occurred while loading {basename + extension}.\n{str(exc)}"
+                    raise FileContentsException(msg)
                 finally:
                     # Close the data file
                     self.raw_data.close()
@@ -140,9 +139,10 @@ class Reader(FileReader):
 
         # Loop through each element of the parent and process accordingly
         for key in data.keys():
+            value = ""
+            class_name = ""
             try:
                 # Get all information for the current key
-                # TODO: Initialize value and class_name to empty strings each iteration in case of errors
                 value = data.get(key)
                 class_name = h5attr(value, u'canSAS_class')
                 if isinstance(class_name, (list, tuple, np.ndarray)):
@@ -266,8 +266,8 @@ class Reader(FileReader):
                     self.errors.append("ShouldNeverHappenException")
 
             except Exception as e:
-                # TODO: Write more explicit error message (e.g. Unable to load {class_name} of {value})
-                self.errors.append(e)
+                msg = f'Unable to load {value} from {class_name}\n{str(e)}'
+                self.errors.append(msg)
 
     def process_1d_data_object(self, data_set: np.array, key: str, unit: str):
         """
