@@ -16,19 +16,19 @@
 ######################################################################
 
 # TODO: Keep track of data manipulation in the 'process' data structure.
-# TODO: This module should be independent of plottables. We should write
-#        an adapter class for plottables when needed.
 
 import math
 from math import fabs
 import copy
+from typing import Optional, Union
 
 import numpy as np
 
 from sasdata.data_util.uncertainty import Uncertainty
+from sasdata.data_util.nxsunit import Converter, standardize_units
 
 
-class plottable_1D(object):
+class plottable_1D:
     """
     Data1D is a place holder for 1D plottables.
     """
@@ -38,6 +38,10 @@ class plottable_1D(object):
     y = None
     dx = None
     dy = None
+    xmin = None
+    xmax = None
+    ymin = None
+    ymax = None
     # Slit smearing length
     dxl = None
     # Slit smearing width
@@ -49,13 +53,17 @@ class plottable_1D(object):
     # Units
     _xaxis = ''
     _xunit = ''
+    x_loaded_unit = ''
     _yaxis = ''
     _yunit = ''
+    y_loaded_unit = ''
 
     def __init__(self, x, y, dx=None, dy=None, dxl=None, dxw=None,
                  lam=None, dlam=None):
         self.x = np.asarray(x)
         self.y = np.asarray(y)
+        self.x_converter = None
+        self.y_converter = None
         if dx is not None:
             self.dx = np.asarray(dx)
         if dy is not None:
@@ -69,22 +77,125 @@ class plottable_1D(object):
         if dlam is not None:
             self.dlam = np.asarray(dlam)
 
-    def xaxis(self, label, unit):
+    @property
+    def x_unit(self):
+        return self._xunit
+
+    @x_unit.setter
+    def x_unit(self, x_unit):
+        # type: (str) -> None
+        """Unit conversion for the x data, including all resolutions
+        :param x_unit: A str representation of the new unit to be used for self.x and associated resolutions
         """
-        set the x axis label and unit
+        if hasattr(self, 'x_converter') and self.x_converter:
+            if self.x is not None:
+                self.x = self.x_converter(self.x, x_unit)
+            if self.dx is not None:
+                self.dx = self.x_converter(self.dx, x_unit)
+            if self.dxl is not None:
+                self.dxl = self.x_converter(self.dxl, x_unit)
+            if self.dxw is not None:
+                self.dxw = self.x_converter(self.dxw, x_unit)
+        else:
+            set_loaded_units(self, 'x', x_unit)
+        self.xaxis(self.x_axis, x_unit)
+        self._xunit = self.x_converter.units
+
+    @property
+    def y_unit(self):
+        return self._yunit
+
+    @y_unit.setter
+    def y_unit(self, y_unit):
+        # type: (str) -> None
+        """Unit conversion for the y data, including all resolutions
+        :param y_unit: A str representation of the new unit to be used for self.y and associated resolutions
+        """
+        if hasattr(self, 'y_converter') and self.y_converter:
+            if self.y is not None:
+                self.y = self.y_converter(self.y, y_unit)
+            if self.dy is not None:
+                self.dy = self.y_converter(self.dy, y_unit)
+        else:
+            set_loaded_units(self, 'y', y_unit)
+        self.yaxis(self.y_axis, y_unit)
+        self._yunit = self.y_converter.units
+
+    @property
+    def x_axis(self):
+        return self._xaxis
+
+    @x_axis.setter
+    def x_axis(self, x_axis):
+        # type: (str) -> None
+        """Setter of the private class variable _xaxis, which is displayed on plotting
+        :param x_axis: A str with an appropriate x_axis title for the data
+        """
+        self._xaxis = x_axis
+
+    @property
+    def y_axis(self):
+        return self._yaxis
+
+    @y_axis.setter
+    def y_axis(self, y_axis):
+        # type: (str) -> None
+        """Setter of the private class variable _yaxis, which is displayed on plotting
+        :param y_axis: A str with an appropriate y_axis title for the data
+        """
+        self._yaxis = y_axis
+
+    def xaxis(self, label, unit=None):
+        # type: (str, str) -> None
+        """Set the x axis label and unit
+        :param label: A label that is displayed when the data set is plotted
+        :param unit: A str representation of the units the data should be converted to
         """
         self._xaxis = label
+        if self.x_converter is None and unit is not None:
+            set_loaded_units(self, 'x', unit)
         self._xunit = unit
 
-    def yaxis(self, label, unit):
-        """
-        set the y axis label and unit
+    def yaxis(self, label, unit=None):
+        # type: (str, str) -> None
+        """Set the y axis label and unit
+        :param label: A label that is displayed when the data set is plotted
+        :param unit: A str representation of the units the data should be converted to
         """
         self._yaxis = label
+        if self.y_converter is None and unit is not None:
+            set_loaded_units(self, 'y', unit)
         self._yunit = unit
 
+    def convert_q_units(self, convert_to_unit=None):
+        # type: (str) -> None
+        """Convert the Q units to a new unit value
+        :param convert_to_unit: A str representation of the units the data should be converted to
+        """
+        if convert_to_unit is not None and self.x_converter:
+            # Converter is built off units loaded from file
+            # Need to scale between current units and desired units
+            unit = standardize_units(convert_to_unit)
+            self.x_unit = unit
 
-class plottable_2D(object):
+    def convert_i_units(self, convert_to_unit=None):
+        # type: (str) -> None
+        """Convert the Intensity units to a new unit value
+        :param convert_to_unit: A str representation of the units the data should be converted to
+        """
+        if convert_to_unit is not None and self.y_converter:
+            # Converter is built off units loaded from file
+            # Need to scale between current units and desired units
+            unit = standardize_units(convert_to_unit)
+            self.y_unit = unit
+
+    def convert_to_native_units(self):
+        """Convert the data units to the as-loaded data units"""
+        self.convert_i_units(self.x_loaded_unit)
+        self.convert_q_units(self.y_loaded_unit)
+
+
+class plottable_2D:
     """
     Data2D is a place holder for 2D plottables.
     """
@@ -106,10 +217,13 @@ class plottable_2D(object):
     # Units
     _xaxis = ''
     _xunit = ''
+    x_loaded_unit = ''
     _yaxis = ''
     _yunit = ''
+    y_loaded_unit = ''
     _zaxis = ''
     _zunit = ''
+    z_loaded_unit = ''
 
     def __init__(self, data=None, err_data=None, qx_data=None,
                  qy_data=None, q_data=None, mask=None,
@@ -120,6 +234,9 @@ class plottable_2D(object):
         self.qx_data = np.asarray(qx_data)
         self.qy_data = np.asarray(qy_data)
         self.q_data = np.asarray(q_data)
+        self.x_converter = None
+        self.y_converter = None
+        self.z_converter = None
         if mask is not None:
             self.mask = np.asarray(mask)
         else:
@@ -131,30 +248,115 @@ class plottable_2D(object):
         if dqy_data is not None:
             self.dqy_data = np.asarray(dqy_data)
 
-        # plot limits
-        self.xmin = xmin
-        self.xmax = xmax
-        self.ymin = ymin
-        self.ymax = ymax
-        self.zmin = zmin
-        self.zmax = zmax
-
         self.y_bins = x_bins if x_bins else []
         self.x_bins = y_bins if y_bins else []
 
-    def xaxis(self, label, unit):
+    @property
+    def Q_unit(self):
+        return self._xunit
+
+    @Q_unit.setter
+    def Q_unit(self, Q_unit):
+        self.x_unit = Q_unit
+        self.y_unit = Q_unit
+
+    @property
+    def I_unit(self):
+        return self._zunit
+
+    @I_unit.setter
+    def I_unit(self, I_unit):
+        self.z_unit = I_unit
+
+    @property
+    def x_unit(self):
+        return self._xunit
+
+    @x_unit.setter
+    def x_unit(self, x_unit):
+        if hasattr(self, 'x_converter') and self.x_converter:
+            if self.qx_data is not None:
+                self.qx_data = self.x_converter(self.qx_data, x_unit)
+            if self.dqx_data is not None:
+                self.dqx_data = self.x_converter(self.dqx_data, x_unit)
+        else:
+            set_loaded_units(self, 'x', x_unit)
+        self.xaxis(self.x_axis, x_unit)
+        self._xunit = self.x_converter.units
+
+    @property
+    def x_axis(self):
+        return self._xaxis
+
+    @x_axis.setter
+    def x_axis(self, x_axis):
+        self._xaxis = x_axis
+
+    @property
+    def y_unit(self):
+        return self._yunit
+
+    @y_unit.setter
+    def y_unit(self, y_unit):
+        if hasattr(self, 'y_converter') and self.y_converter:
+            if self.qy_data is not None:
+                self.qy_data = self.y_converter(self.qy_data, y_unit)
+            if self.dqy_data is not None:
+                self.dqy_data = self.y_converter(self.dqy_data, y_unit)
+        else:
+            set_loaded_units(self, 'y', y_unit)
+        self.yaxis(self.y_axis, y_unit)
+        self._yunit = self.y_converter.units
+
+    @property
+    def y_axis(self):
+        return self._yaxis
+
+    @y_axis.setter
+    def y_axis(self, y_axis):
+        self._yaxis = y_axis
+
+    @property
+    def z_axis(self):
+        return self._zaxis
+
+    @z_axis.setter
+    def z_axis(self, z_axis):
+        self._zaxis = z_axis
+
+    @property
+    def z_unit(self):
+        return self._zunit
+
+    @z_unit.setter
+    def z_unit(self, z_unit):
+        if hasattr(self, 'z_converter') and self.z_converter:
+            if self.data is not None:
+                self.data = self.z_converter(self.data, z_unit)
+            if self.err_data is not None:
+                self.err_data = self.z_converter(self.err_data, z_unit)
+        else:
+            set_loaded_units(self, 'z', z_unit)
+        self.zaxis(self.z_axis, z_unit)
+        self._zunit = self.z_converter.units
+
+    def xaxis(self, label, unit=None):
         """
         set the x axis label and unit
         """
         self._xaxis = label
         self._xunit = unit
+        if self.x_converter is None and unit is not None:
+            set_loaded_units(self, 'x', unit)
 
-    def yaxis(self, label, unit):
+    def yaxis(self, label, unit=None):
         """
         set the y axis label and unit
         """
         self._yaxis = label
         self._yunit = unit
+        if self.y_converter is None and unit is not None:
+            set_loaded_units(self, 'y', unit)
 
     def zaxis(self, label, unit):
         """
@@ -162,9 +364,38 @@ class plottable_2D(object):
         """
         self._zaxis = label
         self._zunit = unit
+        if self.z_converter is None and unit is not None:
+            set_loaded_units(self, 'z', unit)
+
+    def convert_q_units(self, convert_to_unit=None):
+        # type: (str) -> None
+        """Convert the Q units to a new unit value
+        :param convert_to_unit: A str representation of the units the data should be converted to
+        """
+        if convert_to_unit is not None:
+            # Converter based off units loaded from file
+            # Need to scale between current units and desired units
+            unit = standardize_units(convert_to_unit)
+            self.Q_unit = unit
+
+    def convert_i_units(self, convert_to_unit=None):
+        # type: (str) -> None
+        """Convert the Intensity units to a new unit value
+        :param convert_to_unit: A str representation of the units the data should be converted to
+        """
+        if convert_to_unit is not None and self.z_converter:
+            # Converter based off units loaded from file
+            # Need to scale between current units and desired units
+            unit = standardize_units(convert_to_unit)
+            self.I_unit = unit
+
+    def convert_to_native_units(self):
+        """Convert the data units to the as-loaded data units"""
+        self.convert_q_units(self.x_loaded_unit)
+        self.convert_i_units(self.z_loaded_unit)
 
 
-class Vector(object):
+class Vector:
     """
     Vector class to hold multi-dimensional objects
     """
@@ -193,7 +424,7 @@ class Vector(object):
         return msg
 
 
-class Detector(object):
+class Detector:
     """
     Class to hold detector information
     """
@@ -248,7 +479,7 @@ class Detector(object):
         return _str
 
 
-class Aperture(object):
+class Aperture:
     # Name
     name = None
     # Type
@@ -266,7 +497,7 @@ class Aperture(object):
         self.size = Vector()
 
 
-class Collimation(object):
+class Collimation:
     """
     Class to hold collimation information
     """
@@ -293,7 +524,7 @@ class Collimation(object):
         return _str
 
 
-class Source(object):
+class Source:
     """
     Class to hold source information
     """
@@ -358,7 +589,7 @@ MUON = 'muon'
 ELECTRON = 'electron'
 
 
-class Sample(object):
+class Sample:
     """
     Class to hold the sample description
     """
@@ -411,7 +642,7 @@ class Sample(object):
         return _str
 
 
-class Process(object):
+class Process:
     """
     Class that holds information about the processes
     performed on the data.
@@ -452,7 +683,7 @@ class Process(object):
         return _str
 
 
-class TransmissionSpectrum(object):
+class TransmissionSpectrum:
     """
     Class that holds information about transmission spectrum
     for white beams and spallation sources.
@@ -488,7 +719,7 @@ class TransmissionSpectrum(object):
         return _str
 
 
-class DataInfo(object):
+class DataInfo:
     """
     Class to hold the data read from a file.
     It includes four blocks of data for the
@@ -741,15 +972,6 @@ class Data1D(plottable_1D, DataInfo):
         DataInfo.__init__(self)
         plottable_1D.__init__(self, x, y, dx, dy, None, None, lam, dlam)
         self.isSesans = isSesans
-        try:
-            if self.isSesans:  # the data is SESANS
-                self.x_unit = 'A'
-                self.y_unit = 'pol'
-            elif not self.isSesans:  # the data is SANS
-                self.x_unit = '1/A'
-                self.y_unit = '1/cm'
-        except Exception:  # the data is not recognized, notifying user
-            raise TypeError('Check documentation for supported 1D data formats')
 
     def __str__(self):
         """
@@ -976,10 +1198,6 @@ class Data2D(plottable_2D, DataInfo):
     """
     2D data class
     """
-    # Units for Q-values
-    Q_unit = '1/A'
-    # Units for I(Q) values
-    I_unit = '1/cm'
     # No 2D SESANS data as of yet. Always set it to False
     isSesans = False
 
@@ -1251,17 +1469,10 @@ def combine_data_info_with_plottable(data, datainfo):
         final_dataset.dy = data.dy
         final_dataset.dxl = data.dxl
         final_dataset.dxw = data.dxw
-        final_dataset.x_unit = data._xunit
-        final_dataset.y_unit = data._yunit
-        final_dataset.xaxis(data._xaxis, data._xunit)
-        final_dataset.yaxis(data._yaxis, data._yunit)
     elif isinstance(data, plottable_2D):
         final_dataset = Data2D(data.data, data.err_data, data.qx_data,
                                data.qy_data, data.q_data, data.mask,
                                data.dqx_data, data.dqy_data)
-        final_dataset.xaxis(data._xaxis, data._xunit)
-        final_dataset.yaxis(data._yaxis, data._yunit)
-        final_dataset.zaxis(data._zaxis, data._zunit)
         final_dataset.x_bins = data.x_bins
         final_dataset.y_bins = data.y_bins
     else:
@@ -1278,6 +1489,10 @@ def combine_data_info_with_plottable(data, datainfo):
         final_dataset.xmin = data.xmin
     if hasattr(data, "ymin"):
         final_dataset.ymin = data.ymin
+    final_dataset.x_unit = data.x_unit
+    final_dataset.y_unit = data.y_unit
+    if hasattr(data, 'z_unit'):
+        final_dataset.z_unit = data.z_unit
     final_dataset.isSesans = datainfo.isSesans
     final_dataset.title = datainfo.title
     final_dataset.run = datainfo.run
@@ -1294,3 +1509,41 @@ def combine_data_info_with_plottable(data, datainfo):
     final_dataset.meta_data = datainfo.meta_data
     final_dataset.errors = datainfo.errors
     return final_dataset
+
+
+def set_loaded_units(obj: Union[plottable_1D, plottable_2D], axis: Optional[str]='', loaded_unit: Optional[str]=None):
+    """A helper method that sets the default units for a specific axis of a the included dataset
+    :param obj: A plottable_(1|2)D instance that will be modified
+    :param axis: The axis ('x', 'y', 'z') that will be set
+    :param loaded_unit: The as-loaded units for the axis of the dataset
+    """
+    # Set the loaded_unit to an empty string, otherwise Converter will stringify 'None'
+    if loaded_unit is None:
+        loaded_unit = ""
+    if axis.lower() == 'x':
+        # Set the x-axis for the data set
+        obj.x_converter = Converter(loaded_unit)
+        if hasattr(obj, 'x_unit'):
+            obj.x_unit = obj.x_converter.units
+        else:
+            obj._xunit = obj.x_converter.units
+        obj.x_loaded_unit = obj.x_converter.units
+    elif axis.lower() == 'y':
+        # Set the y-axis for the data set
+        obj.y_converter = Converter(loaded_unit)
+        if hasattr(obj, 'y_unit'):
+            obj.y_unit = obj.y_converter.units
+        else:
+            obj._yunit = obj.y_converter.units
+        obj.y_loaded_unit = obj.y_converter.units
+    elif axis.lower() == 'z':
+        # Set the z-axis for the data set (Data2D only)
+        obj.z_converter = Converter(loaded_unit)
+        if hasattr(obj, 'z_unit'):
+            obj.z_unit = obj.z_converter.units
+        else:
+            obj._zunit = obj.z_converter.units
+        obj.z_loaded_unit = obj.z_converter.units
+    else:
+        raise ValueError(
+            "The axis {0} was not found.".format(axis))

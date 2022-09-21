@@ -16,6 +16,7 @@ from sasdata.data_util.loader_exceptions import NoKnownLoaderException, FileCont
 from sasdata.dataloader.data_info import Data1D, Data2D, DataInfo, plottable_1D, plottable_2D,\
     combine_data_info_with_plottable
 from sasdata.data_util.nxsunit import Converter
+from sasdata.system.config import config
 
 logger = logging.getLogger(__name__)
 
@@ -35,15 +36,9 @@ def decode(s):
     logger.warning(f"Unable to decode {s}")
 
 
-# Data 1D fields for iterative purposes
-FIELDS_1D = 'x', 'y', 'dx', 'dy', 'dxl', 'dxw'
-# Data 2D fields for iterative purposes
-FIELDS_2D = 'data', 'qx_data', 'qy_data', 'q_data', 'err_data', 'dqx_data', 'dqy_data', 'mask'
-DEPRECATION_MESSAGE = ("\rThe extension of this file suggests the data set migh"
-                       "t not be fully reduced. Support for the reader associat"
-                       "ed with this file type has been removed. An attempt to "
-                       "load the file was made, but, should it be successful, "
-                       "SasView cannot guarantee the accuracy of the data.")
+DEPRECATION_MESSAGE = ("\rThe extension of this file suggests the data set might not be fully reduced. Support for the "
+                       "reader associated with this file type has been removed. An attempt to load the file was made, "
+                       "but, should it be successful, the accuracy of the data cannot be guaranteed.")
 
 
 class FileReader:
@@ -51,13 +46,13 @@ class FileReader:
     type_name = "ASCII"
 
     # Wildcards to display
-    type = ["Text files (*.txt|*.TXT)"]
+    type = config.FILE_LOADER_WLIST
 
     # List of allowed extensions
-    ext = ['.txt']
+    ext = config.FILE_LOADER_EXTENSIONS
 
     # Deprecated extensions
-    deprecated_extensions = ['.asc']
+    deprecated_extensions = config.EXTENSION_DEPRECATED
 
     # Bypass extension check and try to load anyway
     allow_all = False
@@ -183,11 +178,6 @@ class FileReader:
         """
         for data in self.output:
             if isinstance(data, Data1D):
-                # Normalize the units for
-                data.x_unit = self.format_unit(data.x_unit)
-                data._xunit = data.x_unit
-                data.y_unit = self.format_unit(data.y_unit)
-                data._yunit = data.y_unit
                 # Sort data by increasing x and remove 1st point
                 ind = np.lexsort((data.y, data.x))
                 data.x = self._reorder_1d_array(data.x, ind)
@@ -217,12 +207,6 @@ class FileReader:
                     data.ymin = np.min(data.y)
                     data.ymax = np.max(data.y)
             elif isinstance(data, Data2D):
-                # Normalize the units for
-                data.Q_unit = self.format_unit(data.Q_unit)
-                data.I_unit = self.format_unit(data.I_unit)
-                data._xunit = data.Q_unit
-                data._yunit = data.Q_unit
-                data._zunit = data.I_unit
                 data.data = data.data.astype(np.float64)
                 data.qx_data = data.qx_data.astype(np.float64)
                 data.xmin = np.min(data.qx_data)
@@ -230,8 +214,7 @@ class FileReader:
                 data.qy_data = data.qy_data.astype(np.float64)
                 data.ymin = np.min(data.qy_data)
                 data.ymax = np.max(data.qy_data)
-                data.q_data = np.sqrt(data.qx_data * data.qx_data
-                                         + data.qy_data * data.qy_data)
+                data.q_data = np.sqrt(data.qx_data * data.qx_data + data.qy_data * data.qy_data)
                 if data.err_data is not None:
                     data.err_data = data.err_data.astype(np.float64)
                 if data.dqx_data is not None:
@@ -242,8 +225,7 @@ class FileReader:
                     data.mask = data.mask.astype(dtype=bool)
                     # If all mask elements are False, give a warning to the user
                     if not data.mask.any():
-                        error = "The entire dataset is masked and may not "
-                        error += "produce usable fits."
+                        error = "The entire dataset is masked and may not produce usable fits."
                         data.errors.append(error)
 
                 if len(data.data.shape) == 2:
@@ -277,9 +259,9 @@ class FileReader:
         :return: data with nan points removed
         """
         if isinstance(data, Data1D):
-            fields = FIELDS_1D
+            fields = config.FIELDS_1D
         elif isinstance(data, Data2D):
-            fields = FIELDS_2D
+            fields = config.FIELDS_2D
         else:
             return data
         # Make array of good points - all others will be removed
@@ -338,7 +320,6 @@ class FileReader:
                 logger.info("Unrecognized Q units in data file. No data conversion attempted")
                 convert_q = False
             try:
-
                 if isinstance(data, Data1D):
                     if convert_q:
                         data.x = data_conv_x(data.x, units=default_q_unit)
@@ -377,21 +358,6 @@ class FileReader:
                 data.errors.append(message)
             new_output.append(data)
         self.output = new_output
-
-    def format_unit(self, unit: str = None) -> str:
-        """
-        Format units a common way
-        :param unit:
-        :return:
-        """
-        if unit:
-            split = unit.split("/")
-            if len(split) == 1:
-                return unit
-            elif split[0] == '1':
-                return f"{split[1]}^{{-1}}"
-            else:
-                return f"{split[0]}*{split[1]}^{{-1}}"
 
     def set_all_to_none(self):
         """
