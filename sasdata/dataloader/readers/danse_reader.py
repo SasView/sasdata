@@ -178,7 +178,6 @@ class Reader(FileReader):
         detector.beam_center.x = center_x * pixel
         detector.beam_center.y = center_y * pixel
 
-        self.current_dataset = self.set_default_2d_units(self.current_dataset)
         self.current_dataset.x_bins = x_vals
         self.current_dataset.y_bins = y_vals
 
@@ -199,6 +198,8 @@ class Reader(FileReader):
 
         # Store loading process information
         self.current_datainfo.meta_data['loader'] = self.type_name
+
+        self.current_dataset = self.set_default_2d_units(self.current_dataset)
 
         self.send_to_output()
 

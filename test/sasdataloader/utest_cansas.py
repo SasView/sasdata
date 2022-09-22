@@ -271,16 +271,29 @@ class cansas_reader_xml(unittest.TestCase):
 
         # Data
         self.assertEqual(len(self.data.x), 2)
-        self.assertEqual(self.data.x_unit, 'A^{-1}')
-        self.assertEqual(self.data.y_unit, 'cm^{-1}')
-        self.assertAlmostEqual(self.data.x[0], 0.02, 6)
-        self.assertAlmostEqual(self.data.y[0], 1000, 6)
-        self.assertAlmostEqual(self.data.dx[0], 0.01, 6)
-        self.assertAlmostEqual(self.data.dy[0], 3, 6)
-        self.assertAlmostEqual(self.data.x[1], 0.03, 6)
-        self.assertAlmostEqual(self.data.y[1], 1001.0)
-        self.assertAlmostEqual(self.data.dx[1], 0.02, 6)
-        self.assertAlmostEqual(self.data.dy[1], 4, 6)
+        self.assertIn(self.data.x_unit, ['A^{-1}', 'nm^{-1}'])
+        self.assertIn(self.data.y_unit, ['cm^{-1}', 'nm^{-1}'])
+        if self.data.x_unit == 'A^{-1}':
+            self.assertAlmostEqual(self.data.x[0], 0.02, 6)
+            self.assertAlmostEqual(self.data.dx[0], 0.01, 6)
+            self.assertAlmostEqual(self.data.dx[1], 0.02, 6)
+            self.assertAlmostEqual(self.data.x[1], 0.03, 6)
+        else:
+            self.assertAlmostEqual(self.data.x[0], 0.002, 6)
+            self.assertAlmostEqual(self.data.dx[0], 0.001, 6)
+            self.assertAlmostEqual(self.data.x[1], 0.003, 6)
+            self.assertAlmostEqual(self.data.dx[1], 0.002, 6)
+
+        if self.data.y_unit == 'cm^{-1}':
+            self.assertAlmostEqual(self.data.y[0], 1000, 6)
+            self.assertAlmostEqual(self.data.dy[0], 3, 6)
+            self.assertAlmostEqual(self.data.y[1], 1001.0)
+            self.assertAlmostEqual(self.data.dy[1], 4, 6)
+        else:
+            self.assertAlmostEqual(self.data.y[0], 0.0001, 6)
+            self.assertAlmostEqual(self.data.dy[0], 0.000000003, 6)
+            self.assertAlmostEqual(self.data.y[1], 0.0001001)
+            self.assertAlmostEqual(self.data.dy[1], 0.000000004, 6)
         self.assertEqual(self.data.run_name['1234'], 'run name')
         self.assertEqual(self.data.title, "Test title")
 
