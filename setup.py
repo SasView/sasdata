@@ -82,6 +82,10 @@ packages.append("sasdata.file_converter")
 package_dir["sasdata.data_util"] = os.path.join("sasdata", "data_util")
 packages.append("sasdata.data_util")
 
+# sasdata.system
+package_dir["sasdata.system"] = os.path.join("sasdata", "system")
+packages.append("sasdata.system")
+
 required = ['lxml', 'h5py', 'numpy', 'pytest<6', 'xmlrunner']
 
 with open('README.md', encoding='utf-8') as f:
