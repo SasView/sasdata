@@ -178,9 +178,6 @@ class Reader(FileReader):
         detector.beam_center.x = center_x * pixel
         detector.beam_center.y = center_y * pixel
 
-        self.current_dataset.x_bins = x_vals
-        self.current_dataset.y_bins = y_vals
-
         # Reshape data
         x_vals = np.tile(x_vals, (size_y, 1)).flatten()
         y_vals = np.tile(y_vals, (size_x, 1)).T.flatten()
@@ -200,6 +197,8 @@ class Reader(FileReader):
         self.current_datainfo.meta_data['loader'] = self.type_name
 
         self.current_dataset = self.set_default_2d_units(self.current_dataset)
+        self.current_dataset.x_bins = x_vals
+        self.current_dataset.y_bins = y_vals
 
         self.send_to_output()
 

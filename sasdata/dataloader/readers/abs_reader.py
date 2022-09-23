@@ -16,6 +16,7 @@ import numpy as np
 from sasdata.data_util.nxsunit import Converter
 from sasdata.dataloader.filereader import FileReader
 from sasdata.dataloader.data_info import DataInfo, Detector
+from sasdata.system.config import config
 
 logger = logging.getLogger(__name__)
 
@@ -55,10 +56,8 @@ class Reader(FileReader):
         is_center = False
         is_data_started = False
 
-        base_q_unit = '1/A'
-        base_i_unit = '1/cm'
-        data_conv_q = Converter(base_q_unit)
-        data_conv_i = Converter(base_i_unit)
+        data_conv_q = Converter(config.LOADER_Q_UNIT_ON_LOAD)
+        data_conv_i = Converter(config.LOADER_I_UNIT_ON_LOAD)
 
         for line in lines:
             # Information line 1
@@ -178,12 +177,12 @@ class Reader(FileReader):
                     _dx = float(toks[3])
 
                     if data_conv_q is not None:
-                        _x = data_conv_q(_x, units=base_q_unit)
-                        _dx = data_conv_q(_dx, units=base_q_unit)
+                        _x = data_conv_q(_x, units=config.LOADER_Q_UNIT_ON_LOAD)
+                        _dx = data_conv_q(_dx, units=config.LOADER_Q_UNIT_ON_LOAD)
 
                     if data_conv_i is not None:
-                        _y = data_conv_i(_y, units=base_i_unit)
-                        _dy = data_conv_i(_dy, units=base_i_unit)
+                        _y = data_conv_i(_y, units=config.LOADER_I_UNIT_ON_LOAD)
+                        _dy = data_conv_i(_dy, units=config.LOADER_I_UNIT_ON_LOAD)
 
                     self.current_dataset.x[data_line] = _x
                     self.current_dataset.y[data_line] = _y
@@ -228,9 +227,9 @@ class Reader(FileReader):
 
         self.current_dataset = self.set_default_1d_units(self.current_dataset)
         if data_conv_q is not None:
-            self.current_dataset.xaxis("\\rm{Q}", base_q_unit)
+            self.current_dataset.xaxis("\\rm{Q}", config.LOADER_Q_UNIT_ON_LOAD)
         if data_conv_i is not None:
-            self.current_dataset.yaxis("\\rm{Intensity}", base_i_unit)
+            self.current_dataset.yaxis("\\rm{Intensity}", config.LOADER_I_UNIT_ON_LOAD)
 
         # Store loading process information
         self.current_datainfo.meta_data['loader'] = self.type_name
