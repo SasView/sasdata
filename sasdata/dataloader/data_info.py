@@ -15,6 +15,7 @@
 # copyright 2008, University of Tennessee
 ######################################################################
 
+# TODO: remove old code and import new classes here -> create patch methods/classes for the time-being
 # TODO: Keep track of data manipulation in the 'process' data structure.
 # TODO: This module should be independent of plottables. We should write
 #        an adapter class for plottables when needed.
