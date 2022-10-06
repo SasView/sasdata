@@ -148,23 +148,23 @@ class Plottable:
     #################
     # Deprecated properties below here
 
-    @deprecated(replaced_with='self.x_max')
     @property
+    @deprecated(replaced_with='self.x_max')
     def xmax(self):
         return self.x_max
 
-    @deprecated(replaced_with='self.x_max')
     @property
+    @deprecated(replaced_with='self.x_max')
     def xmin(self):
         return self.x_min
 
-    @deprecated(replaced_with='self.y_max')
     @property
+    @deprecated(replaced_with='self.y_max')
     def ymax(self):
         return self.y_max
 
-    @deprecated(replaced_with='self.y_min')
     @property
+    @deprecated(replaced_with='self.y_min')
     def ymin(self):
         return self.y_min
 
@@ -177,6 +177,7 @@ class Plottable:
         self.y_label = label
         self.y_unit = unit
 
+    @property
     @deprecated(replaced_with='SpinEchoSANS class')
     def isSesans(self):
         return self._is_sesans
@@ -286,8 +287,8 @@ class Plottable2D(Plottable):
     ##################################################
     #
     # Deprecated properties that will be removed in a future release
-    @deprecated(replaced_with='Plottable2D.x')
     @property
+    @deprecated(replaced_with='Plottable2D.x')
     def qx_data(self):
         return self.x
 
@@ -295,8 +296,8 @@ class Plottable2D(Plottable):
     def qx_data(self, x: Iterable):
         self.x = x
 
-    @deprecated(replaced_with='Plottable2D.y')
     @property
+    @deprecated(replaced_with='Plottable2D.y')
     def qy_data(self):
         return self.y
 
@@ -304,8 +305,8 @@ class Plottable2D(Plottable):
     def qy_data(self, y: Iterable):
         self.y = y
 
-    @deprecated(replaced_with='Plottable2D.z')
     @property
+    @deprecated(replaced_with='Plottable2D.z')
     def data(self):
         return self.z
 
@@ -313,8 +314,8 @@ class Plottable2D(Plottable):
     def data(self, z: Iterable):
         self.z = z
 
-    @deprecated(replaced_with='Plottable2D.dx')
     @property
+    @deprecated(replaced_with='Plottable2D.dx')
     def dqx_data(self):
         return self.dx
 
@@ -322,8 +323,8 @@ class Plottable2D(Plottable):
     def dqx_data(self, dx: Iterable):
         self.dx = dx
 
-    @deprecated(replaced_with='Plottable2D.y')
     @property
+    @deprecated(replaced_with='Plottable2D.y')
     def dqy_data(self):
         return self.dy
 
@@ -331,8 +332,8 @@ class Plottable2D(Plottable):
     def dqy_data(self, dy: Iterable):
         self.dy = dy
 
-    @deprecated(replaced_with='Plottable2D.z')
     @property
+    @deprecated(replaced_with='Plottable2D.z')
     def error_data(self):
         return self.dz
 
@@ -378,8 +379,8 @@ class Plottable2D(Plottable):
         self._z_min = min(self.z) if any(self.z) else None
         return self._z_min
 
-    @deprecated(replaced_with='self.z_min')
     @property
+    @deprecated(replaced_with='self.z_min')
     def zmin(self):
         return self.z_min
 
