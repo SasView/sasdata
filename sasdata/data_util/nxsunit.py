@@ -152,7 +152,7 @@ def _build_all_units():
     dimensions.
     """
     # Gather all the ambiguities in one spot
-    AMBIGUITIES['A'] = 'distance'  # distance, current
+    AMBIGUITIES['A'] = 'distance'  # distance: Angstrom, current: Ampere
     AMBIGUITIES['second'] = 'time'  # time, angle
     AMBIGUITIES['seconds'] = 'time'
     AMBIGUITIES['sec'] = 'time'
@@ -160,9 +160,9 @@ def _build_all_units():
     AMBIGUITIES['minute'] = 'angle'  # time, angle
     AMBIGUITIES['minutes'] = 'angle'
     AMBIGUITIES['min'] = 'angle'
-    AMBIGUITIES['C'] = 'charge'  # temperature, charge
-    AMBIGUITIES['F'] = 'temperature'  # temperature
-    AMBIGUITIES['R'] = 'radiation'  # temperature:rankines, radiation:roentgens
+    AMBIGUITIES['C'] = 'temperature'  # temperature:Celsius, charge: Coulomb
+    AMBIGUITIES['F'] = 'temperature'  # temperature:Fahrenheit, capacitance: Farad
+    AMBIGUITIES['R'] = 'temperature'  # temperature:rankines, radiation:roentgens
 
     # Distance measurements
     distance = _build_metric_units('meter', 'm')
@@ -205,9 +205,9 @@ def _build_all_units():
     for k, v in temperature.items():
         # add offset 0 to all kelvin temperatures
         temperature[k] = (v, 0.)  # type: ignore
-    temperature.update(_build_degree_units('celcius', 'C', (1., 273.15)))
+    temperature.update(_build_degree_units('celcius', 'C', (1., -273.15)))
     temperature.update(_build_degree_units('centigrade', 'C', temperature['degC']))
-    temperature.update(_build_degree_units('fahrenheit', 'F', (5. / 9., 491.67 - 32)))
+    temperature.update(_build_degree_units('fahrenheit', 'F', (5. / 9., 32 - 491.67)))
     temperature.update(_build_degree_units('rankine', 'R', (5. / 9., 0)))
     # special unicode symbols for fahrenheit and celcius
     temperature['℃'] = temperature['degC']
@@ -225,7 +225,7 @@ def _build_all_units():
 
     # Scattering length densities and inverse area units
     sld = _build_inv_n_metric_units('meter', 'm', 2)
-    sld.update(_build_inv_n_units(('Å', 'A', 'Ang', 'Angstrom', 'ang', 'angstrom'), 1.0e10, 2))
+    sld.update(_build_inv_n_units(('Å', 'A', 'Ang', 'Angstrom', 'ang', 'angstrom'), 1.0e20, 2))
     sld['10^-6 Angstrom^-2'] = 1e-6
     DIMENSIONS['sld'] = sld
 
@@ -409,13 +409,15 @@ class Converter:
         """Scale the given value and add the offset using the units string supplied"""
         inscale, inoffset = self.scalebase, self.scaleoffset
         outscale, outoffset = scale_base
-        return (value + inoffset) * inscale / outscale - outoffset
+        return (value + outoffset) * inscale / outscale - inoffset
 
     def _get_scale_for_units(self, units: List[str]):
         """Protected method to get scale factor and scale offset as a combined value"""
         base = (1.0, 0.0)
         for scalemap, unit in zip(self.scalemap, units):
             unit_scale = scalemap.get(unit)
+            if unit_scale is None:
+                raise ValueError(f"{units} are not compatible with {self.units}")
             if not isinstance(unit_scale, tuple):
                 unit_scale = (unit_scale, 0.0)
             base = (base[0] * unit_scale[0], base[1] + unit_scale[1])
