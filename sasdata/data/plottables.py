@@ -4,6 +4,13 @@ from typing import Optional, Iterable
 from sasdata.data_util.deprecation import deprecated
 
 
+# TODO: Either turn Plottable into a meta class -or- (better) create a separate meta class that returns type Plottable
+class PlottableMeta:
+    def __new__(cls, *args, **kwargs):
+        # TODO: determine proper class based on parameters passed to method
+        return type(None)
+
+
 class Plottable:
     """Base class all plottable objects should inherit from."""
 
@@ -198,7 +205,7 @@ class Plottable1D(Plottable):
         super().__init__(x, y, dx, dy, mask)
 
 
-class SlitSmeared1D(Plottable):
+class SlitSmeared1D(Plottable1D):
     """Data class for slit-smeared 1-dimensional data. This will typically be SAS data in the form I vs. Q."""
 
     # Slit smeared resolution
@@ -229,7 +236,7 @@ class SlitSmeared1D(Plottable):
         self._dxw = np.asarray(dxw) if dxw is not None else None
 
 
-class SpinEchoSANS(Plottable):
+class SpinEchoSANS(Plottable1D):
     """Data class for SESANS data."""
 
     _lam = None
