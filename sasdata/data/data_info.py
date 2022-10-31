@@ -8,7 +8,9 @@
     http://www.smallangles.net/wgwiki/index.php/cansas1d_documentation
 """
 
-from sasdata.data.meta_data import Sample, Source, Process
+from typing import Any, Dict, List
+
+from sasdata.data.meta_data import Collimation, Detector, Process, Sample, Source, TransmissionSpectrum
 
 
 class DataInfo:
@@ -19,35 +21,36 @@ class DataInfo:
     the data itself and any other meta data.
     """
     # Title
-    title = ''
+    title: str = ''
     # Run number
-    run = None
+    run: List[int] = None
     # Run name
-    run_name = None
+    run_name: Dict[str, List[int]] = None
     # File name
-    filename = ''
+    filename: str = ''
     # Notes
-    notes = None
+    notes: List[str] = None
     # Processes (Action on the data)
-    process = None
+    process: List[Process] = None
     # Instrument name
-    instrument = ''
+    instrument: str = ''
     # Detector information
-    detector = None
+    detector: List[Detector] = None
     # Sample information
-    sample = None
+    sample: Sample = None
     # Source information
-    source = None
+    source: Source = None
     # Collimation information
-    collimation = None
+    collimation: List[Collimation] = None
     # Transmission Spectrum INfo
-    trans_spectrum = None
+    trans_spectrum: List[TransmissionSpectrum] = None
     # Additional meta-data
-    meta_data = None
+    meta_data: Dict[str, Any] = None
     # Loading errors
-    errors = None
+    errors: List[str] = None
     # SESANS data check
-    isSesans = None
+    # TODO: Should not be in here!
+    isSesans: bool = None
 
     def __init__(self):
         """
@@ -117,6 +120,7 @@ class DataInfo:
             _str += f"{str(item)}\n"
         return _str
 
+    # TODO: These should be in the plottables Classes. Not here
     # Private method to perform operation. Not implemented for DataInfo,
     # but should be implemented for each data class inherited from DataInfo
     # that holds actual data (ex.: Data1D)
