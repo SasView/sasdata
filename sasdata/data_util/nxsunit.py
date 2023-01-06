@@ -288,10 +288,10 @@ def standardize_units(unit: Union[str, None]) -> List[str]:
     unit = re.sub(r'kel(vin)?(s)?', 'K', unit, flags=re.IGNORECASE)
     # Catch celcius, CELCIUS, and any capitalization in between
     # Replace with '℃'
-    unit = re.sub(r'cel(cius)?', '℃', unit)
+    unit = re.sub(r'cel(cius)?', '℃', unit, flags=re.IGNORECASE)
     # Catch hertz, HERTZ, hz, HZ, and any capitalization in between
     # Replace with 'Hz'
-    unit = re.sub(r'h(ert)?z', 'Hz', unit)
+    unit = re.sub(r'h(ert)?z', 'Hz', unit, flags=re.IGNORECASE)
     # Catch arbitrary units, arbitrary, and any capitalization
     # Replace with 'a.u.'
     unit = re.sub(r'(arb(itrary|[.]|)?( )?(units)?|a[.] ?u[.]|au[.]?|aus[.]?)',
