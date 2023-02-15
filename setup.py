@@ -41,24 +41,6 @@ elif os.path.exists(SAS_DATA_BUILD):
     print("Removing existing build directory", SAS_DATA_BUILD, "for a clean build")
     shutil.rmtree(SAS_DATA_BUILD)
 
-
-class BuildSphinxCommand(Command):
-    description = "Build Sphinx documentation."
-    user_options = []
-
-    def initialize_options(self):
-        self.cwd = None
-
-    def finalize_options(self):
-        self.cwd = os.getcwd()
-
-    def run(self):
-        """Build the docs from source"""
-        sys.path.append("docs/sphinx-docs")
-        import build_sphinx
-        build_sphinx.rebuild()
-
-
 # _standard_ commands which should trigger the Qt build
 build_commands = [
     'install', 'build', 'build_py', 'bdist', 'bdist_egg', 'bdist_rpm',
@@ -82,7 +64,10 @@ packages.append("sasdata.file_converter")
 package_dir["sasdata.data_util"] = os.path.join("sasdata", "data_util")
 packages.append("sasdata.data_util")
 
-required = ['lxml', 'h5py', 'numpy', 'pytest<6', 'xmlrunner']
+required = ['lxml', 'h5py', 'numpy']
+
+with open('LICENSE.TXT', encoding='utf-8') as f:
+    license_text = f.read()
 
 with open('README.md', encoding='utf-8') as f:
     long_description = f.read()
@@ -96,8 +81,8 @@ setup(
     long_description_content_type='text/markdown',
     author="SasView Team",
     author_email="developers@sasview.org",
-    url="http://sasview.org",
-    license="PSF",
+    url="https://sasview.org",
+    license=license_text,
     keywords="small-angle x-ray and neutron scattering data loading",
     download_url="https://github.com/SasView/sasdata.git",
     package_dir=package_dir,
