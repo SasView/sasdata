@@ -21,8 +21,9 @@ To run sasdata from the source, create a python environment using python 3.8 or 
  - Using [miniconda](https://docs.conda.io/en/latest/miniconda.html)
 or [anaconda](https://www.anaconda.com/)::
    
-       $ conda create -n sasdata --file build_tools/requirements.txt
+       $ conda create -n sasdata
        $ conda activate sasdata
+       (sasdata) $ python -m pip install -r build_tools/requirements.txt
        (sasdata) $ python /path/to/sasdata/setup.py clean build
        (sasdata) $ python -m pip install .
 

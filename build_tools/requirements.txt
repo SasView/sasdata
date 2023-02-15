@@ -7,6 +7,7 @@ numpy
 
 # Unit testing
 pytest
+unittest-xml-reporting
 
 # Documentation (future)
 sphinx
