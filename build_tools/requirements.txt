@@ -1,0 +1,13 @@
+# Data import/export requirements
+h5py
+lxml
+
+# Calculation
+numpy
+
+# Unit testing
+pytest
+
+# Documentation (future)
+sphinx
+html5lib
