@@ -72,6 +72,12 @@ class GenericFileReaderTests(unittest.TestCase):
         self.assertEqual(len(asc_load[0].errors), 1)
         self.assertEqual(len(nxs_load[0].errors), 0)
 
+    def test_caller_method(self):
+        xml_native = find("TestExtensions.xml")
+        f_load = self.generic_reader.load(xml_native)[0]
+        f_call = Loader()([xml_native])[0]
+        self.assertEqual(str(f_call), str(f_load))
+
     def check_unknown_extension(self, data):
         self.assertTrue(isinstance(data, Data1D))
         self.assertEqual(len(data.x), 138)
