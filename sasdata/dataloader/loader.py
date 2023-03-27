@@ -24,7 +24,7 @@ import time
 from zipfile import ZipFile
 from collections import defaultdict
 from types import ModuleType
-from typing import Optional, Union
+from typing import Optional, Union, List
 
 from sasdata.data_util.registry import ExtensionRegistry
 from sasdata.data_util.util import unique_preserve_order
@@ -400,3 +400,12 @@ class Loader:
         Return the list of wildcards
         """
         return self.__registry.wildcards
+
+    def __call__(self, file_path_list: List[str]) -> List:
+        output = []
+        for file_path in file_path_list:
+            try:
+                output.extend(self.load(file_path))
+            except Exception:
+                pass
+        return output
