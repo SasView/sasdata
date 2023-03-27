@@ -4,12 +4,40 @@ File extension registry.
 This provides routines for opening files based on extension,
 and registers the built-in file extensions.
 """
-from typing import Optional, List, Union
+import requests
+
+from io import BytesIO
+from typing import Optional, List, Union, Tuple, TextIO, BinaryIO
 from collections import defaultdict
+
+import h5py
+from h5py import Group
 
 from sasdata.data_util.loader_exceptions import NoKnownLoaderException
 from sasdata.data_util.util import unique_preserve_order
 from sasdata.dataloader.filereader import FileReader
+
+
+def open_or_fetch(uri: str) -> Tuple[Union[TextIO, BinaryIO], Union[Group, None]]:
+    """A helper method to either fetch a file from a URL or open a local file.
+    :param uri: A string representation of a file path or URI where the file is located.
+    :return: A tuple of File objects, the first either a BytesIO or TextIO object, the second an h5py File/Group object
+        or None if the file is not in the HDF format.
+    """
+    if '://' in uri:
+        req = requests.get(uri)
+        req.raise_for_status()
+        fd = BytesIO(req.content)
+    else:
+        fd = open(uri, 'rb')
+    try:
+        # H5PY uses its own reader that returns a dictionary-like data structure as opposed to the binary from open().
+        h5_file = h5py.File(fd, 'r')
+    except OSError:
+        # Not an HDF5 file -> Ignore
+        h5_file = None
+    fd.name = uri
+    return fd, h5_file
 
 
 class ExtensionRegistry:
