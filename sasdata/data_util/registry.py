@@ -18,26 +18,35 @@ from sasdata.data_util.util import unique_preserve_order
 from sasdata.dataloader.filereader import FileReader
 
 
-def open_or_fetch(uri: str) -> Tuple[Union[TextIO, BinaryIO], Union[Group, None]]:
-    """A helper method to either fetch a file from a URL or open a local file.
-    :param uri: A string representation of a file path or URI where the file is located.
-    :return: A tuple of File objects, the first either a BytesIO or TextIO object, the second an h5py File/Group object
-        or None if the file is not in the HDF format.
-    """
-    if '://' in uri:
-        req = requests.get(uri)
-        req.raise_for_status()
-        fd = BytesIO(req.content)
-    else:
-        fd = open(uri, 'rb')
-    try:
-        # H5PY uses its own reader that returns a dictionary-like data structure as opposed to the binary from open().
-        h5_file = h5py.File(fd, 'r')
-    except OSError:
-        # Not an HDF5 file -> Ignore
-        h5_file = None
-    fd.name = uri
-    return fd, h5_file
+class CustomFileOpen:
+    """Custom context manager to fetch file contents."""
+    def __init__(self, filename, mode='rb'):
+        self.filename = filename
+        self.mode = mode
+        self.fd = None
+        self.h5_file = None
+
+    def __enter__(self):
+        """A helper method to either fetch a file from a URL or open a local file."""
+        if '://' in self.filename:
+            req = requests.get(self.filename)
+            req.raise_for_status()
+            self.fd = BytesIO(req.content)
+        else:
+            self.fd = open(self.filename, self.mode)
+        try:
+            # H5PY uses its own reader that returns a dictionary-like data structure
+            self.h5_file = h5py.File(self.fd, 'r')
+        except (TypeError, OSError):
+            # Not an HDF5 file -> Ignore
+            self.h5_file = None
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.fd is not None:
+            self.fd.close()
+        if self.h5_file is not None:
+            self.h5_file.close()
 
 
 class ExtensionRegistry:
@@ -152,11 +161,12 @@ class ExtensionRegistry:
                 raise NoKnownLoaderException("No loaders match format %r"
                                              % ext)
         last_exc = None
-        for load_function in loaders:
-            try:
-                return load_function(path)
-            except Exception as e:
-                last_exc = e
-                pass  # give other loaders a chance to succeed
-        # If we get here it is because all loaders failed
-        raise last_exc
+        with CustomFileOpen(path, 'r') as file_handler:
+            for load_function in loaders:
+                try:
+                    return load_function(file_handler.fd, file_handler.h5_file)
+                except Exception as e:
+                    last_exc = e
+                    pass  # give other loaders a chance to succeed
+            # If we get here it is because all loaders failed
+            raise last_exc
