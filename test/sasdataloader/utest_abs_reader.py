@@ -3,8 +3,6 @@
 """
 import unittest
 from sasdata.dataloader.loader import Loader
-from sasdata.dataloader.readers.abs_reader import Reader as AbsReader
-from sasdata.dataloader.readers.danse_reader import Reader as DANSEReader
 
 import os.path
 
@@ -16,8 +14,8 @@ def find(filename):
 class abs_reader(unittest.TestCase):
 
     def setUp(self):
-        reader = AbsReader()
-        self.data_list = reader.read(find("jan08002.ABS"))
+        reader = Loader()
+        self.data_list = reader.load(find("jan08002.ABS"))
         self.data = self.data_list[0]
 
     def test_abs_checkdata(self):
@@ -82,8 +80,8 @@ class abs_reader(unittest.TestCase):
 class DanseReaderTests(unittest.TestCase):
 
     def setUp(self):
-        reader = DANSEReader()
-        self.data_list = reader.read(find("MP_New.sans"))
+        reader = Loader()
+        self.data_list = reader.load(find("MP_New.sans"))
         self.data = self.data_list[0]
 
     def test_checkdata(self):
