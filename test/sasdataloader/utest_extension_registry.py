@@ -21,11 +21,15 @@ class ExtensionRegistryTests(unittest.TestCase):
 
     def setUp(self):
         self.valid_file = find("valid_cansas_xml.xml")
+        self.valid_file_url = "https://github.com/SasView/sasdata/raw/master/test/sasdataloader/data/valid_cansas_xml.xml"
         self.valid_file_wrong_known_ext = find("valid_cansas_xml.txt")
         self.valid_file_wrong_unknown_ext = find("valid_cansas_xml.xyz")
         shutil.copyfile(self.valid_file, self.valid_file_wrong_known_ext)
         shutil.copyfile(self.valid_file, self.valid_file_wrong_unknown_ext)
         self.invalid_file = find("cansas1d_notitle.xml")
+
+        self.valid_hdf_file = find("MAR07232_rest.h5")
+        self.valid_hdf_url = "https://github.com/SasView/sasdata/raw/master/test/sasdataloader/data/MAR07232_rest.h5"
 
         self.loader = Loader()
 
@@ -75,6 +79,12 @@ class ExtensionRegistryTests(unittest.TestCase):
 
         err_msg = data.errors[0]
         self.assertTrue("does not fully meet the CanSAS v1.x specification" in err_msg)
+
+    def test_compare_remote_file_to_local(self):
+        remote = self.loader.load(self.valid_hdf_url)
+        local = self.loader.load(self.valid_hdf_file)
+        # Ensure the string representation of the file contents match
+        self.assertEqual(str(local[0]), str(remote[0]))
 
     def tearDown(self):
         if os.path.isfile(self.valid_file_wrong_known_ext):
