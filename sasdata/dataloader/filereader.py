@@ -74,14 +74,20 @@ class FileReader:
         self.current_datainfo = None
         # File path sent to reader
         self.filepath = None
+        # File extension sent to reader
+        self.extension = None
         # Open file handle
         self.f_open = None
+        # Open HDF file handle
+        self.hdf_open = None
 
     def read(self, filepath: str, raw_file: Union[TextIO, BinaryIO]=None, hdf5_file=None) -> List[Union[Data1D, Data2D]]:
         """
         Basic file reader
 
         :param filepath: The full or relative path to a file to be loaded
+        :param raw_file: An open TextIO or Binary IO file handle to be read.
+        :param hdf5_file: An open h5py.File file handle or None if not HDF.
         """
         self.f_open = raw_file
         self.hdf_open = hdf5_file
