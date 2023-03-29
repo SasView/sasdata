@@ -8,7 +8,7 @@ import os
 import codecs
 import logging
 from abc import abstractmethod
-from typing import List, Union
+from typing import List, Union, TextIO, BinaryIO
 
 import numpy as np
 from sasdata.data_util.loader_exceptions import NoKnownLoaderException, FileContentsException,\
@@ -77,43 +77,36 @@ class FileReader:
         # Open file handle
         self.f_open = None
 
-    def read(self, filepath: str) -> List[Union[Data1D, Data2D]]:
+    def read(self, filepath: str, raw_file: Union[TextIO, BinaryIO]=None, hdf5_file=None) -> List[Union[Data1D, Data2D]]:
         """
         Basic file reader
 
         :param filepath: The full or relative path to a file to be loaded
         """
+        self.f_open = raw_file
+        self.hdf_open = hdf5_file
         self.filepath = filepath
-        if os.path.isfile(filepath):
-            basename, extension = os.path.splitext(os.path.basename(filepath))
-            self.extension = extension.lower()
-            # If the file type is not allowed, return nothing
-            if self.extension in self.ext or self.allow_all:
-                # Try to load the file, but raise an error if unable to.
-                try:
-                    with open(filepath, 'rb') as self.f_open:
-                        self.get_file_contents()
-                except DataReaderException as e:
-                    self.handle_error_message(str(e))
-                except FileContentsException as e:
-                    raise
-                except OSError as e:
-                    # If the file cannot be opened
-                    msg = "Unable to open file: {}\n".format(filepath)
-                    msg += str(e)
-                    self.handle_error_message(msg)
-                except Exception as e:
-                    self.handle_error_message(str(e))
-                finally:
-                    if any(filepath.lower().endswith(ext) for ext in
-                           self.deprecated_extensions):
-                        self.handle_error_message(DEPRECATION_MESSAGE)
-                    if len(self.output) > 0:
-                        # Sort the data that's been loaded
-                        self.convert_data_units()
-                        self.sort_data()
+        basename, extension = os.path.splitext(os.path.basename(self.filepath))
+        self.extension = extension.lower()
+        if self.extension in self.ext or self.allow_all:
+            try:
+                self.get_file_contents()
+            except DataReaderException as e:
+                self.handle_error_message(str(e))
+            except FileContentsException as e:
+                raise
+            except Exception as e:
+                self.handle_error_message(str(e))
+            finally:
+                if any(self.filepath.lower().endswith(ext) for ext in
+                       self.deprecated_extensions):
+                    self.handle_error_message(DEPRECATION_MESSAGE)
+                if len(self.output) > 0:
+                    # Sort the data that's been loaded
+                    self.convert_data_units()
+                    self.sort_data()
         else:
-            msg = "Unable to find file at: {}\n".format(filepath)
+            msg = "Unable to find file at: {}\n".format(self.filepath)
             msg += "Please check your file path and try again."
             self.handle_error_message(msg)
 

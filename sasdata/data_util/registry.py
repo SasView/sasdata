@@ -24,29 +24,31 @@ class CustomFileOpen:
         self.filename = filename
         self.mode = mode
         self.fd = None
-        self.h5_file = None
+        self.h5_fd = None
 
     def __enter__(self):
-        """A helper method to either fetch a file from a URL or open a local file."""
+        """A context method that either fetches a file from a URL or opens a local file."""
         if '://' in self.filename:
             req = requests.get(self.filename)
             req.raise_for_status()
             self.fd = BytesIO(req.content)
+            h5_file = self.fd
         else:
             self.fd = open(self.filename, self.mode)
+            h5_file = self.filename
         try:
             # H5PY uses its own reader that returns a dictionary-like data structure
-            self.h5_file = h5py.File(self.fd, 'r')
+            self.h5_fd = h5py.File(h5_file, 'r')
         except (TypeError, OSError):
             # Not an HDF5 file -> Ignore
-            self.h5_file = None
+            self.h5_fd = None
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.fd is not None:
             self.fd.close()
-        if self.h5_file is not None:
-            self.h5_file.close()
+        if self.h5_fd is not None:
+            self.h5_fd.close()
 
 
 class ExtensionRegistry:
@@ -164,7 +166,7 @@ class ExtensionRegistry:
         with CustomFileOpen(path, 'r') as file_handler:
             for load_function in loaders:
                 try:
-                    return load_function(file_handler.fd, file_handler.h5_file)
+                    return load_function(file_handler.filename, file_handler.fd, file_handler.h5_fd)
                 except Exception as e:
                     last_exc = e
                     pass  # give other loaders a chance to succeed
