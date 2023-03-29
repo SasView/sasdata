@@ -122,7 +122,6 @@ class FileReader:
         """
         self.current_datainfo = None
         self.current_dataset = None
-        self.filepath = None
         self.ind = None
         self.output = []
 

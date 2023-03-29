@@ -66,41 +66,18 @@ class Reader(FileReader):
         # Reinitialize when loading a new data file to reset all class variables
         self.reset_state()
 
-        filename = self.f_open.name
-        self.f_open.close() # IO handled by h5py
-
-        # Check that the file exists
-        if os.path.isfile(filename):
-            basename = os.path.basename(filename)
-            _, extension = os.path.splitext(basename)
-            # If the file type is not allowed, return empty list
-            if extension in self.ext or self.allow_all:
-                # Load the data file
-                try:
-                    self.raw_data = h5py.File(filename, 'r')
-                except Exception as exc:
-                    if extension not in self.ext:
-                        msg = "NXcanSAS Reader could not load file {}".format(
-                            basename + extension)
-                        raise DefaultReaderException(msg)
-                    raise FileContentsException(exc)
-                try:
-                    # Read in all child elements of top level SASroot
-                    self.read_children(self.raw_data, [])
-                    # Add the last data set to the list of outputs
-                    self.add_data_set()
-                except Exception as exc:
-                    raise FileContentsException(exc)
-                finally:
-                    # Close the data file
-                    self.raw_data.close()
-
-                for data_set in self.output:
-                    if isinstance(data_set, Data1D):
-                        if data_set.x.size < 5:
-                            exception = FileContentsException(
-                                "Fewer than 5 data points found.")
-                            data_set.errors.append(exception)
+        try:
+            # Read in all child elements of top level SASroot
+            self.read_children(self.hdf_open, [])
+            # Add the last data set to the list of outputs
+            self.add_data_set()
+        except Exception as exc:
+            raise FileContentsException(exc)
+        for data_set in self.output:
+            if isinstance(data_set, Data1D):
+                if data_set.x.size < 5:
+                    exception = FileContentsException("Fewer than 5 data points found.")
+                    data_set.errors.append(exception)
 
     def reset_state(self):
         """
@@ -109,7 +86,6 @@ class Reader(FileReader):
         super(Reader, self).reset_state()
         self.data1d = []
         self.data2d = []
-        self.raw_data = None
         self.multi_frame = False
         self.data_frames = []
         self.data_uncertainty_frames = []
@@ -646,7 +622,8 @@ class Reader(FileReader):
             x = np.array(0)
             y = np.array(0)
             self.current_dataset = plottable_1D(x, y)
-        self.current_datainfo.filename = self.raw_data.filename
+        basename, _ = os.path.splitext(os.path.basename(self.filepath))
+        self.current_datainfo.filename = basename
 
     @staticmethod
     def as_list_or_array(data: Any) -> Union[list, np.ndarray]:
