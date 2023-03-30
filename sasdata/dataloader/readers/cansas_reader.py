@@ -79,7 +79,7 @@ class Reader(XMLreader):
 
     def get_file_contents(self):
         self.reset_state()
-        xml_file = self.f_open.name
+        xml_file = self.filepath
         try:
             # Raises FileContentsException
             is_valid_cansas = self.load_file_and_schema(xml_file, '')
@@ -123,7 +123,7 @@ class Reader(XMLreader):
         try:
             self.set_xml_file(xml_file)
         except etree.XMLSyntaxError:  # File isn't valid XML so can't be loaded
-            msg = "SasView cannot load {}.\nInvalid XML syntax".format(xml_file)
+            msg = f"SasView cannot load {self.filepath}.\nInvalid XML syntax."
             raise FileContentsException(msg)
 
         self.cansas_version = self.xmlroot.get("version", "1.1")
