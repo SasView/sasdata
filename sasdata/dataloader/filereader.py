@@ -8,7 +8,8 @@ import os
 import codecs
 import logging
 from abc import abstractmethod
-from typing import List, Union, TextIO, BinaryIO
+from h5py import Group
+from typing import List, Union, TextIO, BinaryIO, Optional
 
 import numpy as np
 from sasdata.data_util.loader_exceptions import NoKnownLoaderException, FileContentsException,\
@@ -82,13 +83,14 @@ class FileReader:
         # Open HDF file handle
         self.hdf_open = None
 
-    def read(self, filepath: str, raw_file: Union[TextIO, BinaryIO]=None, hdf5_file=None) -> List[Union[Data1D, Data2D]]:
+    def read(self, filepath: str, raw_file: Optional[Union[TextIO, BinaryIO]] = None,
+             hdf5_file: Optional[Group] = None) -> List[Union[Data1D, Data2D]]:
         """
         Basic file reader
 
-        :param filepath: The full or relative path to a file to be loaded
+        :param filepath: The string representation of the path to a file to be loaded. This can be a URI or a local file
         :param raw_file: An open TextIO or Binary IO file handle to be read.
-        :param hdf5_file: An open h5py.File file handle or None if not HDF.
+        :param hdf5_file: An open h5py.File file handle, which is also an h5py Group.
         """
         self.f_open = raw_file
         self.hdf_open = hdf5_file
@@ -105,7 +107,7 @@ class FileReader:
                         self.hdf_open = file_handler.h5_fd
                         self.get_file_contents()
                 else:
-                    # For calls to the reader from the registry system
+                    # For calls to the reader from the registry system where the file handles are passed
                     self.get_file_contents()
             except DataReaderException as e:
                 self.handle_error_message(str(e))
@@ -122,8 +124,7 @@ class FileReader:
                     self.convert_data_units()
                     self.sort_data()
         else:
-            msg = "Unable to find file at: {}\n".format(self.filepath)
-            msg += "Please check your file path and try again."
+            msg = f"Unable to find file at: {self.filepath}\nPlease check your file path and try again."
             self.handle_error_message(msg)
 
         # Return a list of parsed entries that data_loader can manage
