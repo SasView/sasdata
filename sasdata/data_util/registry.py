@@ -163,7 +163,7 @@ class ExtensionRegistry:
                 raise NoKnownLoaderException("No loaders match format %r"
                                              % ext)
         last_exc = None
-        with CustomFileOpen(path, 'r') as file_handler:
+        with CustomFileOpen(path, 'rb') as file_handler:
             for load_function in loaders:
                 try:
                     return load_function(file_handler.filename, file_handler.fd, file_handler.h5_fd)
