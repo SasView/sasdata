@@ -28,6 +28,7 @@ from typing import Optional, Union, List
 
 from sasdata.data_util.registry import ExtensionRegistry
 from sasdata.data_util.util import unique_preserve_order
+from sasdata.dataloader.data_info import Data1D, Data2D
 
 # Default readers are defined in the readers sub-module
 from . import readers
@@ -401,7 +402,12 @@ class Loader:
         """
         return self.__registry.wildcards
 
-    def __call__(self, file_path_list: List[str]) -> List:
+    def __call__(self, file_path_list: List[str]) -> List[Union[Data1D, Data2D]]:
+        """Allow direct calls to the loader system for transient file loader systems.
+        :param file_path_list: A list of string representations of file paths. Each item can either be a local file path
+            or a URI.
+        :return: A list of loaded Data1D/2D objects.
+        """
         output = []
         for file_path in file_path_list:
             try:
