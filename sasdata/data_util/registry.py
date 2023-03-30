@@ -15,7 +15,6 @@ from h5py import Group
 
 from sasdata.data_util.loader_exceptions import NoKnownLoaderException
 from sasdata.data_util.util import unique_preserve_order
-from sasdata.dataloader.filereader import FileReader
 
 
 class CustomFileOpen:
@@ -104,10 +103,10 @@ class ExtensionRegistry:
     def __init__(self):
         self.readers = defaultdict(list)
 
-    def __setitem__(self, ext: str, loader: FileReader):
+    def __setitem__(self, ext: str, loader):
         self.readers[ext].insert(0, loader)
 
-    def __getitem__(self, ext: str) -> List[FileReader]:
+    def __getitem__(self, ext: str) -> List:
         return self.readers[ext]
 
     def __contains__(self, ext: str) -> bool:
@@ -145,7 +144,7 @@ class ExtensionRegistry:
         readers = [reader for ext in extensions for reader in self.readers[ext]]
         return unique_preserve_order(readers)
 
-    def load(self, path: str, ext: Optional[str] = None) -> Union[List[FileReader], Exception]:
+    def load(self, path: str, ext: Optional[str] = None) -> Union[List, Exception]:
         """
         Call the loader for the file type of path.
 
