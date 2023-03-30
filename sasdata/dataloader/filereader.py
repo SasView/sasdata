@@ -16,6 +16,7 @@ from sasdata.data_util.loader_exceptions import NoKnownLoaderException, FileCont
 from sasdata.dataloader.data_info import Data1D, Data2D, DataInfo, plottable_1D, plottable_2D,\
     combine_data_info_with_plottable
 from sasdata.data_util.nxsunit import Converter
+from sasdata.data_util.registry import CustomFileOpen
 
 logger = logging.getLogger(__name__)
 
@@ -96,7 +97,16 @@ class FileReader:
         self.extension = extension.lower()
         if self.extension in self.ext or self.allow_all:
             try:
-                self.get_file_contents()
+                if not self.f_open and not self.hdf_open:
+                    # For direct calls to the individual readers, create a separate context manager
+                    # This is here to maintain backwards compatibility
+                    with CustomFileOpen(self.filepath, 'rb') as file_handler:
+                        self.f_open = file_handler.fd
+                        self.hdf_open = file_handler.h5_fd
+                        self.get_file_contents()
+                else:
+                    # For calls to the reader from the registry system
+                    self.get_file_contents()
             except DataReaderException as e:
                 self.handle_error_message(str(e))
             except FileContentsException as e:
