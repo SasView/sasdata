@@ -7,11 +7,10 @@ and registers the built-in file extensions.
 import requests
 
 from io import BytesIO
-from typing import Optional, List, Union, Tuple, TextIO, BinaryIO
+from typing import Optional, List, Union
 from collections import defaultdict
 
 import h5py
-from h5py import Group
 
 from sasdata.data_util.loader_exceptions import NoKnownLoaderException
 from sasdata.data_util.util import unique_preserve_order
@@ -28,11 +27,13 @@ class CustomFileOpen:
     def __enter__(self):
         """A context method that either fetches a file from a URL or opens a local file."""
         if '://' in self.filename:
+            # Use requests package to access remote files
             req = requests.get(self.filename)
             req.raise_for_status()
             self.fd = BytesIO(req.content)
             h5_file = self.fd
         else:
+            # Use native open to access local files
             self.fd = open(self.filename, self.mode)
             h5_file = self.filename
         try:
@@ -41,9 +42,11 @@ class CustomFileOpen:
         except (TypeError, OSError):
             # Not an HDF5 file -> Ignore
             self.h5_fd = None
+        # Return the instance to allow access to the filename, and any open file handles.
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        """Close all open file handles when exiting the context manager."""
         if self.fd is not None:
             self.fd.close()
         if self.h5_fd is not None:
