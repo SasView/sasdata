@@ -2,6 +2,9 @@
 h5py
 lxml
 
+# Remote file fetching requirement
+requests
+
 # Calculation
 numpy
 
