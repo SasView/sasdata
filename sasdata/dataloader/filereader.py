@@ -83,8 +83,7 @@ class FileReader:
         # Open HDF file handle
         self.hdf_open = None
 
-    def read(self, filepath: str, raw_file: Optional[Union[TextIO, BinaryIO]] = None,
-             hdf5_file: Optional[Group] = None) -> List[Union[Data1D, Data2D]]:
+    def read(self, filepath: str, file_handler: Optional[CustomFileOpen] = None) -> List[Union[Data1D, Data2D]]:
         """
         Basic file reader
 
@@ -92,23 +91,18 @@ class FileReader:
         :param raw_file: An open TextIO or Binary IO file handle to be read.
         :param hdf5_file: An open h5py.File file handle, which is also an h5py Group.
         """
-        self.f_open = raw_file
-        self.hdf_open = hdf5_file
         self.filepath = filepath
+        if isinstance(file_handler, CustomFileOpen):
+            self.f_open = file_handler.fd
+            self.hdf_open = file_handler.h5_fd
+        else:
+            # If not called by a context manager, create one locally that calls read() again. Return early
+            return self._read_with_local_context_manager(filepath)
         basename, extension = os.path.splitext(os.path.basename(self.filepath))
         self.extension = extension.lower()
         if self.extension in self.ext or self.allow_all:
             try:
-                if not self.f_open and not self.hdf_open:
-                    # For direct calls to the individual readers, create a separate context manager
-                    # This is here to maintain backwards compatibility
-                    with CustomFileOpen(self.filepath, 'rb') as file_handler:
-                        self.f_open = file_handler.fd
-                        self.hdf_open = file_handler.h5_fd
-                        self.get_file_contents()
-                else:
-                    # For calls to the reader from the registry system where the file handles are passed
-                    self.get_file_contents()
+                self.get_file_contents()
             except DataReaderException as e:
                 self.handle_error_message(str(e))
             except FileContentsException as e:
@@ -131,6 +125,11 @@ class FileReader:
         final_data = self.output
         self.reset_state()
         return final_data
+
+    def _read_with_local_context_manager(self, filepath: str) -> List[Data1D, Data2D]:
+        """A private class method that creates a local context manager to ensure files are closed when exiting."""
+        with CustomFileOpen(filepath, 'rb') as file_handler:
+            return self.read(filepath, file_handler)
 
     def reset_state(self):
         """

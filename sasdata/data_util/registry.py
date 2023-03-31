@@ -168,7 +168,7 @@ class ExtensionRegistry:
         with CustomFileOpen(path, 'rb') as file_handler:
             for load_function in loaders:
                 try:
-                    return load_function(file_handler.filename, file_handler.fd, file_handler.h5_fd)
+                    return load_function(file_handler.filename, file_handler)
                 except Exception as e:
                     last_exc = e
                     pass  # give other loaders a chance to succeed
