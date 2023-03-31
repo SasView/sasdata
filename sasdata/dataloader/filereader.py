@@ -126,7 +126,7 @@ class FileReader:
         self.reset_state()
         return final_data
 
-    def _read_with_local_context_manager(self, filepath: str) -> List[Data1D, Data2D]:
+    def _read_with_local_context_manager(self, filepath: str) -> List[Union[Data1D, Data2D]]:
         """A private class method that creates a local context manager to ensure files are closed when exiting."""
         with CustomFileOpen(filepath, 'rb') as file_handler:
             return self.read(filepath, file_handler)
