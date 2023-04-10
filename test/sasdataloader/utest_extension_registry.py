@@ -20,16 +20,22 @@ def find(filename):
 class ExtensionRegistryTests(unittest.TestCase):
 
     def setUp(self):
-        self.valid_file = find("valid_cansas_xml.xml")
-        self.valid_file_url = "https://github.com/SasView/sasdata/raw/master/test/sasdataloader/data/valid_cansas_xml.xml"
-        self.valid_file_wrong_known_ext = find("valid_cansas_xml.txt")
-        self.valid_file_wrong_unknown_ext = find("valid_cansas_xml.xyz")
-        shutil.copyfile(self.valid_file, self.valid_file_wrong_known_ext)
-        shutil.copyfile(self.valid_file, self.valid_file_wrong_unknown_ext)
-        self.invalid_file = find("cansas1d_notitle.xml")
-
+        # Local and remote files to compare loading
+        # NXcanSAS
         self.valid_hdf_file = find("MAR07232_rest.h5")
         self.valid_hdf_url = "https://github.com/SasView/sasdata/raw/master/test/sasdataloader/data/MAR07232_rest.h5"
+        # canSAS XML
+        self.valid_xml_file = find("valid_cansas_xml.xml")
+        self.valid_xml_url = "https://github.com/SasView/sasdata/raw/master/test/sasdataloader/data/valid_cansas_xml.xml"
+        # ASCII Text
+        self.valid_txt_file = find("avg_testdata.txt")
+        self.valid_txt_url = "https://github.com/SasView/sasdata/raw/master/test/sasdataloader/data/avg_testdata.txt"
+
+        self.valid_file_wrong_known_ext = find("valid_cansas_xml.txt")
+        self.valid_file_wrong_unknown_ext = find("valid_cansas_xml.xyz")
+        shutil.copyfile(self.valid_xml_file, self.valid_file_wrong_known_ext)
+        shutil.copyfile(self.valid_xml_file, self.valid_file_wrong_unknown_ext)
+        self.invalid_file = find("cansas1d_notitle.xml")
 
         self.loader = Loader()
 
@@ -39,7 +45,7 @@ class ExtensionRegistryTests(unittest.TestCase):
         the extension registry. Compare the results to loading the same file
         with the extension '.xml'
         """
-        correct = self.loader.load(self.valid_file)
+        correct = self.loader.load(self.valid_xml_file)
         wrong_ext = self.loader.load(self.valid_file_wrong_known_ext)
         self.assertEqual(len(correct), 1)
         self.assertEqual(len(wrong_ext), 1)
@@ -56,7 +62,7 @@ class ExtensionRegistryTests(unittest.TestCase):
         in the extension registry. Compare the results to loading the same file
         with the extension '.xml'
         """
-        correct = self.loader.load(self.valid_file)
+        correct = self.loader.load(self.valid_xml_file)
         wrong_ext = self.loader.load(self.valid_file_wrong_unknown_ext)
         self.assertEqual(len(correct), 1)
         self.assertEqual(len(wrong_ext), 1)
@@ -81,10 +87,22 @@ class ExtensionRegistryTests(unittest.TestCase):
         self.assertTrue("does not fully meet the CanSAS v1.x specification" in err_msg)
 
     def test_compare_remote_file_to_local(self):
-        remote = self.loader.load(self.valid_hdf_url)
-        local = self.loader.load(self.valid_hdf_file)
+        """Load the same file from a local directory and a remote URL and compare data objects."""
+        # ASCII Text file loading
+        remote_txt = self.loader.load(self.valid_txt_url)
+        local_txt = self.loader.load(self.valid_txt_file)
         # Ensure the string representation of the file contents match
-        self.assertEqual(str(local[0]), str(remote[0]))
+        self.assertEqual(str(local_txt[0]), str(remote_txt[0]))
+        # NXcanSAS file loading
+        local_hdf = self.loader.load(self.valid_hdf_file)
+        remote_hdf = self.loader.load(self.valid_hdf_url)
+        # Ensure the string representation of the file contents match
+        self.assertEqual(str(local_hdf[0]), str(remote_hdf[0]))
+        # canSAS XML file loading
+        local_xml = self.loader.load(self.valid_xml_file)
+        remote_xml = self.loader.load(self.valid_xml_url)
+        # Ensure the string representation of the file contents match
+        self.assertEqual(str(local_xml[0]), str(remote_xml[0]))
 
     def tearDown(self):
         if os.path.isfile(self.valid_file_wrong_known_ext):
