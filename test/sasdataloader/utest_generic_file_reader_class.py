@@ -9,7 +9,6 @@ import numpy as np
 
 from sasdata.dataloader.data_info import DataInfo, plottable_1D, Data1D
 from sasdata.dataloader.loader import Loader
-from sasdata.data_util.loader_exceptions import NoKnownLoaderException
 from sasdata.dataloader.filereader import FileReader
 
 logger = logging.getLogger(__name__)
@@ -29,7 +28,7 @@ class GenericFileReaderTests(unittest.TestCase):
         self.deprecated_file_type = find("FEB18012.ASC")
 
     def test_bad_file_path(self):
-        self.assertRaises(NoKnownLoaderException, self.reader.read,
+        self.assertRaises(FileNotFoundError, self.reader.read,
                           self.bad_file)
 
     def test_good_file_path(self):
