@@ -80,6 +80,8 @@ class FileReader:
         self.extension = None
         # Open file handle
         self.f_open = None
+        # Open string file handle
+        self.string_open = None
         # Open HDF file handle
         self.hdf_open = None
 
@@ -95,6 +97,7 @@ class FileReader:
         if isinstance(file_handler, CustomFileOpen):
             self.f_open = file_handler.fd
             self.hdf_open = file_handler.h5_fd
+            self.string_open = file_handler.string_fd
         else:
             # If not called by a context manager, create one locally that calls read() again. Return early
             return self._read_with_local_context_manager(filepath)
@@ -146,13 +149,13 @@ class FileReader:
         Returns the next line in the file as a string.
         """
         #return self.f_open.readline()
-        return decode(self.f_open.readline())
+        return decode(self.string_open.readline())
 
     def nextlines(self) -> str:
         """
         Returns the next line in the file as a string.
         """
-        for line in self.f_open:
+        for line in self.string_open:
             #yield line
             yield decode(line)
 
@@ -160,7 +163,7 @@ class FileReader:
         """
         Returns the entire file as a string.
         """
-        return decode(self.f_open.read())
+        return decode(self.string_open.read())
 
     def handle_error_message(self, msg: str):
         """
