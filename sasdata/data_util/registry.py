@@ -4,9 +4,9 @@ File extension registry.
 This provides routines for opening files based on extension,
 and registers the built-in file extensions.
 """
-import requests
+import urllib.request as requests
 
-from io import BytesIO
+from io import BytesIO, StringIO
 from typing import Optional, List, Union
 from collections import defaultdict
 
@@ -22,19 +22,23 @@ class CustomFileOpen:
         self.filename = filename
         self.mode = mode
         self.fd = None
+        self.string_fd = None
         self.h5_fd = None
 
     def __enter__(self):
         """A context method that either fetches a file from a URL or opens a local file."""
         if '://' in self.filename:
             # Use requests package to access remote files
-            req = requests.get(self.filename)
-            req.raise_for_status()
-            self.fd = BytesIO(req.content)
+            req = requests.urlopen(self.filename)
+            if req.status != 200:
+                raise ConnectionError(req.msg)
+            content = req.read()
+            self.fd = BytesIO(content)
             h5_file = self.fd
         else:
             # Use native open to access local files
             self.fd = open(self.filename, self.mode)
+            content = self.fd.read()
             h5_file = self.filename
         try:
             # H5PY uses its own reader that returns a dictionary-like data structure
@@ -42,6 +46,11 @@ class CustomFileOpen:
         except (TypeError, OSError):
             # Not an HDF5 file -> Ignore
             self.h5_fd = None
+        try:
+            # H5py objects will fail here, but are unnecessary for later
+            self.string_fd = StringIO(content.decode())
+        except UnicodeDecodeError:
+            self.string_fd = None
         # Return the instance to allow access to the filename, and any open file handles.
         return self
 
@@ -51,6 +60,8 @@ class CustomFileOpen:
             self.fd.close()
         if self.h5_fd is not None:
             self.h5_fd.close()
+        if self.string_fd is not None:
+            self.string_fd.close()
 
 
 class ExtensionRegistry:
