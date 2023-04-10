@@ -2,7 +2,6 @@
     Unit tests for the new recursive cansas reader
 """
 import os
-import math
 import unittest
 import logging
 import warnings
@@ -67,7 +66,7 @@ class cansas_reader_xml(unittest.TestCase):
         """
         Should fail gracefully and send a message to logger.info()
         """
-        invalid = StringIO('<a><c></b></a>')
+        invalid = '<a><c></b></a>'
         self.assertRaises(XMLSyntaxError, lambda: XMLreader(invalid))
 
     def test_xml_validate(self):
@@ -88,7 +87,7 @@ class cansas_reader_xml(unittest.TestCase):
         self.assertFalse(xmlschema.validate(invalid))
 
     def test_real_xml(self):
-        self.xml_reader.set_xml_file(self.xml_valid)
+        self.xml_reader.set_xml(self.xml_valid)
         self.xml_reader.set_schema(self.schema_1_0)
         self.assertTrue(self.xml_reader.validate_xml())
 
@@ -110,7 +109,7 @@ class cansas_reader_xml(unittest.TestCase):
         self.assertTrue(len(spectrum.wavelength) == 138)
 
     def test_cansas_xml(self):
-        self.xml_reader.set_xml_file(self.isis_1_1)
+        self.xml_reader.set_xml(self.isis_1_1)
         self.xml_reader.set_schema(self.schema_1_1)
         self.xml_reader.set_processing_instructions()
         self.assertTrue(self.xml_reader.validate_xml())
@@ -131,7 +130,7 @@ class cansas_reader_xml(unittest.TestCase):
             os.remove(self.write_1_1_filename)
 
     def test_double_trans_spectra(self):
-        self.xml_reader.set_xml_file(self.isis_1_1_doubletrans)
+        self.xml_reader.set_xml(self.isis_1_1_doubletrans)
         self.xml_reader.set_schema(self.schema_1_1)
         self.assertTrue(self.xml_reader.validate_xml())
         data = self.loader.load(self.isis_1_1_doubletrans)
@@ -174,7 +173,7 @@ class cansas_reader_xml(unittest.TestCase):
         self.assertTrue(data.detector[0].distance == 4150)
 
     def test_old_cansas_files(self):
-        self.xml_reader.set_xml_file(self.cansas1d)
+        self.xml_reader.set_xml(self.cansas1d)
         self.xml_reader.set_schema(self.schema_1_0)
         self.assertTrue(self.xml_reader.validate_xml())
         self.loader.load(self.cansas1d)
@@ -206,7 +205,7 @@ class cansas_reader_xml(unittest.TestCase):
             os.remove(self.write_1_0_filename)
 
     def test_processing_instructions(self):
-        self.xml_reader.set_xml_file(self.isis_1_1)
+        self.xml_reader.set_xml(self.isis_1_1)
         self.xml_reader.set_schema(self.schema_1_1)
         if self.xml_reader.validate_xml():
             # find the processing instructions and make into a dictionary
