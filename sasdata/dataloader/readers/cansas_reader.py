@@ -186,7 +186,7 @@ class Reader(XMLreader):
                 PREPROCESS] = self.processing_instructions
             self.base_ns = "{" + CANSAS_NS.get(self.cansas_version).get("ns") + "}"
         if self._is_call_local() and not recurse:
-            basename, _ = os.path.splitext(os.path.basename(self.f_open.name))
+            basename, _ = os.path.splitext(os.path.basename(self.filepath))
             self.current_datainfo.filename = basename + self.extension
         # Create an empty dataset if no data has been passed to the reader
         if self.current_dataset is None:
