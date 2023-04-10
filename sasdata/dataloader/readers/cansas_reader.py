@@ -121,7 +121,7 @@ class Reader(XMLreader):
     def load_file_and_schema(self, xml_file: str, schema_path: Optional[str] = "") -> bool:
         # Try and parse the XML file
         try:
-            self.set_xml_file(xml_file)
+            self.set_xml(xml_file)
         except etree.XMLSyntaxError:  # File isn't valid XML so can't be loaded
             msg = f"SasView cannot load {self.filepath}.\nInvalid XML syntax."
             raise FileContentsException(msg)

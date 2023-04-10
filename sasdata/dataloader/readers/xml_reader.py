@@ -15,6 +15,9 @@
 #############################################################################
 
 import logging
+import os
+
+from urllib.parse import urlparse
 
 from lxml import etree
 from lxml.builder import E
@@ -24,6 +27,15 @@ from sasdata.dataloader.filereader import FileReader, decode
 logger = logging.getLogger(__name__)
 
 PARSER = etree.ETCompatXMLParser(remove_comments=True, remove_pis=False)
+
+
+def uri_is_valid(x):
+    """Check if a URI string is valid"""
+    try:
+        result = urlparse(x)
+        return all([result.scheme, result.netloc])
+    except Exception:
+        return False
 
 
 class XMLreader(FileReader):
@@ -49,7 +61,7 @@ class XMLreader(FileReader):
         self.schema = schema
         self.processing_instructions = {}
         if xml is not None:
-            self.set_xml_file(xml)
+            self.set_xml(xml)
         else:
             self.xmldoc = None
             self.xmlroot = None
@@ -68,32 +80,19 @@ class XMLreader(FileReader):
             raise etree.XMLSchemaValidateError(self, self.find_invalid_xml())
         return self.xmldoc
 
-    def set_xml_file(self, xml):
-        """
-        Set the XML file and parse
-        """
-        try:
-            self.xml = xml
-            self.xmldoc = etree.parse(self.xml, parser=PARSER)
-            self.xmlroot = self.xmldoc.getroot()
-        except etree.XMLSyntaxError as xml_error:
-            logger.info(xml_error)
-            raise xml_error
-        except Exception:
-            self.xml = None
-            self.xmldoc = None
-            self.xmlroot = None
-
-    def set_xml_string(self, tag_soup):
-        """
-        Set an XML string as the working XML.
-
-        :param tag_soup: XML formatted string
+    def set_xml(self, xml: str) -> None:
+        """Generic method that routes xml based on string contents
+        :param xml: A string that can either be a filepath, URL, or XML string.
         """
         try:
-            self.xml = tag_soup
-            self.xmldoc = tag_soup
-            self.xmlroot = etree.fromstring(tag_soup)
+            if os.path.isfile(xml):
+                # File or URL object
+                self._set_xml_file(xml)
+            elif uri_is_valid(xml):
+                self._set_xml_uri(xml)
+            else:
+                # XML string
+                self._set_xml_string(xml)
         except etree.XMLSyntaxError as xml_error:
             logger.info(xml_error)
             raise xml_error
@@ -102,6 +101,34 @@ class XMLreader(FileReader):
             self.xmldoc = None
             self.xmlroot = None
             raise exc
+
+    def _set_xml_file(self, xml):
+        """
+        Set the XML file and parse
+        """
+        self.xml = xml
+        self.xmldoc = etree.parse(self.xml, parser=PARSER)
+        self.xmlroot = self.xmldoc.getroot()
+
+    def _set_xml_string(self, tag_soup):
+        """
+        Set an XML string as the working XML.
+
+        :param tag_soup: XML formatted string
+        """
+        self.xml = tag_soup
+        self.xmldoc = etree.fromstring(tag_soup)
+        self.xmlroot = self.xmldoc
+
+    def _set_xml_uri(self, uri: str) -> None:
+        """
+        Set a URI as the working XML.
+
+        :param uri: URI formatted string
+        """
+        self.xml = uri
+        self.xmldoc = etree.parse(self.string_open)
+        self.xmlroot = self.xmldoc.getroot()
 
     def set_schema(self, schema):
         """
@@ -147,7 +174,7 @@ class XMLreader(FileReader):
         """
         Creates a dictionary of the parsed schema and xml files.
         """
-        self.set_xml_file(self.xml)
+        self.set_xml(self.xml)
         self.set_schema(self.schema)
 
     def to_string(self, elem, pretty_print=False, encoding=None):
