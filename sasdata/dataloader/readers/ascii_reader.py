@@ -13,6 +13,7 @@
 #############################################################################
 
 import logging
+import os
 from typing import Optional
 
 from sasdata.dataloader.filereader import FileReader
@@ -46,7 +47,7 @@ class Reader(FileReader):
         """
 
         buff = self.readall()
-        filepath = self.f_open.name
+        filepath = os.path.basename(self.filepath)
         lines = buff.splitlines()
         self.output = []
         self.current_datainfo = DataInfo()
