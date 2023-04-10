@@ -164,6 +164,7 @@ class FileReader:
         Returns the entire file as a string.
         """
         handle = self.string_open if self.string_open else self.f_open
+        handle.seek(0)
         return decode(handle.read())
 
     def handle_error_message(self, msg: str):
