@@ -14,7 +14,7 @@ jobs:
     strategy:
       matrix:
         os: [macos-latest, ubuntu-latest, windows-latest]
-        python-version: [3.7, 3.8, 3.9]
+        python-version: ['3.8', '3.9', '3.10']
       fail-fast: false
 
     steps:
@@ -48,9 +48,9 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         python -m pip install wheel setuptools
-        python -m pip install numpy lxml h5py xmlrunner "pytest<6"
+        python -m pip install -r requirements.txt
 
-    ### Actual building/testing of sasdata
+    ### Build and test sasdata
 
     - name: Build sasdata
       run: |
@@ -60,7 +60,5 @@ jobs:
         python -m pip install .
 
     - name: Test with pytest
-      env:
-        PYOPENCL_COMPILER_OUTPUT: 1
       run: |
         python -m pytest -v -s test
