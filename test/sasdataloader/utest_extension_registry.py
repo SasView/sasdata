@@ -9,6 +9,7 @@ import shutil
 import numpy as np
 
 from sasdata.dataloader.loader import Registry as Loader
+from sasdata.dataloader.loader import Loader as LoaderMain
 
 logger = logging.getLogger(__name__)
 
@@ -103,6 +104,17 @@ class ExtensionRegistryTests(unittest.TestCase):
         remote_xml = self.loader.load(self.valid_xml_url)
         # Ensure the string representation of the file contents match
         self.assertEqual(str(local_xml[0]), str(remote_xml[0]))
+
+    def test_load_simultaneously(self):
+        """Load a list of files, not just a single file, and ensure the content matches"""
+        loader = LoaderMain()
+        local_txt = loader.load(self.valid_txt_file)
+        local_hdf = loader.load(self.valid_hdf_file)
+        local_xml = loader.load(self.valid_xml_file)
+        strings = [str(local_txt[0]), str(local_hdf[0]), str(local_xml[0])]
+        all_files = loader.load([self.valid_xml_file, self.valid_hdf_file, self.valid_txt_file])
+        for file in all_files:
+            self.assertTrue(str(file) in strings)
 
     def tearDown(self):
         if os.path.isfile(self.valid_file_wrong_known_ext):
