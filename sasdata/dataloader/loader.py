@@ -364,14 +364,26 @@ class Loader:
         """
         return self.__registry.associate_file_reader(ext, loader)
 
-    def load(self, file: str, format: Optional[str] = None) -> Union[list, Exception]:
+    def load(self, file_path_list: Union[List[str], str],
+             format: Optional[Union[List[str], str]] = None
+             ) -> Union[List[Union[Data1D, Data2D]], Exception]:
         """
-        Load a file
-        :param file: file name (path)
+        Load a file or series of files
+        :param file_path_list: String representations of any number of file paths. This can either be a list or a string
         :param format: specified format to use (optional)
         :return: DataInfo object
         """
-        return self.__registry.load(file, format)
+        if isinstance(file_path_list, str):
+            file_path_list = [file_path_list]
+        if isinstance(format, str) or not format:
+            format = [format] * len(file_path_list)
+        output = []
+        for index, file_path in enumerate(file_path_list):
+            try:
+                output.extend(self.__registry.load(file_path, format[index]))
+            except Exception:
+                pass
+        return output
 
     def save(self, file: str, data, format: str) -> bool:
         """
@@ -408,10 +420,4 @@ class Loader:
             or a URI.
         :return: A list of loaded Data1D/2D objects.
         """
-        output = []
-        for file_path in file_path_list:
-            try:
-                output.extend(self.load(file_path))
-            except Exception:
-                pass
-        return output
+        return self.load(file_path_list)
