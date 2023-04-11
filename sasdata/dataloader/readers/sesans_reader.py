@@ -77,7 +77,7 @@ class Reader(FileReader):
         self._insist_header(headers, "Depolarisation_error")
         self._insist_header(headers, "Wavelength")
 
-        data = np.loadtxt(self.f_open)
+        data = np.loadtxt(self.nextlines())
 
         if data.shape[1] != len(headers):
             raise FileContentsException(f"File has {len(headers)} headers, but {data.shape[1]} columns")
