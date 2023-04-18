@@ -121,7 +121,7 @@ class Reader(FileReader):
         self.current_datainfo._xunit = x_unit
         self.current_datainfo.source.wavelength_unit = lam_unit
         self.current_datainfo.source.wavelength = lam
-        self.current_datainfo.filename = os.path.basename(self.f_open.name)
+        self.current_datainfo.filename = os.path.basename(self.filepath)
         self.current_dataset.xaxis(r"\rm{z}", x_unit)
         # Adjust label to ln P/(lam^2 t), remove lam column refs
         self.current_dataset.yaxis(r"\rm{ln(P)/(t \lambda^2)}", y_unit)
