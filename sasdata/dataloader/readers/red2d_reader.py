@@ -70,11 +70,10 @@ class Reader(FileReader):
     def get_file_contents(self):
         # Read file
         buf = self.readall()
-        self.f_open.close()
         # Instantiate data object
         self.current_dataset = plottable_2D()
         self.current_datainfo = DataInfo()
-        self.current_datainfo.filename = os.path.basename(self.f_open.name)
+        self.current_datainfo.filename = os.path.basename(self.filepath)
         self.current_datainfo.detector.append(Detector())
 
         # Get content
