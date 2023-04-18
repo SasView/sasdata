@@ -37,6 +37,10 @@ class ExtensionRegistryTests(unittest.TestCase):
         # DAT 2D NIST format
         self.valid_dat_file = find("detector_square.dat")
         self.valid_dat_url = "https://github.com/SasView/sasdata/raw/master/test/sasdataloader/data/detector_square.dat"
+        # Anton Parr SAXSess PDH format
+        # TODO: This should point to the sasdata package, but the file doesn't exist there yet.
+        self.valid_pdh_file = find("Anton-Paar.pdh")
+        self.valid_pdh_url = "https://github.com/SasView/sasview/raw/main/src/sas/example_data/1d_data/Anton-Paar.pdh"
 
         self.valid_file_wrong_known_ext = find("valid_cansas_xml.txt")
         self.valid_file_wrong_unknown_ext = find("valid_cansas_xml.xyz")
@@ -120,6 +124,11 @@ class ExtensionRegistryTests(unittest.TestCase):
         remote_dat = self.loader.load(self.valid_dat_url)
         # Ensure the string representation of the file contents match
         self.assertEqual(str(local_dat[0]), str(remote_dat[0]))
+        # PDH file loading
+        local_pdh = self.loader.load(self.valid_pdh_file)
+        remote_pdh = self.loader.load(self.valid_pdh_url)
+        # Ensure the string representation of the file contents match
+        self.assertEqual(str(local_pdh[0]), str(remote_pdh[0]))
 
     def test_load_simultaneously(self):
         """Load a list of files, not just a single file, and ensure the content matches"""

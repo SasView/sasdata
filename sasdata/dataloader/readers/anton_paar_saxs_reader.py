@@ -62,7 +62,7 @@ class Reader(XMLreader):
 
         # Reinitialize the class when loading a new data file to reset all class variables
         self.reset_state()
-        buff = self.readall()
+        buff = self.readall().strip()
         self.raw_data = buff.splitlines()
         self.read_data()
 
@@ -95,7 +95,7 @@ class Reader(XMLreader):
                 yvals.insert(index, float(data[1]))
                 dyvals.insert(index, float(data[2]))
         except Exception as e:
-            error_message = f"Couldn't load {self.f_open.name}.\n{e}"
+            error_message = f"Couldn't load {self.filepath}.\n{e}"
             raise FileContentsException(error_message)
         self.current_dataset.x = np.append(self.current_dataset.x, xvals)
         self.current_dataset.y = np.append(self.current_dataset.y, yvals)
