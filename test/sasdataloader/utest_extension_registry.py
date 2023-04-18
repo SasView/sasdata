@@ -31,6 +31,12 @@ class ExtensionRegistryTests(unittest.TestCase):
         # ASCII Text
         self.valid_txt_file = find("avg_testdata.txt")
         self.valid_txt_url = "https://github.com/SasView/sasdata/raw/master/test/sasdataloader/data/avg_testdata.txt"
+        # ABS Text
+        self.valid_abs_file = find("ascii_test_4.abs")
+        self.valid_abs_url = "https://github.com/SasView/sasdata/raw/master/test/sasdataloader/data/ascii_test_4.abs"
+        # DAT 2D NIST format
+        self.valid_dat_file = find("detector_square.dat")
+        self.valid_dat_url = "https://github.com/SasView/sasdata/raw/master/test/sasdataloader/data/detector_square.dat"
 
         self.valid_file_wrong_known_ext = find("valid_cansas_xml.txt")
         self.valid_file_wrong_unknown_ext = find("valid_cansas_xml.xyz")
@@ -104,6 +110,16 @@ class ExtensionRegistryTests(unittest.TestCase):
         remote_xml = self.loader.load(self.valid_xml_url)
         # Ensure the string representation of the file contents match
         self.assertEqual(str(local_xml[0]), str(remote_xml[0]))
+        # ABS file loading
+        local_abs = self.loader.load(self.valid_abs_file)
+        remote_abs = self.loader.load(self.valid_abs_url)
+        # Ensure the string representation of the file contents match
+        self.assertEqual(str(local_abs[0]), str(remote_abs[0]))
+        # DAT file loading
+        local_dat = self.loader.load(self.valid_dat_file)
+        remote_dat = self.loader.load(self.valid_dat_url)
+        # Ensure the string representation of the file contents match
+        self.assertEqual(str(local_dat[0]), str(remote_dat[0]))
 
     def test_load_simultaneously(self):
         """Load a list of files, not just a single file, and ensure the content matches"""
