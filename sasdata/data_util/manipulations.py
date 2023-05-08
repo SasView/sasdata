@@ -283,13 +283,15 @@ class Binning:
     def __init__(self, min_value, max_value, n_bins, base=None):
         """
         if base is None: Linear binning
-        Todo: should base be a boolean? True = log? or do we want to allow for
-              other types of binning in the future, in which case we should
-              define base="linear" or "log" and explicitly set
-              if base = None then base="log"
+
+        todo: This should have been a boolean but suggest that we make it an
+              enum to allow for future scales besides log and linear.
         """
         # min and max values can be negative.
-        # todo: do we want to check for min < max?
+        # todo: do we want to enforce min < max? Currently it makes no
+        #       difference to the calcuation and the plot allows it as
+        #       well. Question: is this confusing? Could it cause problems
+        #       for future coding efforts?
         self.min = min_value
         self.max = max_value
         self.n_bins = n_bins
