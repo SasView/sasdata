@@ -4,7 +4,7 @@ File extension registry.
 This provides routines for opening files based on extension,
 and registers the built-in file extensions.
 """
-import urllib.request as requests
+from urllib.request import urlopen
 
 from io import BytesIO, StringIO
 from typing import Optional, List, Union
@@ -28,13 +28,11 @@ class CustomFileOpen:
     def __enter__(self):
         """A context method that either fetches a file from a URL or opens a local file."""
         if '://' in self.filename:
-            # Use requests package to access remote files
-            req = requests.urlopen(self.filename)
-            if req.status != 200:
-                raise ConnectionError(req.msg)
-            content = req.read()
-            self.fd = BytesIO(content)
-            h5_file = self.fd
+            # Use urllib.request package to access remote files
+            with urlopen(self.filename) as req:
+                content = req.read()
+                self.fd = BytesIO(content)
+                h5_file = self.fd
         else:
             # Use native open to access local files
             self.fd = open(self.filename, self.mode)
@@ -47,7 +45,7 @@ class CustomFileOpen:
             # Not an HDF5 file -> Ignore
             self.h5_fd = None
         try:
-            # H5py objects will fail here, but are unnecessary for later
+            # H5PY objects will fail here, but are unnecessary for later
             self.string_fd = StringIO(content.decode())
         except UnicodeDecodeError:
             self.string_fd = None
