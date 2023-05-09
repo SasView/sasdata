@@ -128,7 +128,7 @@ class ExtensionRegistry:
         exts.sort()
         return exts
 
-    def lookup(self, path: str) -> List[str]:
+    def lookup(self, path: str) -> List[callable]:
         """
         Return the loader associated with the file type of path.
 
@@ -144,7 +144,7 @@ class ExtensionRegistry:
         readers = [reader for ext in extensions for reader in self.readers[ext]]
         return unique_preserve_order(readers)
 
-    def load(self, path: str, ext: Optional[str] = None) -> Union[List, Exception]:
+    def load(self, path: str, ext: Optional[str] = None) -> List[Union[Data1D, Data2D, Exception]]:
         """
         Call the loader for the file type of path.
 
@@ -161,13 +161,12 @@ class ExtensionRegistry:
             if not loaders:
                 raise NoKnownLoaderException("No loaders match format %r"
                                              % ext)
-        last_exc = None
+        errors = []
         with CustomFileOpen(path, 'rb') as file_handler:
             for load_function in loaders:
                 try:
-                    return load_function(file_handler.filename, file_handler)
+                    return load_function(path, file_handler)
                 except Exception as e:
-                    last_exc = e
-                    pass  # give other loaders a chance to succeed
-            # If we get here it is because all loaders failed
-            raise last_exc
+                    errors.append(e)
+            # If we get here it is because all loaders failed -> return exceptions instead
+            return errors
