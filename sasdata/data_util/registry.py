@@ -6,14 +6,15 @@ and registers the built-in file extensions.
 """
 from urllib.request import urlopen
 
-from io import BytesIO, StringIO
-from typing import Optional, List, Union
+from io import BytesIO
+from typing import Optional, List, Union, TYPE_CHECKING
 from collections import defaultdict
-
-import h5py
 
 from sasdata.data_util.loader_exceptions import NoKnownLoaderException
 from sasdata.data_util.util import unique_preserve_order
+
+if TYPE_CHECKING:
+    from sasdata.dataloader.data_info import Data1D, Data2D
 
 
 class CustomFileOpen:
@@ -22,6 +23,7 @@ class CustomFileOpen:
         self.filename = filename
         self.mode = mode
         self.fd = None
+        # The following two file handles are for specific readers only. -> ensure they are closed when finished
         self.string_fd = None
         self.h5_fd = None
 
@@ -32,23 +34,9 @@ class CustomFileOpen:
             with urlopen(self.filename) as req:
                 content = req.read()
                 self.fd = BytesIO(content)
-                h5_file = self.fd
         else:
             # Use native open to access local files
             self.fd = open(self.filename, self.mode)
-            content = self.fd.read()
-            h5_file = self.filename
-        try:
-            # H5PY uses its own reader that returns a dictionary-like data structure
-            self.h5_fd = h5py.File(h5_file, 'r')
-        except (TypeError, OSError):
-            # Not an HDF5 file -> Ignore
-            self.h5_fd = None
-        try:
-            # H5PY objects will fail here, but are unnecessary for later
-            self.string_fd = StringIO(content.decode())
-        except UnicodeDecodeError:
-            self.string_fd = None
         # Return the instance to allow access to the filename, and any open file handles.
         return self
 
