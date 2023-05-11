@@ -367,7 +367,7 @@ class Loader:
 
     def load(self, file_path_list: Union[List[Union[str, Path]], str, Path],
              format: Optional[Union[List[Union[str, Path]], str, Path]] = None
-             ) -> Union[List[Union[Data1D, Data2D, Exception]]]:
+             ) -> Union[List[Union[Data1D, Data2D]]]:
         """
         Load a file or series of files
         :param file_path_list: String representations of any number of file paths. This can either be a list or a string
@@ -379,15 +379,23 @@ class Loader:
         if isinstance(format, (str, Path)) or not format:
             format = [format] * len(file_path_list)
         output = []
-        for index, file_path in enumerate(file_path_list):
+        for file_path, format in zip(file_path_list, format):
             try:
-                output.extend(self.__registry.load(file_path, format[index]))
+                data_list = self.__registry.load(file_path, format)
+                if isinstance(data_list[0], Exception):
+                    data_list = self._empty_data_from_errors(file_path, data_list)
+                output.extend(data_list)
             except Exception as e:
-                data_object = Data1D()
-                data_object.errors = [e]
-                data_object.filename = file_path
-                output.append(data_object)
+                output.append(self._empty_data_from_errors(file_path, [e]))
         return output
+
+    @staticmethod
+    def _empty_data_from_errors(path, errors=None):
+        if errors is not None:
+            data_object = Data1D()
+            data_object.errors = errors
+            data_object.filename = path
+            return [data_object]
 
     def save(self, file: str, data, format: str) -> bool:
         """
