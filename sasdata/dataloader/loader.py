@@ -383,7 +383,10 @@ class Loader:
             try:
                 output.extend(self.__registry.load(file_path, format[index]))
             except Exception as e:
-                output.extend([e])
+                data_object = Data1D()
+                data_object.errors = [e]
+                data_object.filename = file_path
+                output.append(data_object)
         return output
 
     def save(self, file: str, data, format: str) -> bool:
