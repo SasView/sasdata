@@ -67,10 +67,12 @@ class Reader(FileReader):
         self.reset_state()
 
         try:
-            # Read in all child elements of top level SASroot
-            self.read_children(self.hdf_open, [])
-            # Add the last data set to the list of outputs
-            self.add_data_set()
+            # Only create h5py object
+            with h5py.File(self.f_open, 'r') as self.hdf_open:
+                # Read in all child elements of top level SASroot
+                self.read_children(self.hdf_open, [])
+                # Add the last data set to the list of outputs
+                self.add_data_set()
         except Exception as exc:
             raise FileContentsException(exc)
         for data_set in self.output:
