@@ -386,7 +386,7 @@ class Loader:
                     data_list = self._empty_data_from_errors(file_path, data_list)
                 output.extend(data_list)
             except Exception as e:
-                output.append(self._empty_data_from_errors(file_path, [e]))
+                output.extend(self._empty_data_from_errors(file_path, [e]))
         return output
 
     @staticmethod
@@ -396,6 +396,7 @@ class Loader:
             data_object.errors = errors
             data_object.filename = path
             return [data_object]
+        return []
 
     def save(self, file: str, data, format: str) -> bool:
         """
