@@ -76,6 +76,8 @@ class FileReader:
         self.current_datainfo = None
         # File path sent to reader
         self.filepath = None
+        # Starting file position to begin reading data from
+        self.f_pos = 0
         # File extension sent to reader
         self.extension = None
         # Open file handle
@@ -85,22 +87,37 @@ class FileReader:
         # Open HDF file handle
         self.hdf_open = None
 
-    def read(self, filepath: str, file_handler: Optional[CustomFileOpen] = None) -> List[Union[Data1D, Data2D]]:
+    def read(self, filepath: str, file_handler: Optional[CustomFileOpen] = None,
+             f_pos: Optional[int] = 0) -> List[Union[Data1D, Data2D]]:
         """
         Basic file reader
 
         :param filepath: The string representation of the path to a file to be loaded. This can be a URI or a local file
-        :param raw_file: An open TextIO or Binary IO file handle to be read.
-        :param hdf5_file: An open h5py.File file handle, which is also an h5py Group.
+        :param file_handler: A CustomFileOpen instance used to handle file operations
+        :param f_pos: The initial file position to start reading from
+        :return: A list of Data1D and Data2D objects
         """
         self.filepath = filepath
-        if isinstance(file_handler, CustomFileOpen):
-            self.f_open = file_handler.fd
-            self.hdf_open = file_handler.h5_fd
-            self.string_open = file_handler.string_fd
-        else:
-            # If not called by a context manager, create one locally that calls read() again. Return early
-            return self._read_with_local_context_manager(filepath)
+        self.f_pos = f_pos
+        if not file_handler:
+            # Allow direct calls to the readers without generating a file_handler, but higher-level calls should
+            #   already have file_handler defined
+            with CustomFileOpen(filepath, 'rb') as file_handler:
+                return self._read(file_handler)
+        return self._read(file_handler)
+
+    def _read(self, file_handler: CustomFileOpen) -> List[Union[Data1D, Data2D]]:
+        """
+        Private method to handle file loading
+
+        :param file_handler: A CustomFileOpen instance used to handle file operations
+        :param f_pos: The initial file position to start the read from
+        :return: A list of Data1D and Data2D objects
+        """
+        self.f_open = file_handler.fd
+        self.hdf_open = file_handler.h5_fd
+        self.string_open = file_handler.string_fd
+
         basename, extension = os.path.splitext(os.path.basename(self.filepath))
         self.extension = extension.lower()
         if self.extension in self.ext or self.allow_all:
@@ -129,11 +146,6 @@ class FileReader:
         self.reset_state()
         return final_data
 
-    def _read_with_local_context_manager(self, filepath: str) -> List[Union[Data1D, Data2D]]:
-        """A private class method that creates a local context manager to ensure files are closed when exiting."""
-        with CustomFileOpen(filepath, 'rb') as file_handler:
-            return self.read(filepath, file_handler)
-
     def reset_state(self):
         """
         Resets the class state to a base case when loading a new data file so previous
@@ -148,7 +160,6 @@ class FileReader:
         """
         Returns the next line in the file as a string.
         """
-        #return self.f_open.readline()
         return decode(self.string_open.readline())
 
     def nextlines(self) -> str:
@@ -156,7 +167,6 @@ class FileReader:
         Returns the next line in the file as a string.
         """
         for line in self.string_open:
-            #yield line
             yield decode(line)
 
     def readall(self) -> str:
@@ -164,7 +174,7 @@ class FileReader:
         Returns the entire file as a string.
         """
         handle = self.string_open if self.string_open else self.f_open
-        handle.seek(0)
+        handle.seek(self.f_pos)
         return decode(handle.read())
 
     def handle_error_message(self, msg: str):
