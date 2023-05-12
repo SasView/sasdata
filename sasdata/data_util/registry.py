@@ -144,7 +144,7 @@ class ExtensionRegistry:
         readers = [reader for ext in extensions for reader in self.readers[ext]]
         return unique_preserve_order(readers)
 
-    def load(self, path: str, ext: Optional[str] = None) -> List[Union[Data1D, Data2D, Exception]]:
+    def load(self, path: str, ext: Optional[str] = None) -> List[Union["Data1D", "Data2D", Exception]]:
         """
         Call the loader for the file type of path.
 
