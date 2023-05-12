@@ -82,10 +82,6 @@ class FileReader:
         self.extension = None
         # Open file handle
         self.f_open = None
-        # Open string file handle
-        self.string_open = None
-        # Open HDF file handle
-        self.hdf_open = None
 
     def read(self, filepath: str, file_handler: Optional[CustomFileOpen] = None,
              f_pos: Optional[int] = 0) -> List[Union[Data1D, Data2D]]:
@@ -115,8 +111,6 @@ class FileReader:
         :return: A list of Data1D and Data2D objects
         """
         self.f_open = file_handler.fd
-        self.hdf_open = file_handler.h5_fd
-        self.string_open = file_handler.string_fd
 
         basename, extension = os.path.splitext(os.path.basename(self.filepath))
         self.extension = extension.lower()
@@ -160,22 +154,21 @@ class FileReader:
         """
         Returns the next line in the file as a string.
         """
-        return decode(self.string_open.readline())
+        return decode(self.f_open.readline())
 
     def nextlines(self) -> str:
         """
         Returns the next line in the file as a string.
         """
-        for line in self.string_open:
+        for line in self.f_open:
             yield decode(line)
 
     def readall(self) -> str:
         """
         Returns the entire file as a string.
         """
-        handle = self.string_open if self.string_open else self.f_open
-        handle.seek(self.f_pos)
-        return decode(handle.read())
+        self.f_open.seek(self.f_pos)
+        return decode(self.f_open.read())
 
     def handle_error_message(self, msg: str):
         """

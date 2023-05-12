@@ -18,14 +18,11 @@ if TYPE_CHECKING:
 
 
 class CustomFileOpen:
-    """Custom context manager to fetch file contents."""
+    """Custom context manager to fetch file contents depending on where the file is located."""
     def __init__(self, filename, mode='rb'):
         self.filename = filename
         self.mode = mode
         self.fd = None
-        # The following two file handles are for specific readers only. -> ensure they are closed when finished
-        self.string_fd = None
-        self.h5_fd = None
 
     def __enter__(self):
         """A context method that either fetches a file from a URL or opens a local file."""
@@ -44,10 +41,6 @@ class CustomFileOpen:
         """Close all open file handles when exiting the context manager."""
         if self.fd is not None:
             self.fd.close()
-        if self.h5_fd is not None:
-            self.h5_fd.close()
-        if self.string_fd is not None:
-            self.string_fd.close()
 
 
 class ExtensionRegistry:
