@@ -12,6 +12,7 @@ from collections import defaultdict
 
 from sasdata.data_util.loader_exceptions import NoKnownLoaderException
 from sasdata.data_util.util import unique_preserve_order
+from sasdata.dataloader import readers as all_readers
 
 if TYPE_CHECKING:
     from sasdata.dataloader.data_info import Data1D, Data2D
@@ -135,6 +136,8 @@ class ExtensionRegistry:
         extensions.sort(key=len)
         # Combine readers for matching extensions into one big list
         readers = [reader for ext in extensions for reader in self.readers[ext]]
+        # include generic readers in list of available readers to ensure error handling works properly
+        readers.extend(all_readers.get_generic_readers())
         return unique_preserve_order(readers)
 
     def load(self, path: str, ext: Optional[str] = None) -> List[Union["Data1D", "Data2D", Exception]]:

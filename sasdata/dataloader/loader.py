@@ -33,7 +33,6 @@ from sasdata.dataloader.data_info import Data1D, Data2D
 
 # Default readers are defined in the readers sub-module
 from . import readers
-from sasdata.data_util.loader_exceptions import NoKnownLoaderException, DefaultReaderException
 
 logger = logging.getLogger(__name__)
 
@@ -89,38 +88,6 @@ class Registry(ExtensionRegistry):
             logger.debug(traceback.print_exc())
             if not use_defaults:
                 raise
-        # Use backup readers
-        try:
-            return self.load_using_generic_loaders(path)
-        except (NoKnownLoaderException, DefaultReaderException) as e:
-            logger.debug(traceback.print_exc())
-            # No known reader available. Give up and throw an error
-            msg = f"{str(e)}\nUnknown data format: {path}.\nThe file is not a format that can be loaded by SasView.\n"
-            logger.error(msg)
-            raise
-        except Exception as e:
-            logger.debug(traceback.print_exc())
-            raise
-
-    def load_using_generic_loaders(self, path: str) -> list:
-        """
-        If the expected reader cannot load the file or no known loader exists,
-        attempt to load the file using a few defaults readers
-        :param path: file path
-        :return: List of Data1D and Data2D objects
-        """
-        module_list = readers.get_generic_readers()
-        for module in module_list:
-            reader = module.Reader()
-            try:
-                data_list = reader.read(path)
-                if data_list:
-                    return data_list
-            except Exception as e:
-                # Cycle through all generic readers
-                pass
-        # Only throw exception if all generic readers fail
-        raise NoKnownLoaderException(f"Generic readers failed to load {path}")
 
     def find_plugins(self, dir: str):
         """
