@@ -111,6 +111,8 @@ class FileReader:
         :return: A list of Data1D and Data2D objects
         """
         self.f_open = file_handler.fd
+        # Move to the desired initial file position in case of successive reads on the same handle
+        self.f_open.seek(self.f_pos)
 
         basename, extension = os.path.splitext(os.path.basename(self.filepath))
         self.extension = extension.lower()

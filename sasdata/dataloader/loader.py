@@ -86,8 +86,7 @@ class Registry(ExtensionRegistry):
                 logger.debug(f"No data returned from '{path}'")
         except Exception as e:
             logger.debug(traceback.print_exc())
-            if not use_defaults:
-                raise
+            raise
 
     def find_plugins(self, dir: str):
         """

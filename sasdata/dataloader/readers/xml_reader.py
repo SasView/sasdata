@@ -95,12 +95,12 @@ class XMLreader(FileReader):
                 self._set_xml_string(xml)
         except etree.XMLSyntaxError as xml_error:
             logger.info(xml_error)
-            raise xml_error
-        except Exception as exc:
+            raise
+        except Exception:
             self.xml = None
             self.xmldoc = None
             self.xmlroot = None
-            raise exc
+            raise
 
     def _set_xml_file(self, xml):
         """
