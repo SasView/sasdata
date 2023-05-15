@@ -89,7 +89,7 @@ class XMLreader(FileReader):
                 # File or URL object
                 self._set_xml_file(xml)
             elif uri_is_valid(xml):
-                self._set_xml_uri(xml)
+                self._set_xml_uri()
             else:
                 # XML string
                 self._set_xml_string(xml)
@@ -120,15 +120,13 @@ class XMLreader(FileReader):
         self.xmldoc = etree.fromstring(tag_soup)
         self.xmlroot = self.xmldoc
 
-    def _set_xml_uri(self, uri: str) -> None:
+    def _set_xml_uri(self) -> None:
         """
         Set a URI as the working XML.
 
         :param uri: URI formatted string
         """
-        self.xml = uri
-        self.xmldoc = etree.parse(self.string_open)
-        self.xmlroot = self.xmldoc.getroot()
+        self._set_xml_string(self.readall())
 
     def set_schema(self, schema):
         """
