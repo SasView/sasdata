@@ -65,7 +65,8 @@ def get_q_compo(dx: float, dy: float, detector_distance: float, wavelength: floa
 
 def flip_phi(phi: float) -> float:
     """
-    Correct phi to within the 0 <= to <= 2pi range
+    Force phi to be within the 0 <= to <= 2pi range by adding or subtracting
+    2pi as necessary
 
     :return: phi in >=0 and <=2Pi
     """
@@ -282,8 +283,16 @@ class Binning:
     def __init__(self, min_value, max_value, n_bins, base=None):
         """
         if base is None: Linear binning
+
+        todo: This should have been a boolean but suggest that we make it an
+              enum to allow for future scales besides log and linear.
         """
-        self.min = min_value if min_value > 0 else 0.0001
+        # min and max values can be negative.
+        # todo: do we want to enforce min < max? Currently it makes no
+        #       difference to the calcuation and the plot allows it as
+        #       well. Question: is this confusing? Could it cause problems
+        #       for future coding efforts?
+        self.min = min_value
         self.max = max_value
         self.n_bins = n_bins
         self.base = base
@@ -798,9 +807,7 @@ class Ring:
         if not idx.any():
             msg = "Average Error: No points inside ROI to average..."
             raise ValueError(msg)
-        # elif len(phi_bins[idx])!= self.nbins_phi:
-        #    print "resulted",self.nbins_phi- len(phi_bins[idx])
-        #,"empty bin(s) due to tight binning..."
+
         return Data1D(x=phi_values[idx], y=phi_bins[idx], dy=phi_err[idx])
 
 
@@ -830,19 +837,22 @@ class _Sector:
         self.nbins = nbins
         self.base = base
 
+        # set up to use the asymmetric sector average - default to symmetric
+        self.fold = True
+
     def _agv(self, data2D, run='phi'):
         """
         Perform sector averaging.
 
         :param data2D: Data2D object
-        :param run:  define the varying parameter ('phi' , 'q' , or 'q2')
+        :param run:  define the varying parameter ('phi' , or 'sector')
 
         :return: Data1D object
         """
         if data2D.__class__.__name__ not in ["Data2D", "plottable_2D"]:
             raise RuntimeError("Ring averaging only take plottable_2D objects")
 
-        # Get the all data & info
+        # Get all the data & info
         data = data2D.data[np.isfinite(data2D.data)]
         q_data = data2D.q_data[np.isfinite(data2D.data)]
         err_data = data2D.err_data[np.isfinite(data2D.data)]
@@ -864,12 +874,18 @@ class _Sector:
         # Get the min and max into the region: 0 <= phi < 2Pi
         phi_min = flip_phi(self.phi_min)
         phi_max = flip_phi(self.phi_max)
+        # Now calculate the angles for the opposite side sector, here referred
+        # to as "minor wing," and ensure these too are within 0 to 2pi
+        phi_min_minor = flip_phi(phi_min - math.pi)
+        phi_max_minor = flip_phi(phi_max - math.pi)
 
-        #  binning object
+        #  set up the bins by creating a binning object
         if run.lower() == 'phi':
             binning = Binning(self.phi_min, self.phi_max, self.nbins, self.base)
-        else:
+        elif self.fold:
             binning = Binning(self.r_min, self.r_max, self.nbins, self.base)
+        else:
+            binning = Binning(-self.r_max, self.r_max, self.nbins, self.base)
 
         for n in range(len(data)):
             if not mask_data[n]:
@@ -883,35 +899,44 @@ class _Sector:
             # Is pixel within range?
             is_in = False
 
-            # phi-value of the pixel (j,i)
+            # calculate the phi-value of the pixel (j,i) and convert the range
+            # [-pi,pi] returned by the atan2 function to the [0,2pi] range used
+            # as the reference frame for these calculations
             phi_value = math.atan2(qy_data[n], qx_data[n]) + math.pi
 
             # No need to calculate: data outside of the radius
             if self.r_min > q_value or q_value > self.r_max:
                 continue
 
-            # In case of two ROIs (symmetric major and minor regions)(for 'q2')
-            if run.lower() == 'q2':
-                # For minor sector wing
-                # Calculate the minor wing phis
-                phi_min_minor = flip_phi(phi_min - math.pi)
-                phi_max_minor = flip_phi(phi_max - math.pi)
-                # Check if phis of the minor ring is within 0 to 2pi
-                if phi_min_minor > phi_max_minor:
-                    is_in = (phi_value > phi_min_minor or
-                             phi_value < phi_max_minor)
-                else:
-                    is_in = (phi_value > phi_min_minor and
-                             phi_value < phi_max_minor)
-
-            # For all cases(i.e.,for 'q', 'q2', and 'phi')
-            # Find pixels within ROI
+            # For all cases(i.e.,for 'sector' (fold true or false), and 'phi')
+            # Find pixels within the main ROI (primary sector (main wing)
+            # in the case of sectors)
             if phi_min > phi_max:
                 is_in = is_in or (phi_value > phi_min or
                                   phi_value < phi_max)
             else:
                 is_in = is_in or (phi_value >= phi_min and
                                   phi_value < phi_max)
+
+            # For sector cuts we need to check if the point is within the
+            # "minor wing" before checking if it is in the major wing.
+            # There are effectively two ROIs here as each sector on opposite
+            # sides of 0,0 need to be checked separately.
+            if run.lower() == 'sector' and not is_in:
+                if phi_min_minor > phi_max_minor:
+                    is_in = (phi_value > phi_min_minor or
+                             phi_value < phi_max_minor)
+                else:
+                    is_in = (phi_value > phi_min_minor and
+                             phi_value < phi_max_minor)
+                # now, if we want to keep both sides separate we arbitrarily,
+                # assign negative q to the qs in the minor wing. As calculated,
+                # all qs are postive and in fact all qs in the same ring are
+                # the same. This will allow us to plot both sides of 0,0
+                # independently.
+                if not self.fold:
+                    if is_in:
+                        q_value *= -1
 
             # data oustide of the phi range
             if not is_in:
@@ -951,8 +976,8 @@ class _Sector:
         with np.errstate(divide='ignore', invalid='ignore'):
             y = y/y_counts
             y_err = np.sqrt(y_err)/y_counts
-            # The type of averaging: phi, q2, or q
-            # Calculate x values at the center of the bin
+            # Calculate x values at the center of the bin depending on the
+            # the type of averaging (phi or sector)
             if run.lower() == 'phi':
                 step = (self.phi_max - self.phi_min) / self.nbins
                 x = (np.arange(self.nbins) + 0.5) * step + self.phi_min
@@ -975,9 +1000,6 @@ class _Sector:
         if not idx.any():
             msg = "Average Error: No points inside sector of ROI to average..."
             raise ValueError(msg)
-        # elif len(y[idx])!= self.nbins:
-        #    print "resulted",self.nbins- len(y[idx]),
-        # "empty bin(s) due to tight binning..."
         return Data1D(x=x[idx], y=y[idx], dy=y_err[idx], dx=d_x)
 
 
@@ -1002,11 +1024,14 @@ class SectorPhi(_Sector):
 
 class SectorQ(_Sector):
     """
-    Sector average as a function of Q for both symatric wings.
-    I(Q) is return and the data is averaged over phi.
+    Sector average as a function of Q for both wings. setting the _Sector.fold
+    attribute determines whether or not the two sectors are averaged together
+    (folded over) or separate.  In the case of separate (not folded), the
+    qs for the "minor wing" are arbitrarily set to a negative value.
+    I(Q) is returned and the data is averaged over phi.
 
     A sector is defined by r_min, r_max, phi_min, phi_max.
-    r_min, r_max, phi_min, phi_max >0.
+    where r_min, r_max, phi_min, phi_max >0.
     The number of bin in Q also has to be defined.
     """
 
@@ -1018,7 +1043,7 @@ class SectorQ(_Sector):
 
         :return: Data1D object
         """
-        return self._agv(data2D, 'q2')
+        return self._agv(data2D, 'sector')
 
 ################################################################################
 
