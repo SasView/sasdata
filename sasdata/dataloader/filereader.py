@@ -117,12 +117,8 @@ class FileReader:
         if self.extension in self.ext or self.allow_all:
             try:
                 self.get_file_contents()
-            except DataReaderException as e:
-                self.handle_error_message(str(e))
-            except FileContentsException as e:
-                raise
             except Exception as e:
-                self.handle_error_message(str(e))
+                raise
             finally:
                 if any(self.filepath.lower().endswith(ext) for ext in
                        self.deprecated_extensions):
