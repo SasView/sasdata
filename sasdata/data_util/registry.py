@@ -138,6 +138,7 @@ class ExtensionRegistry:
         readers = [reader for ext in extensions for reader in self.readers[ext]]
         # include generic readers in list of available readers to ensure error handling works properly
         readers.extend(all_readers.get_generic_readers())
+        # Ensure the list of readers only includes unique values and the order is maintained
         return unique_preserve_order(readers)
 
     def load(self, path: str, ext: Optional[str] = None) -> List[Union["Data1D", "Data2D", Exception]]:

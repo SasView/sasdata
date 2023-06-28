@@ -70,7 +70,7 @@ def read_associations(loader, settings=None):
 
 
 def get_generic_readers(settings=None, use_generic_readers=True):
-    # type: ([FileReader], bool) -> [classmethod]
+    # type: ([FileReader], bool) -> [FileReader.read]
     """
     Returns a list of default readers that the data loader system will use in an attempt to load a data file.
     A list of loaders can be passed as an argument which will be appended to (if use_generic is True) or override the
@@ -87,4 +87,5 @@ def get_generic_readers(settings=None, use_generic_readers=True):
         loader = module.Reader()
         # Append the new reader to the list
         read_methods.append(loader.read)
+    # This might return duplicates -> Registry handles this issue upstream
     return read_methods
