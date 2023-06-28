@@ -5,6 +5,7 @@ class
 """
 
 import os
+import pathlib
 import codecs
 import logging
 from abc import abstractmethod
@@ -83,7 +84,7 @@ class FileReader:
         # Open file handle
         self.f_open = None
 
-    def read(self, filepath: str, file_handler: Optional[CustomFileOpen] = None,
+    def read(self, filepath: Union[str, Path], file_handler: Optional[CustomFileOpen] = None,
              f_pos: Optional[int] = 0) -> List[Union[Data1D, Data2D]]:
         """
         Basic file reader
@@ -93,13 +94,13 @@ class FileReader:
         :param f_pos: The initial file position to start reading from
         :return: A list of Data1D and Data2D objects
         """
-        self.filepath = filepath
-        self.f_pos = f_pos
         if not file_handler:
             # Allow direct calls to the readers without generating a file_handler, but higher-level calls should
             #   already have file_handler defined
             with CustomFileOpen(filepath, 'rb') as file_handler:
                 return self._read(file_handler)
+        self.filepath = filepath if isinstance(filepath, pathlib.Path) else pathlib.Path(filepath).resolve()
+        self.f_pos = f_pos
         return self._read(file_handler)
 
     def _read(self, file_handler: CustomFileOpen) -> List[Union[Data1D, Data2D]]:
@@ -114,7 +115,7 @@ class FileReader:
         # Move to the desired initial file position in case of successive reads on the same handle
         self.f_open.seek(self.f_pos)
 
-        basename, extension = os.path.splitext(os.path.basename(self.filepath))
+        basename, extension = self.filepath.stem, self.filepath.suffix
         self.extension = extension.lower()
         if self.extension in self.ext or self.allow_all:
             try:
@@ -122,7 +123,7 @@ class FileReader:
             except Exception as e:
                 raise
             finally:
-                if any(self.filepath.lower().endswith(ext) for ext in
+                if any(self.filepath.name.lower().endswith(ext) for ext in
                        self.deprecated_extensions):
                     self.handle_error_message(DEPRECATION_MESSAGE)
                 if len(self.output) > 0:

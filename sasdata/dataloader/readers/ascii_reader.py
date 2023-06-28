@@ -47,7 +47,7 @@ class Reader(FileReader):
         """
 
         buff = self.readall()
-        filepath = os.path.basename(self.filepath)
+        filepath = self.filepath.name
         lines = buff.splitlines()
         self.output = []
         self.current_datainfo = DataInfo()

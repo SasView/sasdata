@@ -624,8 +624,7 @@ class Reader(FileReader):
             x = np.array(0)
             y = np.array(0)
             self.current_dataset = plottable_1D(x, y)
-        basename, _ = os.path.splitext(os.path.basename(self.filepath))
-        self.current_datainfo.filename = basename
+        self.current_datainfo.filename = self.filepath.name
 
     @staticmethod
     def as_list_or_array(data: Any) -> Union[list, np.ndarray]:

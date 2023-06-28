@@ -332,7 +332,7 @@ class Loader:
         return self.__registry.associate_file_reader(ext, loader)
 
     def load(self, file_path_list: Union[List[Union[str, Path]], str, Path],
-             format: Optional[Union[List[Union[str, Path]], str, Path]] = None
+             format: Optional[Union[List[str], str]] = None
              ) -> Union[List[Union[Data1D, Data2D]]]:
         """
         Load a file or series of files

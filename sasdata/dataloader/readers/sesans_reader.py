@@ -83,7 +83,7 @@ class Reader(FileReader):
             raise FileContentsException(f"File has {len(headers)} headers, but {data.shape[1]} columns")
 
         if not data.size:
-            raise FileContentsException("{} is empty".format(self.filepath))
+            raise FileContentsException("{} is empty".format(self.filepath.name))
         x = data[:, headers.index("SpinEchoLength")]
         if "SpinEchoLength_error" in headers:
             dx = data[:, headers.index("SpinEchoLength_error")]
@@ -121,7 +121,7 @@ class Reader(FileReader):
         self.current_datainfo._xunit = x_unit
         self.current_datainfo.source.wavelength_unit = lam_unit
         self.current_datainfo.source.wavelength = lam
-        self.current_datainfo.filename = os.path.basename(self.filepath)
+        self.current_datainfo.filename = self.filepath.name
         self.current_dataset.xaxis(r"\rm{z}", x_unit)
         # Adjust label to ln P/(lam^2 t), remove lam column refs
         self.current_dataset.yaxis(r"\rm{ln(P)/(t \lambda^2)}", y_unit)

@@ -73,7 +73,7 @@ class Reader(FileReader):
         # Instantiate data object
         self.current_dataset = plottable_2D()
         self.current_datainfo = DataInfo()
-        self.current_datainfo.filename = os.path.basename(self.filepath)
+        self.current_datainfo.filename = self.filepath.name
         self.current_datainfo.detector.append(Detector())
 
         # Get content
