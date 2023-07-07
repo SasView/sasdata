@@ -69,17 +69,17 @@ def read_associations(loader, settings=None):
             logger.warning(msg)
 
 
-def get_generic_readers(settings=None, use_generic_readers=True):
-    # type: ([FileReader], bool) -> [FileReader.read]
+def get_fallback_readers(settings=None, use_defaults=True):
+    # type: ([FileReader], bool) -> [callable]
     """
-    Returns a list of default readers that the data loader system will use in an attempt to load a data file.
-    A list of loaders can be passed as an argument which will be appended to (if use_generic is True) or override the
-    list of generic readers.
+    Returns a list of fallback readers that the data loader system will use in an attempt to load a data file.
+    A list of loaders can be passed as an argument which will be appended to (if use_defaults is True) or override the
+    list of default readers.
     :param settings: A list of modules to use as default readers. If None is passed, a default list will be used.
-    :param use_generic_readers: Boolean to say if the generic readers should be added to the list of readers returned.
-    :return: Final list of default loader modules the dataloader system will try if necessary
+    :param use_defaults: Boolean to say if the default fallback readers should be added to the list of readers returned.
+    :return: Final list of fallback loader modules the dataloader system will try if necessary
     """
-    default_readers = GENERIC_READERS.copy() if use_generic_readers else []
+    default_readers = GENERIC_READERS.copy() if use_defaults else []
     read_methods = []
     if isinstance(settings, (list, set, tuple)):
         default_readers.extend(settings)
