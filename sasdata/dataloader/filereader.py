@@ -4,12 +4,12 @@ All generic functionality required for a file loader/reader is built into this
 class
 """
 
-import os
 import pathlib
 import codecs
 import logging
 from abc import abstractmethod
-from typing import List, Union, TextIO, BinaryIO, Optional
+from pathlib import Path
+from typing import List, Union, Optional
 
 import numpy as np
 from sasdata.data_util.loader_exceptions import NoKnownLoaderException, FileContentsException,\
@@ -93,13 +93,13 @@ class FileReader:
         :param f_pos: The initial file position to start reading from
         :return: A list of Data1D and Data2D objects
         """
+        self.filepath = filepath if isinstance(filepath, Path) else Path(filepath).resolve()
+        self.f_pos = f_pos
         if not file_handler:
             # Allow direct calls to the readers without generating a file_handler, but higher-level calls should
             #   already have file_handler defined
             with CustomFileOpen(filepath, 'rb') as file_handler:
                 return self._read(file_handler)
-        self.filepath = filepath if isinstance(filepath, pathlib.Path) else pathlib.Path(filepath).resolve()
-        self.f_pos = f_pos
         return self._read(file_handler)
 
     def _read(self, file_handler: CustomFileOpen) -> List[Union[Data1D, Data2D]]:

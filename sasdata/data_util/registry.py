@@ -9,6 +9,7 @@ from urllib.request import urlopen
 from io import BytesIO
 from typing import Optional, List, Union, TYPE_CHECKING
 from collections import defaultdict
+from pathlib import Path
 
 from sasdata.data_util.loader_exceptions import NoKnownLoaderException
 from sasdata.data_util.util import unique_preserve_order
@@ -21,6 +22,7 @@ if TYPE_CHECKING:
 def create_empty_data_with_errors(path: Union[str, Path], errors: List[Exception]):
     """Create a Data1D instance that only holds errors and a filepath. This allows all file paths to return a common
     data type, regardless if the data loading was successful or a failure."""
+    from sasdata.dataloader.data_info import Data1D
     data_object = Data1D()
     data_object.errors = errors
     data_object.filename = path
@@ -174,4 +176,4 @@ class ExtensionRegistry:
                 except Exception as e:
                     errors.append(e)
             # If we get here it is because all loaders failed -> return Data1D with only file path and errors
-            return create_empty_data_with_errors(file_path, [errors])
+            return create_empty_data_with_errors(path, errors)

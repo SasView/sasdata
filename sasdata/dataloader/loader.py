@@ -25,6 +25,7 @@ from zipfile import ZipFile
 from collections import defaultdict
 from types import ModuleType
 from typing import Optional, Union, List
+from itertools import zip_longest
 from pathlib import Path
 
 from sasdata.data_util.registry import ExtensionRegistry
@@ -43,7 +44,8 @@ class Registry(ExtensionRegistry):
     Readers and writers are supported.
     """
     def __init__(self):
-        super().__init__()
+        self.as_super = super(Registry, self)
+        self.as_super.__init__()
 
         # Writers
         self.writers = defaultdict(list)
@@ -57,12 +59,14 @@ class Registry(ExtensionRegistry):
         # Register default readers
         readers.read_associations(self)
 
-    def load(self, path: str, ext: Optional[str] = None, debug: Optional[bool] = False,
+    def load(self, file_path_list: Union[List[Union[str, Path]], str, Path],
+             ext: Optional[Union[List[str], str]] = None,
+             debug: Optional[bool] = False,
              use_defaults: Optional[bool] = True):
         """
         Call the loader for the file type of path.
 
-        :param path: file path
+        :param file_path_list: file path
         :param ext: explicit extension, to force the use of a particular
                        reader
         :param debug: when True, print the traceback for each loader that fails
@@ -73,10 +77,12 @@ class Registry(ExtensionRegistry):
         Defaults to the ascii (multi-column), cansas XML, and cansas NeXuS
         readers if no reader was registered for the file's extension.
         """
-
-        file_path_list = list(file_path_list)  # Ensure the file paths are a list: list(str), list(Path), and list([])
-        format = list(format) * int((len(file_path_list) / len(list(format))))  # Ensure length of lists the same
-        return [super().load(path, ext=ext) for file_path, ext in zip(file_path_list, format)]
+        file_path_list = [file_path_list] if isinstance(file_path_list, (str, Path)) else file_path_list
+        ext = list(ext) * int((len(file_path_list) / len(list(ext)))) if ext else []
+        output = []
+        for file_path, ext_n in zip_longest(file_path_list, ext):
+            output.extend(self.as_super.load(file_path, ext=ext_n))
+        return output
 
     def find_plugins(self, dir: str):
         """
@@ -330,7 +336,7 @@ class Loader:
         :param format: specified format to use (optional)
         :return: a list of DataInfo objects and/or loading exceptions.
         """
-        return self.__registry.load(file_path, format)
+        return self.__registry.load(file_path_list, format)
 
     def save(self, file: str, data, format: str) -> bool:
         """
