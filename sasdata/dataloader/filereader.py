@@ -9,7 +9,6 @@ import pathlib
 import codecs
 import logging
 from abc import abstractmethod
-from h5py import Group
 from typing import List, Union, TextIO, BinaryIO, Optional
 
 import numpy as np
