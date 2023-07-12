@@ -18,6 +18,15 @@ if TYPE_CHECKING:
     from sasdata.dataloader.data_info import Data1D, Data2D
 
 
+def create_empty_data_with_errors(path: Union[str, Path], errors: List[Exception]):
+    """Create a Data1D instance that only holds errors and a filepath. This allows all file paths to return a common
+    data type, regardless if the data loading was successful or a failure."""
+    data_object = Data1D()
+    data_object.errors = errors
+    data_object.filename = path
+    return [data_object]
+
+
 class CustomFileOpen:
     """Custom context manager to fetch file contents depending on where the file is located."""
     def __init__(self, filename, mode='rb'):
@@ -141,12 +150,11 @@ class ExtensionRegistry:
         # Ensure the list of readers only includes unique values and the order is maintained
         return unique_preserve_order(readers)
 
-    def load(self, path: str, ext: Optional[str] = None) -> List[Union["Data1D", "Data2D", Exception]]:
+    def load(self, path: str, ext: Optional[str] = None) -> List[Union["Data1D", "Data2D"]]:
         """
-        Call the loader for the file type of path.
+        Call the loader for a single file.
 
-        Raises an exception if the loader fails or if no loaders are defined
-        for the given path or format.
+        Exceptions are stored in Data1D instances, with the errors in Data1D.errors
         """
         if ext is None:
             loaders = self.lookup(path)
@@ -165,5 +173,5 @@ class ExtensionRegistry:
                     return load_function(path, file_handler)
                 except Exception as e:
                     errors.append(e)
-            # If we get here it is because all loaders failed -> return exceptions instead
-            return errors
+            # If we get here it is because all loaders failed -> return Data1D with only file path and errors
+            return create_empty_data_with_errors(file_path, [errors])

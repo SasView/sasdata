@@ -73,20 +73,10 @@ class Registry(ExtensionRegistry):
         Defaults to the ascii (multi-column), cansas XML, and cansas NeXuS
         readers if no reader was registered for the file's extension.
         """
-        import traceback
 
-        # Gets set to a string if the file has an associated reader that fails
-        try:
-            data_list = super().load(path, ext=ext)
-            if data_list:
-                return data_list
-            if ext:
-                logger.debug(f"No data returned from '{path}' for format {ext}")
-            else:
-                logger.debug(f"No data returned from '{path}'")
-        except Exception as e:
-            logger.debug(traceback.print_exc())
-            raise
+        file_path_list = list(file_path_list)  # Ensure the file paths are a list: list(str), list(Path), and list([])
+        format = list(format) * int((len(file_path_list) / len(list(format))))  # Ensure length of lists the same
+        return [super().load(path, ext=ext) for file_path, ext in zip(file_path_list, format)]
 
     def find_plugins(self, dir: str):
         """
@@ -340,29 +330,7 @@ class Loader:
         :param format: specified format to use (optional)
         :return: a list of DataInfo objects and/or loading exceptions.
         """
-        if isinstance(file_path_list, (str, Path)):
-            file_path_list = [file_path_list]
-        if isinstance(format, (str, Path)) or not format:
-            format = [format] * len(file_path_list)
-        output = []
-        for file_path, format in zip(file_path_list, format):
-            try:
-                data_list = self.__registry.load(file_path, format)
-                if isinstance(data_list[0], Exception):
-                    data_list = self._empty_data_from_errors(file_path, data_list)
-                output.extend(data_list)
-            except Exception as e:
-                output.extend(self._empty_data_from_errors(file_path, [e]))
-        return output
-
-    @staticmethod
-    def _empty_data_from_errors(path, errors=None):
-        if errors is not None:
-            data_object = Data1D()
-            data_object.errors = errors
-            data_object.filename = path
-            return [data_object]
-        return []
+        return self.__registry.load(file_path, format)
 
     def save(self, file: str, data, format: str) -> bool:
         """
