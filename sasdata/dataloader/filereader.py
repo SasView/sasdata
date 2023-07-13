@@ -93,7 +93,7 @@ class FileReader:
         :param f_pos: The initial file position to start reading from
         :return: A list of Data1D and Data2D objects
         """
-        self.filepath = filepath if isinstance(filepath, Path) else Path(filepath).resolve()
+        self.filepath = filepath if isinstance(filepath, Path) else Path(filepath)
         self.f_pos = f_pos
         if not file_handler:
             # Allow direct calls to the readers without generating a file_handler, but higher-level calls should
