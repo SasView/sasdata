@@ -79,7 +79,7 @@ class Reader(XMLreader):
 
     def get_file_contents(self):
         self.reset_state()
-        xml_file = self.filepath.name
+        xml_file = self.filepath.resolve()
         try:
             # Raises FileContentsException
             is_valid_cansas = self.load_file_and_schema(xml_file, '')
