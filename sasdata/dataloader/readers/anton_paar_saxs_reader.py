@@ -62,7 +62,7 @@ class Reader(XMLreader):
 
         # Reinitialize the class when loading a new data file to reset all class variables
         self.reset_state()
-        buff = self.readall().strip()
+        buff = self.readall()
         self.raw_data = buff.splitlines()
         self.read_data()
 
@@ -90,7 +90,7 @@ class Reader(XMLreader):
             dyvals = []
             for i in range(self.lower, self.upper):
                 index = i - self.lower
-                data = self.raw_data[i].split()
+                data = self.raw_data[i].strip().split()
                 xvals.insert(index, float(data[0]))
                 yvals.insert(index, float(data[1]))
                 dyvals.insert(index, float(data[2]))
