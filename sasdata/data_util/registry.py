@@ -43,6 +43,7 @@ class CustomFileOpen:
             with urlopen(self.filename) as req:
                 content = req.read()
                 self.fd = BytesIO(content)
+                self.fd.name = self.filename
         else:
             # Use native open to access local files
             self.fd = open(self.filename, self.mode)

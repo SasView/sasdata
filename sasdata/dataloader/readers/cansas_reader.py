@@ -77,9 +77,11 @@ class Reader(XMLreader):
         self.logging = []
         self.encoding = None
 
+
     def get_file_contents(self):
         self.reset_state()
-        xml_file = self.filepath.resolve()
+        # Use the name attribute associated with the file (raw string) and fall back to the Path object in filepath
+        xml_file = self.f_open.name if hasattr(self.f_open, 'name') else self.filepath.resolve()
         try:
             # Raises FileContentsException
             is_valid_cansas = self.load_file_and_schema(xml_file, '')
