@@ -78,9 +78,16 @@ class Registry(ExtensionRegistry):
         readers if no reader was registered for the file's extension.
         """
         file_path_list = [file_path_list] if isinstance(file_path_list, (str, Path)) else file_path_list
-        ext = list(ext) * int((len(file_path_list) / len(list(ext)))) if ext else []
+        ext = [ext] if isinstance(ext, str) else ext
+        # Ensure ext has at least 1 value in it to ensure zip_longest has a value for the fillvalue
+        if not ext:
+            ext = [None]
+        if len(ext) > 1 and len(ext) != len(file_path_list):
+            raise IndexError(f"The file extensions, {ext}, and file paths, {file_path_list} are not the same length. ")
         output = []
-        for file_path, ext_n in zip_longest(file_path_list, ext):
+        # Use zip_longest for times where no ext or a single ext is passed
+        # Note: load() returns a list, so list comprehension would create a list of lists, without multiple loops
+        for file_path, ext_n in zip_longest(file_path_list, ext, fillvalue=ext[0]):
             output.extend(self.as_super.load(file_path, ext=ext_n))
         return output
 

@@ -85,7 +85,7 @@ class FileReader:
         :param f_pos: The initial file position to start reading from
         :return: A list of Data1D and Data2D objects
         """
-        self.filepath = filepath if isinstance(filepath, Path) else Path(filepath)
+        self.filepath = Path(filepath)
         self.f_pos = f_pos
         if not file_handler:
             # Allow direct calls to the readers without generating a file_handler, but higher-level calls should
@@ -111,8 +111,6 @@ class FileReader:
         if self.extension in self.ext or self.allow_all:
             try:
                 self.get_file_contents()
-            except Exception as e:
-                raise
             finally:
                 # Regardless of the exception status, always attempt to do final data cleanup
                 # Primary Use case: Multiple data sets in one file. Some have loaded, but one throws an exception.
