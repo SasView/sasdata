@@ -83,7 +83,7 @@ class Reader(FileReader):
             raise FileContentsException(f"File has {len(headers)} headers, but {data.shape[1]} columns")
 
         if not data.size:
-            raise FileContentsException("{} is empty".format(self.filepath.name))
+            raise FileContentsException(f"{self.filepath.name} is empty")
         x = data[:, headers.index("SpinEchoLength")]
         if "SpinEchoLength_error" in headers:
             dx = data[:, headers.index("SpinEchoLength_error")]

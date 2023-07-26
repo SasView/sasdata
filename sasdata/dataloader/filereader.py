@@ -66,11 +66,11 @@ class FileReader:
         self.current_dataset = None
         # Current DataInfo object being loaded in
         self.current_datainfo = None
-        # File path sent to reader
+        # Path object using the file path sent to reader
         self.filepath = None
         # Starting file position to begin reading data from
         self.f_pos = 0
-        # File extension sent to reader
+        # File extension of the data file passed to the reader
         self.extension = None
         # Open file handle
         self.f_open = None
@@ -110,6 +110,7 @@ class FileReader:
         self.extension = extension.lower()
         if self.extension in self.ext or self.allow_all:
             try:
+                # All raised exceptions are handled by ExtensionRegistry.load(). No exception handling here.
                 self.get_file_contents()
             finally:
                 # Regardless of the exception status, always attempt to do final data cleanup
@@ -120,7 +121,8 @@ class FileReader:
                     self.convert_data_units()
                     self.sort_data()
         else:
-            msg = f"Unable to find file at: {self.filepath}\nPlease check your file path and try again."
+            msg = f"Skipping loader {self.type_name} for file format {self.filepath}.\n"
+            msg += "The reader and file are not compatible."
             self.handle_error_message(msg)
 
         # Return a list of parsed entries that data_loader can manage

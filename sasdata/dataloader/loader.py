@@ -66,9 +66,11 @@ class Registry(ExtensionRegistry):
         """
         Call the loader for the file type of path.
 
-        :param file_path_list: file path
-        :param ext: explicit extension, to force the use of a particular
-                       reader
+        :param file_path_list: A list of pathlib.Path objects and/or string representations of file paths
+        :param ext: A list of explicit extensions, to force the use of a particular reader for a particular file.
+                    **Usage** If any ext is passed, the length of the ext list should be the same as the length of
+                    the file path list. A single extention, as a string or a list of length 1, will apply  ext to all
+                    files in the file path list. Any other case will result in an error.
         :param debug: when True, print the traceback for each loader that fails
         :param use_defaults:
             Flag to use the default readers as a backup if the
@@ -77,6 +79,7 @@ class Registry(ExtensionRegistry):
         Defaults to the ascii (multi-column), cansas XML, and cansas NeXuS
         readers if no reader was registered for the file's extension.
         """
+        # Coerce file path list and ext to lists
         file_path_list = [file_path_list] if isinstance(file_path_list, (str, Path)) else file_path_list
         ext = [ext] if isinstance(ext, str) else ext
         # Ensure ext has at least 1 value in it to ensure zip_longest has a value for the fillvalue
@@ -336,7 +339,7 @@ class Loader:
 
     def load(self, file_path_list: Union[List[Union[str, Path]], str, Path],
              format: Optional[Union[List[str], str]] = None
-             ) -> Union[List[Union[Data1D, Data2D]]]:
+             ) -> List[Union[Data1D, Data2D]]:
         """
         Load a file or series of files
         :param file_path_list: String representations of any number of file paths. This can either be a list or a string

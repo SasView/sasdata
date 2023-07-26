@@ -6,7 +6,6 @@ and registers the built-in file extensions.
 """
 import os
 from urllib.request import urlopen
-
 from io import BytesIO
 from typing import Optional, List, Union, TYPE_CHECKING
 from collections import defaultdict
@@ -16,6 +15,8 @@ from sasdata.data_util.loader_exceptions import NoKnownLoaderException
 from sasdata.data_util.util import unique_preserve_order
 from sasdata.dataloader import readers as all_readers
 
+# TYPE_CHECKING hides imports at runtime: https://docs.python.org/3/library/typing.html#typing.TYPE_CHECKING
+# Imports used here are only used for type checking, but would create a circular import, otherwise.
 if TYPE_CHECKING:
     from sasdata.dataloader.data_info import Data1D, Data2D
 

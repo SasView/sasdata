@@ -48,13 +48,23 @@ a reader. If format is passed, it must either be a single value, or a list of va
   - `.pdh`: Anton Paar reduced SAXS format
 
 The `save()` method accepts 3 arguments; the file path to save the file as, a `Data1D` or `Data2D` object, and, optionally, 
-a file extension. If an extension is passed to `save`, any file extension in the file path will be superseded.
+a file extension. If an extension is passed to `save`, any file extension in the file path will be superseded. If no file
+extension is given in the filename or format, a ValueError will be thrown.
 
 - Save `format` options include:
   - `.xml`: for the canSAS XML format
   - `.h5`: for the NXcanSAS format
   - `.txt`: for the multi-column ascii format
   - `.csv`: for a comma delimited text format
+
+Save argument examples and data output:
+
+| filename     | format | saved file name | saved file format |
+|--------------|--------|-----------------|-------------------|
+| 'mydata'     | '.csv' | mydata.csv      | CSV format        |
+| 'mydata.xml' | None   | mydata.xml      | canSAS XML format |
+| 'mydata.xml' | '.csv' | mydata.xml.csv  | CSV format        |
+| 'mydata'     | None   | -               | raise ValueError  |
 
 More information on the recognized data formats is available on the 
 [sasview website](https://www.sasview.org/docs/user/qtgui/MainWindow/data_formats_help.html).
