@@ -77,7 +77,6 @@ class Reader(XMLreader):
         self.logging = []
         self.encoding = None
 
-
     def get_file_contents(self):
         self.reset_state()
         # Use the name attribute associated with the file (raw string) and fall back to the Path object in filepath
