@@ -41,11 +41,6 @@ def decode(s):
 FIELDS_1D = 'x', 'y', 'dx', 'dy', 'dxl', 'dxw'
 # Data 2D fields for iterative purposes
 FIELDS_2D = 'data', 'qx_data', 'qy_data', 'q_data', 'err_data', 'dqx_data', 'dqy_data', 'mask'
-DEPRECATION_MESSAGE = ("\rThe extension of this file suggests the data set migh"
-                       "t not be fully reduced. Support for the reader associat"
-                       "ed with this file type has been removed. An attempt to "
-                       "load the file was made, but, should it be successful, "
-                       "SasView cannot guarantee the accuracy of the data.")
 
 
 class FileReader:
@@ -57,9 +52,6 @@ class FileReader:
 
     # List of allowed extensions
     ext = ['.txt']
-
-    # Deprecated extensions
-    deprecated_extensions = ['.asc']
 
     # Bypass extension check and try to load anyway
     allow_all = False
@@ -122,9 +114,9 @@ class FileReader:
             except Exception as e:
                 raise
             finally:
-                if any(self.filepath.name.lower().endswith(ext) for ext in
-                       self.deprecated_extensions):
-                    self.handle_error_message(DEPRECATION_MESSAGE)
+                # Regardless of the exception status, always attempt to do final data cleanup
+                # Primary Use case: Multiple data sets in one file. Some have loaded, but one throws an exception.
+                #                   This will allow the reader to return the data that was successfully loaded.
                 if len(self.output) > 0:
                     # Sort the data that's been loaded
                     self.convert_data_units()

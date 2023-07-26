@@ -4,6 +4,7 @@ File extension registry.
 This provides routines for opening files based on extension,
 and registers the built-in file extensions.
 """
+import os
 from urllib.request import urlopen
 
 from io import BytesIO
@@ -17,6 +18,10 @@ from sasdata.dataloader import readers as all_readers
 
 if TYPE_CHECKING:
     from sasdata.dataloader.data_info import Data1D, Data2D
+
+DEPRECATION_MESSAGE = ("\rThe extension, {}, of the file, {}, suggests the data set might not be fully reduced. Support"
+                       " for the reader associated with this file type has been removed. An attempt to load the file "
+                       "was made, but, should it be successful, SasView cannot guarantee the accuracy of the data.")
 
 
 def create_empty_data_with_errors(path: Union[str, Path], errors: List[Exception]):
@@ -109,6 +114,9 @@ class ExtensionRegistry:
     def __init__(self):
         self.readers = defaultdict(list)
 
+        # Deprecated extensions
+        self.deprecated_extensions = ['.asc']
+
     def __setitem__(self, ext: str, loader):
         self.readers[ext].insert(0, loader)
 
@@ -161,6 +169,7 @@ class ExtensionRegistry:
         """
         if ext is None:
             loaders = self.lookup(path)
+            _, ext = os.path.splitext(path)
             if not loaders:
                 raise NoKnownLoaderException("No loaders match extension in %r"
                                              % path)
@@ -173,7 +182,11 @@ class ExtensionRegistry:
         with CustomFileOpen(path, 'rb') as file_handler:
             for load_function in loaders:
                 try:
-                    return load_function(path, file_handler)
+                    loaded_data = load_function(path, file_handler)
+                    # Check if the file read support is deprecated
+                    if ext.lower() in self.deprecated_extensions:
+                        loaded_data[0].errors.append(DEPRECATION_MESSAGE.format(ext, path))
+                    return loaded_data
                 except Exception as e:
                     errors.append(e)
             # If we get here it is because all loaders failed -> return Data1D with only file path and errors

@@ -47,11 +47,11 @@ class Reader(FileReader):
         """
 
         buff = self.readall()
-        filepath = self.filepath.name
+        filename = self.filepath.name
         lines = buff.splitlines()
         self.output = []
         self.current_datainfo = DataInfo()
-        self.current_datainfo.filename = filepath
+        self.current_datainfo.filename = filename
         self.reset_data_list(len(lines))
 
         # The first good line of data will define whether
@@ -136,23 +136,23 @@ class Reader(FileReader):
             self.set_all_to_none()
             if self.extension in self.ext:
                 msg = "ASCII Reader error: Fewer than five Q data points found "
-                msg += "in {}.".format(filepath)
+                msg += "in {}.".format(filename)
                 raise FileContentsException(msg)
             else:
-                msg = "ASCII Reader could not load the file {}".format(filepath)
+                msg = "ASCII Reader could not load the file {}".format(filename)
                 raise DefaultReaderException(msg)
         # Sanity check
         if has_error_dy and not len(self.current_dataset.y) == \
                 len(self.current_dataset.dy):
             msg = "ASCII Reader error: Number of I and dI data points are"
-            msg += " different in {}.".format(filepath)
+            msg += " different in {}.".format(filename)
             # TODO: Add error to self.current_datainfo.errors instead?
             self.set_all_to_none()
             raise FileContentsException(msg)
         if has_error_dx and not len(self.current_dataset.x) == \
                 len(self.current_dataset.dx):
             msg = "ASCII Reader error: Number of Q and dQ data points are"
-            msg += " different in {}.".format(filepath)
+            msg += " different in {}.".format(filename)
             # TODO: Add error to self.current_datainfo.errors instead?
             self.set_all_to_none()
             raise FileContentsException(msg)
