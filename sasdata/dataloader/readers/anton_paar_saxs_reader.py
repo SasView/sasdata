@@ -90,12 +90,12 @@ class Reader(XMLreader):
             dyvals = []
             for i in range(self.lower, self.upper):
                 index = i - self.lower
-                data = self.raw_data[i].split()
+                data = self.raw_data[i].strip().split()
                 xvals.insert(index, float(data[0]))
                 yvals.insert(index, float(data[1]))
                 dyvals.insert(index, float(data[2]))
         except Exception as e:
-            error_message = f"Couldn't load {self.f_open.name}.\n{e}"
+            error_message = f"Couldn't load {self.filepath}.\n{e}"
             raise FileContentsException(error_message)
         self.current_dataset.x = np.append(self.current_dataset.x, xvals)
         self.current_dataset.y = np.append(self.current_dataset.y, yvals)

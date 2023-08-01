@@ -9,7 +9,6 @@ import numpy as np
 
 from sasdata.dataloader.data_info import DataInfo, plottable_1D, Data1D
 from sasdata.dataloader.loader import Loader
-from sasdata.data_util.loader_exceptions import NoKnownLoaderException
 from sasdata.dataloader.filereader import FileReader
 
 logger = logging.getLogger(__name__)
@@ -29,7 +28,7 @@ class GenericFileReaderTests(unittest.TestCase):
         self.deprecated_file_type = find("FEB18012.ASC")
 
     def test_bad_file_path(self):
-        self.assertRaises(NoKnownLoaderException, self.reader.read,
+        self.assertRaises(FileNotFoundError, self.reader.read,
                           self.bad_file)
 
     def test_good_file_path(self):
@@ -71,6 +70,12 @@ class GenericFileReaderTests(unittest.TestCase):
         # Be sure the deprecation warning is passed with the file
         self.assertEqual(len(asc_load[0].errors), 1)
         self.assertEqual(len(nxs_load[0].errors), 0)
+
+    def test_caller_method(self):
+        xml_native = find("TestExtensions.xml")
+        f_load = self.generic_reader.load(xml_native)[0]
+        f_call = Loader()([xml_native])[0]
+        self.assertEqual(str(f_call), str(f_load))
 
     def check_unknown_extension(self, data):
         self.assertTrue(isinstance(data, Data1D))

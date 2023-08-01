@@ -24,7 +24,9 @@ class sesans_reader(unittest.TestCase):
             Test .SES in the full loader to make sure that the file type is correctly accepted
         """
         file = Loader().load(find("sphere2micron.ses"))
+        remote_file = Loader().load("https://github.com/SasView/sasdata/raw/master/test/sasdataloader/sesans_data/sphere2micron.ses")
         f = file[0]
+        rf = remote_file[0]
         # self.assertEqual(f, 5)
         self.assertEqual(len(file), 1)
         self.assertEqual(len(f.x), 40)
@@ -37,6 +39,7 @@ class sesans_reader(unittest.TestCase):
         self.assertEqual(f.sample.thickness, 0.2)
         self.assertEqual(f.sample.zacceptance, (0.0168, "radians"))
         self.assertEqual(f.isSesans, True)
+        self.assertEqual(str(f), str(rf))
 
     def test_sesans_tof(self):
         """

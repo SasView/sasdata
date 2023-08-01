@@ -27,29 +27,62 @@ or [anaconda](https://www.anaconda.com/)::
        (sasdata) $ python /path/to/sasdata/setup.py clean build
        (sasdata) $ python -m pip install .
 
+## Data Formats
+
+The `Loader()` class is directly callable so a transient call can be made to the class or, for cases where repeated calls
+are necessary, the `Loader()` instance can be assigned to a python variable.
+
+The `Loader.load()` method accepts a string or list of strings to load a single or multiple data sets simultaneously. The
+strings passed to `load()` can be any combination of file path representations, or URIs. A list of `Data1D/Data2D`
+objects is returned. An optional `format` parameter can be passed to specify the expected file extension associated with 
+a reader. If format is passed, it must either be a single value, or a list of values of the same length as the file path list.
+
+- Load `format` options include:
+  - `.xml`: [canSAS XML](https://www.cansas.org/formats/canSAS1d/1.1/doc/index.html) format
+  - `.h5`, `.hdf`, `.hdf5`, `.nxs`: [NXcanSAS](https://manual.nexusformat.org/classes/applications/NXcanSAS.html) format
+  - `.txt`: Multi-column ascii format
+  - `.csv`: Comma delimited text format
+  - `.ses`, `.sesans`: [Multi-column SESANS](https://www.sasview.org/docs/user/qtgui/MainWindow/data_formats_help.html#d-sesans-format) data
+  - `.dat`: [2D NIST](https://github.com/sansigormacros/ncnrsansigormacros/wiki/NCNROutput2D_QxQy) format
+  - `.abs`, `.cor`: 1D NIST format for SAS and USAS
+  - `.pdh`: Anton Paar reduced SAXS format
+
+The `save()` method accepts 3 arguments; the file path to save the file as, a `Data1D` or `Data2D` object, and, optionally, 
+a file extension. If an extension is passed to `save`, any file extension in the file path will be superseded. If no file
+extension is given in the filename or format, a ValueError will be thrown.
+
+- Save `format` options include:
+  - `.xml`: for the canSAS XML format
+  - `.h5`: for the NXcanSAS format
+  - `.txt`: for the multi-column ascii format
+  - `.csv`: for a comma delimited text format
+
+Save argument examples and data output:
+
+| filename     | format | saved file name | saved file format |
+|--------------|--------|-----------------|-------------------|
+| 'mydata'     | '.csv' | mydata.csv      | CSV format        |
+| 'mydata.xml' | None   | mydata.xml      | canSAS XML format |
+| 'mydata.xml' | '.csv' | mydata.xml.csv  | CSV format        |
+| 'mydata'     | None   | -               | raise ValueError  |
+
+More information on the recognized data formats is available on the 
+[sasview website](https://www.sasview.org/docs/user/qtgui/MainWindow/data_formats_help.html).
+
 ## Usage
 
-Loading data sets:
+### Loading and saving data sets using a fixed Loader instance:
 
     (sasdata) $ python
     >>> from sasdata.dataloader.loader import Loader
     >>> loader_module = Loader()
     >>> loaded_data_sets = loader_module.load(path="/path/to/file.ext")
-
- - The Loader() class is not callable and must be instantiated prior to use.
- - The load() method returns a list of Data1/2D objects as loaded from the specified path.
-
-Saving loaded data:
-
     >>> loaded_data_set = loaded_data_sets[0]
-    >>> loader.save(path='/path/to/new/file.ext', data=loaded_data_set, format=None)
+    >>> loader_module.save(path='/path/to/new/file.ext', data=loaded_data_set, format=None)
 
- - The save() method accepts three (3) arguments:
-   - path: The file name and path to save the data.
-   - data: A Data1D or Data2D object.
-   - format (optional): The expected file extension for the file. Options include:
-     - .xml: for the canSAS XMl format
-     - .h5: for the NXcanSAS format
-     - .txt: for the multi-column ascii format
-     - .csv: for a comma delimited text format.
- - The file extension specified in the save path will be superseded by the format value.
+### Loading and saving data sets using a transient Loader instance (more scriptable):
+
+    (sasdata) $ python
+    >>> from sasdata.dataloader.loader import Loader
+    >>> loaded_data_sets = Loader().load(path="/path/to/file.ext")
+    >>> Loader().save(path='/path/to/new/file.ext', data=loaded_data_sets[0], format=None)

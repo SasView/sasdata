@@ -4,11 +4,12 @@ All generic functionality required for a file loader/reader is built into this
 class
 """
 
-import os
+import pathlib
 import codecs
 import logging
 from abc import abstractmethod
-from typing import List, Union
+from pathlib import Path
+from typing import List, Union, Optional
 
 import numpy as np
 from sasdata.data_util.loader_exceptions import NoKnownLoaderException, FileContentsException,\
@@ -16,6 +17,7 @@ from sasdata.data_util.loader_exceptions import NoKnownLoaderException, FileCont
 from sasdata.dataloader.data_info import Data1D, Data2D, DataInfo, plottable_1D, plottable_2D,\
     combine_data_info_with_plottable
 from sasdata.data_util.nxsunit import Converter
+from sasdata.data_util.registry import CustomFileOpen
 
 logger = logging.getLogger(__name__)
 
@@ -39,11 +41,6 @@ def decode(s):
 FIELDS_1D = 'x', 'y', 'dx', 'dy', 'dxl', 'dxw'
 # Data 2D fields for iterative purposes
 FIELDS_2D = 'data', 'qx_data', 'qy_data', 'q_data', 'err_data', 'dqx_data', 'dqy_data', 'mask'
-DEPRECATION_MESSAGE = ("\rThe extension of this file suggests the data set migh"
-                       "t not be fully reduced. Support for the reader associat"
-                       "ed with this file type has been removed. An attempt to "
-                       "load the file was made, but, should it be successful, "
-                       "SasView cannot guarantee the accuracy of the data.")
 
 
 class FileReader:
@@ -55,9 +52,6 @@ class FileReader:
 
     # List of allowed extensions
     ext = ['.txt']
-
-    # Deprecated extensions
-    deprecated_extensions = ['.asc']
 
     # Bypass extension check and try to load anyway
     allow_all = False
@@ -72,49 +66,63 @@ class FileReader:
         self.current_dataset = None
         # Current DataInfo object being loaded in
         self.current_datainfo = None
-        # File path sent to reader
+        # Path object using the file path sent to reader
         self.filepath = None
+        # Starting file position to begin reading data from
+        self.f_pos = 0
+        # File extension of the data file passed to the reader
+        self.extension = None
         # Open file handle
         self.f_open = None
 
-    def read(self, filepath: str) -> List[Union[Data1D, Data2D]]:
+    def read(self, filepath: Union[str, Path], file_handler: Optional[CustomFileOpen] = None,
+             f_pos: Optional[int] = 0) -> List[Union[Data1D, Data2D]]:
         """
         Basic file reader
 
-        :param filepath: The full or relative path to a file to be loaded
+        :param filepath: The string representation of the path to a file to be loaded. This can be a URI or a local file
+        :param file_handler: A CustomFileOpen instance used to handle file operations
+        :param f_pos: The initial file position to start reading from
+        :return: A list of Data1D and Data2D objects
         """
-        self.filepath = filepath
-        if os.path.isfile(filepath):
-            basename, extension = os.path.splitext(os.path.basename(filepath))
-            self.extension = extension.lower()
-            # If the file type is not allowed, return nothing
-            if self.extension in self.ext or self.allow_all:
-                # Try to load the file, but raise an error if unable to.
-                try:
-                    with open(filepath, 'rb') as self.f_open:
-                        self.get_file_contents()
-                except DataReaderException as e:
-                    self.handle_error_message(str(e))
-                except FileContentsException as e:
-                    raise
-                except OSError as e:
-                    # If the file cannot be opened
-                    msg = "Unable to open file: {}\n".format(filepath)
-                    msg += str(e)
-                    self.handle_error_message(msg)
-                except Exception as e:
-                    self.handle_error_message(str(e))
-                finally:
-                    if any(filepath.lower().endswith(ext) for ext in
-                           self.deprecated_extensions):
-                        self.handle_error_message(DEPRECATION_MESSAGE)
-                    if len(self.output) > 0:
-                        # Sort the data that's been loaded
-                        self.convert_data_units()
-                        self.sort_data()
+        self.filepath = Path(filepath)
+        self.f_pos = f_pos
+        if not file_handler:
+            # Allow direct calls to the readers without generating a file_handler, but higher-level calls should
+            #   already have file_handler defined
+            with CustomFileOpen(filepath, 'rb') as file_handler:
+                return self._read(file_handler)
+        return self._read(file_handler)
+
+    def _read(self, file_handler: CustomFileOpen) -> List[Union[Data1D, Data2D]]:
+        """
+        Private method to handle file loading
+
+        :param file_handler: A CustomFileOpen instance used to handle file operations
+        :param f_pos: The initial file position to start the read from
+        :return: A list of Data1D and Data2D objects
+        """
+        self.f_open = file_handler.fd
+        # Move to the desired initial file position in case of successive reads on the same handle
+        self.f_open.seek(self.f_pos)
+
+        basename, extension = self.filepath.stem, self.filepath.suffix
+        self.extension = extension.lower()
+        if self.extension in self.ext or self.allow_all:
+            try:
+                # All raised exceptions are handled by ExtensionRegistry.load(). No exception handling here.
+                self.get_file_contents()
+            finally:
+                # Regardless of the exception status, always attempt to do final data cleanup
+                # Primary Use case: Multiple data sets in one file. Some have loaded, but one throws an exception.
+                #                   This will allow the reader to return the data that was successfully loaded.
+                if len(self.output) > 0:
+                    # Sort the data that's been loaded
+                    self.convert_data_units()
+                    self.sort_data()
         else:
-            msg = "Unable to find file at: {}\n".format(filepath)
-            msg += "Please check your file path and try again."
+            msg = f"Skipping loader {self.type_name} for file format {self.filepath}.\n"
+            msg += "The reader and file are not compatible."
             self.handle_error_message(msg)
 
         # Return a list of parsed entries that data_loader can manage
@@ -129,7 +137,6 @@ class FileReader:
         """
         self.current_datainfo = None
         self.current_dataset = None
-        self.filepath = None
         self.ind = None
         self.output = []
 
@@ -137,7 +144,6 @@ class FileReader:
         """
         Returns the next line in the file as a string.
         """
-        #return self.f_open.readline()
         return decode(self.f_open.readline())
 
     def nextlines(self) -> str:
@@ -145,13 +151,13 @@ class FileReader:
         Returns the next line in the file as a string.
         """
         for line in self.f_open:
-            #yield line
             yield decode(line)
 
     def readall(self) -> str:
         """
         Returns the entire file as a string.
         """
+        self.f_open.seek(self.f_pos)
         return decode(self.f_open.read())
 
     def handle_error_message(self, msg: str):

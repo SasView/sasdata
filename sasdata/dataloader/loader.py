@@ -24,14 +24,16 @@ import time
 from zipfile import ZipFile
 from collections import defaultdict
 from types import ModuleType
-from typing import Optional, Union
+from typing import Optional, Union, List
+from itertools import zip_longest
+from pathlib import Path
 
 from sasdata.data_util.registry import ExtensionRegistry
 from sasdata.data_util.util import unique_preserve_order
+from sasdata.dataloader.data_info import Data1D, Data2D
 
 # Default readers are defined in the readers sub-module
 from . import readers
-from sasdata.data_util.loader_exceptions import NoKnownLoaderException, DefaultReaderException
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +44,8 @@ class Registry(ExtensionRegistry):
     Readers and writers are supported.
     """
     def __init__(self):
-        super().__init__()
+        self.as_super = super(Registry, self)
+        self.as_super.__init__()
 
         # Writers
         self.writers = defaultdict(list)
@@ -56,14 +59,18 @@ class Registry(ExtensionRegistry):
         # Register default readers
         readers.read_associations(self)
 
-    def load(self, path: str, ext: Optional[str] = None, debug: Optional[bool] = False,
+    def load(self, file_path_list: Union[List[Union[str, Path]], str, Path],
+             ext: Optional[Union[List[str], str]] = None,
+             debug: Optional[bool] = False,
              use_defaults: Optional[bool] = True):
         """
         Call the loader for the file type of path.
 
-        :param path: file path
-        :param ext: explicit extension, to force the use of a particular
-                       reader
+        :param file_path_list: A list of pathlib.Path objects and/or string representations of file paths
+        :param ext: A list of explicit extensions, to force the use of a particular reader for a particular file.
+                    **Usage** If any ext is passed, the length of the ext list should be the same as the length of
+                    the file path list. A single extention, as a string or a list of length 1, will apply  ext to all
+                    files in the file path list. Any other case will result in an error.
         :param debug: when True, print the traceback for each loader that fails
         :param use_defaults:
             Flag to use the default readers as a backup if the
@@ -72,53 +79,20 @@ class Registry(ExtensionRegistry):
         Defaults to the ascii (multi-column), cansas XML, and cansas NeXuS
         readers if no reader was registered for the file's extension.
         """
-        import traceback
-
-        # Gets set to a string if the file has an associated reader that fails
-        try:
-            data_list = super().load(path, ext=ext)
-            if data_list:
-                return data_list
-            if ext:
-                logger.debug(f"No data returned from '{path}' for format {ext}")
-            else:
-                logger.debug(f"No data returned from '{path}'")
-        except Exception as e:
-            logger.debug(traceback.print_exc())
-            if not use_defaults:
-                raise
-        # Use backup readers
-        try:
-            return self.load_using_generic_loaders(path)
-        except (NoKnownLoaderException, DefaultReaderException) as e:
-            logger.debug(traceback.print_exc())
-            # No known reader available. Give up and throw an error
-            msg = f"{str(e)}\nUnknown data format: {path}.\nThe file is not a format that can be loaded by SasView.\n"
-            logger.error(msg)
-            raise
-        except Exception as e:
-            logger.debug(traceback.print_exc())
-            raise
-
-    def load_using_generic_loaders(self, path: str) -> list:
-        """
-        If the expected reader cannot load the file or no known loader exists,
-        attempt to load the file using a few defaults readers
-        :param path: file path
-        :return: List of Data1D and Data2D objects
-        """
-        module_list = readers.get_generic_readers()
-        for module in module_list:
-            reader = module.Reader()
-            try:
-                data_list = reader.read(path)
-                if data_list:
-                    return data_list
-            except Exception as e:
-                # Cycle through all generic readers
-                pass
-        # Only throw exception if all generic readers fail
-        raise NoKnownLoaderException(f"Generic readers failed to load {path}")
+        # Coerce file path list and ext to lists
+        file_path_list = [file_path_list] if isinstance(file_path_list, (str, Path)) else file_path_list
+        ext = [ext] if isinstance(ext, str) else ext
+        # Ensure ext has at least 1 value in it to ensure zip_longest has a value for the fillvalue
+        if not ext:
+            ext = [None]
+        if len(ext) > 1 and len(ext) != len(file_path_list):
+            raise IndexError(f"The file extensions, {ext}, and file paths, {file_path_list} are not the same length. ")
+        output = []
+        # Use zip_longest for times where no ext or a single ext is passed
+        # Note: load() returns a list, so list comprehension would create a list of lists, without multiple loops
+        for file_path, ext_n in zip_longest(file_path_list, ext, fillvalue=ext[0]):
+            output.extend(self.as_super.load(file_path, ext=ext_n))
+        return output
 
     def find_plugins(self, dir: str):
         """
@@ -363,14 +337,16 @@ class Loader:
         """
         return self.__registry.associate_file_reader(ext, loader)
 
-    def load(self, file: str, format: Optional[str] = None) -> Union[list, Exception]:
+    def load(self, file_path_list: Union[List[Union[str, Path]], str, Path],
+             format: Optional[Union[List[str], str]] = None
+             ) -> List[Union[Data1D, Data2D]]:
         """
-        Load a file
-        :param file: file name (path)
+        Load a file or series of files
+        :param file_path_list: String representations of any number of file paths. This can either be a list or a string
         :param format: specified format to use (optional)
-        :return: DataInfo object
+        :return: a list of DataInfo objects and/or loading exceptions.
         """
-        return self.__registry.load(file, format)
+        return self.__registry.load(file_path_list, format)
 
     def save(self, file: str, data, format: str) -> bool:
         """
@@ -400,3 +376,11 @@ class Loader:
         Return the list of wildcards
         """
         return self.__registry.wildcards
+
+    def __call__(self, file_path_list: List[str]) -> List[Union[Data1D, Data2D]]:
+        """Allow direct calls to the loader system for transient file loader systems.
+        :param file_path_list: A list of string representations of file paths. Each item can either be a local file path
+            or a URI.
+        :return: A list of loaded Data1D/2D objects.
+        """
+        return self.load(file_path_list)

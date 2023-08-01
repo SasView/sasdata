@@ -79,7 +79,8 @@ class Reader(XMLreader):
 
     def get_file_contents(self):
         self.reset_state()
-        xml_file = self.f_open.name
+        # Use the name attribute associated with the file (raw string) and fall back to the Path object in filepath
+        xml_file = self.f_open.name if hasattr(self.f_open, 'name') else self.filepath.resolve()
         try:
             # Raises FileContentsException
             is_valid_cansas = self.load_file_and_schema(xml_file, '')
@@ -121,9 +122,9 @@ class Reader(XMLreader):
     def load_file_and_schema(self, xml_file: str, schema_path: Optional[str] = "") -> bool:
         # Try and parse the XML file
         try:
-            self.set_xml_file(xml_file)
+            self.set_xml(xml_file)
         except etree.XMLSyntaxError:  # File isn't valid XML so can't be loaded
-            msg = "SasView cannot load {}.\nInvalid XML syntax".format(xml_file)
+            msg = f"SasView cannot load {self.filepath.name}.\nInvalid XML syntax."
             raise FileContentsException(msg)
 
         self.cansas_version = self.xmlroot.get("version", "1.1")
@@ -186,8 +187,7 @@ class Reader(XMLreader):
                 PREPROCESS] = self.processing_instructions
             self.base_ns = "{" + CANSAS_NS.get(self.cansas_version).get("ns") + "}"
         if self._is_call_local() and not recurse:
-            basename, _ = os.path.splitext(os.path.basename(self.f_open.name))
-            self.current_datainfo.filename = basename + self.extension
+            self.current_datainfo.filename = self.filepath.name
         # Create an empty dataset if no data has been passed to the reader
         if self.current_dataset is None:
             self._initialize_new_data_set(dom)
