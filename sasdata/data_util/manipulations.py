@@ -63,13 +63,19 @@ def get_q_compo(dx: float, dy: float, detector_distance: float, wavelength: floa
     return out
 
 
-def flip_phi(phi: float) -> float:
+def normalize_angle(phi: float, closed_at_end: bool = False) -> float:
     """
-    Force phi to be within the 0 <= to < 2pi range, using a modulus operation.
+    Force phi to be within the half-open interval 0 <= phi < 2pi, unless
+    closed_at_end is set to True, in which case the interval is 0 < phi <= 2pi.
 
-    :return: phi in range 0 <= phi < 2pi
+    :param phi: angle to return in a normalized form (0 <= phi < 2pi)
+    :param closed_at_end: if True, changes the interval to 0 < phi <= 2pi
     """
-    return phi % (2 * np.pi)
+    phi_out = phi % (2 * np.pi)
+    if closed_at_end and phi_out == 0:
+        phi_out = 2 * np.pi
+
+    return phi_out
 
 
 def get_pixel_fraction_square(x: float, x_min: float, x_max: float) -> float:
@@ -303,7 +309,7 @@ class Binning:
             temp_y = self.max - self.min
         # Fixing an issue where certain angular coordinate values give bad bin values
         if np.fabs(temp_x) > np.fabs(temp_y):
-            temp_x = flip_phi(temp_x)
+            temp_x = normalize_angle(temp_x)
         # Bin index calulation
         return int(math.floor(self.n_bins * temp_x / temp_y))
 
@@ -867,13 +873,13 @@ class _Sector:
         x_err = np.zeros(self.nbins)
         y_counts = np.zeros(self.nbins)  # Cycle counts (for the mean)
 
-        # Get the min and max into the region: 0 <= phi < 2Pi
-        phi_min = flip_phi(self.phi_min)
-        phi_max = flip_phi(self.phi_max)
+        # Get the min into region: 0 <= phi < 2Pi and max into region: 0 < phi <= 2Pi
+        phi_min = normalize_angle(self.phi_min)
+        phi_max = normalize_angle(self.phi_max, closed_at_end=True)
         # Now calculate the angles for the opposite side sector, here referred
         # to as "minor wing," and ensure these too are within 0 to 2pi
-        phi_min_minor = flip_phi(phi_min - math.pi)
-        phi_max_minor = flip_phi(phi_max - math.pi)
+        phi_min_minor = normalize_angle(phi_min - math.pi)
+        phi_max_minor = normalize_angle(phi_max - math.pi, closed_at_end=True)
 
         #  set up the bins by creating a binning object
         if run.lower() == 'phi':
@@ -1190,9 +1196,9 @@ class Sectorcut:
         # get phi from data
         phi_data = np.arctan2(qy_data, qx_data)
 
-        # Get the min and max into the region: -pi <= phi < Pi
-        phi_min_major = flip_phi(self.phi_min + Pi) - Pi
-        phi_max_major = flip_phi(self.phi_max + Pi) - Pi
+        # Get the min into region -pi <= phi < pi and max into region -pi < phi <= pi
+        phi_min_major = normalize_angle(self.phi_min + Pi) - Pi
+        phi_max_major = normalize_angle(self.phi_max + Pi, closed_at_end=True) - Pi
         # check for major sector
         if phi_min_major > phi_max_major:
             out_major = (phi_min_major <= phi_data) + \
@@ -1202,9 +1208,9 @@ class Sectorcut:
                 phi_max_major > phi_data)
 
         # minor sector
-        # Get the min and max into the region: -pi <= phi < Pi
-        phi_min_minor = flip_phi(self.phi_min) - Pi
-        phi_max_minor = flip_phi(self.phi_max) - Pi
+        # Get the min into region -pi <= phi < pi and max into region -pi < phi <= pi
+        phi_min_minor = normalize_angle(self.phi_min) - Pi
+        phi_max_minor = normalize_angle(self.phi_max, closed_at_end=True) - Pi
 
         # check for minor sector
         if phi_min_minor > phi_max_minor:
