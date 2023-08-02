@@ -65,18 +65,11 @@ def get_q_compo(dx: float, dy: float, detector_distance: float, wavelength: floa
 
 def flip_phi(phi: float) -> float:
     """
-    Force phi to be within the 0 <= to <= 2pi range by adding or subtracting
-    2pi as necessary
+    Force phi to be within the 0 <= to < 2pi range, using a modulus operation.
 
-    :return: phi in >=0 and <=2Pi
+    :return: phi in range 0 <= phi < 2pi
     """
-    if phi < 0:
-        phi_out = phi + (2 * math.pi)
-    elif phi > (2 * math.pi):
-        phi_out = phi - (2 * math.pi)
-    else:
-        phi_out = phi
-    return phi_out
+    return phi % (2 * np.pi)
 
 
 def get_pixel_fraction_square(x: float, x_min: float, x_max: float) -> float:
@@ -303,13 +296,16 @@ class Binning:
         bin = floor(N * (log(x) - log(min)) / (log(max) - log(min)))
         """
         if self.base:
-            temp_x = self.n_bins * (math.log(value, self.base) - math.log(self.min, self.base))
+            temp_x = math.log(value, self.base) - math.log(self.min, self.base)
             temp_y = math.log(self.max, self.base) - math.log(self.min, self.base)
         else:
-            temp_x = self.n_bins * (value - self.min)
+            temp_x = value - self.min
             temp_y = self.max - self.min
+        # Fixing an issue where certain angular coordinate values give bad bin values
+        if np.fabs(temp_x) > np.fabs(temp_y):
+            temp_x = flip_phi(temp_x)
         # Bin index calulation
-        return int(math.floor(temp_x / temp_y))
+        return int(math.floor(self.n_bins * temp_x / temp_y))
 
 
 ################################################################################
