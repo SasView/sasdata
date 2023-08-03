@@ -63,18 +63,19 @@ def get_q_compo(dx: float, dy: float, detector_distance: float, wavelength: floa
     return out
 
 
-def normalize_angle(phi: float, closed_at_end: bool = False) -> float:
+def normalize_angle(phi: float) -> float:
     """
-    Force phi to be within the half-open interval 0 <= phi < 2pi, unless
-    closed_at_end is set to True, in which case the interval is 0 < phi <= 2pi.
-
-    :param phi: angle to return in a normalized form (0 <= phi < 2pi)
-    :param closed_at_end: if True, changes the interval to 0 < phi <= 2pi
+    Returns the supplied angle in the range 0 <= phi <= 2pi.
+    When phi is a non-zero integer multiple of 2pi, it is more appropriate to
+    return 2pi than zero. This allows rings to be defined with start points
+    at 0 and end points at 2pi.
     """
-    phi_out = phi % (2 * np.pi)
-    if closed_at_end and phi_out == 0:
-        phi_out = 2 * np.pi
-
+    quotient, remainder = divmod(phi, 2*np.pi)
+    # If phi is a non-zero integer multiple of 2pi:
+    if remainder == 0 and quotient > 0:
+        phi_out = 2*np.pi
+    else:
+        phi_out = remainder
     return phi_out
 
 
@@ -302,16 +303,18 @@ class Binning:
         bin = floor(N * (log(x) - log(min)) / (log(max) - log(min)))
         """
         if self.base:
-            temp_x = math.log(value, self.base) - math.log(self.min, self.base)
-            temp_y = math.log(self.max, self.base) - math.log(self.min, self.base)
+            numerator = math.log(value, self.base) - math.log(self.min, self.base)
+            denominator = math.log(self.max, self.base) - math.log(self.min, self.base)
         else:
-            temp_x = value - self.min
-            temp_y = self.max - self.min
-        # Fixing an issue where certain angular coordinate values give bad bin values
-        if np.fabs(temp_x) > np.fabs(temp_y):
-            temp_x = normalize_angle(temp_x)
+            numerator = value - self.min
+            denominator = self.max - self.min
+        # This if statement can only trigger if value > self.max, which should
+        # only ever happen when binning an angular parameter.
+        # Calling normalize_angle() ensures the bin index returned <= n_bins.
+        if np.fabs(numerator) > np.fabs(denominator):
+            numerator = normalize_angle(numerator)
         # Bin index calulation
-        return int(math.floor(self.n_bins * temp_x / temp_y))
+        return int(math.floor(self.n_bins * numerator / denominator))
 
 
 ################################################################################
@@ -873,13 +876,13 @@ class _Sector:
         x_err = np.zeros(self.nbins)
         y_counts = np.zeros(self.nbins)  # Cycle counts (for the mean)
 
-        # Get the min into region: 0 <= phi < 2Pi and max into region: 0 < phi <= 2Pi
+        # Get the min and max into the region: 0 <= phi < 2Pi
         phi_min = normalize_angle(self.phi_min)
-        phi_max = normalize_angle(self.phi_max, closed_at_end=True)
+        phi_max = normalize_angle(self.phi_max)
         # Now calculate the angles for the opposite side sector, here referred
         # to as "minor wing," and ensure these too are within 0 to 2pi
         phi_min_minor = normalize_angle(phi_min - math.pi)
-        phi_max_minor = normalize_angle(phi_max - math.pi, closed_at_end=True)
+        phi_max_minor = normalize_angle(phi_max - math.pi)
 
         #  set up the bins by creating a binning object
         if run.lower() == 'phi':
@@ -1196,9 +1199,9 @@ class Sectorcut:
         # get phi from data
         phi_data = np.arctan2(qy_data, qx_data)
 
-        # Get the min into region -pi <= phi < pi and max into region -pi < phi <= pi
+        # Get the min and max into the region: -pi <= phi < Pi
         phi_min_major = normalize_angle(self.phi_min + Pi) - Pi
-        phi_max_major = normalize_angle(self.phi_max + Pi, closed_at_end=True) - Pi
+        phi_max_major = normalize_angle(self.phi_max + Pi) - Pi
         # check for major sector
         if phi_min_major > phi_max_major:
             out_major = (phi_min_major <= phi_data) + \
@@ -1208,9 +1211,9 @@ class Sectorcut:
                 phi_max_major > phi_data)
 
         # minor sector
-        # Get the min into region -pi <= phi < pi and max into region -pi < phi <= pi
+        # Get the min and max into the region: -pi <= phi < Pi
         phi_min_minor = normalize_angle(self.phi_min) - Pi
-        phi_max_minor = normalize_angle(self.phi_max, closed_at_end=True) - Pi
+        phi_max_minor = normalize_angle(self.phi_max) - Pi
 
         # check for minor sector
         if phi_min_minor > phi_max_minor:
