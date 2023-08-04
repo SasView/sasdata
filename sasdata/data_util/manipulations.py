@@ -881,6 +881,8 @@ class _Sector:
 
         #  set up the bins by creating a binning object
         if run.lower() == 'phi':
+            if self.phi_min > self.phi_max:
+                self.phi_max += 2 * np.pi
             binning = Binning(self.phi_min, self.phi_max, self.nbins, self.base)
         elif self.fold:
             binning = Binning(self.r_min, self.r_max, self.nbins, self.base)
@@ -944,6 +946,10 @@ class _Sector:
 
             # Get the binning index
             if run.lower() == 'phi':
+                if phi_value < binning.min:
+                    phi_value += 2 * np.pi
+                elif phi_value > binning.max:
+                    phi_value -= 2 * np.pi
                 i_bin = binning.get_bin_index(phi_value)
             else:
                 i_bin = binning.get_bin_index(q_value)
