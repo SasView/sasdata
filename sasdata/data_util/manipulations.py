@@ -881,9 +881,20 @@ class _Sector:
 
         #  set up the bins by creating a binning object
         if run.lower() == 'phi':
-            if self.phi_min > self.phi_max:
-                self.phi_max += 2 * np.pi
-            binning = Binning(self.phi_min, self.phi_max, self.nbins, self.base)
+            # self.phi_min/max are waht are received from the GUI and can be in the range of 0, 2pi;
+            # -delta, 2pi-delta; or delta, 2pi+delta, while phi_min/max move the received values to
+            # always in the range 0, 2pi. Use phi_min/max here to ensure well understood behavior
+            # (though, if careful, one could use the self.phi_min/max.
+            # NOTE: if using phi_min/max as here instead of self.phi_min we must NOT change
+            # their values as they are used throughout to determine what points (also all in
+            # the 0, 2pi range) are in the ROI.
+            # NOTE2: the first line is needed in any case to ensure that when a range straddles
+            # the discontinuity inherent in circular angles (e.g. jumping from 2pi to 0) by
+            # putting sliding the range to be continuous (e.g. 2pi goes to 2pi + delta)
+            if phi_min > phi_max:
+                binning = Binning(phi_min, phi_max + 2 * np.pi, self.nbins, self.base)
+            else:
+                binning = Binning(phi_min, phi_max, self.nbins, self.base)
         elif self.fold:
             binning = Binning(self.r_min, self.r_max, self.nbins, self.base)
         else:
@@ -946,11 +957,15 @@ class _Sector:
 
             # Get the binning index
             if run.lower() == 'phi':
-                if phi_value < binning.min:
-                    phi_value += 2 * np.pi
-                elif phi_value > binning.max:
-                    phi_value -= 2 * np.pi
-                i_bin = binning.get_bin_index(phi_value)
+                # phi_value is in the range of 0 to 2pi. If the original range had to be slid
+                # to accommodate straddling the discontinuity in the circular angles
+                # (e.g. jumping from 2pi to 0), we need to slide the range for phi_value
+                # in the same way so that it falls in the continuous range set up for the
+                # binning process
+                if phi_min > phi_value:
+                    i_bin = binning.get_bin_index(phi_value+ 2* np.pi)
+                else:
+                    i_bin = binning.get_bin_index(phi_value)
             else:
                 i_bin = binning.get_bin_index(q_value)
 
@@ -985,8 +1000,27 @@ class _Sector:
             # Calculate x values at the center of the bin depending on the
             # the type of averaging (phi or sector)
             if run.lower() == 'phi':
-                step = (self.phi_max - self.phi_min) / self.nbins
-                x = (np.arange(self.nbins) + 0.5) * step + self.phi_min
+                # setting up the angular array now we need to get the step size.
+                # phi_max is not the same as the max used to create the interval
+                # so easiest just to use the binning object interval directly.
+                #
+                # In the second line setting up the x array, one can start from
+                # either phi_min or sel.phi_min. This will shift the final starting
+                # angle in the series when the ROI straddles the discontinuity.
+                # Using self.phi_min will cause the linear array to start in the
+                # negative as long as the center of the region is above the 0 line
+                # (above the negative x axis on a plot) and continue negative to the
+                # end even for points in the series which are below the 0 line (and
+                # should thus be small postivie). Alternatively, using phi_min will
+                # make the series start in the positive range and continue such that
+                # the final points will be well above 2pi (instead of small positives
+                # as might be expected) ... until the ROI no longer straddles the
+                # disontinuity.
+                #
+                # Remember that on return, qtgui will convert the 0, 2pi to -pi, pi
+                # when attempting to validate by running sasview gui.
+                step = (binning.max - binning.min) / self.nbins
+                x = (np.arange(self.nbins) + 0.5) * step + phi_min
             else:
                 # set q to the average of the q values within each bin
                 x = x/y_counts
