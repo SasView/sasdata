@@ -282,16 +282,15 @@ class Binning:
 
     def __init__(self, min_value, max_value, n_bins, base=None):
         """
-        if base is None: Linear binning
+        :param min_value: the value defining the start of the binning interval.
+        :param max_value: the value defining the end of the binning interval.
+        :param n_bins: the number of bins.
+        :param base: the base used for log, linear binning if None.
 
-        todo: This should have been a boolean but suggest that we make it an
-              enum to allow for future scales besides log and linear.
+        Beware that min_value should always be numerically smaller than
+        max_value. Take particular care when binning angles across the
+        2pi to 0 discontinuity.
         """
-        # min and max values can be negative.
-        # todo: do we want to enforce min < max? Currently it makes no
-        #       difference to the calcuation and the plot allows it as
-        #       well. Question: is this confusing? Could it cause problems
-        #       for future coding efforts?
         self.min = min_value
         self.max = max_value
         self.n_bins = n_bins
@@ -299,6 +298,9 @@ class Binning:
 
     def get_bin_index(self, value):
         """
+        :param value: the value in the binning interval whose bin index should
+                      be returned. Must be between min_value and max_value.
+
         The general formula logarithm binning is:
         bin = floor(N * (log(x) - log(min)) / (log(max) - log(min)))
         """
@@ -814,14 +816,13 @@ class Ring:
 class _Sector:
     """
     Defines a sector region on a 2D data set.
-    The sector is defined by r_min, r_max, phi_min, phi_max,
-    and the position of the center of the ring
-    where phi_min and phi_max are defined by the right
-    and left lines wrt central line
-    and phi_max could be less than phi_min.
+    The sector is defined by r_min, r_max, phi_min and phi_max.
+    phi_min and phi_max are defined by the right and left lines wrt a central
+    line such that phi_max could be less than phi_min if they straddle the
+    discontinuity from 2pi to 0.
 
     Phi is defined between 0 and 2*pi in anti-clockwise
-    starting from the x- axis on the left-hand side
+    starting from the negative x-axis.
     """
 
     def __init__(self, r_min, r_max, phi_min=0, phi_max=2 * math.pi, nbins=20,
@@ -881,7 +882,17 @@ class _Sector:
 
         #  set up the bins by creating a binning object
         if run.lower() == 'phi':
-            binning = Binning(self.phi_min, self.phi_max, self.nbins, self.base)
+            # The check here ensures when a range straddles the discontinuity
+            # inherent in circular angles (jumping from 2pi to 0) that the
+            # Binning class still recieves a continuous interval. phi_min/max
+            # are used here instead of self.phi_min/max as they are always in
+            # the range 0, 2pi - making their values more predictable.
+            # Note that their values must not be altered, as they are used to
+            # determine what points (also in the range 0, 2pi) are in the ROI.
+            if phi_min > phi_max:
+                binning = Binning(phi_min, phi_max + 2 * np.pi, self.nbins, self.base)
+            else:
+                binning = Binning(phi_min, phi_max, self.nbins, self.base)
         elif self.fold:
             binning = Binning(self.r_min, self.r_max, self.nbins, self.base)
         else:
@@ -944,7 +955,14 @@ class _Sector:
 
             # Get the binning index
             if run.lower() == 'phi':
-                i_bin = binning.get_bin_index(phi_value)
+                # If the original range used to instantiate `binning` was
+                # shifted by 2pi to accommodate the 2pi to 0 discontinuity,
+                # then phi_value needs to be shifted too so that it falls in
+                # the continuous range set up for the binning process.
+                if phi_min > phi_value:
+                    i_bin = binning.get_bin_index(phi_value + 2 * np.pi)
+                else:
+                    i_bin = binning.get_bin_index(phi_value)
             else:
                 i_bin = binning.get_bin_index(q_value)
 
@@ -979,8 +997,16 @@ class _Sector:
             # Calculate x values at the center of the bin depending on the
             # the type of averaging (phi or sector)
             if run.lower() == 'phi':
-                step = (self.phi_max - self.phi_min) / self.nbins
-                x = (np.arange(self.nbins) + 0.5) * step + self.phi_min
+                # Determining the step size is best done via the binning
+                # object's interval, as this is set up so max > min in all
+                # cases. One could also use phi_min and phi_max, so long as
+                # they have not been changed.
+                # In setting up x, phi_min makes a better starting point than
+                # self.phi_min, as the resulting array is garenteed to be > 0
+                # throughout. This works better with the sasview gui, which
+                # will convert the result to the range -pi, pi.
+                step = (binning.max - binning.min) / self.nbins
+                x = (np.arange(self.nbins) + 0.5) * step + phi_min
             else:
                 # set q to the average of the q values within each bin
                 x = x/y_counts
