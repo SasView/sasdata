@@ -392,9 +392,9 @@ class _Slab:
             frac_x = 0
             frac_y = 0
             # get ROI
-            if self.x_min <= qx_data[npts] and self.x_max > qx_data[npts]:
+            if self.x_min <= qx_data[npts] and self.x_max >= qx_data[npts]:
                 frac_x = 1
-            if self.y_min <= qy_data[npts] and self.y_max > qy_data[npts]:
+            if self.y_min <= qy_data[npts] and self.y_max >= qy_data[npts]:
                 frac_y = 1
             frac = frac_x * frac_y
 
@@ -410,6 +410,7 @@ class _Slab:
             if self.fold and q_value < 0:
                 q_value = -q_value
             # bin
+            # Is this -1 okay? It causes i_q = -1 when q_value = min_value
             i_q = int(math.ceil((q_value - min_value) / self.bin_width)) - 1
 
             # skip outside of max bins
@@ -544,9 +545,9 @@ class Boxsum:
             qy = qy_data[npts]
 
             # get the ROI
-            if self.x_min <= qx and self.x_max > qx:
+            if self.x_min <= qx and self.x_max >= qx:
                 frac_x = 1
-            if self.y_min <= qy and self.y_max > qy:
+            if self.y_min <= qy and self.y_max >= qy:
                 frac_y = 1
             # Find the fraction along each directions
             frac = frac_x * frac_y
