@@ -11,9 +11,9 @@ import numpy as np
 from scipy import integrate
 
 from sasdata.dataloader import data_info
-from sasdata.data_util.manipulations import (_Slab, SlabX, SlabY, Boxsum,
-                                             Boxavg, CircularAverage, Ring,
-                                             _Sector, SectorQ, SectorPhi)
+from sasdata.data_util.manipulations import (CircularAverage, Ring, _Sector,
+                                             SectorQ, SectorPhi)
+from sasdata.data_util.new_manipulations import _Slab, SlabX, SlabY, Boxsum, Boxavg
 
 
 class MatrixToData2D:
@@ -159,21 +159,21 @@ class SlabTests(unittest.TestCase):
         """
         Test that _Slab's __init__ method does what it's supposed to.
         """
-        x_min = 1
-        x_max = 2
-        y_min = 3
-        y_max = 4
-        bin_width = 0.1
+        qx_min = 1
+        qx_max = 2
+        qy_min = 3
+        qy_max = 4
+        nbins = 100
         fold = True
 
-        slab_object = _Slab(x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max,
-                            bin_width=bin_width, fold=fold)
+        slab_object = _Slab(qx_min=qx_min, qx_max=qx_max, qy_min=qy_min,
+                            qy_max=qy_max, nbins=nbins, fold=fold)
 
-        self.assertEqual(slab_object.x_min, x_min)
-        self.assertEqual(slab_object.x_max, x_max)
-        self.assertEqual(slab_object.y_min, y_min)
-        self.assertEqual(slab_object.y_max, y_max)
-        self.assertEqual(slab_object.bin_width, bin_width)
+        self.assertEqual(slab_object.qx_min, qx_min)
+        self.assertEqual(slab_object.qx_max, qx_max)
+        self.assertEqual(slab_object.qy_min, qy_min)
+        self.assertEqual(slab_object.qy_max, qy_max)
+        self.assertEqual(slab_object.nbins, nbins)
         self.assertEqual(slab_object.fold, fold)
 
     def test_slab_multiple_detectors(self):
@@ -187,7 +187,7 @@ class SlabTests(unittest.TestCase):
         averager_data.data.detector.append(detector2)
 
         slab_object = _Slab()
-        self.assertRaises(RuntimeError, slab_object._avg, averager_data.data, 'x')
+        self.assertRaises(ValueError, slab_object._avg, averager_data.data, 'x')
 
     def test_slab_unknown_axis(self):
         """
@@ -197,7 +197,7 @@ class SlabTests(unittest.TestCase):
         major = 'neither_x_nor_y'
 
         slab_object = _Slab()
-        self.assertRaises(RuntimeError, slab_object._avg, averager_data.data, major)
+        self.assertRaises(ValueError, slab_object._avg, averager_data.data, major)
 
     def test_slab_no_points_to_average(self):
         """
@@ -222,23 +222,23 @@ class SlabTests(unittest.TestCase):
         averager_data = MatrixToData2D(data2d=test_data)
 
         # Set up region of interest to average over - the limits are arbitrary.
-        x_min = -0.5 * averager_data.qmax  # = -0.5
-        x_max = averager_data.qmax  # = 1
-        y_min = -0.5 * averager_data.qmax  # = -0.5
-        y_max = averager_data.qmax  # = 1
-        bin_width = (x_max - x_min) / matrix_size
+        qx_min = -0.5 * averager_data.qmax  # = -0.5
+        qx_max = averager_data.qmax  # = 1
+        qy_min = -0.5 * averager_data.qmax  # = -0.5
+        qy_max = averager_data.qmax  # = 1
+        nbins = int((qx_max - qx_min) / 2 * matrix_size)
         # Explicitly not using fold in this test
         fold = False
 
-        slab_object = _Slab(x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max,
-                            bin_width=bin_width, fold=fold)
-        data1d = slab_object._avg(averager_data.data, maj='x')
+        slab_object = _Slab(qx_min=qx_min, qx_max=qx_max, qy_min=qy_min,
+                            qy_max=qy_max, nbins=nbins, fold=fold)
+        data1d = slab_object._avg(averager_data.data, major_axis='x')
 
         # ∫x² dx = x³ / 3 + constant.
-        x_part_integ = (x_max**3 - x_min**3) / 3
+        x_part_integ = (qx_max**3 - qx_min**3) / 3
         # ∫y dy = y² / 2 + constant.
-        y_part_integ = (y_max**2 - y_min**2) / 2
-        y_part_avg = y_part_integ / (y_max - y_min)
+        y_part_integ = (qy_max**2 - qy_min**2) / 2
+        y_part_avg = y_part_integ / (qy_max - qy_min)
         expected_area = y_part_avg * x_part_integ
         actual_area = integrate.simpson(data1d.y, data1d.x)
 
@@ -258,23 +258,23 @@ class SlabTests(unittest.TestCase):
         averager_data = MatrixToData2D(data2d=test_data)
 
         # Set up region of interest to average over - the limits are arbitrary.
-        x_min = -0.5 * averager_data.qmax  # = -0.5
-        x_max = averager_data.qmax  # = 1
-        y_min = -0.5 * averager_data.qmax  # = -0.5
-        y_max = averager_data.qmax  # = 1
-        bin_width = (y_max - y_min) / matrix_size
+        qx_min = -0.5 * averager_data.qmax  # = -0.5
+        qx_max = averager_data.qmax  # = 1
+        qy_min = -0.5 * averager_data.qmax  # = -0.5
+        qy_max = averager_data.qmax  # = 1
+        nbins = int((qx_max - qx_min) / 2 * matrix_size)
         # Explicitly not using fold in this test
         fold = False
 
-        slab_object = _Slab(x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max,
-                            bin_width=bin_width, fold=fold)
-        data1d = slab_object._avg(averager_data.data, maj='y')
+        slab_object = _Slab(qx_min=qx_min, qx_max=qx_max, qy_min=qy_min,
+                            qy_max=qy_max, nbins=nbins, fold=fold)
+        data1d = slab_object._avg(averager_data.data, major_axis='y')
 
         # ∫x dx = x² / 2 + constant.
-        x_part_integ = (x_max**2 - x_min**2) / 2
-        x_part_avg = x_part_integ / (x_max - x_min)  # or (x_min + x_max) / 2
+        x_part_integ = (qx_max**2 - qx_min**2) / 2
+        x_part_avg = x_part_integ / (qx_max - qx_min)  # or (x_min + x_max) / 2
         # ∫y² dy = y³ / 3 + constant.
-        y_part_integ = (y_max**3 - y_min**3) / 3
+        y_part_integ = (qy_max**3 - qy_min**3) / 3
         expected_area = x_part_avg * y_part_integ
         actual_area = integrate.simpson(data1d.y, data1d.x)
 
@@ -294,25 +294,25 @@ class SlabTests(unittest.TestCase):
         averager_data = MatrixToData2D(data2d=test_data)
 
         # Set up region of interest to average over - the limits are arbitrary.
-        x_min = -0.5 * averager_data.qmax  # = -0.5
-        x_max = averager_data.qmax  # = 1
-        y_min = -0.5 * averager_data.qmax  # = -0.5
-        y_max = averager_data.qmax  # = 1
-        bin_width = (x_max - x_min) / matrix_size
+        qx_min = -0.5 * averager_data.qmax  # = -0.5
+        qx_max = averager_data.qmax  # = 1
+        qy_min = -0.5 * averager_data.qmax  # = -0.5
+        qy_max = averager_data.qmax  # = 1
+        nbins = int((qx_max - qx_min) / 2 * matrix_size)
         # Explicitly using fold in this test
         fold = True
 
-        slab_object = _Slab(x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max,
-                            bin_width=bin_width, fold=fold)
-        data1d = slab_object._avg(averager_data.data, maj='x')
+        slab_object = _Slab(qx_min=qx_min, qx_max=qx_max, qy_min=qy_min,
+                            qy_max=qy_max, nbins=nbins, fold=fold)
+        data1d = slab_object._avg(averager_data.data, major_axis='x')
 
         # Negative values of x are not graphed when fold = True
-        x_min = 0
+        qx_min = 0
         # ∫x² dx = x³ / 3 + constant.
-        x_part_integ = (x_max**3 - x_min**3) / 3
+        x_part_integ = (qx_max**3 - qx_min**3) / 3
         # ∫y dy = y² / 2 + constant.
-        y_part_integ = (y_max**2 - y_min**2) / 2
-        y_part_avg = y_part_integ / (y_max - y_min)
+        y_part_integ = (qy_max**2 - qy_min**2) / 2
+        y_part_avg = y_part_integ / (qy_max - qy_min)
         expected_area = y_part_avg * x_part_integ
         actual_area = integrate.simpson(data1d.y, data1d.x)
 
@@ -332,26 +332,26 @@ class SlabTests(unittest.TestCase):
         averager_data = MatrixToData2D(data2d=test_data)
 
         # Set up region of interest to average over - the limits are arbitrary.
-        x_min = -0.5 * averager_data.qmax  # = -0.5
-        x_max = averager_data.qmax  # = 1
-        y_min = -0.5 * averager_data.qmax  # = -0.5
-        y_max = averager_data.qmax  # = 1
-        bin_width = (y_max - y_min) / matrix_size
+        qx_min = -0.5 * averager_data.qmax  # = -0.5
+        qx_max = averager_data.qmax  # = 1
+        qy_min = -0.5 * averager_data.qmax  # = -0.5
+        qy_max = averager_data.qmax  # = 1
+        nbins = int((qx_max - qx_min) / 2 * matrix_size)
         # Explicitly using fold in this test
         fold = True
 
-        slab_object = _Slab(x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max,
-                            bin_width=bin_width, fold=fold)
-        data1d = slab_object._avg(averager_data.data, maj='y')
+        slab_object = _Slab(qx_min=qx_min, qx_max=qx_max, qy_min=qy_min,
+                            qy_max=qy_max, nbins=nbins, fold=fold)
+        data1d = slab_object._avg(averager_data.data, major_axis='y')
 
         # Negative values of y are not graphed when fold = True, so don't
         # include them in the area calculation.
-        y_min = 0
+        qy_min = 0
         # ∫x dx = x² / 2 + constant.
-        x_part_integ = (x_max**2 - x_min**2) / 2
-        x_part_avg = x_part_integ / (x_max - x_min)  # or (x_min + x_max) / 2
+        x_part_integ = (qx_max**2 - qx_min**2) / 2
+        x_part_avg = x_part_integ / (qx_max - qx_min)  # or (x_min + x_max) / 2
         # ∫y² dy = y³ / 3 + constant.
-        y_part_integ = (y_max**3 - y_min**3) / 3
+        y_part_integ = (qy_max**3 - qy_min**3) / 3
         expected_area = x_part_avg * y_part_integ
         actual_area = integrate.simpson(data1d.y, data1d.x)
 
@@ -370,17 +370,18 @@ class BoxsumTests(unittest.TestCase):
         """
         Test that Boxsum's __init__ method does what it's supposed to.
         """
-        x_min = 1
-        x_max = 2
-        y_min = 3
-        y_max = 4
+        qx_min = 1
+        qx_max = 2
+        qy_min = 3
+        qy_max = 4
 
-        box_object = Boxsum(x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max)
+        box_object = Boxsum(qx_min=qx_min, qx_max=qx_max,
+                            qy_min=qy_min, qy_max=qy_max)
 
-        self.assertEqual(box_object.x_min, x_min)
-        self.assertEqual(box_object.x_max, x_max)
-        self.assertEqual(box_object.y_min, y_min)
-        self.assertEqual(box_object.y_max, y_max)
+        self.assertEqual(box_object.qx_min, qx_min)
+        self.assertEqual(box_object.qx_max, qx_max)
+        self.assertEqual(box_object.qy_min, qy_min)
+        self.assertEqual(box_object.qy_max, qy_max)
 
     def test_boxsum_multiple_detectors(self):
         """
@@ -393,7 +394,7 @@ class BoxsumTests(unittest.TestCase):
         averager_data.data.detector.append(detector2)
 
         box_object = Boxsum()
-        self.assertRaises(RuntimeError, box_object, averager_data.data)
+        self.assertRaises(ValueError, box_object, averager_data.data)
 
     def test_boxsum_total(self):
         """
@@ -405,11 +406,12 @@ class BoxsumTests(unittest.TestCase):
         averager_data = MatrixToData2D(data2d=test_data)
 
         # Selected region is entire data set
-        x_min = -1 * averager_data.qmax
-        x_max = averager_data.qmax
-        y_min = -1 * averager_data.qmax
-        y_max = averager_data.qmax
-        box_object = Boxsum(x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max)
+        qx_min = -1 * averager_data.qmax
+        qx_max = averager_data.qmax
+        qy_min = -1 * averager_data.qmax
+        qy_max = averager_data.qmax
+        box_object = Boxsum(qx_min=qx_min, qx_max=qx_max,
+                            qy_min=qy_min, qy_max=qy_max)
         result, error, npoints = box_object(averager_data.data)
         correct_sum = np.sum(test_data)
         # When averager_data was created, we didn't include any error data.
@@ -431,14 +433,15 @@ class BoxsumTests(unittest.TestCase):
         averager_data = MatrixToData2D(data2d=test_data)
 
         # Selection region covers the inner half of the +&- x&y axes
-        x_min = -0.5 * averager_data.qmax
-        x_max = 0.5 * averager_data.qmax
-        y_min = -0.5 * averager_data.qmax
-        y_max = 0.5 * averager_data.qmax
+        qx_min = -0.5 * averager_data.qmax
+        qx_max = 0.5 * averager_data.qmax
+        qy_min = -0.5 * averager_data.qmax
+        qy_max = 0.5 * averager_data.qmax
         # Extracting the inner half of the data set
         inner_portion = test_data[25:75, 25:75]
 
-        box_object = Boxsum(x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max)
+        box_object = Boxsum(qx_min=qx_min, qx_max=qx_max,
+                            qy_min=qy_min, qy_max=qy_max)
         result, error, npoints = box_object(averager_data.data)
         correct_sum = np.sum(inner_portion)
         # When averager_data was created, we didn't include any error data.
@@ -460,11 +463,12 @@ class BoxsumTests(unittest.TestCase):
         averager_data = MatrixToData2D(data2d=test_data)
 
         # Selection region covers the inner half of the +&- x&y axes
-        x_min = -0.5 * averager_data.qmax
-        x_max = 0.5 * averager_data.qmax
-        y_min = -0.5 * averager_data.qmax
-        y_max = 0.5 * averager_data.qmax
-        box_object = Boxsum(x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max)
+        qx_min = -0.5 * averager_data.qmax
+        qx_max = 0.5 * averager_data.qmax
+        qy_min = -0.5 * averager_data.qmax
+        qy_max = 0.5 * averager_data.qmax
+        box_object = Boxsum(qx_min=qx_min, qx_max=qx_max,
+                            qy_min=qy_min, qy_max=qy_max)
         result, error, npoints = box_object(averager_data.data)
 
         self.assertAlmostEqual(result, 0, 6)
@@ -481,17 +485,18 @@ class BoxavgTests(unittest.TestCase):
         """
         Test that Boxavg's __init__ method does what it's supposed to.
         """
-        x_min = 1
-        x_max = 2
-        y_min = 3
-        y_max = 4
+        qx_min = 1
+        qx_max = 2
+        qy_min = 3
+        qy_max = 4
 
-        box_object = Boxavg(x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max)
+        box_object = Boxavg(qx_min=qx_min, qx_max=qx_max,
+                            qy_min=qy_min, qy_max=qy_max)
 
-        self.assertEqual(box_object.x_min, x_min)
-        self.assertEqual(box_object.x_max, x_max)
-        self.assertEqual(box_object.y_min, y_min)
-        self.assertEqual(box_object.y_max, y_max)
+        self.assertEqual(box_object.qx_min, qx_min)
+        self.assertEqual(box_object.qx_max, qx_max)
+        self.assertEqual(box_object.qy_min, qy_min)
+        self.assertEqual(box_object.qy_max, qy_max)
 
     def test_boxavg_multiple_detectors(self):
         """
@@ -504,7 +509,7 @@ class BoxavgTests(unittest.TestCase):
         averager_data.data.detector.append(detector2)
 
         box_object = Boxavg()
-        self.assertRaises(RuntimeError, box_object, averager_data.data)
+        self.assertRaises(ValueError, box_object, averager_data.data)
 
     def test_boxavg_total(self):
         """
@@ -516,11 +521,12 @@ class BoxavgTests(unittest.TestCase):
         averager_data = MatrixToData2D(data2d=test_data)
 
         # Selected region is entire data set
-        x_min = -1 * averager_data.qmax
-        x_max = averager_data.qmax
-        y_min = -1 * averager_data.qmax
-        y_max = averager_data.qmax
-        box_object = Boxavg(x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max)
+        qx_min = -1 * averager_data.qmax
+        qx_max = averager_data.qmax
+        qy_min = -1 * averager_data.qmax
+        qy_max = averager_data.qmax
+        box_object = Boxavg(qx_min=qx_min, qx_max=qx_max,
+                            qy_min=qy_min, qy_max=qy_max)
         result, error = box_object(averager_data.data)
         correct_avg = np.mean(test_data)
         # When averager_data was created, we didn't include any error data.
@@ -542,14 +548,15 @@ class BoxavgTests(unittest.TestCase):
         averager_data = MatrixToData2D(data2d=test_data)
 
         # Selection region covers the inner half of the +&- x&y axes
-        x_min = -0.5 * averager_data.qmax
-        x_max = 0.5 * averager_data.qmax
-        y_min = -0.5 * averager_data.qmax
-        y_max = 0.5 * averager_data.qmax
+        qx_min = -0.5 * averager_data.qmax
+        qx_max = 0.5 * averager_data.qmax
+        qy_min = -0.5 * averager_data.qmax
+        qy_max = 0.5 * averager_data.qmax
         # Extracting the inner half of the data set
         inner_portion = test_data[25:75, 25:75]
 
-        box_object = Boxavg(x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max)
+        box_object = Boxavg(qx_min=qx_min, qx_max=qx_max,
+                            qy_min=qy_min, qy_max=qy_max)
         result, error = box_object(averager_data.data)
         correct_avg = np.mean(inner_portion)
         # When averager_data was created, we didn't include any error data.
@@ -571,11 +578,12 @@ class BoxavgTests(unittest.TestCase):
         averager_data = MatrixToData2D(data2d=test_data)
 
         # Selection region covers the inner half of the +&- x&y axes
-        x_min = -0.5 * averager_data.qmax
-        x_max = 0.5 * averager_data.qmax
-        y_min = -0.5 * averager_data.qmax
-        y_max = 0.5 * averager_data.qmax
-        box_object = Boxavg(x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max)
+        qx_min = -0.5 * averager_data.qmax
+        qx_max = 0.5 * averager_data.qmax
+        qy_min = -0.5 * averager_data.qmax
+        qy_max = 0.5 * averager_data.qmax
+        box_object = Boxavg(qx_min=qx_min, qx_max=qx_max,
+                            qy_min=qy_min, qy_max=qy_max)
         result, error = box_object(averager_data.data)
 
         self.assertAlmostEqual(result, 0, 6)
@@ -594,14 +602,18 @@ class CircularAverageTests(unittest.TestCase):
         """
         r_min = 1
         r_max = 2
-        bin_width = 0.01
+        bin_width = 0.001
+        # nbins = 100
 
         circ_object = CircularAverage(r_min=r_min, r_max=r_max,
                                       bin_width=bin_width)
+        # circ_object = CircularAverage(r_min=r_min, r_max=r_max,
+        #                               nbins=nbins)
 
         self.assertEqual(circ_object.r_min, r_min)
         self.assertEqual(circ_object.r_max, r_max)
         self.assertEqual(circ_object.bin_width, bin_width)
+        # self.assertEqual(circ_object.nbins, nbins)
 
     def test_circularaverage_dq_retrieval(self):
         """
