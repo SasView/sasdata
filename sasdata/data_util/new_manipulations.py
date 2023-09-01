@@ -1,12 +1,32 @@
-import numpy as np
 from abc import ABC, abstractmethod
 from typing import Union
+
+import numpy as np
 
 from sasdata.dataloader.data_info import Data1D, Data2D
 
 
+def weights_for_interval(array, l_bound, u_bound, interval_type='half-open'):
+    """
+    If and when fractional binning is implemented (ask Lucas), this function
+    will be changed so that instead of outputting zeros and ones, it gives
+    fractional values instead. These will depend on how close the array value
+    is to being within the interval defined.
+    """
+    if interval_type == 'half-open':
+        in_range = (l_bound <= array) & (array < u_bound)
+    elif interval_type == 'closed':
+        in_range = (l_bound <= array) & (array <= u_bound)
+    else:
+        msg = f"Unrecognised interval_type: {interval_type}"
+        raise ValueError(msg)
+
+    return np.asarray(in_range, dtype=int)
+
+
 class Binning:
     """
+    TODO - add docstring
     """
 
     def __init__(self, min_value, max_value, nbins, base=None):
@@ -16,8 +36,9 @@ class Binning:
         self.maximum = max_value
         self.nbins = nbins
         self.base = base
+        self.bin_width = (max_value - min_value) / nbins
 
-    def get_index(self, value):
+    def get_index(self, value: float) -> int:
         """
         """
         if self.base:
@@ -38,6 +59,14 @@ class Binning:
 
         return bin_index
 
+    def get_interval(self, bin_number: int) -> float:
+        """
+        """
+        start = self.minimum + self.bin_width * bin_number
+        stop = self.minimum + self.bin_width * (bin_number + 1)
+
+        return start, stop
+
 
 class CartesianROI(ABC):
     """
@@ -47,7 +76,7 @@ class CartesianROI(ABC):
     def __init__(self, qx_min: float = 0, qx_max: float = 0,
                  qy_min: float = 0, qy_max: float = 0) -> None:
         """
-        Placeholder
+        TODO - add docstring
         """
 
         # Units A^-1
@@ -66,7 +95,7 @@ class CartesianROI(ABC):
     @abstractmethod
     def __call__(self, data2d: Data2D = None) -> Union[float, Data1D]:
         """
-        Placeholder
+        TODO - add docstring
         """
         return
 
@@ -88,6 +117,11 @@ class CartesianROI(ABC):
         self.qx_data = data2d.qx_data[finite_data]
         self.qy_data = data2d.qy_data[finite_data]
         self.mask_data = data2d.mask[finite_data]
+
+        # No points should have zero error, if they do then assume the error is
+        # the square root of the data.
+        self.err_data[self.err_data == 0] = \
+            np.sqrt(np.abs(self.data[self.err_data == 0]))
 
     @property
     def roi_mask(self):
@@ -117,7 +151,7 @@ class PolarROI(ABC):
     def __init__(self, r_min: float = 0, r_max: float = 1000,
                  phi_min: float = 0, phi_max: float = 2*np.pi) -> None:
         """
-        Placeholder
+        TODO - add docstring
         """
 
         # Units A^-1 for radii, radians for angles
@@ -137,7 +171,7 @@ class PolarROI(ABC):
     @abstractmethod
     def __call__(self, data2d: Data2D = None) -> Union[float, Data1D]:
         """
-        Placeholder
+        TODO - add docstring
         """
         return
 
@@ -161,6 +195,11 @@ class PolarROI(ABC):
         self.qy_data = data2d.qy_data[finite_data]
         self.mask_data = data2d.mask[finite_data]
 
+        # No points should have zero error, if they do then assume the error is
+        # the square root of the data.
+        self.err_data[self.err_data == 0] = \
+            np.sqrt(np.abs(self.data[self.err_data == 0]))
+
 
 class Boxsum(CartesianROI):
     """
@@ -183,7 +222,7 @@ class Boxsum(CartesianROI):
 
     def _sum(self) -> float:
         """
-        Placeholder
+        TODO - add docstring
         """
 
         # Currently the weights are binary, but could be fractional in future
@@ -191,12 +230,10 @@ class Boxsum(CartesianROI):
 
         data = weights * self.data
         err_squared = weights * weights * self.err_data * self.err_data
-        # No points should have zero error, if they do then assume the worst
-        err_squared[self.err_data == 0] = (weights * data)[self.err_data == 0]
 
         total_sum = np.sum(data)
-        total_count = np.sum(weights)
         total_errors_squared = np.sum(err_squared)
+        total_count = np.sum(weights)
 
         return total_sum, np.sqrt(total_errors_squared), total_count
 
@@ -213,7 +250,7 @@ class Boxavg(Boxsum):
 
     def __call__(self, data2d: Data2D) -> float:
         """
-        Placeholder
+        TODO - add docstring
         """
         self.validate_and_assign_data(data2d)
         total_sum, error, count = super()._sum()
@@ -238,49 +275,52 @@ class _Slab(CartesianROI):
 
     def _avg(self, data2d: Data2D, major_axis: str) -> Data1D:
         """
-        Placeholder
+        TODO - add docstring
         """
         self.validate_and_assign_data(data2d)
 
-        # TODO - change weights
-        weights = self.roi_mask.astype(int)
-
         if major_axis == 'x':
             q_major = self.qx_data
+            q_minor = self.qy_data
+            minor_lims = (self.qy_min, self.qy_max)
             binning = Binning(min_value=0 if self.fold else self.qx_min,
                               max_value=self.qx_max, nbins=self.nbins)
         elif major_axis == 'y':
             q_major = self.qy_data
+            q_minor = self.qx_data
+            minor_lims = (self.qx_min, self.qx_max)
             binning = Binning(min_value=0 if self.fold else self.qy_min,
                               max_value=self.qy_max, nbins=self.nbins)
         else:
             msg = f"Unrecognised axis: {major_axis}"
             raise ValueError(msg)
 
-        q_values = np.zeros(self.nbins)
-        intensity = np.zeros(self.nbins)
-        errs_squared = np.zeros(self.nbins)
-        bin_counts = np.zeros(self.nbins)
+        if self.fold:
+            q_major = np.abs(q_major)
 
-        for index, q_value in enumerate(q_major):
-            # Skip over datapoints with no relevance
-            # This should include masked datapoints.
-            if weights[index] == 0:
-                continue
-
-            if self.fold and q_value < 0:
-                q_value = -q_value
-
-            q_bin = binning.get_index(q_value)
-            q_values[q_bin] += weights[index] * q_value
-            intensity[q_bin] += weights[index] * self.data[index]
-            errs_squared[q_bin] += (weights[index] * self.err_data[index]) ** 2
-            # No points should have zero error, assume the worst if they do
-            if self.err_data[index] == 0.0:
-                errs_squared[q_bin] += weights[index] ** 2 * abs(self.data[index])
+        major_weights = np.zeros((self.nbins, q_major.size))
+        for m in range(self.nbins):
+            # Include the value at the end of the binning range, but otherwise
+            # use half-open intervals so each value belongs in only one bin.
+            if m == self.nbins - 1:
+                interval = 'closed'
             else:
-                errs_squared[q_bin] += (weights[index] * self.err_data[index]) ** 2
-            bin_counts[q_bin] += weights[index]
+                interval = 'half-open'
+            bin_start, bin_end = binning.get_interval(bin_number=m)
+            major_weights[m] \
+                = weights_for_interval(array=q_major, l_bound=bin_start,
+                                       u_bound=bin_end,
+                                       interval_type=interval)
+        minor_weights = weights_for_interval(array=q_minor,
+                                             l_bound=minor_lims[0],
+                                             u_bound=minor_lims[1],
+                                             interval_type='closed')
+        weights = major_weights * minor_weights
+
+        q_values = np.sum(weights * q_major, axis=1)
+        intensity = np.sum(weights * self.data, axis=1)
+        errs_squared = np.sum((weights * self.err_data)**2, axis=1)
+        bin_counts = np.sum(weights, axis=1)
 
         errors = np.sqrt(errs_squared)
         q_values /= bin_counts
