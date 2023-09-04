@@ -11,9 +11,8 @@ import numpy as np
 from scipy import integrate
 
 from sasdata.dataloader import data_info
-from sasdata.data_util.manipulations import (CircularAverage, Ring, _Sector,
-                                             SectorQ, SectorPhi)
-from sasdata.data_util.new_manipulations import _Slab, SlabX, SlabY, Boxsum, Boxavg
+from sasdata.data_util.manipulations import CircularAverage, Ring, SectorQ, SectorPhi
+from sasdata.data_util.new_manipulations import SlabX, SlabY, Boxsum, Boxavg
 
 
 class MatrixToData2D:
@@ -25,11 +24,11 @@ class MatrixToData2D:
     """
 
     def __init__(self, data2d=None, err_data=None):
-        if data2d is None:
+        if data2d is not None:
+            matrix = np.asarray(data2d)
+        else:
             msg = "Data must be supplied to convert to Data2D"
             raise ValueError(msg)
-        else:
-            matrix = np.asarray(data2d)
 
         if matrix.ndim != 2:
             msg = "Supplied array must have 2 dimensions to convert to Data2D"
@@ -149,15 +148,15 @@ class CircularTestingMatrix:
         return calculated_area
 
 
-class SlabTests(unittest.TestCase):
+class SlabXTests(unittest.TestCase):
     """
-    This class contains all the unit tests for the _Slab class from
+    This class contains all the unit tests for the SlabX class from
     manipulations.py
     """
 
-    def test_slab_init(self):
+    def test_slabx_init(self):
         """
-        Test that _Slab's __init__ method does what it's supposed to.
+        Test that SlabX's __init__ method does what it's supposed to.
         """
         qx_min = 1
         qx_max = 2
@@ -166,7 +165,7 @@ class SlabTests(unittest.TestCase):
         nbins = 100
         fold = True
 
-        slab_object = _Slab(qx_min=qx_min, qx_max=qx_max, qy_min=qy_min,
+        slab_object = SlabX(qx_min=qx_min, qx_max=qx_max, qy_min=qy_min,
                             qy_max=qy_max, nbins=nbins, fold=fold)
 
         self.assertEqual(slab_object.qx_min, qx_min)
@@ -176,9 +175,9 @@ class SlabTests(unittest.TestCase):
         self.assertEqual(slab_object.nbins, nbins)
         self.assertEqual(slab_object.fold, fold)
 
-    def test_slab_multiple_detectors(self):
+    def test_slabx_multiple_detectors(self):
         """
-        Test that _Slab raises an error when there are multiple detectors
+        Test that SlabX raises an error when there are multiple detectors
         """
         averager_data = MatrixToData2D(np.ones([100, 100]))
         detector1 = data_info.Detector()
@@ -186,33 +185,29 @@ class SlabTests(unittest.TestCase):
         averager_data.data.detector.append(detector1)
         averager_data.data.detector.append(detector2)
 
-        slab_object = _Slab()
-        self.assertRaises(ValueError, slab_object._avg, averager_data.data, 'x')
+        slab_object = SlabX()
+        self.assertRaises(ValueError, slab_object, averager_data.data)
 
-    def test_slab_unknown_axis(self):
+    def test_slabx_no_points_to_average(self):
         """
-        Test that _Slab raises an error when given an invalid major axis
-        """
-        averager_data = MatrixToData2D(np.ones([100, 100]))
-        major = 'neither_x_nor_y'
-
-        slab_object = _Slab()
-        self.assertRaises(ValueError, slab_object._avg, averager_data.data, major)
-
-    def test_slab_no_points_to_average(self):
-        """
-        Test _Slab raises ValueError when the ROI contains no data
+        Test SlabX raises ValueError when the ROI contains no data
         """
         test_data = np.ones([100, 100])
         averager_data = MatrixToData2D(data2d=test_data)
 
-        # Default params for _Slab are all zeros. Effectively, there is no ROI.
-        slab_object = _Slab()
-        self.assertRaises(ValueError, slab_object._avg, averager_data.data, 'x')
+        # Region of interest well outside region with data
+        qx_min = 2 * averager_data.qmax
+        qx_max = 3 * averager_data.qmax
+        qy_min = 2 * averager_data.qmax
+        qy_max = 3 * averager_data.qmax
 
-    def test_slab_averaging_x_without_fold(self):
+        slab_object = SlabX(qx_min=qx_min, qx_max=qx_max,
+                            qy_min=qy_min, qy_max=qy_max)
+        self.assertRaises(ValueError, slab_object, averager_data.data)
+
+    def test_slabx_averaging_without_fold(self):
         """
-        Test that _Slab can average correctly when x is the major axis
+        Test that SlabX can average correctly when x is the major axis
         """
         matrix_size = 201
         x, y = np.meshgrid(np.linspace(-1, 1, matrix_size),
@@ -230,9 +225,9 @@ class SlabTests(unittest.TestCase):
         # Explicitly not using fold in this test
         fold = False
 
-        slab_object = _Slab(qx_min=qx_min, qx_max=qx_max, qy_min=qy_min,
+        slab_object = SlabX(qx_min=qx_min, qx_max=qx_max, qy_min=qy_min,
                             qy_max=qy_max, nbins=nbins, fold=fold)
-        data1d = slab_object._avg(averager_data.data, major_axis='x')
+        data1d = slab_object(averager_data.data)
 
         # ∫x² dx = x³ / 3 + constant.
         x_part_integ = (qx_max**3 - qx_min**3) / 3
@@ -246,45 +241,9 @@ class SlabTests(unittest.TestCase):
 
         # TODO - also check the errors are being calculated correctly
 
-    def test_slab_averaging_y_without_fold(self):
+    def test_slabx_averaging_with_fold(self):
         """
-        Test that _Slab can average correctly when y is the major axis
-        """
-        matrix_size = 201
-        x, y = np.meshgrid(np.linspace(-1, 1, matrix_size),
-                           np.linspace(-1, 1, matrix_size))
-        # Create a distribution which is linear in x and quadratic in y
-        test_data = x * y**2
-        averager_data = MatrixToData2D(data2d=test_data)
-
-        # Set up region of interest to average over - the limits are arbitrary.
-        qx_min = -0.5 * averager_data.qmax  # = -0.5
-        qx_max = averager_data.qmax  # = 1
-        qy_min = -0.5 * averager_data.qmax  # = -0.5
-        qy_max = averager_data.qmax  # = 1
-        nbins = int((qx_max - qx_min) / 2 * matrix_size)
-        # Explicitly not using fold in this test
-        fold = False
-
-        slab_object = _Slab(qx_min=qx_min, qx_max=qx_max, qy_min=qy_min,
-                            qy_max=qy_max, nbins=nbins, fold=fold)
-        data1d = slab_object._avg(averager_data.data, major_axis='y')
-
-        # ∫x dx = x² / 2 + constant.
-        x_part_integ = (qx_max**2 - qx_min**2) / 2
-        x_part_avg = x_part_integ / (qx_max - qx_min)  # or (x_min + x_max) / 2
-        # ∫y² dy = y³ / 3 + constant.
-        y_part_integ = (qy_max**3 - qy_min**3) / 3
-        expected_area = x_part_avg * y_part_integ
-        actual_area = integrate.simpson(data1d.y, data1d.x)
-
-        self.assertAlmostEqual(actual_area, expected_area, 2)
-
-        # TODO - also check the errors are being calculated correctly
-
-    def test_slab_averaging_x_with_fold(self):
-        """
-        Test that _Slab can average correctly when x is the major axis
+        Test that SlabX can average correctly when x is the major axis
         """
         matrix_size = 201
         x, y = np.meshgrid(np.linspace(-1, 1, matrix_size),
@@ -302,9 +261,9 @@ class SlabTests(unittest.TestCase):
         # Explicitly using fold in this test
         fold = True
 
-        slab_object = _Slab(qx_min=qx_min, qx_max=qx_max, qy_min=qy_min,
+        slab_object = SlabX(qx_min=qx_min, qx_max=qx_max, qy_min=qy_min,
                             qy_max=qy_max, nbins=nbins, fold=fold)
-        data1d = slab_object._avg(averager_data.data, major_axis='x')
+        data1d = slab_object(averager_data.data)
 
         # Negative values of x are not graphed when fold = True
         qx_min = 0
@@ -320,9 +279,103 @@ class SlabTests(unittest.TestCase):
 
         # TODO - also check the errors are being calculated correctly
 
+
+class SlabYTests(unittest.TestCase):
+    """
+    This class contains all the unit tests for the SlabY class from
+    manipulations.py
+    """
+
+    def test_slaby_init(self):
+        """
+        Test that SlabY's __init__ method does what it's supposed to.
+        """
+        qx_min = 1
+        qx_max = 2
+        qy_min = 3
+        qy_max = 4
+        nbins = 100
+        fold = True
+
+        slab_object = SlabY(qx_min=qx_min, qx_max=qx_max, qy_min=qy_min,
+                            qy_max=qy_max, nbins=nbins, fold=fold)
+
+        self.assertEqual(slab_object.qx_min, qx_min)
+        self.assertEqual(slab_object.qx_max, qx_max)
+        self.assertEqual(slab_object.qy_min, qy_min)
+        self.assertEqual(slab_object.qy_max, qy_max)
+        self.assertEqual(slab_object.nbins, nbins)
+        self.assertEqual(slab_object.fold, fold)
+
+    def test_slaby_multiple_detectors(self):
+        """
+        Test that SlabY raises an error when there are multiple detectors
+        """
+        averager_data = MatrixToData2D(np.ones([100, 100]))
+        detector1 = data_info.Detector()
+        detector2 = data_info.Detector()
+        averager_data.data.detector.append(detector1)
+        averager_data.data.detector.append(detector2)
+
+        slab_object = SlabY()
+        self.assertRaises(ValueError, slab_object, averager_data.data)
+
+    def test_slaby_no_points_to_average(self):
+        """
+        Test SlabY raises ValueError when the ROI contains no data
+        """
+        test_data = np.ones([100, 100])
+        averager_data = MatrixToData2D(data2d=test_data)
+
+        # Region of interest well outside region with data
+        qx_min = 2 * averager_data.qmax
+        qx_max = 3 * averager_data.qmax
+        qy_min = 2 * averager_data.qmax
+        qy_max = 3 * averager_data.qmax
+
+        slab_object = SlabY(qx_min=qx_min, qx_max=qx_max,
+                            qy_min=qy_min, qy_max=qy_max)
+        self.assertRaises(ValueError, slab_object, averager_data.data)
+
+    def test_slaby_averaging_without_fold(self):
+        """
+        Test that SlabY can average correctly when y is the major axis
+        """
+        matrix_size = 201
+        x, y = np.meshgrid(np.linspace(-1, 1, matrix_size),
+                           np.linspace(-1, 1, matrix_size))
+        # Create a distribution which is linear in x and quadratic in y
+        test_data = x * y**2
+        averager_data = MatrixToData2D(data2d=test_data)
+
+        # Set up region of interest to average over - the limits are arbitrary.
+        qx_min = -0.5 * averager_data.qmax  # = -0.5
+        qx_max = averager_data.qmax  # = 1
+        qy_min = -0.5 * averager_data.qmax  # = -0.5
+        qy_max = averager_data.qmax  # = 1
+        nbins = int((qx_max - qx_min) / 2 * matrix_size)
+        # Explicitly not using fold in this test
+        fold = False
+
+        slab_object = SlabY(qx_min=qx_min, qx_max=qx_max, qy_min=qy_min,
+                            qy_max=qy_max, nbins=nbins, fold=fold)
+        data1d = slab_object(averager_data.data)
+
+        # ∫x dx = x² / 2 + constant.
+        x_part_integ = (qx_max**2 - qx_min**2) / 2
+        x_part_avg = x_part_integ / (qx_max - qx_min)  # or (x_min + x_max) / 2
+        # ∫y² dy = y³ / 3 + constant.
+        y_part_integ = (qy_max**3 - qy_min**3) / 3
+        expected_area = x_part_avg * y_part_integ
+        actual_area = integrate.simpson(data1d.y, data1d.x)
+
+        self.assertAlmostEqual(actual_area, expected_area, 2)
+
+        # TODO - also check the errors are being calculated correctly
+
     def test_slab_averaging_y_with_fold(self):
         """
-        Test that _Slab can average correctly when y is the major axis
+        Test that SlabY can average correctly when y is the major axis
         """
         matrix_size = 201
         x, y = np.meshgrid(np.linspace(-1, 1, matrix_size),
@@ -340,9 +393,9 @@ class SlabTests(unittest.TestCase):
         # Explicitly using fold in this test
         fold = True
 
-        slab_object = _Slab(qx_min=qx_min, qx_max=qx_max, qy_min=qy_min,
+        slab_object = SlabY(qx_min=qx_min, qx_max=qx_max, qy_min=qy_min,
                             qy_max=qy_max, nbins=nbins, fold=fold)
-        data1d = slab_object._avg(averager_data.data, major_axis='y')
+        data1d = slab_object(averager_data.data)
 
         # Negative values of y are not graphed when fold = True, so don't
         # include them in the area calculation.
@@ -713,6 +766,7 @@ class RingTests(unittest.TestCase):
 
         self.assertEqual(ring_object.r_min, r_min)
         self.assertEqual(ring_object.r_max, r_max)
+        # TODO - replace nbins_phi with nbins for consitency
         self.assertEqual(ring_object.nbins_phi, nbins)
 
     def test_ring_non_plottable_data(self):
@@ -763,7 +817,7 @@ class RingTests(unittest.TestCase):
         # TODO - also check the errors are being calculated correctly
 
 
-class SectorTests(unittest.TestCase):
+class SectorQTests(unittest.TestCase):
     """
     This class contains the tests for the _Sector class from manipulations.py
     On the sasview side, this includes SectorSlicer and WedgeSlicer.
@@ -772,9 +826,9 @@ class SectorTests(unittest.TestCase):
     arbitrary, and the tests should pass if any sane value is used for them.
     """
 
-    def test_sector_init(self):
+    def test_sectorq_init(self):
         """
-        Test that _Sector's __init__ method does what it's supposed to.
+        Test that SectorQ's __init__ method does what it's supposed to.
         """
         r_min = 1
         r_max = 2
@@ -783,7 +837,7 @@ class SectorTests(unittest.TestCase):
         nbins = 100
         base = 10
 
-        sector_object = _Sector(r_min=r_min, r_max=r_max, phi_min=phi_min,
+        sector_object = SectorQ(r_min=r_min, r_max=r_max, phi_min=phi_min,
                                 phi_max=phi_max, nbins=nbins, base=base)
 
         self.assertEqual(sector_object.r_min, r_min)
@@ -793,44 +847,16 @@ class SectorTests(unittest.TestCase):
         self.assertEqual(sector_object.nbins, nbins)
         self.assertEqual(sector_object.base, base)
 
-    def test_sector_non_plottable_data(self):
+    def test_sectorq_non_plottable_data(self):
         """
         Test that RuntimeError is raised if the data supplied isn't plottable
         """
         # Implementing this test can wait
         pass
 
-    def test_sector_phi_averaging(self):
+    def test_sectorq_averaging_without_fold(self):
         """
-        Test _Sector can average correctly with a major axis of phi, when all
-        of min/max r & phi params are specified and have their expected form.
-        """
-        test_data = CircularTestingMatrix(frequency=1, matrix_size=201,
-                                          major_axis='Phi')
-        averager_data = MatrixToData2D(test_data.matrix)
-
-        r_min = 0.1 * averager_data.qmax
-        r_max = 0.9 * averager_data.qmax
-        phi_min = np.pi/6
-        phi_max = 5*np.pi/6
-        nbins = int(test_data.matrix_size * np.sqrt(2)/4)  # usually reliable
-
-        wedge_object = SectorPhi(r_min=r_min, r_max=r_max, phi_min=phi_min + np.pi,
-                                 phi_max=phi_max + np.pi, nbins=nbins)
-        data1d = wedge_object(averager_data.data)
-
-        expected_area = test_data.area_under_region(r_min=r_min, r_max=r_max,
-                                                    phi_min=phi_min,
-                                                    phi_max=phi_max)
-        actual_area = integrate.simpson(data1d.y, data1d.x)
-
-        self.assertAlmostEqual(actual_area, expected_area, 1)
-
-        # TODO - Something is very wrong with this test
-
-    def test_sector_q_averaging_without_fold(self):
-        """
-        Test _Sector can average correctly w/ major axis q and fold disabled.
+        Test SectorQ can average correctly w/ major axis q and fold disabled.
         All min/max r & phi params are specified and have their expected form.
         """
         test_data = CircularTestingMatrix(frequency=1, matrix_size=201,
@@ -862,9 +888,9 @@ class SectorTests(unittest.TestCase):
 
         self.assertAlmostEqual(actual_area, expected_area, 1)
 
-    def test_sector_q_averaging_with_fold(self):
+    def test_sectorq_averaging_with_fold(self):
         """
-        Test _Sector can average correctly w/ major axis q and fold enabled.
+        Test SectorQ can average correctly w/ major axis q and fold enabled.
         All min/max r & phi params are specified and have their expected form.
         """
         test_data = CircularTestingMatrix(frequency=1, matrix_size=201,
@@ -894,6 +920,70 @@ class SectorTests(unittest.TestCase):
                                                      phi_min=phi_min+np.pi,
                                                      phi_max=phi_max+np.pi)
         expected_area /= 2
+        actual_area = integrate.simpson(data1d.y, data1d.x)
+
+        self.assertAlmostEqual(actual_area, expected_area, 1)
+
+
+class SectorPhiTests(unittest.TestCase):
+    """
+    This class contains the tests for the SectorPhi class from manipulations.py
+    On the sasview side, this includes SectorSlicer and WedgeSlicer.
+
+    The parameters frequency, r_min, r_max, phi_min and phi_max are largely
+    arbitrary, and the tests should pass if any sane value is used for them.
+    """
+
+    def test_sectorphi_init(self):
+        """
+        Test that SectorPhi's __init__ method does what it's supposed to.
+        """
+        r_min = 1
+        r_max = 2
+        phi_min = 0
+        phi_max = np.pi
+        nbins = 100
+        base = 10
+
+        sector_object = SectorPhi(r_min=r_min, r_max=r_max, phi_min=phi_min,
+                                  phi_max=phi_max, nbins=nbins, base=base)
+
+        self.assertEqual(sector_object.r_min, r_min)
+        self.assertEqual(sector_object.r_max, r_max)
+        self.assertEqual(sector_object.phi_min, phi_min)
+        self.assertEqual(sector_object.phi_max, phi_max)
+        self.assertEqual(sector_object.nbins, nbins)
+        self.assertEqual(sector_object.base, base)
+
+    def test_sectorphi_non_plottable_data(self):
+        """
+        Test that RuntimeError is raised if the data supplied isn't plottable
+        """
+        # Implementing this test can wait
+        pass
+
+    def test_sectorphi_averaging(self):
+        """
+        Test _Sector can average correctly with a major axis of phi, when all
+        of min/max r & phi params are specified and have their expected form.
+        """
+        test_data = CircularTestingMatrix(frequency=1, matrix_size=201,
+                                          major_axis='Phi')
+        averager_data = MatrixToData2D(test_data.matrix)
+
+        r_min = 0.1 * averager_data.qmax
+        r_max = 0.9 * averager_data.qmax
+        phi_min = np.pi/6
+        phi_max = 5*np.pi/6
+        nbins = int(test_data.matrix_size * np.sqrt(2)/4)  # usually reliable
+
+        wedge_object = SectorPhi(r_min=r_min, r_max=r_max, phi_min=phi_min + np.pi,
+                                 phi_max=phi_max + np.pi, nbins=nbins)
+        data1d = wedge_object(averager_data.data)
+
+        expected_area = test_data.area_under_region(r_min=r_min, r_max=r_max,
+                                                    phi_min=phi_min,
+                                                    phi_max=phi_max)
         actual_area = integrate.simpson(data1d.y, data1d.x)
 
         self.assertAlmostEqual(actual_area, expected_area, 1)
