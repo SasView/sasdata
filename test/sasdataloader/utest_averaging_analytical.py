@@ -13,7 +13,7 @@ from scipy import integrate
 from sasdata.dataloader import data_info
 from sasdata.data_util.new_manipulations import (SlabX, SlabY, Boxsum, Boxavg,
                                                  CircularAverage, Ring,
-                                                 SectorQ, SectorPhi)
+                                                 SectorQ, WedgeQ, WedgePhi)
 
 
 class MatrixToData2D:
@@ -815,7 +815,7 @@ class RingTests(unittest.TestCase):
 
 class SectorQTests(unittest.TestCase):
     """
-    This class contains the tests for the _Sector class from manipulations.py
+    This class contains the tests for the SectorQ class from manipulations.py
     On the sasview side, this includes SectorSlicer and WedgeSlicer.
 
     The parameters frequency, r_min, r_max, phi_min and phi_max are largely
@@ -826,8 +826,8 @@ class SectorQTests(unittest.TestCase):
         """
         Test that SectorQ's __init__ method does what it's supposed to.
         """
-        r_min = 1
-        r_max = 2
+        r_min = 0
+        r_max = 1
         phi_min = 0
         phi_max = np.pi
         nbins = 100
@@ -861,7 +861,7 @@ class SectorQTests(unittest.TestCase):
                                           major_axis='Q')
         averager_data = MatrixToData2D(test_data.matrix)
 
-        r_min = 0.1 * averager_data.qmax
+        r_min = 0
         r_max = 0.9 * averager_data.qmax
         phi_min = np.pi/6
         phi_max = 5*np.pi/6
@@ -895,7 +895,7 @@ class SectorQTests(unittest.TestCase):
                                           major_axis='Q')
         averager_data = MatrixToData2D(test_data.matrix)
 
-        r_min = 0.1 * averager_data.qmax
+        r_min = 0
         r_max = 0.9 * averager_data.qmax
         phi_min = np.pi/6
         phi_max = 5*np.pi/6
@@ -923,18 +923,71 @@ class SectorQTests(unittest.TestCase):
         self.assertAlmostEqual(actual_area, expected_area, 1)
 
 
-class SectorPhiTests(unittest.TestCase):
+class WedgeQTests(unittest.TestCase):
     """
-    This class contains the tests for the SectorPhi class from manipulations.py
-    On the sasview side, this includes SectorSlicer and WedgeSlicer.
+    This class contains the tests for the WedgeQ class from manipulations.py
 
     The parameters frequency, r_min, r_max, phi_min and phi_max are largely
     arbitrary, and the tests should pass if any sane value is used for them.
     """
 
-    def test_sectorphi_init(self):
+    def test_wedgeq_init(self):
         """
-        Test that SectorPhi's __init__ method does what it's supposed to.
+        Test that WedgeQ's __init__ method does what it's supposed to.
+        """
+        r_min = 1
+        r_max = 2
+        phi_min = 0
+        phi_max = np.pi
+        nbins = 10
+
+        wedge_object = WedgeQ(r_min=r_min, r_max=r_max, phi_min=phi_min,
+                              phi_max=phi_max, nbins=nbins)
+
+        self.assertEqual(wedge_object.r_min, r_min)
+        self.assertEqual(wedge_object.r_max, r_max)
+        self.assertEqual(wedge_object.phi_min, phi_min)
+        self.assertEqual(wedge_object.phi_max, phi_max)
+        self.assertEqual(wedge_object.nbins, nbins)
+
+    def test_wedgeq_averaging(self):
+        """
+        Test WedgeQ can average correctly, when all of min/max r & phi params
+        are specified and have their expected form.
+        """
+        test_data = CircularTestingMatrix(frequency=3, matrix_size=201,
+                                          major_axis='Q')
+        averager_data = MatrixToData2D(test_data.matrix)
+
+        r_min = 0.1 * averager_data.qmax
+        r_max = 0.9 * averager_data.qmax
+        phi_min = np.pi/6
+        phi_max = 5*np.pi/6
+        nbins = int(test_data.matrix_size * np.sqrt(2)/4)  # usually reliable
+
+        wedge_object = WedgeQ(r_min=r_min, r_max=r_max, phi_min=phi_min,
+                              phi_max=phi_max, nbins=nbins)
+        data1d = wedge_object(averager_data.data)
+
+        expected_area = test_data.area_under_region(r_min=r_min, r_max=r_max,
+                                                    phi_min=phi_min,
+                                                    phi_max=phi_max)
+        actual_area = integrate.simpson(data1d.y, data1d.x)
+
+        self.assertAlmostEqual(actual_area, expected_area, 1)
+
+
+class WedgePhiTests(unittest.TestCase):
+    """
+    This class contains the tests for the WedgePhi class from manipulations.py
+
+    The parameters frequency, r_min, r_max, phi_min and phi_max are largely
+    arbitrary, and the tests should pass if any sane value is used for them.
+    """
+
+    def test_wedgephi_init(self):
+        """
+        Test that WedgePhi's __init__ method does what it's supposed to.
         """
         r_min = 1
         r_max = 2
@@ -943,29 +996,29 @@ class SectorPhiTests(unittest.TestCase):
         nbins = 100
         # base = 10
 
-        # sector_object = SectorPhi(r_min=r_min, r_max=r_max, phi_min=phi_min,
+        # wedge_object = WedgePhi(r_min=r_min, r_max=r_max, phi_min=phi_min,
         #                           phi_max=phi_max, nbins=nbins, base=base)
-        sector_object = SectorPhi(r_min=r_min, r_max=r_max, phi_min=phi_min,
-                                  phi_max=phi_max, nbins=nbins)
+        wedge_object = WedgePhi(r_min=r_min, r_max=r_max, phi_min=phi_min,
+                                phi_max=phi_max, nbins=nbins)
 
-        self.assertEqual(sector_object.r_min, r_min)
-        self.assertEqual(sector_object.r_max, r_max)
-        self.assertEqual(sector_object.phi_min, phi_min)
-        self.assertEqual(sector_object.phi_max, phi_max)
-        self.assertEqual(sector_object.nbins, nbins)
-        # self.assertEqual(sector_object.base, base)
+        self.assertEqual(wedge_object.r_min, r_min)
+        self.assertEqual(wedge_object.r_max, r_max)
+        self.assertEqual(wedge_object.phi_min, phi_min)
+        self.assertEqual(wedge_object.phi_max, phi_max)
+        self.assertEqual(wedge_object.nbins, nbins)
+        # self.assertEqual(wedge_object.base, base)
 
-    def test_sectorphi_non_plottable_data(self):
+    def test_wedgephi_non_plottable_data(self):
         """
         Test that RuntimeError is raised if the data supplied isn't plottable
         """
         # Implementing this test can wait
         pass
 
-    def test_sectorphi_averaging(self):
+    def test_wedgephi_averaging(self):
         """
-        Test _Sector can average correctly with a major axis of phi, when all
-        of min/max r & phi params are specified and have their expected form.
+        Test WedgePhi can average correctly, when all of min/max r & phi params
+        are specified and have their expected form.
         """
         test_data = CircularTestingMatrix(frequency=1, matrix_size=201,
                                           major_axis='Phi')
@@ -977,8 +1030,8 @@ class SectorPhiTests(unittest.TestCase):
         phi_max = 5*np.pi/6
         nbins = int(test_data.matrix_size * np.sqrt(2)/4)  # usually reliable
 
-        wedge_object = SectorPhi(r_min=r_min, r_max=r_max, phi_min=phi_min,
-                                 phi_max=phi_max, nbins=nbins)
+        wedge_object = WedgePhi(r_min=r_min, r_max=r_max, phi_min=phi_min,
+                                phi_max=phi_max, nbins=nbins)
         data1d = wedge_object(averager_data.data)
 
         expected_area = test_data.area_under_region(r_min=r_min, r_max=r_max,

@@ -26,6 +26,10 @@ def weights_for_interval(array, l_bound, u_bound, interval_type='half-open'):
 class DirectionalAverage:
     """
     TODO - write a docstring
+
+    Note that the old version of manipulations.py had an option for logarithmic
+    binning which was only used by SectorQ. This functionality is never called
+    upon by SasView however, so I haven't implemented it here (yet).
     """
 
     def __init__(self, major_data, minor_data, major_lims=None,
@@ -548,19 +552,58 @@ class SectorQ(PolarROI):
         return data1d
 
 
-class SectorPhi(PolarROI):
+class WedgeQ(PolarROI):
     """
-    Sector average as a function of phi.
-    I(phi) is return and the data is averaged over Q.
-
-    A sector is defined by r_min, r_max, phi_min, phi_max.
-    The number of bin in phi also has to be defined.
+    TODO - add docstring
     """
 
     def __init__(self, r_min: float, r_max: float, phi_min: float,
                  phi_max: float, nbins: int = 100) -> None:
         """
-        TODO - add docstring
+        """
+        super().__init__(r_min=r_min, r_max=r_max,
+                         phi_min=phi_min, phi_max=phi_max)
+        self.nbins = nbins
+
+    def __call__(self, data2d: Data2D = None) -> Data1D:
+        """
+        """
+        self.validate_and_assign_data(data2d)
+
+        # Transform all angles to the range [0,2π), where phi_min is at zero.
+        # We won't need to convert back later because we're plotting against Q.
+        phi_offset = self.phi_min
+        self.phi_min = 0.0
+        self.phi_max = (self.phi_max - phi_offset) % (2 * np.pi)
+        self.phi_data = (self.phi_data - phi_offset) % (2 * np.pi)
+
+        # Averaging takes place between radial and angular limits
+        major_lims = (self.r_min, self.r_max)
+        # When phi_max and phi_min have the same angle, ROI is a full circle.
+        if self.phi_max == 0:
+            minor_lims = None
+        else:
+            minor_lims = (self.phi_min, self.phi_max)
+
+        directional_average = DirectionalAverage(major_data=self.q_data,
+                                                 minor_data=self.phi_data,
+                                                 major_lims=major_lims,
+                                                 minor_lims=minor_lims,
+                                                 nbins=self.nbins)
+        q_data, intensity, error = \
+            directional_average(data=self.data, err_data=self.err_data)
+
+        return Data1D(x=q_data, y=intensity, dy=error)
+
+
+class WedgePhi(PolarROI):
+    """
+    TODO - add docstring
+    """
+
+    def __init__(self, r_min: float, r_max: float, phi_min: float,
+                 phi_max: float, nbins: int = 100) -> None:
+        """
         """
         super().__init__(r_min=r_min, r_max=r_max,
                          phi_min=phi_min, phi_max=phi_max)
@@ -603,4 +646,19 @@ class SectorPhi(PolarROI):
         phi_data += directional_average.bin_width / 2
 
         return Data1D(x=phi_data, y=intensity, dy=error)
+
+
+class SectorPhi(WedgePhi):
+    """
+    Sector average as a function of phi.
+    I(phi) is return and the data is averaged over Q.
+
+    A sector is defined by r_min, r_max, phi_min, phi_max.
+    The number of bin in phi also has to be defined.
+    """
+
+    # This class has only been kept around in case users are using it in
+    # scripts, SectorPhi was never used by SasView. The functionality is now in
+    # use through WedgeSlicer.py, so the rewritten version of this class has
+    # been named WedgePhi.
 
