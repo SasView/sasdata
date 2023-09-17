@@ -180,7 +180,7 @@ class DirectionalAverage:
         intensity /= bin_counts
         errors /= bin_counts
 
-        finite = (np.isfinite(x_axis_values) & np.isfinite(intensity))
+        finite = np.isfinite(intensity)
         if not finite.any():
             msg = "Average Error: No points inside ROI to average..."
             raise ValueError(msg)
@@ -731,7 +731,7 @@ class SectorQ(PolarROI):
             average_intensity /= bin_counts
             combined_err = np.sqrt(combined_err) / bin_counts
 
-            finite = (np.isfinite(combined_q) & np.isfinite(average_intensity))
+            finite = np.isfinite(average_intensity)
 
             data1d = Data1D(x=combined_q[finite], y=average_intensity[finite],
                             dy=combined_err[finite])
