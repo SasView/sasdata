@@ -27,9 +27,9 @@ def weights_for_interval(array, l_bound, u_bound, interval_type='half-open'):
     # Half-open is used when binning the major axis (except for the final bin)
     # and closed used for the minor axis and the final bin of the major axis.
     if interval_type == 'half-open':
-        in_range = (l_bound <= array) & (array < u_bound)
+        in_range = np.logical_and(l_bound <= array, array < u_bound)
     elif interval_type == 'closed':
-        in_range = (l_bound <= array) & (array <= u_bound)
+        in_range = np.logical_and(l_bound <= array, array <= u_bound)
     else:
         msg = f"Unrecognised interval_type: {interval_type}"
         raise ValueError(msg)
@@ -127,7 +127,7 @@ class DirectionalAverage:
         denominator = self.major_lims[1] - self.major_lims[0]
         bin_index = int(np.floor(self.nbins * numerator / denominator))
 
-        # Bins are indexed from 0 to nbins-1, so tihs check protects against
+        # Bins are indexed from 0 to nbins-1, so this check protects against
         # out-of-range indices when value == self.major_lims[1]
         if bin_index == self.nbins:
             bin_index -= 1
