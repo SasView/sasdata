@@ -901,9 +901,8 @@ class SectorQTests(unittest.TestCase):
         phi_max = 5*np.pi/6
         nbins = int(test_data.matrix_size * np.sqrt(2)/4)  # usually reliable
 
-        wedge_object = SectorQ(r_min=r_min, r_max=r_max,
-                               phi_min=phi_min + np.pi,
-                               phi_max=phi_max + np.pi, nbins=nbins)
+        wedge_object = SectorQ(r_min=r_min, r_max=r_max, phi_min=phi_min,
+                               phi_max=phi_max, nbins=nbins)
         # Explicitly set fold to True - points either side of 0,0 are averaged
         wedge_object.fold = True
         data1d = wedge_object(averager_data.data)
