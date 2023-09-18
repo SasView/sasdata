@@ -4,6 +4,7 @@ lxml
 
 # Calculation
 numpy
+scipy
 
 # Unit testing
 pytest
