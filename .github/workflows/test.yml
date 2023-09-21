@@ -32,7 +32,7 @@ jobs:
       id: pip-cache
       run: |
         echo "{name}={$(pip cache dir)}" >> $GITHUB_OUTPUT
-        echo $GITHUB_OUTPUT
+        printf '%s\n' "$GITHUB_OUTPUT"
 
     - name: Obtain pip cache (Linux)
       uses: actions/cache@v2
