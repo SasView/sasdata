@@ -36,7 +36,7 @@ jobs:
     - name: Obtain pip cache (Linux)
       uses: actions/cache@v2
       with:
-        path: ${{ steps.pip-cache.outputs.dir }}
+        path: ${{ steps.pip-cache.outputs.name }}
         key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/test.yml') }}
         restore-keys: |
           ${{ runner.os }}-pip-${{ matrix.python-version }}-
