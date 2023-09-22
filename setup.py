@@ -64,6 +64,19 @@ packages.append("sasdata.file_converter")
 package_dir["sasdata.data_util"] = os.path.join("sasdata", "data_util")
 packages.append("sasdata.data_util")
 
+# sasdata.example_data
+package_dir["sasdata.example_data"] = os.path.join('sasdata', 'example_data')
+package_data["sasdata.example_data"] = ['1d_data/*.*',
+                                        '2d_data/*.*',
+                                        'convertible_files/*.*',
+                                        'dls_data/*.*',
+                                        'image_data/*.*',
+                                        'media/*.*',
+                                        'nr_data/*.*',
+                                        'other_files/*.*',
+                                        'sesans_data/*.*']
+packages.append("sasdata.example_data")
+
 required = ['lxml', 'h5py', 'numpy']
 
 with open('LICENSE.TXT', encoding='utf-8') as f:

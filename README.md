@@ -69,7 +69,26 @@ Save argument examples and data output:
 More information on the recognized data formats is available on the 
 [sasview website](https://www.sasview.org/docs/user/qtgui/MainWindow/data_formats_help.html).
 
+## Example Data
+
+A number of data files are included with this package available in `sasdata.example_data`.
+
+- Each subdirectory has a specific type of data.
+  - `1d_data`: 1-dimensional SAS data. A few examples are `apoferritin.txt` which is SANS from apoferritin, 3 files starting with `AOT_` that are contrast variations for a mircroemulsion, and `latex_smeared.xml` with SANS and USANS data for spherical latex particles.
+  - `2d_data`: 2-dimensional SAS data. Examples include 3 `P123_....dat` files for a polymer concentration series.
+  - `convertibles_files`: A series of data sets that can be converted via the data conversion tool in the `sasdata.file_converter` package.
+  - `dls_data`: *NOTE* Not loadable by sasdata. Two example DLS data sets that will be loadable in a future release.
+  - `image_data`: Image file loadable from `sasdata.dataloader.readers.tiff_reader`. The files are all the same image, but in different image formats.
+  - `sesans_data`: SESANS data sets. `sphere_isis.ses` is spin-echo SANS from a sample with spherical particles.
+- To directly access this data via a python prompt, `import data_path from sasdata` returns the absolute path to `sasdata.example_data`
+
 ## Usage
+
+### Accessing example data
+
+    (sasdata) $ python
+    >>> from sasdata import data_path
+    >>> data = Loader().load(os.path.join(data_path, '1d_data', 'apoferritin.txt'))
 
 ### Loading and saving data sets using a fixed Loader instance:
 
