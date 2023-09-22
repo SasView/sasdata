@@ -88,7 +88,11 @@ class DirectionalAverage:
 
         self.major_axis = np.asarray(major_axis)
         self.minor_axis = np.asarray(minor_axis)
+        if self.major_axis.size != self.minor_axis.size:
+            msg = "Major and minor axes must have same length"
+            raise ValueError(msg)
         # In some cases all values from a given axis are part of the ROI.
+        # An alternative approach may be needed for fractional weights.
         if major_lims is None:
             self.major_lims = (self.major_axis.min(), self.major_axis.max())
         else:
