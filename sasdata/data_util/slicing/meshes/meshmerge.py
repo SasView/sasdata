@@ -1,13 +1,9 @@
-from typing import Sequence
-from scipy.spatial import Delaunay
-
 import numpy as np
 
-from dataclasses import dataclass
+from sasdata.data_util.slicing.meshes.mesh import Mesh
+from sasdata.data_util.slicing.meshes.delaunay_mesh import delaunay_mesh
+from sasdata.data_util.slicing.meshes.util import closed_loop_edges
 
-from sasdata.data_util.slicing.mesh import Mesh
-
-import matplotlib.pyplot as plt
 
 def meshmerge(mesh_a: Mesh, mesh_b: Mesh) -> tuple[Mesh, np.ndarray, np.ndarray]:
     """ Take two lists of polygons and find their intersections
@@ -15,7 +11,8 @@ def meshmerge(mesh_a: Mesh, mesh_b: Mesh) -> tuple[Mesh, np.ndarray, np.ndarray]
     Polygons in each of the input variables should not overlap i.e. a point in space should be assignable to
     at most one polygon in mesh_a and at most one polygon in mesh_b
 
-    Mesh topology should be sensible, otherwise bad things might happen
+    Mesh topology should be sensible, otherwise bad things might happen, also, the cells of the input meshes
+    must be in order (which is assumed by the mesh class constructor anyway).
 
     :returns:
         1) A triangulated mesh based on both sets of polygons together
@@ -95,17 +92,6 @@ def meshmerge(mesh_a: Mesh, mesh_b: Mesh) -> tuple[Mesh, np.ndarray, np.ndarray]
 
     # Build list of all input points, in a way that we can check for coincident points
 
-    # plt.scatter(mesh_a.points[:,0], mesh_a.points[:,1])
-    # plt.scatter(mesh_b.points[:,0], mesh_b.points[:,1])
-    # plt.scatter(new_x, new_y)
-    #
-    # mesh_a.show(False)
-    # mesh_b.show(False, color=(.8, .5, 0))
-    #
-    # plt.xlim([0,1])
-    # plt.ylim([0,1])
-    #
-    # plt.show()
 
     points = np.concatenate((
                 mesh_a.points,
@@ -113,8 +99,6 @@ def meshmerge(mesh_a: Mesh, mesh_b: Mesh) -> tuple[Mesh, np.ndarray, np.ndarray]
                 np.array((new_x, new_y)).T
                 ))
 
-    # plt.scatter(points[:,0], points[:,1])
-    # plt.show()
 
     # Remove coincident points
 
@@ -122,37 +106,75 @@ def meshmerge(mesh_a: Mesh, mesh_b: Mesh) -> tuple[Mesh, np.ndarray, np.ndarray]
 
     # Triangulate based on these intersections
 
+    output_mesh = delaunay_mesh(points[:, 0], points[:, 1])
+
     # Find centroids of all output triangles, and find which source cells they belong to
 
-    ## Assign -1 to all cells
-    ## Find centroids - they're just the closed voronoi cells?
-    ## Check whether within bounding box
-    ## If in bounding box, check cell properly using winding number, if inside, assign
+    ## step 1) Assign -1 to all cells of original meshes
+    assignments_a = -np.ones(output_mesh.n_cells, dtype=int)
+    assignments_b = -np.ones(output_mesh.n_cells, dtype=int)
+
+    ## step 2) Find centroids of triangulated mesh (just needs to be a point inside, but this is a good one)
+    centroids = []
+    for cell in output_mesh.cells:
+        centroid = np.sum(output_mesh.points[cell, :]/3, axis=0)
+        centroids.append(centroid)
+
+    ## step 3) Perform checks based on winding number method (see wikipedia Point in Polygon).
+    for mesh, assignments in [
+            (mesh_a, assignments_a),
+            (mesh_b, assignments_b)]:
+
+        for centroid_index, centroid in enumerate(centroids):
+            for cell_index, cell in enumerate(mesh.cells):
+
+                # Bounding box check
+                points = mesh.points[cell, :]
+                if np.any(centroid < np.min(points, axis=0)): # x or y less than any in polygon
+                    continue
+
+                if np.any(centroid > np.max(points, axis=0)): # x or y greater than any in polygon
+                    continue
+
+                # Winding number check - count directional crossings of vertical half line from centroid
+                winding_number = 0
+                for i1, i2 in closed_loop_edges(cell):
+                    p1 = mesh.points[i1, :]
+                    p2 = mesh.points[i2, :]
+
+                    # if the section xs do not straddle the x=centroid_x coordinate, then the
+                    # edge cannot cross the half line.
+                    # If it does, then remember which way it was
+                    # * Careful about ends
+                    # * Also, note that the p1[0] == p2[0] -> (no contribution) case is covered by the strict inequality
+                    if p1[0] > centroid[0] >= p2[0]:
+                        left_right = -1
+                    elif p2[0] > centroid[0] >= p1[0]:
+                        left_right = 1
+                    else:
+                        continue
+
+                    # Find the y point that it crosses x=centroid at
+                    # note: denominator cannot be zero because of strict inequality above
+                    gradient = (p2[1] - p1[1]) / (p2[0] - p1[0])
+                    x_delta = centroid[0] - p1[0]
+                    y = p1[1] + x_delta * gradient
+
+                    if y > centroid[1]:
+                        winding_number += left_right
 
 
-def simple_intersection():
-    mesh_a = Mesh(
-                np.array([[0, 0.5],[1,0.5]], dtype=float),
-                [[0, 1]], [])
+                if abs(winding_number) > 0:
+                    # Do assignment of input cell to output triangle index
+                    assignments[centroid_index] = cell_index
 
-    mesh_b = Mesh(
-        np.array([[0.5, 0], [0.5, 1]], dtype=float),
-        [[0, 1]], [])
+            # end cell loop
 
-    meshmerge(mesh_a, mesh_b)
+        # end centroid loop
 
+    return output_mesh, assignments_a, assignments_b
 
 
-def simple_intersection_2():
-    mesh_a = Mesh(
-                np.array([[4,3],[1,3]], dtype=float),
-                [[0, 1]], [])
-
-    mesh_b = Mesh(
-        np.array([[3, 4], [3, 1]], dtype=float),
-        [[0, 1]], [])
-
-    meshmerge(mesh_a, mesh_b)
 def main():
     from voronoi_mesh import voronoi_mesh
 
@@ -163,8 +185,10 @@ def main():
     m2 = voronoi_mesh(np.random.random(n2), np.random.random(n2))
 
 
-    meshmerge(m1, m2)
+    mesh, _, _ = meshmerge(m1, m2)
+
+    mesh.show()
+
 
 if __name__ == "__main__":
     main()
-    # simple_intersection()

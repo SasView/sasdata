@@ -1,0 +1,96 @@
+from typing import Sequence
+
+import numpy as np
+
+import matplotlib.pyplot as plt
+from matplotlib.collections import LineCollection
+
+from sasdata.data_util.slicing.meshes.util import closed_loop_edges
+
+class Mesh:
+    def __init__(self,
+                 points: np.ndarray,
+                 cells: Sequence[Sequence[int]]):
+
+        """
+        Object representing a mesh.
+
+        Parameters are the values:
+            mesh points
+            map from edge to points
+            map from cells to edges
+
+        it is done this way to ensure a non-redundant representation of cells and edges,
+        however there are no checks for the topology of the mesh, this is assumed to be done by
+        whatever creates it. There are also no checks for ordering of cells.
+
+        :param points: points in 2D forming vertices of the mesh
+        :param cells: ordered lists of indices of points forming each cell (face)
+
+        """
+
+        self.points = points
+        self.cells = cells
+
+        # Get edges
+
+        edges = set()
+        for cell_index, cell in enumerate(cells):
+
+            for a, b in closed_loop_edges(cell):
+                # make sure the representation is unique
+                if a > b:
+                    edges.add((a, b))
+                else:
+                    edges.add((b, a))
+
+        self.edges = list(edges)
+
+        # Associate edges with faces
+
+        edge_lookup = {edge: i for i, edge in enumerate(self.edges)}
+        self.cells_to_edges = []
+
+        for cell in cells:
+
+            this_cell_data = []
+
+            for a, b in closed_loop_edges(cell):
+                # make sure the representation is unique
+                if a > b:
+                    this_cell_data.append(edge_lookup[(a, b)])
+                else:
+                    this_cell_data.append(edge_lookup[(b, a)])
+
+            self.cells_to_edges.append(this_cell_data)
+
+        # Counts for elements
+        self.n_points = self.points.shape[0]
+        self.n_edges = len(self.edges)
+        self.n_cells = len(self.cells)
+
+    def show(self, actually_show=True, show_labels=False, **kwargs):
+        """ Show on a plot """
+        ax = plt.gca()
+        segments = [[self.points[edge[0]], self.points[edge[1]]] for edge in self.edges]
+        line_collection = LineCollection(segments=segments, **kwargs)
+        ax.add_collection(line_collection)
+
+        if show_labels:
+            text_color = kwargs["color"] if "color" in kwargs else 'k'
+            for i, cell in enumerate(self.cells):
+                xy = np.sum(self.points[cell, :], axis=0)/len(cell)
+                ax.text(xy[0], xy[1], str(i), horizontalalignment="center", verticalalignment="center", color=text_color)
+
+        x_limits = [np.min(self.points[:,0]), np.max(self.points[:,0])]
+        y_limits = [np.min(self.points[:,1]), np.max(self.points[:,1])]
+
+        plt.xlim(x_limits)
+        plt.ylim(y_limits)
+
+        if actually_show:
+            plt.show()
+
+    def show_data(self, data: np.ndarray, show_mesh=True):
+        """ Show with data """
+        raise NotImplementedError("Show data not implemented")
