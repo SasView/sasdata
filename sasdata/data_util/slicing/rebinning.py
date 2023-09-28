@@ -19,7 +19,6 @@ class CacheData:
 
 class Rebinner():
 
-    allowable_orders = [-1,0,1]
 
     def __init__(self, order):
         """ Base class for rebinning methods"""
@@ -30,8 +29,9 @@ class Rebinner():
         # Output dependent caching
         self._input_cache: Optional[CacheData] = None
 
-        if order not in Rebinner.allowable_orders:
-            raise ValueError(f"Expected order to be in {Rebinner.allowable_orders}, got {order}")
+        if order not in self.allowable_orders:
+            raise ValueError(f"Expected order to be in {self.allowable_orders}, got {order}")
+
 
     @abstractmethod
     def _bin_coordinates(self) -> np.ndarray:
@@ -40,6 +40,10 @@ class Rebinner():
     @abstractmethod
     def _bin_mesh(self) -> Mesh:
         """ Get the meshes used for binning """
+
+    @property
+    def allowable_orders(self) -> list[int]:
+        return [-1, 0, 1]
 
     @property
     def bin_mesh(self):
@@ -104,13 +108,22 @@ class Rebinner():
                 for input_index, output_index, area in zip(merged_to_input, merged_to_output, merged_mesh.areas):
                     output[output_index] += input_data[input_index] * area / input_areas[input_data]
 
+
                 return output
 
             elif self._order == 1:
+                # Linear interpolation requires the following relationship with the data,
+                # as the input data is the total over the whole input cell, the linear
+                # interpolation requires continuity at the vertices, and a constraint on the
+                # integral.
+                #
+                # We can take each of the input points, and the associated values, and solve a system
+                # of linear equations that gives a total value.
+
                 raise NotImplementedError("1st order (linear) interpolation currently not implemented")
 
             else:
-                raise ValueError(f"Expected order to be in {Rebinner.allowable_orders}, got {self._order}")
+                raise ValueError(f"Expected order to be in {self.allowable_orders}, got {self._order}")
 
     def sum(self, input_coordinates: np.ndarray, data: np.ndarray) -> np.ndarray:
         """ Return the summed data in the output bins """
