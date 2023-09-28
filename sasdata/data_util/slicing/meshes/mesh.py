@@ -3,6 +3,7 @@ from typing import Sequence
 import numpy as np
 
 import matplotlib.pyplot as plt
+from matplotlib import cm
 from matplotlib.collections import LineCollection
 
 from sasdata.data_util.slicing.meshes.util import closed_loop_edges
@@ -72,6 +73,12 @@ class Mesh:
         # Areas
         self._areas = None
 
+    def find_locations(self, points):
+        """ Find indices of cells containing the input points """
+
+        
+
+
     @property
     def areas(self):
         """ Areas of cells """
@@ -119,6 +126,24 @@ class Mesh:
         if actually_show:
             plt.show()
 
-    def show_data(self, data: np.ndarray, show_mesh=True):
+    def show_data(self, data: np.ndarray, cmap='winter', mesh_color='white', show_mesh=True, actually_show=True):
         """ Show with data """
-        raise NotImplementedError("Show data not implemented")
+
+        colormap = cm.get_cmap(cmap, 256)
+
+        cmin = np.min(data)
+        cmax = np.max(data)
+
+        color_index_map = np.array(255 * (data - cmin) / (cmax - cmin), dtype=int)
+
+        for cell, color_index in zip(self.cells, color_index_map):
+
+            color = colormap(color_index)
+
+            plt.fill(self.points[cell, 0], self.points[cell, 1], color=color)
+
+        if show_mesh:
+            self.show(actually_show=False, color=mesh_color)
+
+        if actually_show:
+            self.show()
