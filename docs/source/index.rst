@@ -20,8 +20,10 @@ Contents
 
    Developer Documentation <dev/dev>
 
-Indices and tables
-==================
+   Release Note <user/RELEASE>
+
+Indices and Search
+------------------
 
 * :ref:`genindex`
 * :ref:`search`
