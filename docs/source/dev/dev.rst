@@ -4,3 +4,7 @@
 
 Developer Documentation
 =======================
+
+.. toctree::
+
+   api

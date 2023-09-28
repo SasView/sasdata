@@ -11,7 +11,10 @@ release = sasdata_version
 
 # -- General configuration ---------------------------------------------------
 
-extensions = []
+extensions = [
+    'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary',
+]
 
 templates_path = ['_templates']
 exclude_patterns = []
