@@ -1,6 +1,7 @@
 # Configuration file for the Sphinx documentation builder.
 
-# -- Project information -----------------------------------------------------
+# -- Project information ----------------------------------------------------
+import datetime
 
 from sasdata import __version__ as sasdata_version
 
