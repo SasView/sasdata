@@ -130,7 +130,7 @@ class Mesh:
                   data: np.ndarray,
                   cmap='winter',
                   mesh_color='white',
-                  show_mesh=True,
+                  show_mesh=False,
                   actually_show=True,
                   density=False):
 
@@ -150,7 +150,7 @@ class Mesh:
 
             color = colormap(color_index)
 
-            plt.fill(self.points[cell, 0], self.points[cell, 1], color=color)
+            plt.fill(self.points[cell, 0], self.points[cell, 1], color=color, edgecolor=None)
 
         if show_mesh:
             self.show(actually_show=False, color=mesh_color)
