@@ -69,6 +69,34 @@ class Mesh:
         self.n_edges = len(self.edges)
         self.n_cells = len(self.cells)
 
+        # Areas
+        self._areas = None
+
+    @property
+    def areas(self):
+        """ Areas of cells """
+
+        if self._areas is None:
+            # Calculate areas
+            areas = []
+            for cell in self.cells:
+                # Use triangle shoelace formula, basically calculate the
+                # determinant based on of triangles with one point at 0,0
+                a_times_2 = 0.0
+                for i1, i2 in closed_loop_edges(cell):
+                    p1 = self.points[i1, :]
+                    p2 = self.points[i2, :]
+                    a_times_2 += p1[0]*p2[1] - p1[1]*p2[0]
+
+                areas.append(0.5*np.abs(a_times_2))
+
+            # Save in cache
+            self._areas = np.ndarray(areas)
+
+        # Return cache
+        return self._areas
+
+
     def show(self, actually_show=True, show_labels=False, **kwargs):
         """ Show on a plot """
         ax = plt.gca()
