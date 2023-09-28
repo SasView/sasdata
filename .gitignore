@@ -20,6 +20,7 @@
 *.so
 *.exe
 
+**/generated
 **/build
 /dist
 .mplconfig
