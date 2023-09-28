@@ -17,19 +17,27 @@ class AnularSector(Rebinner):
 
     def _bin_mesh(self) -> Mesh:
 
-        n_points = 1 + 180*self.points_per_degree*(self.phi1 - self.phi0) / np.pi
+        n_points = int(1 + 180*self.points_per_degree*(self.phi1 - self.phi0) / np.pi)
 
         angles = np.linspace(self.phi0, self.phi1, n_points)
 
         row1 = self.q0 * np.array([np.cos(angles), np.sin(angles)])
         row2 = self.q1 * np.array([np.cos(angles), np.sin(angles)])[:, ::-1]
 
-        points = np.concatenate((row1, row2), axis=1)
+        points = np.concatenate((row1, row2), axis=1).T
 
-        cells = [i for i in range(2*n_points)]
+        cells = [[i for i in range(2*n_points)]]
 
         return Mesh(points=points, cells=cells)
 
     def _bin_coordinates(self) -> np.ndarray:
         return np.array([], dtype=float)
 
+
+def main():
+    """ Just show a random example"""
+    AnularSector(1, 2, 1, 2).bin_mesh.show()
+
+
+if __name__ == "__main__":
+    main()
