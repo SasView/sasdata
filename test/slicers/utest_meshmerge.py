@@ -10,6 +10,13 @@ from test.slicers.meshes_for_testing import (
 
 
 def test_meshmerge_mappings():
+    """ Test the output of meshmerge is correct
+
+    IMPORTANT IF TESTS FAIL!!!... The docs for scipy.spatial.Voronoi and Delaunay
+    say that the ordering of faces might depend on machine precession. Thus, these
+    tests might not be reliable... we'll see how they play out
+    """
+
 
     combined_mesh, grid_mappings, shape_mappings = meshmerge(grid_mesh, shape_mesh)
 
