@@ -4,8 +4,11 @@
 
 from sasdata import __version__ as sasdata_version
 
-project = 'sasdata'
-copyright = '2023, SasView'
+# General information about the project.
+year = datetime.datetime.now().year
+
+project = 'SasData'
+copyright = f'{year}, The SasView Project'
 author = 'SasView'
 release = sasdata_version
 
