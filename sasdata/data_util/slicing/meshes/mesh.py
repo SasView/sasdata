@@ -76,7 +76,7 @@ class Mesh:
     def find_locations(self, points):
         """ Find indices of cells containing the input points """
 
-        
+
 
 
     @property
@@ -98,7 +98,7 @@ class Mesh:
                 areas.append(0.5*np.abs(a_times_2))
 
             # Save in cache
-            self._areas = np.ndarray(areas)
+            self._areas = np.array(areas)
 
         # Return cache
         return self._areas
@@ -126,10 +126,20 @@ class Mesh:
         if actually_show:
             plt.show()
 
-    def show_data(self, data: np.ndarray, cmap='winter', mesh_color='white', show_mesh=True, actually_show=True):
+    def show_data(self,
+                  data: np.ndarray,
+                  cmap='winter',
+                  mesh_color='white',
+                  show_mesh=True,
+                  actually_show=True,
+                  density=False):
+
         """ Show with data """
 
         colormap = cm.get_cmap(cmap, 256)
+
+        if density:
+            data = data / self.areas
 
         cmin = np.min(data)
         cmax = np.max(data)
