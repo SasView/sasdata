@@ -32,24 +32,36 @@ shape_mesh = Mesh(mesh_points, cells)
 
 # Subset of the mappings that meshmerge should include
 # This can be read off the plots generated below
-expected_shape_mappings = [
-    (98, -1),
-    (99, -1),
-    (12, 0),
-    (1, -1),
-    (148, 1),
-    (149, 1),
-    (110, 1),
-    (144, -1),
-    (123, -1)]
 
+
+expected_shape_mappings = [
+    (100, -1),
+    (152, -1),
+    (141, -1),
+    (172, -1),
+    (170, -1),
+    (0, -1),
+    (1, -1),
+    (8, 0),
+    (9, 0),
+    (37, 0),
+    (83, 0),
+    (190, 1),
+    (186, 1),
+    (189, 1),
+    (193, 1)
+]
 
 expected_grid_mappings = [
-    (89, 1),
-    (146, 29),
-    (66, 34),
-    (112, 45)
+    (89, 0),
+    (90, 1),
+    (148, 16),
+    (175, 35),
+    (60, 47),
+    (44, 47),
+    (80, 60)
 ]
+
 
 
 if __name__ == "__main__":
@@ -62,14 +74,14 @@ if __name__ == "__main__":
     combined_mesh.show(actually_show=False, show_labels=True, color='k')
     grid_mesh.show(actually_show=False, show_labels=True, color='r')
 
-    plt.xlim([-4, 4])
-    plt.ylim([-4, 4])
+    plt.xlim([-5, 5])
+    plt.ylim([-5, 5])
 
     plt.figure()
     combined_mesh.show(actually_show=False, show_labels=True, color='k')
     shape_mesh.show(actually_show=False, show_labels=True, color='r')
 
-    plt.xlim([-4, 4])
-    plt.ylim([-4, 4])
+    plt.xlim([-5, 5])
+    plt.ylim([-5, 5])
 
     plt.show()
