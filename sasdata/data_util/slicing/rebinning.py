@@ -46,12 +46,13 @@ class Rebinner():
         return [-1, 0, 1]
 
     @property
-    def bin_mesh(self):
+    def bin_mesh(self) -> Mesh:
+
         if self._bin_mesh_cache is None:
             bin_mesh = self._bin_mesh()
-            self._data_mesh_cache = bin_mesh
-        else:
-            return self._bin_mesh_cache
+            self._bin_mesh_cache = bin_mesh
+
+        return self._bin_mesh_cache
 
     def _post_processing(self, coordinates, values) -> tuple[np.ndarray, np.ndarray]:
         """ Perform post-processing on the mesh binned values """
@@ -95,7 +96,7 @@ class Rebinner():
                     input_coordinates_mesh=input_coordinate_mesh,
                     merged_mesh_data=merge_data)
 
-            merged_mesh, merged_to_input, merged_to_output = merge_data
+            merged_mesh, merged_to_output, merged_to_input = merge_data
 
             # Calculate values according to the order parameter
 
@@ -105,8 +106,15 @@ class Rebinner():
                 input_areas = input_coordinate_mesh.areas
                 output = np.zeros(self.bin_mesh.n_cells, dtype=float)
 
+                print(np.max(merged_to_input))
+                print(np.max(merged_to_output))
+
                 for input_index, output_index, area in zip(merged_to_input, merged_to_output, merged_mesh.areas):
-                    output[output_index] += input_data[input_index] * area / input_areas[input_data]
+                    if input_index == -1 or output_index == -1:
+                        # merged region does not correspond to anything of interest
+                        continue
+
+                    output[output_index] += input_data[input_index] * area / input_areas[input_index]
 
 
                 return output
@@ -125,9 +133,9 @@ class Rebinner():
             else:
                 raise ValueError(f"Expected order to be in {self.allowable_orders}, got {self._order}")
 
-    def sum(self, input_coordinates: np.ndarray, data: np.ndarray) -> np.ndarray:
+    def sum(self, x: np.ndarray, y: np.ndarray, data: np.ndarray) -> np.ndarray:
         """ Return the summed data in the output bins """
-        return self._calculate(input_coordinates, data)
+        return self._calculate(np.array((x.reshape(-1), y.reshape(-1))).T, data)
 
     def error_propagate(self, input_coordinates: np.ndarray, data: np.ndarray, errors) -> np.ndarray:
         raise NotImplementedError("Error propagation not implemented yet")
@@ -135,7 +143,7 @@ class Rebinner():
     def resolution_propagate(self, input_coordinates: np.ndarray, data: np.ndarray, errors) -> np.ndarray:
         raise NotImplementedError("Resolution propagation not implemented yet")
 
-    def average(self, input_coordinates: np.ndarray, data: np.ndarray) -> np.ndarray:
+    def average(self, x: np.ndarray, y: np.ndarray, data: np.ndarray) -> np.ndarray:
         """ Return the averaged data in the output bins """
-        return self._calculate(input_coordinates, data) / self.bin_mesh.areas
+        return self._calculate(np.array((x, y)).T, data) / self.bin_mesh.areas
 
