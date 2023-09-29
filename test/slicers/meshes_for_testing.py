@@ -62,7 +62,31 @@ expected_grid_mappings = [
     (80, 60)
 ]
 
+#
+# Mesh location tests
+#
 
+location_test_mesh_points = np.array([
+    [0, 0],  # 0
+    [0, 1],  # 1
+    [0, 2],  # 2
+    [1, 0],  # 3
+    [1, 1],  # 4
+    [1, 2],  # 5
+    [2, 0],  # 6
+    [2, 1],  # 7
+    [2, 2]], dtype=float)
+
+location_test_mesh_cells = [
+    [0, 1, 4, 3],
+    [1, 2, 5, 4],
+    [3, 4, 7, 6],
+    [4, 5, 8, 7]]
+
+location_test_mesh = Mesh(location_test_mesh_points, location_test_mesh_cells)
+
+test_coords = 0.25 + 0.5*np.arange(4)
+location_test_points_x, location_test_points_y = np.meshgrid(test_coords, test_coords)
 
 if __name__ == "__main__":
 
@@ -83,5 +107,9 @@ if __name__ == "__main__":
 
     plt.xlim([-5, 5])
     plt.ylim([-5, 5])
+
+    plt.figure()
+    location_test_mesh.show(actually_show=False, show_labels=True)
+    plt.scatter(location_test_points_x, location_test_points_y)
 
     plt.show()
