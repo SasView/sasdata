@@ -11,7 +11,8 @@ SasData User Documentation
    Data Formats <data/data_formats_help>
 
    Importing Data <data/data_import_help>
+
+   Exporting Data <data/data_export_help>
 ..
    #TODO: Implement these help files
-   Exporting Data <data/data_export_help>
    Test Data <example_data/testdata_help>
