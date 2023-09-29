@@ -5,8 +5,6 @@
 SasData User Documentation
 ==========================
 
-.. note:: In Windows use [Alt]-[Cursor left] to return to the previous page
-
 .. toctree::
    :maxdepth: 1
 
