@@ -33,7 +33,9 @@ if __name__ == "__main__":
 
     data_order_0 = []
 
-    for index, size in enumerate(np.linspace(0.1, 1, 100)):
+    sizes = np.linspace(0.1, 1, 100)
+
+    for index, size in enumerate(sizes):
         q0 = 0.75 - 0.6*size
         q1 = 0.75 + 0.6*size
         phi0 = np.pi/2 - size
@@ -46,6 +48,10 @@ if __name__ == "__main__":
         if index % 10 == 0:
             plt.figure("Regions")
             rebinner.bin_mesh.show(actually_show=False)
+
+    plt.figure("Data")
+
+    plt.plot(sizes, data_order_0)
 
     plt.show()
 
