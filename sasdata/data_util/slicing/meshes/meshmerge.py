@@ -5,6 +5,8 @@ from sasdata.data_util.slicing.meshes.delaunay_mesh import delaunay_mesh
 from sasdata.data_util.slicing.meshes.util import closed_loop_edges
 
 
+import time
+
 def meshmerge(mesh_a: Mesh, mesh_b: Mesh) -> tuple[Mesh, np.ndarray, np.ndarray]:
     """ Take two lists of polygons and find their intersections
 
@@ -20,6 +22,8 @@ def meshmerge(mesh_a: Mesh, mesh_b: Mesh) -> tuple[Mesh, np.ndarray, np.ndarray]
         3) The indices of the mesh_b polygon that corresponds to each triangle, -1 for nothing
 
     """
+
+    t0 = time.time()
 
     # Find intersections of all edges in mesh one with edges in mesh two
 
@@ -89,6 +93,8 @@ def meshmerge(mesh_a: Mesh, mesh_b: Mesh) -> tuple[Mesh, np.ndarray, np.ndarray]
             new_y.append(y)
 
 
+    t1 = time.time()
+    print("Edge intersections:", t1 - t0)
 
     # Build list of all input points, in a way that we can check for coincident points
 
@@ -108,6 +114,11 @@ def meshmerge(mesh_a: Mesh, mesh_b: Mesh) -> tuple[Mesh, np.ndarray, np.ndarray]
 
     output_mesh = delaunay_mesh(points[:, 0], points[:, 1])
 
+
+    t2 = time.time()
+    print("Delaunay:", t2 - t1)
+
+
     # Find centroids of all output triangles, and find which source cells they belong to
 
     ## step 1) Assign -1 to all cells of original meshes
@@ -120,57 +131,72 @@ def meshmerge(mesh_a: Mesh, mesh_b: Mesh) -> tuple[Mesh, np.ndarray, np.ndarray]
         centroid = np.sum(output_mesh.points[cell, :]/3, axis=0)
         centroids.append(centroid)
 
+    centroids = np.array(centroids)
+
+    t3 = time.time()
+    print("Centroids:", t3 - t2)
+
+
     ## step 3) Perform checks based on winding number method (see wikipedia Point in Polygon).
-    for mesh, assignments in [
-            (mesh_a, assignments_a),
-            (mesh_b, assignments_b)]:
+    #
+    # # TODO: Brute force search is sllllloooooooowwwwww - keeping track of which points are where would be better
+    # for mesh, assignments in [
+    #         (mesh_a, assignments_a),
+    #         (mesh_b, assignments_b)]:
+    #
+    #     for centroid_index, centroid in enumerate(centroids):
+    #         for cell_index, cell in enumerate(mesh.cells):
+    #
+    #             # Bounding box check
+    #             points = mesh.points[cell, :]
+    #             if np.any(centroid < np.min(points, axis=0)): # x or y less than any in polygon
+    #                 continue
+    #
+    #             if np.any(centroid > np.max(points, axis=0)): # x or y greater than any in polygon
+    #                 continue
+    #
+    #             # Winding number check - count directional crossings of vertical half line from centroid
+    #             winding_number = 0
+    #             for i1, i2 in closed_loop_edges(cell):
+    #                 p1 = mesh.points[i1, :]
+    #                 p2 = mesh.points[i2, :]
+    #
+    #                 # if the section xs do not straddle the x=centroid_x coordinate, then the
+    #                 # edge cannot cross the half line.
+    #                 # If it does, then remember which way it was
+    #                 # * Careful about ends
+    #                 # * Also, note that the p1[0] == p2[0] -> (no contribution) case is covered by the strict inequality
+    #                 if p1[0] > centroid[0] >= p2[0]:
+    #                     left_right = -1
+    #                 elif p2[0] > centroid[0] >= p1[0]:
+    #                     left_right = 1
+    #                 else:
+    #                     continue
+    #
+    #                 # Find the y point that it crosses x=centroid at
+    #                 # note: denominator cannot be zero because of strict inequality above
+    #                 gradient = (p2[1] - p1[1]) / (p2[0] - p1[0])
+    #                 x_delta = centroid[0] - p1[0]
+    #                 y = p1[1] + x_delta * gradient
+    #
+    #                 if y > centroid[1]:
+    #                     winding_number += left_right
+    #
+    #
+    #             if abs(winding_number) > 0:
+    #                 # Do assignment of input cell to output triangle index
+    #                 assignments[centroid_index] = cell_index
+    #                 break # point is assigned
+    #
+    #         # end cell loop
+    #
+    #     # end centroid loop
 
-        for centroid_index, centroid in enumerate(centroids):
-            for cell_index, cell in enumerate(mesh.cells):
+    assignments_a = mesh_a.locate_points(centroids[:, 0], centroids[:, 1])
+    assignments_b = mesh_b.locate_points(centroids[:, 0], centroids[:, 1])
 
-                # Bounding box check
-                points = mesh.points[cell, :]
-                if np.any(centroid < np.min(points, axis=0)): # x or y less than any in polygon
-                    continue
-
-                if np.any(centroid > np.max(points, axis=0)): # x or y greater than any in polygon
-                    continue
-
-                # Winding number check - count directional crossings of vertical half line from centroid
-                winding_number = 0
-                for i1, i2 in closed_loop_edges(cell):
-                    p1 = mesh.points[i1, :]
-                    p2 = mesh.points[i2, :]
-
-                    # if the section xs do not straddle the x=centroid_x coordinate, then the
-                    # edge cannot cross the half line.
-                    # If it does, then remember which way it was
-                    # * Careful about ends
-                    # * Also, note that the p1[0] == p2[0] -> (no contribution) case is covered by the strict inequality
-                    if p1[0] > centroid[0] >= p2[0]:
-                        left_right = -1
-                    elif p2[0] > centroid[0] >= p1[0]:
-                        left_right = 1
-                    else:
-                        continue
-
-                    # Find the y point that it crosses x=centroid at
-                    # note: denominator cannot be zero because of strict inequality above
-                    gradient = (p2[1] - p1[1]) / (p2[0] - p1[0])
-                    x_delta = centroid[0] - p1[0]
-                    y = p1[1] + x_delta * gradient
-
-                    if y > centroid[1]:
-                        winding_number += left_right
-
-
-                if abs(winding_number) > 0:
-                    # Do assignment of input cell to output triangle index
-                    assignments[centroid_index] = cell_index
-
-            # end cell loop
-
-        # end centroid loop
+    t4 = time.time()
+    print("Assignments:", t4 - t3)
 
     return output_mesh, assignments_a, assignments_b
 
@@ -185,7 +211,7 @@ def main():
     m2 = voronoi_mesh(np.random.random(n2), np.random.random(n2))
 
 
-    mesh, _, _ = meshmerge(m1, m2)
+    mesh, assignement1, assignement2 = meshmerge(m1, m2)
 
     mesh.show()
 
