@@ -6,5 +6,4 @@ Developer Documentation
 =======================
 
 .. toctree::
-
-   api
+    SasData <generated/sasdata>
