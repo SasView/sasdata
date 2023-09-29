@@ -8,6 +8,7 @@ from sasdata.data_util.slicing.meshes.mesh import Mesh
 from sasdata.data_util.slicing.meshes.voronoi_mesh import voronoi_mesh
 from sasdata.data_util.slicing.meshes.meshmerge import meshmerge
 
+import time
 
 @dataclass
 class CacheData:
@@ -99,15 +100,12 @@ class Rebinner():
             merged_mesh, merged_to_output, merged_to_input = merge_data
 
             # Calculate values according to the order parameter
-
+            t0 = time.time()
             if self._order == 0:
                 # Based on the overlap of cells only
 
                 input_areas = input_coordinate_mesh.areas
                 output = np.zeros(self.bin_mesh.n_cells, dtype=float)
-
-                print(np.max(merged_to_input))
-                print(np.max(merged_to_output))
 
                 for input_index, output_index, area in zip(merged_to_input, merged_to_output, merged_mesh.areas):
                     if input_index == -1 or output_index == -1:
@@ -116,6 +114,7 @@ class Rebinner():
 
                     output[output_index] += input_data[input_index] * area / input_areas[input_index]
 
+                print("Main calc:", time.time() - t0)
 
                 return output
 
