@@ -9,6 +9,5 @@ numpy
 pytest
 unittest-xml-reporting
 
-# Documentation (future)
+# Documentation
 sphinx
-html5lib
