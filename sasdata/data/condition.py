@@ -68,9 +68,22 @@ class Condition:
     @units.setter
     def units(self, units: str):
         """A generic property to allow extra operations to be performed when modifying units."""
-        self._desired_units = units
+        if self._are_units_sensible(units):
+            self._desired_units = units
+        else:
+            raise ValueError(f"The units sent to {self.__class__} are not sensible for {self._name}.")
 
     def revert_to_base_units(self):
         """Sets the units property to None, which, in turn, sets _desired_units to None, forcing the converter and
         other operations to use _base_units."""
         self.units = None
+
+    def _are_units_sensible(self, units: str):
+        """A check to see if the units passed to the method make sense based on the condition type used."""
+        if self._converter:
+            try:
+                self._converter(self.value, units)
+                return True
+            except ValueError:
+                return False
+        return True
