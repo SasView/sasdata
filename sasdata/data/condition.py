@@ -17,10 +17,11 @@ value_type = Union[str, float, list[str], np.ndarray]
 class Condition:
     # The cansas_class variable defines the NeXuS class the Condition should be saved under. Sub-classing of Condition
     #   will help for fine-grained canSAS classing.
-    cansas_class: str = "NXnote"
+    _can_sas_class: str = "NXnote"
+    # The _name variable defines the name that all similar conditions should have.
+    _name: str = "generic"
 
-    def __init__(self, name: str, value: value_type, uncertainty: Optional[value_type] = None,
-                 units: Optional[str] = None):
+    def __init__(self, value: value_type, uncertainty: Optional[value_type] = None, units: Optional[str] = None):
         """The Condition class initialization routine. This creates a Condition object from the values passed to it.
 
         :param name: The name of the Condition.
@@ -30,7 +31,6 @@ class Condition:
         :param units: (Optional) The units of the value, in a form that can be interpreted by the Converter class.
         """
         # Base properties related to the condition. Internal variables should be immutable.
-        self._name: str = name
         self._value: value_type = value
         self._uncertainty: value_type = uncertainty
         self._desired_units: str = units
