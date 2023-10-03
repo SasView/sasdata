@@ -71,7 +71,7 @@ class Condition:
         if self._are_units_sensible(units):
             self._desired_units = units
         else:
-            raise ValueError(f"The units sent to {self.__class__} are not sensible for {self._name}.")
+            raise ValueError(f"The units, {units}, sent to {self.__class__} are not sensible for {self._name}.")
 
     def revert_to_base_units(self):
         """Sets the units property to None, which, in turn, sets _desired_units to None, forcing the converter and
