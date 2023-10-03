@@ -44,9 +44,6 @@ class Condition:
             # For unrecognized units, the Converter class throws a ValueError.
             self._converter = None
 
-        self._suggested_views = []
-        self.selected_view = None
-
     @property
     def value(self):
         """A property to calculate the converted condition value, to maintain the immutability of self._value."""
