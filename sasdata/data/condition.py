@@ -11,7 +11,10 @@ import numpy as np
 
 from sasdata.data_util.nxsunit import Converter
 
+str_type = str
+str_type_optional = Optional[str]
 value_type = Union[str, float, list[str], np.ndarray]
+value_type_optional = Optional[value_type]
 
 
 class Condition:
@@ -21,7 +24,7 @@ class Condition:
     # The _name variable defines the name that all similar conditions should have.
     _name: str = "generic"
 
-    def __init__(self, value: value_type, uncertainty: Optional[value_type] = None, units: Optional[str] = None):
+    def __init__(self, value: value_type, uncertainty: value_type_optional = None, units: str_type_optional = None):
         """The Condition class initialization routine. This creates a Condition object from the values passed to it.
 
         :param name: The name of the Condition.
@@ -33,7 +36,7 @@ class Condition:
         # Base properties related to the condition. Internal variables should be immutable.
         self._value: value_type = value
         self._uncertainty: value_type = uncertainty
-        self._desired_units: str = units
+        self._desired_units: str_type_optional = None
         self._base_units: str = units
         try:
             self._converter: Optional[Converter] = Converter(self._base_units)
