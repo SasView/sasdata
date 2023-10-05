@@ -26,7 +26,6 @@ def meshmerge(mesh_a: Mesh, mesh_b: Mesh) -> tuple[Mesh, np.ndarray, np.ndarray]
     t0 = time.time()
 
     # Find intersections of all edges in mesh one with edges in mesh two
-    # TODO: Speed this up
 
     # Fastest way might just be to calculate the intersections of all lines on edges,
     # see whether we need filtering afterwards
@@ -49,6 +48,10 @@ def meshmerge(mesh_a: Mesh, mesh_b: Mesh) -> tuple[Mesh, np.ndarray, np.ndarray]
     p4 = edge_b_2[b_grid, :]
 
     #
+    # TODO: Investigate whether adding a bounding box check will help with speed, seems likely as most edges wont cross
+    #
+
+    #
     # Solve the equations
     #
     #    z_a1 + s delta_z_a = z_b1 + t delta_z_b
@@ -64,7 +67,9 @@ def meshmerge(mesh_a: Mesh, mesh_b: Mesh) -> tuple[Mesh, np.ndarray, np.ndarray]
     deltas = np.concatenate(([-delta1], [delta3]), axis=0)
     deltas = np.moveaxis(deltas, 0, 2)
 
-    st = np.linalg.solve(deltas, start_point_diff)
+    non_singular = np.linalg.det(deltas) != 0
+
+    st = np.linalg.solve(deltas[non_singular], start_point_diff[non_singular])
 
     # Find the points where s and t are in (0, 1)
 
@@ -72,8 +77,8 @@ def meshmerge(mesh_a: Mesh, mesh_b: Mesh) -> tuple[Mesh, np.ndarray, np.ndarray]
         np.logical_and(0 < st[:, 0], st[:, 0] < 1),
         np.logical_and(0 < st[:, 1], st[:, 1] < 1))
 
-    start_points_for_intersections = p1[intersection_inds, :]
-    deltas_for_intersections = delta1[intersection_inds, :]
+    start_points_for_intersections = p1[non_singular][intersection_inds, :]
+    deltas_for_intersections = delta1[non_singular][intersection_inds, :]
 
     points_to_add = start_points_for_intersections + st[intersection_inds, 0].reshape(-1,1) * deltas_for_intersections
 
@@ -121,60 +126,7 @@ def meshmerge(mesh_a: Mesh, mesh_b: Mesh) -> tuple[Mesh, np.ndarray, np.ndarray]
     print("Centroids:", t3 - t2)
 
 
-    ## step 3) Perform checks based on winding number method (see wikipedia Point in Polygon).
-    #
-    # # TODO: Brute force search is sllllloooooooowwwwww - keeping track of which points are where would be better
-    # for mesh, assignments in [
-    #         (mesh_a, assignments_a),
-    #         (mesh_b, assignments_b)]:
-    #
-    #     for centroid_index, centroid in enumerate(centroids):
-    #         for cell_index, cell in enumerate(mesh.cells):
-    #
-    #             # Bounding box check
-    #             points = mesh.points[cell, :]
-    #             if np.any(centroid < np.min(points, axis=0)): # x or y less than any in polygon
-    #                 continue
-    #
-    #             if np.any(centroid > np.max(points, axis=0)): # x or y greater than any in polygon
-    #                 continue
-    #
-    #             # Winding number check - count directional crossings of vertical half line from centroid
-    #             winding_number = 0
-    #             for i1, i2 in closed_loop_edges(cell):
-    #                 p1 = mesh.points[i1, :]
-    #                 p2 = mesh.points[i2, :]
-    #
-    #                 # if the section xs do not straddle the x=centroid_x coordinate, then the
-    #                 # edge cannot cross the half line.
-    #                 # If it does, then remember which way it was
-    #                 # * Careful about ends
-    #                 # * Also, note that the p1[0] == p2[0] -> (no contribution) case is covered by the strict inequality
-    #                 if p1[0] > centroid[0] >= p2[0]:
-    #                     left_right = -1
-    #                 elif p2[0] > centroid[0] >= p1[0]:
-    #                     left_right = 1
-    #                 else:
-    #                     continue
-    #
-    #                 # Find the y point that it crosses x=centroid at
-    #                 # note: denominator cannot be zero because of strict inequality above
-    #                 gradient = (p2[1] - p1[1]) / (p2[0] - p1[0])
-    #                 x_delta = centroid[0] - p1[0]
-    #                 y = p1[1] + x_delta * gradient
-    #
-    #                 if y > centroid[1]:
-    #                     winding_number += left_right
-    #
-    #
-    #             if abs(winding_number) > 0:
-    #                 # Do assignment of input cell to output triangle index
-    #                 assignments[centroid_index] = cell_index
-    #                 break # point is assigned
-    #
-    #         # end cell loop
-    #
-    #     # end centroid loop
+    ## step 3) Find where points belong based on Mesh classes point location algorithm
 
     assignments_a = mesh_a.locate_points(centroids[:, 0], centroids[:, 1])
     assignments_b = mesh_b.locate_points(centroids[:, 0], centroids[:, 1])
