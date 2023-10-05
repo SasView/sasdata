@@ -203,6 +203,8 @@ class Mesh:
 
         colormap = cm.get_cmap(cmap, 256)
 
+        data = data.reshape(-1)
+
         if density:
             data = data / self.areas
 
