@@ -26,72 +26,56 @@ def meshmerge(mesh_a: Mesh, mesh_b: Mesh) -> tuple[Mesh, np.ndarray, np.ndarray]
     t0 = time.time()
 
     # Find intersections of all edges in mesh one with edges in mesh two
+    # TODO: Speed this up
 
-    new_x = []
-    new_y = []
-    for edge_a in mesh_a.edges:
-        for edge_b in mesh_b.edges:
+    # Fastest way might just be to calculate the intersections of all lines on edges,
+    # see whether we need filtering afterwards
 
-            p1 = mesh_a.points[edge_a[0]]
-            p2 = mesh_a.points[edge_a[1]]
-            p3 = mesh_b.points[edge_b[0]]
-            p4 = mesh_b.points[edge_b[1]]
+    edges_a = np.array(mesh_a.edges, dtype=int)
+    edges_b = np.array(mesh_b.edges, dtype=int)
 
-            # Bounding box check
+    edge_a_1 = mesh_a.points[edges_a[:, 0], :]
+    edge_a_2 = mesh_a.points[edges_a[:, 1], :]
+    edge_b_1 = mesh_b.points[edges_b[:, 0], :]
+    edge_b_2 = mesh_b.points[edges_b[:, 1], :]
 
-            # First edge entirely to left of other
-            if max((p1[0], p2[0])) < min((p3[0], p4[0])):
-                continue
+    a_grid, b_grid = np.mgrid[0:mesh_a.n_edges, 0:mesh_b.n_edges]
+    a_grid = a_grid.reshape(-1)
+    b_grid = b_grid.reshape(-1)
 
-            # First edge entirely below other
-            if max((p1[1], p2[1])) < min((p3[1], p4[1])):
-                continue
+    p1 = edge_a_1[a_grid, :]
+    p2 = edge_a_2[a_grid, :]
+    p3 = edge_b_1[b_grid, :]
+    p4 = edge_b_2[b_grid, :]
 
-            # First edge entirely to right of other
-            if min((p1[0], p2[0])) > max((p3[0], p4[0])):
-                continue
+    #
+    # Solve the equations
+    #
+    #    z_a1 + s delta_z_a = z_b1 + t delta_z_b
+    #
+    # for z = (x, y)
+    #
 
-            # First edge entirely above other
-            if min((p1[1], p2[1])) > max((p3[1], p4[1])):
-                continue
+    start_point_diff = p1 - p3
 
-            #
-            # Parametric description of intersection in terms of position along lines
-            #
-            # Simultaneous eqns (to reflect current wiki notation)
-            # s(x2 - x1) - t(x4 - x3) = x3 - x1
-            # s(y2 - y1) - t(y4 - y3) = y3 - y1
-            #
-            # in matrix form:
-            # m.(s,t) = v
-            #
+    delta1 = p2 - p1
+    delta3 = p4 - p3
 
+    deltas = np.concatenate(([-delta1], [delta3]), axis=0)
+    deltas = np.moveaxis(deltas, 0, 2)
 
-            m = np.array([
-                [p2[0] - p1[0], p3[0] - p4[0]],
-                [p2[1] - p1[1], p3[1] - p4[1]]])
+    st = np.linalg.solve(deltas, start_point_diff)
 
-            v = np.array([p3[0] - p1[0], p3[1] - p1[1]])
+    # Find the points where s and t are in (0, 1)
 
-            if np.linalg.det(m) == 0:
-                # Lines don't intersect, or are colinear in a way that doesn't matter
-                continue
+    intersection_inds = np.logical_and(
+        np.logical_and(0 < st[:, 0], st[:, 0] < 1),
+        np.logical_and(0 < st[:, 1], st[:, 1] < 1))
 
-            st = np.linalg.solve(m, v)
+    start_points_for_intersections = p1[intersection_inds, :]
+    deltas_for_intersections = delta1[intersection_inds, :]
 
-            # As the purpose of this is finding new points for the merged mesh, we don't
-            # want new points if they are right at the end of the lines, hence non-strict
-            # inequalities here
-            if np.any(st <= 0) or np.any(st >= 1):
-                # Exclude intection points, that are not on the *segments*
-                continue
-
-            x = p1[0] + (p2[0] - p1[0])*st[0]
-            y = p1[1] + (p2[1] - p1[1])*st[0]
-
-            new_x.append(x)
-            new_y.append(y)
-
+    points_to_add = start_points_for_intersections + st[intersection_inds, 0].reshape(-1,1) * deltas_for_intersections
 
     t1 = time.time()
     print("Edge intersections:", t1 - t0)
@@ -102,7 +86,7 @@ def meshmerge(mesh_a: Mesh, mesh_b: Mesh) -> tuple[Mesh, np.ndarray, np.ndarray]
     points = np.concatenate((
                 mesh_a.points,
                 mesh_b.points,
-                np.array((new_x, new_y)).T
+                points_to_add
                 ))
 
 
