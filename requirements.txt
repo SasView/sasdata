@@ -4,6 +4,7 @@ lxml
 
 # Calculation
 numpy
+scipy
 
 # Unit testing
 pytest
@@ -12,3 +13,6 @@ unittest-xml-reporting
 # Documentation (future)
 sphinx
 html5lib
+
+# Other stuff
+matplotlib
