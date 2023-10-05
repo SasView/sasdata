@@ -24,6 +24,7 @@ def voronoi_mesh(x, y, debug_plot=False) -> Mesh:
     #       2) the bounding box of the grid
     #
 
+
     # Use the median area of finite voronoi cells as an estimate
     voronoi = Voronoi(input_data)
     finite_cells = [region for region in voronoi.regions if -1 not in region and len(region) > 0]
@@ -37,8 +38,8 @@ def voronoi_mesh(x, y, debug_plot=False) -> Mesh:
     x_max, y_max = np.max(input_data, axis=0)
 
     # Create a border
-    n_x = np.round((x_max - x_min)/gap).astype(int)
-    n_y = np.round((y_max - y_min)/gap).astype(int)
+    n_x = int(np.round((x_max - x_min)/gap))
+    n_y = int(np.round((y_max - y_min)/gap))
 
     top_bottom_xs = np.linspace(x_min - gap, x_max + gap, n_x + 3)
     left_right_ys = np.linspace(y_min, y_max, n_y + 1)
