@@ -18,20 +18,16 @@ class CacheData:
     merged_mesh_data: tuple[Mesh, np.ndarray, np.ndarray] # mesh information about the merging
 
 
-class Rebinner():
+class Rebinner(ABC):
 
 
-    def __init__(self, order):
+    def __init__(self):
         """ Base class for rebinning methods"""
 
-        self._order = order
         self._bin_mesh_cache: Optional[Mesh] = None # cached version of the output bin mesh
 
         # Output dependent caching
         self._input_cache: Optional[CacheData] = None
-
-        if order not in self.allowable_orders:
-            raise ValueError(f"Expected order to be in {self.allowable_orders}, got {order}")
 
 
     @abstractmethod
@@ -60,17 +56,22 @@ class Rebinner():
         # Default is to do nothing, override if needed
         return coordinates, values
 
-    def _do_binning(self, data):
-        """ Main binning algorithm """
-
-    def _calculate(self, input_coordinates: np.ndarray, input_data: np.ndarray) -> np.ndarray:
+    def _calculate(self, input_coordinates: np.ndarray, input_data: np.ndarray, order: int) -> np.ndarray:
         """ Main calculation """
 
-        if self._order == -1:
+        if order == -1:
             # Construct the input output mapping just based on input points being the output cells,
             # Equivalent to the original binning method
 
-            pass
+            mesh = self.bin_mesh
+            bin_identities = mesh.locate_points(input_coordinates[:,0], input_coordinates[:, 1])
+            output_data = np.zeros(mesh.n_cells, dtype=float)
+
+            for index, bin in enumerate(bin_identities):
+                if bin >= 0:
+                    output_data[bin] += input_data[index]
+
+            return output_data
 
         else:
             # Use a mapping based on meshes
@@ -87,7 +88,7 @@ class Rebinner():
             else:
                 # Calculate mesh data
                 input_coordinate_mesh = voronoi_mesh(input_coordinates[:,0], input_coordinates[:, 1])
-                self._data_mesh_cahce = input_coordinate_mesh
+                self._data_mesh_cache = input_coordinate_mesh
 
                 merge_data = meshmerge(self.bin_mesh, input_coordinate_mesh)
 
@@ -101,7 +102,7 @@ class Rebinner():
 
             # Calculate values according to the order parameter
             t0 = time.time()
-            if self._order == 0:
+            if order == 0:
                 # Based on the overlap of cells only
 
                 input_areas = input_coordinate_mesh.areas
@@ -118,7 +119,7 @@ class Rebinner():
 
                 return output
 
-            elif self._order == 1:
+            elif order == 1:
                 # Linear interpolation requires the following relationship with the data,
                 # as the input data is the total over the whole input cell, the linear
                 # interpolation requires continuity at the vertices, and a constraint on the
@@ -130,11 +131,11 @@ class Rebinner():
                 raise NotImplementedError("1st order (linear) interpolation currently not implemented")
 
             else:
-                raise ValueError(f"Expected order to be in {self.allowable_orders}, got {self._order}")
+                raise ValueError(f"Expected order to be in {self.allowable_orders}, got {order}")
 
-    def sum(self, x: np.ndarray, y: np.ndarray, data: np.ndarray) -> np.ndarray:
+    def sum(self, x: np.ndarray, y: np.ndarray, data: np.ndarray, order: int = 0) -> np.ndarray:
         """ Return the summed data in the output bins """
-        return self._calculate(np.array((x.reshape(-1), y.reshape(-1))).T, data)
+        return self._calculate(np.array((x.reshape(-1), y.reshape(-1))).T, data.reshape(-1), order)
 
     def error_propagate(self, input_coordinates: np.ndarray, data: np.ndarray, errors) -> np.ndarray:
         raise NotImplementedError("Error propagation not implemented yet")
@@ -142,7 +143,7 @@ class Rebinner():
     def resolution_propagate(self, input_coordinates: np.ndarray, data: np.ndarray, errors) -> np.ndarray:
         raise NotImplementedError("Resolution propagation not implemented yet")
 
-    def average(self, x: np.ndarray, y: np.ndarray, data: np.ndarray) -> np.ndarray:
+    def average(self, x: np.ndarray, y: np.ndarray, data: np.ndarray, order: int = 0) -> np.ndarray:
         """ Return the averaged data in the output bins """
-        return self._calculate(np.array((x, y)).T, data) / self.bin_mesh.areas
+        return self._calculate(np.array((x, y)).T, data.reshape(-1), order) / self.bin_mesh.areas
 
