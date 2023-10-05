@@ -5,8 +5,8 @@ from sasdata.data_util.slicing.meshes.mesh import Mesh
 
 class AnularSector(Rebinner):
     """ A single annular sector (wedge sum)"""
-    def __init__(self, q0: float, q1: float, phi0: float, phi1: float, order: int=1, points_per_degree: int=2):
-        super().__init__(order)
+    def __init__(self, q0: float, q1: float, phi0: float, phi1: float, points_per_degree: int=2):
+        super().__init__()
 
         self.q0 = q0
         self.q1 = q1
@@ -17,7 +17,7 @@ class AnularSector(Rebinner):
 
     def _bin_mesh(self) -> Mesh:
 
-        n_points = int(1 + 180*self.points_per_degree*(self.phi1 - self.phi0) / np.pi)
+        n_points = np.max([int(1 + 180*self.points_per_degree*(self.phi1 - self.phi0) / np.pi), 2])
 
         angles = np.linspace(self.phi0, self.phi1, n_points)
 
