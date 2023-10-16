@@ -14,7 +14,7 @@ jobs:
     strategy:
       matrix:
         os: [macos-latest, ubuntu-latest, windows-latest]
-        python-version: ['3.8', '3.9', '3.10']
+        python-version: ['3.9', '3.10', '3.11']
       fail-fast: false
 
     steps:
@@ -31,12 +31,12 @@ jobs:
     - name: Get pip cache dir
       id: pip-cache
       run: |
-        echo "::set-output name=dir::$(pip cache dir)"
+        echo "name={$(pip cache dir)}" >> $GITHUB_OUTPUT
 
     - name: Obtain pip cache (Linux)
       uses: actions/cache@v2
       with:
-        path: ${{ steps.pip-cache.outputs.dir }}
+        path: ${{ steps.pip-cache.outputs.name }}
         key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/test.yml') }}
         restore-keys: |
           ${{ runner.os }}-pip-${{ matrix.python-version }}-
