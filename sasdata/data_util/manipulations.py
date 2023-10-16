@@ -22,9 +22,13 @@ PYTHONPATH=../src/ python2  -m sasdataloader.test.utest_averaging DataInfoTests.
 import math
 
 import numpy as np
+from typing import Optional, Union
+from warnings import warn
 
 from sasdata.dataloader.data_info import Data1D, Data2D
 
+warn("sasdata.data_util.manipulations is deprecated and replaced by sasdata.data_util.averaging.",
+     DeprecationWarning, stacklevel=2)
 
 def position_and_wavelength_to_q(dx: float, dy: float, detector_distance: float, wavelength: float) -> float:
     """
