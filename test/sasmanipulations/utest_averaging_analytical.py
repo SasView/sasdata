@@ -1123,8 +1123,7 @@ class DirectionalAverageFunctionalityTests(unittest.TestCase):
         """
         Test that the bin width is calculated correctly.
         """
-        self.assertAlmostEqual(self.directional_average.bin_width,
-                               self.bin_width)
+        self.assertAlmostEqual(np.average(self.directional_average.bin_widths), self.bin_width)
 
     def test_get_bin_interval(self):
         """
