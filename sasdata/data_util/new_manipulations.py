@@ -1,40 +1,44 @@
 """
 This module contains various data processors used by Sasview's slicers.
 """
-
+from enum import StrEnum, auto
 import numpy as np
 
 from sasdata.dataloader.data_info import Data1D, Data2D
 
 
-def weights_for_interval(array, l_bound, u_bound, interval_type='half-open'):
-    """
-    Weight coordinate data by position relative to a specified interval.
+class IntervalType(StrEnum):
+    HALF_OPEN = auto()
+    CLOSED = auto()
 
-    :param array: the array for which the weights are calculated
-    :param l_bound: value defining the lower limit of the region of interest
-    :param u_bound: value defining the upper limit of the region of interest
-    :param interval_type: determines whether the value defined by u_bound is
-                          included within the interval.
+    def weights_for_interval(self, array, l_bound, u_bound):
+        """
+        Weight coordinate data by position relative to a specified interval.
 
-    If and when fractional binning is implemented (ask Lucas), this function
-    will be changed so that instead of outputting zeros and ones, it gives
-    fractional values instead. These will depend on how close the array value
-    is to being within the interval defined.
-    """
+        :param array: the array for which the weights are calculated
+        :param l_bound: value defining the lower limit of the region of interest
+        :param u_bound: value defining the upper limit of the region of interest
+        :param interval_type: determines whether the value defined by u_bound is
+                              included within the interval.
 
-    # Whether the endpoint should be included depends on circumstance.
-    # Half-open is used when binning the major axis (except for the final bin)
-    # and closed used for the minor axis and the final bin of the major axis.
-    if interval_type == 'half-open':
-        in_range = np.logical_and(l_bound <= array, array < u_bound)
-    elif interval_type == 'closed':
-        in_range = np.logical_and(l_bound <= array, array <= u_bound)
-    else:
-        msg = f"Unrecognised interval_type: {interval_type}"
-        raise ValueError(msg)
+        If and when fractional binning is implemented (ask Lucas), this function
+        will be changed so that instead of outputting zeros and ones, it gives
+        fractional values instead. These will depend on how close the array value
+        is to being within the interval defined.
+        """
 
-    return np.asarray(in_range, dtype=int)
+        # Whether the endpoint should be included depends on circumstance.
+        # Half-open is used when binning the major axis (except for the final bin)
+        # and closed used for the minor axis and the final bin of the major axis.
+        if self.name.lower() == 'half_open':
+            in_range = np.logical_and(l_bound <= array, array < u_bound)
+        elif self.name.lower() == 'closed':
+            in_range = np.logical_and(l_bound <= array, array <= u_bound)
+        else:
+            msg = f"Unrecognised interval_type: {self.name}"
+            raise ValueError(msg)
+
+        return np.asarray(in_range, dtype=int)
 
 
 class DirectionalAverage:
@@ -146,23 +150,22 @@ class DirectionalAverage:
         index.
         """
         major_weights = np.zeros((self.nbins, self.major_axis.size))
+        closed = IntervalType.CLOSED
         for m in range(self.nbins):
             # Include the value at the end of the binning range, but in
             # general use half-open intervals so each value belongs in only
             # one bin.
             if m == self.nbins - 1:
-                interval = 'closed'
+                interval = closed
             else:
-                interval = 'half-open'
+                interval = IntervalType.HALF_OPEN
             bin_start, bin_end = self.get_bin_interval(bin_number=m)
-            major_weights[m] = weights_for_interval(array=self.major_axis,
+            major_weights[m] = interval.weights_for_interval(array=self.major_axis,
                                                     l_bound=bin_start,
-                                                    u_bound=bin_end,
-                                                    interval_type=interval)
-        minor_weights = weights_for_interval(array=self.minor_axis,
+                                                    u_bound=bin_end)
+        minor_weights = closed.weights_for_interval(array=self.minor_axis,
                                              l_bound=self.minor_lims[0],
-                                             u_bound=self.minor_lims[1],
-                                             interval_type='closed')
+                                             u_bound=self.minor_lims[1])
         return major_weights * minor_weights
 
     def __call__(self, data, err_data):
@@ -355,14 +358,13 @@ class Boxsum(CartesianROI):
         """
 
         # Currently the weights are binary, but could be fractional in future
-        x_weights = weights_for_interval(array=self.qx_data,
+        interval = IntervalType.CLOSED
+        x_weights = interval.weights_for_interval(array=self.qx_data,
                                          l_bound=self.qx_min,
-                                         u_bound=self.qx_max,
-                                         interval_type='closed')
-        y_weights = weights_for_interval(array=self.qy_data,
+                                         u_bound=self.qx_max)
+        y_weights = interval.weights_for_interval(array=self.qy_data,
                                          l_bound=self.qy_min,
-                                         u_bound=self.qy_max,
-                                         interval_type='closed')
+                                         u_bound=self.qy_max)
         weights = x_weights * y_weights
 
         data = weights * self.data
