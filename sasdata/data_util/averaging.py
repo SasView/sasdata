@@ -1,13 +1,13 @@
 """
 This module contains various data processors used by Sasview's slicers.
 """
-from enum import StrEnum, auto
+from enum import Enum, auto
 import numpy as np
 
 from sasdata.dataloader.data_info import Data1D, Data2D
 
 
-class IntervalType(StrEnum):
+class IntervalType(Enum):
     HALF_OPEN = auto()
     CLOSED = auto()
 
