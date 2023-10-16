@@ -106,24 +106,33 @@ class DirectionalAverage:
         else:
             self.minor_lims = minor_lims
         self.nbins = nbins
+        # Assume a linear spacing for now, but allow for log, fibonacci, etc. implementations in the future
+        # Add one to bin because this is for the limits, not centroids.
+        self.bin_limits = np.linspace(self.major_lims[0], self.major_lims[1], self.nbins + 1)
 
     @property
-    def bin_width(self):
-        """
-        Return the bin width based on the range of the major axis and nbins
-        """
-        return (self.major_lims[1] - self.major_lims[0]) / self.nbins
+    def bin_widths(self) -> np.ndarray:
+        """Return a numpy array of all bin widths, regardless of the point spacings."""
+        return np.asarray([self.bin_width_n(i) for i in range(0, self.nbins)])
 
-    def get_bin_interval(self, bin_number):
+    def bin_width_n(self, bin_number: int) -> float:
+        """Calculate the bin width for the nth bin.
+        :param bin_number: The starting array index of the bin between 0 and self.nbins - 1.
+        :return: The bin width, as a float.
         """
-        Return the upper and lower limits defining a bin, given its index.
+        lower, upper = self.get_bin_interval(bin_number)
+        return upper - lower
+
+    def get_bin_interval(self, bin_number: int) -> (float, float):
+        """
+        Return the lower and upper limits defining a bin, given its index.
 
         :param bin_number: The index of the bin (between 0 and self.nbins - 1)
+        :return: A tuple of the interval limits as (lower, upper).
         """
-        bin_start = self.major_lims[0] + bin_number * self.bin_width
-        bin_end = self.major_lims[0] + (bin_number + 1) * self.bin_width
-
-        return bin_start, bin_end
+        # Ensure bin_number is an integer and not a float or a string representation
+        bin_number = int(bin_number)
+        return self.bin_limits[bin_number], self.bin_limits[bin_number+1]
 
     def get_bin_index(self, value):
         """
@@ -859,7 +868,7 @@ class WedgePhi(PolarROI):
 
         # Transform all angles to the range [0,2π) where phi_min is at zero,
         # eliminating errors when the ROI straddles the 2π -> 0 discontinuity.
-        # Remember to transform back afterwards as we're plotting against phi.
+        # Remember to transform back afterward as we're plotting against phi.
         phi_offset = self.phi_min
         self.phi_min = 0.0
         self.phi_max = (self.phi_max - phi_offset) % (2 * np.pi)
@@ -886,7 +895,8 @@ class WedgePhi(PolarROI):
         # In the old manipulations.py, we also had this shift to plot the data
         # at the centre of the bins. I'm not sure why it's only angular binning
         # which gets this treatment.
-        phi_data += directional_average.bin_width / 2
+        # TODO: Update this once non-linear binning options are implemented
+        phi_data += directional_average.bin_widths / 2
 
         return Data1D(x=phi_data, y=intensity, dy=error)
 
