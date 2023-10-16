@@ -11,10 +11,8 @@ import numpy as np
 from scipy import integrate
 
 from sasdata.dataloader import data_info
-from sasdata.data_util.new_manipulations import (SlabX, SlabY, Boxsum, Boxavg,
-                                                 CircularAverage, Ring,
-                                                 SectorQ, WedgeQ, WedgePhi,
-                                                 DirectionalAverage)
+from sasdata.data_util.averaging import (SlabX, SlabY, Boxsum, Boxavg, CircularAverage, Ring,
+                                         SectorQ, WedgeQ, WedgePhi, DirectionalAverage)
 
 
 class MatrixToData2D:
