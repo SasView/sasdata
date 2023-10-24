@@ -200,7 +200,7 @@ def get_dq_data(data2d: Data2D) -> np.array:
     Get the dq for resolution averaging
     The pinholes and det. pix contribution present
     in both direction of the 2D which must be subtracted when
-    converting to 1D: dq_overlap should calculated ideally at
+    converting to 1D: dq_overlap should be calculated ideally at
     q = 0. Note This method works on only pinhole geometry.
     Extrapolate dqx(r) and dqy(phi) at q = 0, and take an average.
     '''
