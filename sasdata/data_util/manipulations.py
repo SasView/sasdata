@@ -1,12 +1,11 @@
 """
 Data manipulations for 2D data sets.
-Using the meta data information, various types of averaging
-are performed in Q-space
+Using the meta data information, various types of averaging are performed in Q-space
 
 To test this module use:
 ```
 cd test
-PYTHONPATH=../src/ python2  -m sasdataloader.test.utest_averaging DataInfoTests.test_sectorphi_quarter
+PYTHONPATH=../src/ python2  -m sasmanipulations.test.utest_averaging DataInfoTests.test_sectorphi_quarter
 ```
 """
 #####################################################################
