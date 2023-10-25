@@ -944,8 +944,8 @@ class Ringcut(PolarROI):
         """
         super().validate_and_assign_data(data2D)
 
-        # Get data
-        q_data = np.sqrt(self.qx_data * self.qx_data + self.qy_data * self.qy_data)
+        # Calculate q_data using unmasked qx_data and qy_data
+        q_data = np.sqrt(data2D.qx_data * data2D.qx_data + data2D.qy_data * data2D.qy_data)
 
         # check whether each data point is inside ROI
         out = (self.r_min <= q_data) & (self.r_max >= q_data)
@@ -970,8 +970,8 @@ class Boxcut(CartesianROI):
         super().validate_and_assign_data(data2D)
 
         # check whether each data point is inside ROI
-        outx = (self.qx_min <= self.qx_data) & (self.qx_max > self.qx_data)
-        outy = (self.qy_min <= self.qy_data) & (self.qy_max > self.qy_data)
+        outx = (self.qx_min <= data2D.qx_data) & (self.qx_max > data2D.qx_data)
+        outy = (self.qy_min <= data2D.qy_data) & (self.qy_max > data2D.qy_data)
 
         return outx & outy
 
