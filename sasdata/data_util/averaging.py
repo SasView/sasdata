@@ -974,3 +974,52 @@ class Boxcut(CartesianROI):
         outy = (self.qy_min <= self.qy_data) & (self.qy_max > self.qy_data)
 
         return outx & outy
+
+
+class Sectorcut(PolarROI):
+    """
+    Defines a sector (major + minor) region on a 2D data set.
+    The sector is defined by phi_min, phi_max,
+    where phi_min and phi_max are defined by the right
+    and left lines wrt central line.
+
+    Phi_min and phi_max are given in units of radian
+    and (phi_max-phi_min) should not be larger than pi
+    """
+
+    def __init__(self, phi_min: float = 0.0, phi_max: float = np.pi):
+        super().__init__(0, np.inf, phi_min, phi_max)
+
+    def __call__(self, data2D: Data2D) -> np.ndarray[bool]:
+        """
+        Find a rectangular 2D region of interest where  data points inside the ROI are True, and False otherwise
+
+        :param data2D: Data2D object
+        :return: mask, 1d array (len = len(data))
+        """
+        super().validate_and_assign_data(data2D)
+
+        phi_offset = self.phi_min
+        self.phi_min = 0.0
+        self.phi_max = (self.phi_max - phi_offset) % (2 * np.pi)
+        self.phi_data = (self.phi_data - phi_offset) % (2 * np.pi)
+
+        phi_min_major, phi_max_major = (self.r_min, self.r_max)
+        phi_min_minor, phi_max_minor = (self.phi_min, self.phi_max)
+
+        if phi_min_major > phi_max_major:
+            out_major = (phi_min_major <= self.phi_data) + \
+                (phi_max_major > self.phi_data)
+        else:
+            out_major = (phi_min_major <= self.phi_data) & (
+                phi_max_major > self.phi_data)
+
+        if phi_min_minor > phi_max_minor:
+            out_minor = (phi_min_minor <= self.phi_data) + \
+                (phi_max_minor >= self.phi_data)
+        else:
+            out_minor = (phi_min_minor <= self.phi_data) & \
+                (phi_max_minor >= self.phi_data)
+        out = out_major & out_minor
+
+        return out
