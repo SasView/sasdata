@@ -915,3 +915,38 @@ class SectorPhi(WedgePhi):
     # use through WedgeSlicer.py, so the rewritten version of this class has
     # been named WedgePhi.
 
+################################################################################
+
+
+class Ringcut(PolarROI):
+    """
+    Defines a ring on a 2D data set.
+    The ring is defined by r_min, r_max, and
+    the position of the center of the ring.
+
+    The data returned is the region inside the ring
+
+    Phi_min and phi_max should be defined between 0 and 2*pi
+    in anti-clockwise starting from the x- axis on the left-hand side
+    """
+
+    def __init__(self, r_min: float = 0.0, r_max: float = 0.0, phi_min: float = 0.0, phi_max: float = 2*np.pi):
+        super().__init__(r_min, r_max, phi_min, phi_max)
+
+    def __call__(self, data2D: Data2D) -> np.ndarray[bool]:
+        """
+        Apply the ring to the data set.
+        Returns the angular distribution for a given q range
+
+        :param data2D: Data2D object
+
+        :return: index array in the range
+        """
+        super().validate_and_assign_data(data2D)
+
+        # Get data
+        q_data = np.sqrt(self.qx_data * self.qx_data + self.qy_data * self.qy_data)
+
+        # check whether each data point is inside ROI
+        out = (self.r_min <= q_data) & (self.r_max >= q_data)
+        return out
