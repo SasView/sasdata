@@ -27,8 +27,9 @@ from warnings import warn
 
 from sasdata.dataloader.data_info import Data1D, Data2D
 
-warn("sasdata.data_util.manipulations is deprecated and replaced by sasdata.data_util.averaging.",
-     DeprecationWarning, stacklevel=2)
+warn("sasdata.data_util.manipulations is deprecated. Unless otherwise noted, update your import to "
+     "sasdata.data_util.averaging.", DeprecationWarning, stacklevel=2)
+
 
 def position_and_wavelength_to_q(dx: float, dy: float, detector_distance: float, wavelength: float) -> float:
     """
@@ -249,6 +250,8 @@ def reader2D_converter(data2d: Optional[Data2D] = None) -> Data2D:
     :return: 1d arrays of Data2D object
 
     """
+    warn("reader2D_converter should be imported in the future sasdata.dataloader.data_info.",
+         DeprecationWarning, stacklevel=2)
     if data2d.data is None or data2d.x_bins is None or data2d.y_bins is None:
         raise ValueError("Can't convert this data: data=None...")
     new_x = np.tile(data2d.x_bins, (len(data2d.y_bins), 1))
