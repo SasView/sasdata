@@ -950,3 +950,27 @@ class Ringcut(PolarROI):
         # check whether each data point is inside ROI
         out = (self.r_min <= q_data) & (self.r_max >= q_data)
         return out
+
+
+class Boxcut(CartesianROI):
+    """
+    Find a rectangular 2D region of interest.
+    """
+
+    def __init__(self, x_min: float = 0.0, x_max: float = 0.0, y_min: float = 0.0, y_max: float = 0.0):
+        super().__init__(x_min, x_max, y_min, y_max)
+
+    def __call__(self, data2D: Data2D) -> np.ndarray[bool]:
+        """
+       Find a rectangular 2D region of interest where  data points inside the ROI are True, and False otherwise
+
+       :param data2D: Data2D object
+       :return: mask, 1d array (len = len(data))
+        """
+        super().validate_and_assign_data(data2D)
+
+        # check whether each data point is inside ROI
+        outx = (self.qx_min <= self.qx_data) & (self.qx_max > self.qx_data)
+        outy = (self.qy_min <= self.qy_data) & (self.qy_max > self.qy_data)
+
+        return outx & outy
