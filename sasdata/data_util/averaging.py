@@ -999,27 +999,27 @@ class Sectorcut(PolarROI):
         """
         super().validate_and_assign_data(data2D)
 
+        # Ensure unmasked data is used for the phi_data calculation to ensure data sizes match
+        self.phi_data = np.arctan2(data2D.qy_data, data2D.qx_data)
+        # Calculate q_data using unmasked qx_data and qy_data to ensure data sizes match
+        q_data = np.sqrt(data2D.qx_data * data2D.qx_data + data2D.qy_data * data2D.qy_data)
+
         phi_offset = self.phi_min
         self.phi_min = 0.0
         self.phi_max = (self.phi_max - phi_offset) % (2 * np.pi)
         self.phi_data = (self.phi_data - phi_offset) % (2 * np.pi)
+        phi_shifted = self.phi_data - np.pi
 
-        phi_min_major, phi_max_major = (self.r_min, self.r_max)
-        phi_min_minor, phi_max_minor = (self.phi_min, self.phi_max)
+        # Determine angular bounds for both upper and lower half of image
+        phi_min_angle, phi_max_angle = (self.phi_min, self.phi_max)
 
-        if phi_min_major > phi_max_major:
-            out_major = (phi_min_major <= self.phi_data) + \
-                (phi_max_major > self.phi_data)
-        else:
-            out_major = (phi_min_major <= self.phi_data) & (
-                phi_max_major > self.phi_data)
+        # Determine regions of interest
+        out_radial = (self.r_min <= q_data) & (self.r_max > q_data)
+        out_upper = (phi_min_angle <= self.phi_data) & (phi_max_angle >= self.phi_data)
+        out_lower = (phi_min_angle <= phi_shifted) & (phi_max_angle >= phi_shifted)
 
-        if phi_min_minor > phi_max_minor:
-            out_minor = (phi_min_minor <= self.phi_data) + \
-                (phi_max_minor >= self.phi_data)
-        else:
-            out_minor = (phi_min_minor <= self.phi_data) & \
-                (phi_max_minor >= self.phi_data)
-        out = out_major & out_minor
+        upper_roi = out_radial & out_upper
+        lower_roi = out_radial & out_lower
+        out = upper_roi | lower_roi
 
         return out
