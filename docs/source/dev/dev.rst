@@ -6,4 +6,6 @@ Developer Documentation
 =======================
 
 .. toctree::
-    SasData <generated/sasdata>
+    :maxdepth: 1
+
+    SasData <generated/modules>

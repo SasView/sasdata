@@ -2,8 +2,13 @@
 
 # -- Project information ----------------------------------------------------
 import datetime
+import os
 
 from sasdata import __version__ as sasdata_version
+
+if os.path.exists('rst_prolog'):
+    with open('rst_prolog') as fid:
+        rst_prolog = fid.read()
 
 # General information about the project.
 year = datetime.datetime.now().year

@@ -3,7 +3,7 @@
 .. _Importing_data:
 
 Importing data
-============
+==============
 
 The `Loader()` class is directly callable so a transient call can be made to the class or, for cases where repeated calls
 are necessary, the `Loader()` instance can be assigned to a python variable.

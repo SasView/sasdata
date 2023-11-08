@@ -3,7 +3,7 @@
 .. _Exporting_data:
 
 Exporting data
-============
+==============
 
 The `Loader().save()` method accepts 3 arguments; `path`, which is the file path to save the file into, `data`, which is the
 `Data1D` or `Data2D` object, and, optionally, `ext`, a file extension. If an extension is passed to `save`, any file extension
