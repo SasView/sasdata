@@ -69,9 +69,9 @@ jobs:
     - name: Build sasdata docs (Ubuntu only)
       if: matrix.os == 'ubuntu-latest'
       run: |
-        mkdir -p build/lib
-        sphinx-apidoc -o docs/source/dev/generated/ -d 8 -H SasData build/lib
-        sphinx-build -M html docs/source/ docs/build/
+        cd docs
+        make html
+        cd ..
 
     - name: Test with pytest
       run: |
