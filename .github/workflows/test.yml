@@ -69,9 +69,7 @@ jobs:
     - name: Build sasdata docs (Ubuntu only)
       if: matrix.os == 'ubuntu-latest'
       run: |
-        cd docs
-        make html
-        cd ..
+        make -C docs html
 
     - name: Test with pytest
       run: |
