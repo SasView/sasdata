@@ -4,6 +4,9 @@ This module contains various data processors used by Sasview's slicers.
 from enum import Enum, auto
 import numpy as np
 
+from numpy.typing import ArrayLike
+from typing import Optional
+
 from sasdata.dataloader.data_info import Data1D, Data2D
 
 
@@ -18,8 +21,6 @@ class IntervalType(Enum):
         :param array: the array for which the weights are calculated
         :param l_bound: value defining the lower limit of the region of interest
         :param u_bound: value defining the upper limit of the region of interest
-        :param interval_type: determines whether the value defined by u_bound is
-                              included within the interval.
 
         If and when fractional binning is implemented (ask Lucas), this function
         will be changed so that instead of outputting zeros and ones, it gives
@@ -63,8 +64,12 @@ class DirectionalAverage:
     upon by SasView however, so I haven't implemented it here (yet).
     """
 
-    def __init__(self, major_axis=None, minor_axis=None, major_lims=None,
-                 minor_lims=None, nbins=100):
+    def __init__(self,
+                 major_axis: ArrayLike,
+                 minor_axis: ArrayLike,
+                 major_lims: Optional[tuple[float, float]]=None,
+                 minor_lims: Optional[tuple[float, float]]=None,
+                 nbins: int=100):
         """
         Set up direction of averaging, limits on the ROI, & the number of bins.
 
@@ -78,14 +83,17 @@ class DirectionalAverage:
                            axis. Given as a 2 element tuple/list.
         :param nbins: The number of bins the major axis is divided up into.
         """
-        if any(not isinstance(coordinate_data, (list, np.ndarray)) for
+
+        if any(not hasattr(coordinate_data, "__array__") for
                coordinate_data in (major_axis, minor_axis)):
             msg = "Must provide major & minor coordinate arrays for binning."
             raise ValueError(msg)
+
         if any(lims is not None and len(lims) != 2 for
                lims in (major_lims, minor_lims)):
             msg = "Limits arrays must have 2 elements or be NoneType"
             raise ValueError(msg)
+
         if not isinstance(nbins, int):
             msg = "Parameter 'nbins' must be an integer"
             raise TypeError(msg)
@@ -677,6 +685,7 @@ class SectorQ(PolarROI):
         """
         super().__init__(r_min=r_min, r_max=r_max,
                          phi_min=phi_min, phi_max=phi_max)
+        
         self.nbins = nbins
         self.fold = fold
 
