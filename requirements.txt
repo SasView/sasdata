@@ -10,9 +10,8 @@ scipy
 pytest
 unittest-xml-reporting
 
-# Documentation (future)
+# Documentation
 sphinx
-html5lib
 
 # Other stuff
 matplotlib
