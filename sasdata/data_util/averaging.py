@@ -67,9 +67,9 @@ class DirectionalAverage:
     def __init__(self,
                  major_axis: ArrayLike,
                  minor_axis: ArrayLike,
-                 major_lims: Optional[tuple[float, float]]=None,
-                 minor_lims: Optional[tuple[float, float]]=None,
-                 nbins: int=100):
+                 major_lims: Optional[tuple[float, float]] = None,
+                 minor_lims: Optional[tuple[float, float]] = None,
+                 nbins: int = 100):
         """
         Set up direction of averaging, limits on the ROI, & the number of bins.
 
@@ -95,8 +95,12 @@ class DirectionalAverage:
             raise ValueError(msg)
 
         if not isinstance(nbins, int):
-            msg = "Parameter 'nbins' must be an integer"
-            raise TypeError(msg)
+            # TODO: Make classes that depend on this provide ints, its quite a thing to fix though
+            try:
+                nbins = int(nbins)
+            except:
+                msg = f"Parameter 'nbins' must should be convertable to an integer via int(), got type {type(nbins)} (={nbins})"
+                raise TypeError(msg)
 
         self.major_axis = np.asarray(major_axis)
         self.minor_axis = np.asarray(minor_axis)
@@ -685,7 +689,7 @@ class SectorQ(PolarROI):
         """
         super().__init__(r_min=r_min, r_max=r_max,
                          phi_min=phi_min, phi_max=phi_max)
-        
+
         self.nbins = nbins
         self.fold = fold
 
