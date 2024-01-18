@@ -3,22 +3,23 @@
 Test Data
 =========
 
-Test data sets are included as a convenience to our users. Look in the \test 
+Test data sets are included as a convenience to our users. Look in the \\example_data 
 sub-folder in your SasView installation folder.
 
-The test data sets are organized based on their data structure:
+The test data sets are organized based on their data structure & purpose:
 
 - *1D data*
-- *convertible 1D data*
 - *2D data*
-- *coordinate data*
-- *image data*
-- *SESANS data*
+- *convertible data* (as used by the File Converter tool)
+- *coordinate data* (as used by the Generic Scattering Calculator tool)
 - *DLS data*
+- *image data* (as used by the Image Viewer tool)
+- *magnetic data* (from polarised SANS)
 - *NR data*
+- *SESANS data*
+- *other formats*
 - *save states*
-- *upcoming formats*
-- *other test data*
+- *other test data* (such as distribution weights files)
 
 .. ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
 
@@ -131,41 +132,6 @@ VTMA
 
 .. ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
 
-Convertible 1D Data
-^^^^^^^^^^^^^^^^^^^
-**Example data files are located in the \\convertible_files sub-folder.**
-
-APS_X / APS_Y
-  - ASCII format 1D SAXS data output by a reduction software package at the APS.
-  - Suitable for testing the :ref:`File_Converter_Tool` .
-
-FIT2D_I / FIT2D_Q
-  - ASCII format 1D SAXS data output by the FIT2D software package at the ESRF.
-  - Suitable for testing the :ref:`File_Converter_Tool` .
-
-Z8300*.I1D / Z8300*.QAX / Z9800*.I1D / Z9800*.QAX
-  - Binary BSL/OTOKO format 1D TOF-SANS data from polyamide-6 fibres hydrated
-    in D2O collected on the LOQ instrument at ISIS. The data exhibit a broad
-    lamellar peak from the semi-crystalline nanostructure.
-  - This is the *same data* as that in ISIS_83404 / ISIS_98929 (see `1D Data`_)
-    but in a historical separated format developed at the SRS Daresbury!
-  - Suitable for testing the :ref:`File_Converter_Tool` .
-  - Suitable for testing :ref:`Correlation_Function_Analysis` after conversion.
-
-LMOG_100254_merged_ISIS2D
-  - ASCII format TOF-SANS data from low-molecular weight organo-gelator system
-    collected on the LOQ instrument at ISIS.
-  - The data are written in the historical COLETTE (or RKH) 2D format.
-  - Suitable for testing the :ref:`File_Converter_Tool` .
-
-YBCO_12685__ISIS2D
-  - ASCII format TOF-SANS data from a Nb/YBaCuO superconductor sample collected
-    on the SANS2D instrument at ISIS.
-  - The data are written in the historical COLETTE (or RKH) 2D format.
-  - Suitable for testing the :ref:`File_Converter_Tool` .
-
-.. ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
-
 2D Data
 ^^^^^^^
 2D data sets are data sets that give the reduced intensity for a given *Qx-Qy* bin.
@@ -207,6 +173,41 @@ P123_D2O
 SILIC010
   - SANS data from a 2% dispersion of silica nanoparticles in D2O collected at ORNL.
   - The data are written in the NIST 2D format.
+
+.. ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
+
+Convertible Data
+^^^^^^^^^^^^^^^^
+**Example data files are located in the \\convertible_files sub-folder.**
+
+APS_X / APS_Y
+  - ASCII format 1D SAXS data output by a reduction software package at the APS.
+  - Suitable for testing the :ref:`File_Converter_Tool` .
+
+FIT2D_I / FIT2D_Q
+  - ASCII format 1D SAXS data output by the FIT2D software package at the ESRF.
+  - Suitable for testing the :ref:`File_Converter_Tool` .
+
+Z8300*.I1D / Z8300*.QAX / Z9800*.I1D / Z9800*.QAX
+  - Binary BSL/OTOKO format 1D TOF-SANS data from polyamide-6 fibres hydrated
+    in D2O collected on the LOQ instrument at ISIS. The data exhibit a broad
+    lamellar peak from the semi-crystalline nanostructure.
+  - This is the *same data* as that in ISIS_83404 / ISIS_98929 (see `1D Data`_)
+    but in a historical separated format developed at the SRS Daresbury!
+  - Suitable for testing the :ref:`File_Converter_Tool` .
+  - Suitable for testing :ref:`Correlation_Function_Analysis` after conversion.
+
+LMOG_100254_merged_ISIS2D
+  - ASCII format TOF-SANS data from low-molecular weight organo-gelator system
+    collected on the LOQ instrument at ISIS.
+  - The data are written in the historical COLETTE (or RKH) 2D format.
+  - Suitable for testing the :ref:`File_Converter_Tool` .
+
+YBCO_12685__ISIS2D
+  - ASCII format TOF-SANS data from a Nb/YBaCuO superconductor sample collected
+    on the SANS2D instrument at ISIS.
+  - The data are written in the historical COLETTE (or RKH) 2D format.
+  - Suitable for testing the :ref:`File_Converter_Tool` .
 
 .. ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
 
@@ -252,6 +253,22 @@ mag_cylinder
 
 .. ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
 
+DLS Data
+^^^^^^^^
+DLS (Dynamic Light Scattering) data sets primarily contain the intensity
+autocorrelation function as a function of the delay time (in microseconds).
+
+DLS Test Data
+................
+**Example data files are located in the \\dls_data sub-folder.**
+
+dls_monodisperse / dls_polydisperse
+  - DLS data from a very dilute dispersion of 3 nm polymer latex nanoparticles in
+    h/d-water.
+  - Suitable for testing the cumulants_dls model.
+
+.. ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
+
 Image Data
 ^^^^^^^^^^
 Image data sets are designed to be read by the :ref:`Image_Viewer_Tool` .
@@ -268,6 +285,32 @@ ISIS_98940
     gives rise to an anisotropic 2D scattering pattern.
   - The image data is presented in Windows Bitmap (.bmp), GIF (.gif), JPEG (.jpg),
     Portable Network Grpahics (.png), and TIFF (.tif) formats.
+
+.. ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
+
+Magnetic Data
+^^^^^^^^^^^^^
+
+Magnetic Test Data
+..................
+**Example data files are located in the \\magnetic_data sub-folder.**
+
+.. ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
+
+NR Data
+^^^^^^^
+Neutron (NR) or X-ray (XR) Reflectometry data sets primarily contain the
+interfacial reflectivity as a function of *Q*.
+
+.. note:: The Refl1D reflectivity model-fitting software uses the same fitting
+         engine (Bumps) as SasView.
+
+NR Test Data
+................
+**Example data files are located in the \\nr_data sub-folder.**
+
+NR_Ni_down_state / NR_Ni_up_state
+  - Polarised (spin down/up) NR data from a Ni multilayer sample.
 
 .. ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
 
@@ -294,39 +337,6 @@ spheres2micron
 spheres2micron_long
   - SESANS data from 2 micron polystyrene spheres in 53% H2O / 47% D2O collected
     on the LARMOR instrument at ISIS over spin-echo lengths 400 < *z* < 200000 |Ang| .
-
-.. ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
-
-DLS Data
-^^^^^^^^
-DLS (Dynamic Light Scattering) data sets primarily contain the intensity
-autocorrelation function as a function of the delay time (in microseconds).
-
-DLS Test Data
-................
-**Example data files are located in the \\dls_data sub-folder.**
-
-dls_monodisperse / dls_polydisperse
-  - DLS data from a very dilute dispersion of 3 nm polymer latex nanoparticles in
-    h/d-water.
-  - Suitable for testing the cumulants_dls model.
-
-.. ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
-
-NR Data
-^^^^^^^
-Neutron (NR) or X-ray (XR) Reflectometry data sets primarily contain the
-interfacial reflectivity as a function of *Q*.
-
-.. note:: The Refl1D reflectivity model-fitting software uses the same fitting
-         engine (Bumps) as SasView.
-
-NR Test Data
-................
-**Example data files are located in the \\nr_data sub-folder.**
-
-NR_Ni_down_state / NR_Ni_up_state
-  - Polarised (spin down/up) NR data from a Ni multilayer sample.
 
 .. ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
 
@@ -376,8 +386,8 @@ project_new_style
 
 .. ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
 
-Upcoming Formats
-^^^^^^^^^^^^^^^^
+Other Formats
+^^^^^^^^^^^^^
 Data in this folder are in formats that are not yet implemented in SasView but
 which might be in future versions of the program.
 
@@ -385,6 +395,12 @@ which might be in future versions of the program.
   - CanSAS 1D format data from 1000 |Ang| spheres.
   - This version of the format was written by the NIST IGOR reduction software
     (cf. similar xml data in the `1D Data`_ folder).
+
+.. ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
+
+Save States
+^^^^^^^^^^^
+
 
 .. ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
 
@@ -406,4 +422,4 @@ THETA_weights.txt
 
 .. ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
 
-.. note::  This help document was last changed by Steve King, 26Oct2021
+.. note::  This help document was last changed by Steve King, 18Jan2024
