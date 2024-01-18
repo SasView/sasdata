@@ -100,7 +100,7 @@ ISIS_83404 / ISIS_98929
     instrument at ISIS. The data exhibit a broad lamellar peak from the semi-
     crystalline nanostructure.
   - This is the *same data* as that in the BSL/OTOKO Z8300* / Z9800* convertible
-    files (see `Convertible 1D Data`_) but in an amalgamated format!
+    files (see `Convertible Data`_) but in an amalgamated format!
   - Suitable for testing :ref:`Correlation_Function_Analysis` .
 
 ISIS_Polymer_Blend_RT2
