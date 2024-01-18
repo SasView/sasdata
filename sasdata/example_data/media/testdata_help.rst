@@ -194,10 +194,13 @@ FIT2D_I / FIT2D_Q
   - ASCII format 1D SAXS data output by the FIT2D software package at the ESRF.
   - Suitable for testing the :ref:`File_Converter_Tool` .
 
+<<<<<<< HEAD
 X25000.L2D
   - Binary BSL/OTOKO format 2D TOF-SANS data collected on the LOQ instrument at ISIS.
   - Suitable for testing the :ref:`File_Converter_Tool` .
 
+=======
+>>>>>>> af82cd7e6ff5a4572741c2113da8f62cfb1df764
 Z8300*.I1D / Z8300*.QAX / Z9800*.I1D / Z9800*.QAX
   - Binary BSL/OTOKO format 1D TOF-SANS data from polyamide-6 fibres hydrated
     in D2O collected on the LOQ instrument at ISIS. The data exhibit a broad
@@ -279,6 +282,22 @@ dls_monodisperse / dls_polydisperse
 
 .. ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
 
+DLS Data
+^^^^^^^^
+DLS (Dynamic Light Scattering) data sets primarily contain the intensity
+autocorrelation function as a function of the delay time (in microseconds).
+
+DLS Test Data
+................
+**Example data files are located in the \\dls_data sub-folder.**
+
+dls_monodisperse / dls_polydisperse
+  - DLS data from a very dilute dispersion of 3 nm polymer latex nanoparticles in
+    h/d-water.
+  - Suitable for testing the cumulants_dls model.
+
+.. ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
+
 Image Data
 ^^^^^^^^^^
 Image data sets are designed to be read by the :ref:`Image_Viewer_Tool` .
@@ -300,17 +319,23 @@ ISIS_98940
 
 Magnetic Data
 ^^^^^^^^^^^^^
+<<<<<<< HEAD
 Polarised SANS data.
+=======
+>>>>>>> af82cd7e6ff5a4572741c2113da8f62cfb1df764
 
 Magnetic Test Data
 ..................
 **Example data files are located in the \\magnetic_data sub-folder.**
 
+<<<<<<< HEAD
 S50
   - 2D and 1D sector data from 10 nm nanospheres in d8-toluene (c_Fe2O3 = 50 mg/ml,
     ~1 vol%) at an aligning magnetic field of 1.5 T in horizontal direction.
   - See `10.1088/1367-2630/14/1/013025 <https://dx.doi.org/10.1088/1367-2630/14/1/013025>`_
 
+=======
+>>>>>>> af82cd7e6ff5a4572741c2113da8f62cfb1df764
 .. ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
 
 NR Data
@@ -406,14 +431,25 @@ test002.inv
 
 Other Formats
 ^^^^^^^^^^^^^
+<<<<<<< HEAD
 Data in the \\other_formats folder are in alternative varaiations of formats used
 by SasView, or formats that are not yet implemented but which might be in future
 versions of the program.
+=======
+Data in this folder are in formats that are not yet implemented in SasView but
+which might be in future versions of the program.
+>>>>>>> af82cd7e6ff5a4572741c2113da8f62cfb1df764
 
 1000A_sphere_sm
   - CanSAS 1D format data from 1000 |Ang| spheres.
   - This version of the format was written by the NIST IGOR reduction software
     (cf. similar xml data in the `1D Data`_ folder).
+
+.. ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
+
+Save States
+^^^^^^^^^^^
+
 
 .. ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
 
