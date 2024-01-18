@@ -21,6 +21,8 @@ The test data sets are organized based on their data structure & purpose:
 - *save states*
 - *other test data* (such as distribution weights files)
 
+For information on the structure of these files, please see :ref:`Formats`.
+
 .. ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
 
 1D Data
