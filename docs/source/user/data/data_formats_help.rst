@@ -114,10 +114,10 @@ between users.
 Following the header are up to 8 space-delimited columns of experimental
 variables of which the first 4 columns are required. In order, these are:
 
-- Spin-echo length (z, in Angstroms)
+- Spin-echo length (:math:`\delta`, in Angstroms)
 - Depolarization (:math:`log(P/P_0)/(lambda^2 * thickness)`, in Angstrom :sup:`-1` cm :sup:`-1`\ )
 - Depolarization error (also in in Angstrom :sup:`-1` cm :sup:`-1`\ ) (i.e. the measurement error)
-- Spin-echo length error (:math:`\Delta`\ z, in Angstroms) (i.e. the experimental resolution)
+- Spin-echo length error (:math:`\Delta \delta`, in Angstroms) (i.e. the experimental resolution)
 - Neutron wavelength (:math:`\lambda`, in Angstroms)
 - Neutron wavelength error (:math:`\Delta \lambda`, in Angstroms)
 - Normalized polarization (:math:`P/P_0`, unitless)
