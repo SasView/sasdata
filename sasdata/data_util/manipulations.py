@@ -362,19 +362,45 @@ class _Slab:
         qy_data = data2D.qy_data[np.isfinite(data2D.data)]
         mask_data = data2D.mask[np.isfinite(data2D.data)]
 
+        # Was getting negative bin widths if whole box was below Qx = 0 for maj == 'x' or Qy = 0 for maj == 'y'.
+        # Should this raise error or correct bin width?
+        if self.bin_width < 0:
+            # raise RuntimeError("_Slab._avg: bin width can't be negative")
+            self.bin_width = abs(self.bin_width)
+
         # Build array of Q intervals
         if maj == 'x':
             if self.fold:
-                x_min = 0
+                # Set x_max based on which is further from Qx = 0
+                x_max = max(abs(self.x_min),abs(self.x_max))
+                # Set x_min based on which is closer to Qx = 0, but will have different limits depending on whether
+                # x_min and x_max are on the same size of Qx = 0
+                if self.x_min*self.x_max >= 0: # If on same side
+                    x_min = min(abs(self.x_min),abs(self.x_max))
+                else:
+                    x_min = 0
             else:
+                x_max = self.x_max
                 x_min = self.x_min
-            nbins = int(math.ceil((self.x_max - x_min) / self.bin_width))
+            y_max = self.y_max
+            y_min = self.y_min
+            nbins = int(math.ceil((x_max - x_min) / self.bin_width))
         elif maj == 'y':
             if self.fold:
-                y_min = 0
+                # Set y_max based on which is further from Qy = 0
+                y_max = max(abs(self.y_min), abs(self.y_max))
+                # Set y_min based on which is closer to Qy = 0, but will have different limits depending on whether
+                # y_min and y_max are on the same size of Qy = 0
+                if self.y_min * self.y_max >= 0:  # If on same side
+                    y_min = min(abs(self.y_min), abs(self.y_max))
+                else:
+                    y_min = 0
             else:
+                y_max = self.y_max
                 y_min = self.y_min
-            nbins = int(math.ceil((self.y_max - y_min) / self.bin_width))
+            x_max = self.x_max
+            x_min = self.x_min
+            nbins = int(math.ceil((y_max - y_min) / self.bin_width))
         else:
             raise RuntimeError("_Slab._avg: unrecognized axis %s" % str(maj))
 
@@ -392,10 +418,24 @@ class _Slab:
             frac_x = 0
             frac_y = 0
             # get ROI
-            if self.x_min <= qx_data[npts] and self.x_max > qx_data[npts]:
-                frac_x = 1
-            if self.y_min <= qy_data[npts] and self.y_max > qy_data[npts]:
-                frac_y = 1
+            if self.fold:
+                # If folded, need to satisfy absolute value of Q, but also make sure we're only pulling
+                # from data inside the box (an issue when the box is not centered on 0)
+                if maj == 'x':
+                    if self.x_min <= qx_data[npts] < self.x_max and x_min <= abs(qx_data[npts]) < x_max:
+                        frac_x = 1
+                    if self.y_min <= qy_data[npts] < self.y_max:
+                        frac_y = 1
+                elif maj == 'y': # The case where maj != 'x' or 'y' was handled earlier
+                    if self.y_min <= qy_data[npts] < self.y_max and y_min <= abs(qy_data[npts]) < y_max:
+                        frac_y = 1
+                    if self.x_min <= qx_data[npts] < self.x_max:
+                        frac_x = 1
+            else:
+                if self.x_min <= qx_data[npts] < self.x_max:
+                    frac_x = 1
+                if self.y_min <= qy_data[npts] < self.y_max:
+                    frac_y = 1
             frac = frac_x * frac_y
 
             if frac == 0:
