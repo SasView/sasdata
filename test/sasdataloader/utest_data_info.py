@@ -192,13 +192,16 @@ class Data1DTests(unittest.TestCase):
 
         assert_allclose(np.array([1., 2.]), result.x, RTOL)
         assert_allclose(np.array([1.5, 2.3]), result.y, RTOL)
-        # determined target values using Uncertainty
-        assert_allclose(np.array([0.000425, 0.000949]), result.dy, RTOL)
+        # determine target values using Uncertainty (not a check for correctness of Uncertainty)
+        u1 = Uncertainty(np.array([3, 4]), np.array([0.02**2, 0.03**2]))
+        u2 = Uncertainty(np.array([0.5, 0.7]), np.array([0.005**2, 0.007**2]))
+        u3 = u1-u2
+        assert_allclose(np.sqrt(np.abs(u3.variance)), result.dy, RTOL)
         assert_equal(result.lam, data1._lam_op)
         assert_equal(result.dlam, data1._dlam_op)
-        assert_allclose(np.array([0.01, 0.0254951]), result.dx, RTOL)
-        assert_allclose(np.array([0.43011626, 0.51478151]), result.dxl, RTOL)
-        assert_allclose(np.array([0.50990195, 0.41231056]), result.dxw, RTOL)
+        assert_allclose(np.sqrt(np.abs((data1._dx_op**2+data2._dx_op**2)/2)), result.dx, RTOL)
+        assert_allclose(np.sqrt(np.abs((data1._dxl_op**2+data2._dxl_op**2)/2)), result.dxl, RTOL)
+        assert_allclose(np.sqrt(np.abs((data1._dxw_op**2+data2._dxw_op**2)/2)), result.dxw, RTOL)
 
 
 if __name__ == '__main__':
