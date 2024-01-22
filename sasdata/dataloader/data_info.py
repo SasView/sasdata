@@ -796,12 +796,12 @@ class Data1D(plottable_1D, DataInfo):
         from copy import deepcopy
 
         if clone is None or not issubclass(clone.__class__, Data1D):
-            x = np.zeros(length, dype=float)
-            dx = np.zeros(length, dype=float)
-            y = np.zeros(length, dype=float)
-            dy = np.zeros(length, dype=float)
-            lam = np.zeros(length, dype=float)
-            dlam = np.zeros(length, dype=float)
+            x = np.zeros(length)
+            dx = np.zeros(length)
+            y = np.zeros(length)
+            dy = np.zeros(length)
+            lam = np.zeros(length)
+            dlam = np.zeros(length)
             clone = Data1D(x, y, lam=lam, dx=dx, dy=dy, dlam=dlam)
 
         clone.title = self.title
