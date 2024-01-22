@@ -856,6 +856,7 @@ class Data1D(plottable_1D, DataInfo):
                 # all the points in overlap region of self.x found close matches in overlap region of other.x
                 x_op = self.x[self_overlap_bool]
                 other._operation = other.clone_without_data(x_op.size)
+                other._operation.copy_from_datainfo(other)
                 other_overlap_index = (np.abs(x_op[:, None] - other.x[None, :])).argmin(axis=1)
                 y_op_other = np.copy(other.y)[other_overlap_index]
                 dy_op_other = np.zeros(y_op_other.size) if other.dy is None else np.copy(other.dy)[other_overlap_index]
@@ -870,6 +871,7 @@ class Data1D(plottable_1D, DataInfo):
                 self_overlap_index = np.flatnonzero(self_overlap_bool)
                 x_op = self.x[self_overlap_bool]
                 other._operation = other.clone_without_data(x_op.size)
+                other._operation.copy_from_datainfo(other)
                 if scale == 'log':
                     y_op_other, dy_op_other = \
                         interpolations.linear_scales(x_interp=x_op, x=other.x, y=other.y, dy=other.dy, scale='log')
@@ -900,6 +902,7 @@ class Data1D(plottable_1D, DataInfo):
 
         # setup _operation Data1D for self
         self._operation = self.clone_without_data(self_overlap_index.size)
+        self._operation.copy_from_datainfo(self)
         self._operation.x = self.x[self_overlap_bool]
         self._operation.y = self.y[self_overlap_bool]
         self._operation.dy = self.dy[self_overlap_bool] if self.dy is not None \
@@ -918,9 +921,10 @@ class Data1D(plottable_1D, DataInfo):
         self._interpolation_operation(other)
 
         result = self.clone_without_data(self._operation.x.size)
+        result.copy_from_datainfo(self)
         result.x = np.copy(self._operation.x)
-        # result.y is initialized as arrays of zero with length of _operation.x
-        # result.dy is initialized as arrays of zero with length of _operation.x
+        result.y = np.zeros(self._operation.x.size)
+        result.dy = np.zeros(self._operation.x.size)
         result.dx = None if self._operation.dx is None else np.copy(self._operation.dx)
         result.dxl = None if self._operation.dxl is None else np.copy(self._operation.dxl)
         result.dxw = None if self._operation.dxw is None else np.copy(self._operation.dxw)
