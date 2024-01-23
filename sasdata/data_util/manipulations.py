@@ -362,8 +362,8 @@ class _Slab:
         qy_data = data2D.qy_data[np.isfinite(data2D.data)]
         mask_data = data2D.mask[np.isfinite(data2D.data)]
 
-       # Bin width calculation returns negative values when either axis has no points above 0.
-       self.bin_width = abs(self.bin_width)
+        # Bin width calculation returns negative values when either axis has no points above 0.
+        self.bin_width = abs(self.bin_width)
 
         # Build array of Q intervals
         if maj == 'x':
