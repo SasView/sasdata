@@ -364,9 +364,8 @@ class _Slab:
 
         # Was getting negative bin widths if whole box was below Qx = 0 for maj == 'x' or Qy = 0 for maj == 'y'.
         # Should this raise error or correct bin width?
-        if self.bin_width < 0:
-            # raise RuntimeError("_Slab._avg: bin width can't be negative")
-            self.bin_width = abs(self.bin_width)
+       # Bin width calculation returns negative values when either axis has no points above 0.
+       self.bin_width = abs(self.bin_width)
 
         # Build array of Q intervals
         if maj == 'x':
