@@ -374,7 +374,7 @@ class _Slab:
                 # Set x_max based on which is further from Qx = 0
                 x_max = max(abs(self.x_min),abs(self.x_max))
                 # Set x_min based on which is closer to Qx = 0, but will have different limits depending on whether
-                # x_min and x_max are on the same size of Qx = 0
+                # x_min and x_max are on the same side of Qx = 0
                 if self.x_min*self.x_max >= 0: # If on same side
                     x_min = min(abs(self.x_min),abs(self.x_max))
                 else:
@@ -390,7 +390,7 @@ class _Slab:
                 # Set y_max based on which is further from Qy = 0
                 y_max = max(abs(self.y_min), abs(self.y_max))
                 # Set y_min based on which is closer to Qy = 0, but will have different limits depending on whether
-                # y_min and y_max are on the same size of Qy = 0
+                # y_min and y_max are on the same side of Qy = 0
                 if self.y_min * self.y_max >= 0:  # If on same side
                     y_min = min(abs(self.y_min), abs(self.y_max))
                 else:
