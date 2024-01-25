@@ -18,7 +18,7 @@ The test data sets are organized based on their data structure & purpose:
 - *NR data*
 - *SESANS data*
 - *other formats*
-- *save states*
+- *saved states*
 - *other test data* (such as distribution weights files)
 
 For information on the structure of these files, please see :ref:`Formats`.
@@ -276,7 +276,7 @@ DLS Test Data
 
 dls_monodisperse / dls_polydisperse
   - DLS data from a very dilute dispersion of 3 nm polymer latex nanoparticles in
-    h/d-water.
+    H/D-water.
   - Suitable for testing the cumulants_dls model.
 
 .. ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
@@ -315,17 +315,17 @@ S50
 
 .. ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
 
-NR Data
-^^^^^^^
+Reflectometry Data
+^^^^^^^^^^^^^^^^^^
 Neutron (NR) or X-ray (XR) Reflectometry data sets primarily contain the
 interfacial reflectivity as a function of *Q*.
 
 .. note:: The Refl1D reflectivity model-fitting software uses the same fitting
          engine (Bumps) as SasView.
 
-NR Test Data
-................
-**Example data files are located in the \\nr_data sub-folder.**
+Reflectometry Test Data
+.......................
+**Example data files are located in the \\reflectometry_data sub-folder.**
 
 NR_Ni_down_state / NR_Ni_up_state
   - Polarised (spin down/up) NR data from a Ni multilayer sample.
@@ -358,8 +358,8 @@ spheres2micron_long
 
 .. ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
 
-Save States
-^^^^^^^^^^^
+Saved States
+^^^^^^^^^^^^
 Saved states are projects and analyses saved by the SasView program.
 
 A single analysis file contains the data and parameters for a single fit
@@ -370,7 +370,7 @@ SasView session.
 
 Saved State Test Data
 .....................
-**Example data files are located in the \\save_states sub-folder.**
+**Example data files are located in the \\saved_states sub-folder.**
 
 constrained_fit_project
   - A saved fitting project.
@@ -408,7 +408,7 @@ test002.inv
 
 Other Formats
 ^^^^^^^^^^^^^
-Data in the \\other_formats folder are in alternative varaiations of formats used
+Data in the \\other_formats folder are alternative variations of formats used
 by SasView, or formats that are not yet implemented but which might be in future
 versions of the program.
 
@@ -421,7 +421,7 @@ versions of the program.
 
 Other Test Data
 ^^^^^^^^^^^^^^^
-Data in the \\other_formats folder include weights for testing user-defined
+Data in the \\other_files folder include weights for testing user-defined
 distributions (i.e., polydispersity) on angular (theta/phi) or size (radius/length)
 parameters.
 
@@ -438,4 +438,4 @@ THETA_weights.txt
 
 .. ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
 
-.. note::  This help document was last changed by Steve King, 18Jan2024
+.. note::  This help document was last changed by Steve King, 25Jan2024
