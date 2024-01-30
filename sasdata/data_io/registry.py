@@ -5,8 +5,6 @@ This provides routines for opening files based on extension,
 and registers the built-in file extensions.
 """
 import os
-from urllib.request import urlopen
-from io import BytesIO
 from typing import Optional, List, Union, TYPE_CHECKING
 from collections import defaultdict
 from pathlib import Path
@@ -14,6 +12,7 @@ from pathlib import Path
 from sasdata.data_util.loader_exceptions import NoKnownLoaderException
 from sasdata.data_util.util import unique_preserve_order
 from sasdata.dataloader import readers as all_readers
+from sasdata.data_io.open import CustomFileOpen
 
 # TYPE_CHECKING hides imports at runtime: https://docs.python.org/3/library/typing.html#typing.TYPE_CHECKING
 # Imports used here are only used for type checking, but would create a circular import, otherwise.
@@ -33,33 +32,6 @@ def create_empty_data_with_errors(path: Union[str, Path], errors: List[Exception
     data_object.errors = errors
     data_object.filename = path
     return [data_object]
-
-
-class CustomFileOpen:
-    """Custom context manager to fetch file contents depending on where the file is located."""
-    def __init__(self, filename, mode='rb'):
-        self.filename = filename
-        self.mode = mode
-        self.fd = None
-
-    def __enter__(self):
-        """A context method that either fetches a file from a URL or opens a local file."""
-        if '://' in self.filename:
-            # Use urllib.request package to access remote files
-            with urlopen(self.filename) as req:
-                content = req.read()
-                self.fd = BytesIO(content)
-                self.fd.name = self.filename
-        else:
-            # Use native open to access local files
-            self.fd = open(self.filename, self.mode)
-        # Return the instance to allow access to the filename, and any open file handles.
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        """Close all open file handles when exiting the context manager."""
-        if self.fd is not None:
-            self.fd.close()
 
 
 class ExtensionRegistry:
