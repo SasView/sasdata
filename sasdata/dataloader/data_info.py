@@ -796,7 +796,7 @@ class Data1D(plottable_1D, DataInfo):
             dy = np.zeros(length)
             lam = np.zeros(length)
             dlam = np.zeros(length)
-            clone = Data1D(x, y, lam=lam, dx=dx, dy=dy, dlam=dlam)
+            clone = Data1D(x, y, lam=lam, dx=dx, dy=dy, dlam=dlam, isSesans=self.isSesans)
 
         clone.title = self.title
         clone.run = self.run
@@ -879,7 +879,6 @@ class Data1D(plottable_1D, DataInfo):
                     y_op_other, dy_op_other = interpolations.linear(x_interp=x_op, x=other.x, y=other.y, dy=other.dy)
 
                 # setting resolutions and wavelength parameters to None if data is interpolated
-                # TODO: determine proper propagation of resolution through interpolation
                 dx_op_other = None
                 dxl_op_other = None
                 dxw_op_other = None
@@ -917,8 +916,12 @@ class Data1D(plottable_1D, DataInfo):
         """
         """
         # Check for compatibility of the x-ranges and populate the data used for the operation
+        # sets up _operation for both datasets
         # interpolation will be implemented on the 'other' dataset as needed
-        self._interpolation_operation(other)
+        if self.isSesans:
+            self._interpolation_operation(other, scale='linear')
+        else:
+            self._interpolation_operation(other, scale='log')
 
         result = self.clone_without_data(self._operation.x.size)
         result.copy_from_datainfo(self)
