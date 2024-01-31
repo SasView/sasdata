@@ -19,6 +19,7 @@
 # TODO: This module should be independent of plottables. We should write
 #        an adapter class for plottables when needed.
 
+import logging
 import math
 from math import fabs
 import copy
@@ -28,6 +29,8 @@ from typing import Optional
 
 from sasdata.data_util.uncertainty import Uncertainty
 from sasdata.data_util import interpolations
+
+logger = logging.getLogger(__name__)
 
 
 class plottable_1D(object):
@@ -867,6 +870,7 @@ class Data1D(plottable_1D, DataInfo):
                 dlam_op_other = None if other.dlam is None else np.copy(other.dlam)[other_overlap_index]
             else:
                 # not all the points found a close match so implementing interpolation on log scale
+                logging.info(f"Operation requires interpolation of Data2.")
                 self_overlap_bool = (self.x >= max([self.x.min(), other.x.min()])) & (self.x <= min([self.x.max(), other.x.max()]))
                 self_overlap_index = np.flatnonzero(self_overlap_bool)
                 x_op = self.x[self_overlap_bool]
