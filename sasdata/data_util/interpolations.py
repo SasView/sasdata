@@ -20,7 +20,7 @@ def linear(x_interp: ArrayLike, x: ArrayLike, y: ArrayLike, dy: Optional[ArrayLi
     sort = np.argsort(x)
     x = np.array(x)[sort]
     y = np.array(y)[sort]
-    dy = np.array(dy)[sort] if dy is not None else None
+    dy = np.array(dy)[sort] if (dy is not None and len(dy) == len(y)) else None
 
     # find out where the interpolated points fit into the existing data
     index_2 = np.searchsorted(x, x_interp)
@@ -65,7 +65,7 @@ def linear_scales(x_interp: ArrayLike,
         return result
 
     elif scale == "log":
-        dy = np.array(dy) / y if dy is not None else None
+        dy = np.array(dy) / y if (dy is not None and len(dy) == len(x)) else None
         x_interp = np.log(x_interp)
         x = np.log(x)
         y = np.log(y)

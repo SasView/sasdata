@@ -839,8 +839,9 @@ class Data1D(plottable_1D, DataInfo):
     def _interpolation_operation(self, other, tolerance: Optional[float] = 0.01, scale: Optional[str] = 'log'):
         """
         Checks that x values for two datasets have overlapping ranges for an operation.
-        If so, _x_op, _y_op, _dx_op, _dy_op, _dxl_op, _dxw_op, _lam, _dlam for both self and other are updated to
-        values that will be used for the operation.
+        If so, x, y, and dy will be updated to values used in the operation.
+        Resolutions, including dx, dxl, and dxw, are not kept through in the operation.
+        Wavelength parameters for SESANS datasets are also not kept through the operation.
 
         :param other: other data for operation
         :param tolerance: acceptable deviation in matching x data points, default 0.01 (equivalent to 1 % deviation)
@@ -862,12 +863,8 @@ class Data1D(plottable_1D, DataInfo):
                 other._operation.copy_from_datainfo(other)
                 other_overlap_index = (np.abs(x_op[:, None] - other.x[None, :])).argmin(axis=1)
                 y_op_other = np.copy(other.y)[other_overlap_index]
-                dy_op_other = np.zeros(y_op_other.size) if other.dy is None else np.copy(other.dy)[other_overlap_index]
-                dx_op_other = None if other.dx is None else np.copy(other.dx)[other_overlap_index]
-                dxl_op_other = None if other.dxl is None else np.copy(other.dxl)[other_overlap_index]
-                dxw_op_other = None if other.dxw is None else np.copy(other.dxw)[other_overlap_index]
-                lam_op_other = None if other.lam is None else np.copy(other.lam)[other_overlap_index]
-                dlam_op_other = None if other.dlam is None else np.copy(other.dlam)[other_overlap_index]
+                dy_op_other = np.zeros(x_op.size) if (other.dy is None or other.dy.size == 0) \
+                    else np.copy(other.dy)[other_overlap_index]
             else:
                 # not all the points found a close match so implementing interpolation on log scale
                 logging.info(f"Operation requires interpolation of Data2.")
@@ -882,12 +879,12 @@ class Data1D(plottable_1D, DataInfo):
                 else:
                     y_op_other, dy_op_other = interpolations.linear(x_interp=x_op, x=other.x, y=other.y, dy=other.dy)
 
-                # setting resolutions and wavelength parameters to None if data is interpolated
-                dx_op_other = None
-                dxl_op_other = None
-                dxw_op_other = None
-                lam_op_other = None
-                dlam_op_other = None
+            # setting resolutions and wavelength parameters to None as these parameters are not carried through
+            dx_op_other = None
+            dxl_op_other = None
+            dxw_op_other = None
+            lam_op_other = None
+            dlam_op_other = None
 
             other._operation.x = x_op
             other._operation.y = y_op_other
@@ -908,13 +905,13 @@ class Data1D(plottable_1D, DataInfo):
         self._operation.copy_from_datainfo(self)
         self._operation.x = self.x[self_overlap_bool]
         self._operation.y = self.y[self_overlap_bool]
-        self._operation.dy = self.dy[self_overlap_bool] if self.dy is not None \
-            else np.zeros(self._operation.y.size, dtype=float)
-        self._operation.dx = self.dx[self_overlap_bool] if self.dx is not None else None
-        self._operation.dxl = self.dxl[self_overlap_bool] if self.dxl is not None else None
-        self._operation.dxw = self.dxw[self_overlap_bool] if self.dxw is not None else None
-        self._operation.lam = self.lam[self_overlap_bool] if self.lam is not None else None
-        self._operation.dlam = self.dlam[self_overlap_bool] if self.dlam is not None else None
+        self._operation.dy = np.zeros(self._operation.y.size, dtype=float) if (self.dy is None or self.dy.size==0) \
+            else self.dy[self_overlap_bool]
+        self._operation.dx = None
+        self._operation.dxl = None
+        self._operation.dxw = None
+        self._operation.lam = None
+        self._operation.dlam = None
 
     def _perform_operation(self, other, operation):
         """
@@ -943,12 +940,6 @@ class Data1D(plottable_1D, DataInfo):
             a = Uncertainty(self._operation.y[i], self._operation.dy[i]**2)
             if isinstance(other, Data1D):
                 b = Uncertainty(other._operation.y[i], other._operation.dy[i]**2)
-                if result.dx is not None and other._operation.dx is not None:
-                    result.dx[i] = math.sqrt((self._operation.dx[i]**2 + other._operation.dx[i]**2) / 2)
-                if result.dxl is not None and other._operation.dxl is not None:
-                    result.dxl[i] = math.sqrt((self._operation.dxl[i]**2 + other._operation.dxl[i]**2) / 2)
-                if result.dxw is not None and other._operation.dxw is not None:
-                    result.dxw[i] = math.sqrt((self._operation.dxw[i]**2 + other._operation.dxw[i]**2) / 2)
             else:
                 b = other
 
