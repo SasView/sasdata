@@ -867,7 +867,6 @@ class Data1D(plottable_1D, DataInfo):
                     else np.copy(other.dy)[other_overlap_index]
             else:
                 # not all the points found a close match so implementing interpolation on log scale
-                logging.info(f"Operation requires interpolation of Data2.")
                 self_overlap_bool = (self.x >= max([self.x.min(), other.x.min()])) & (self.x <= min([self.x.max(), other.x.max()]))
                 self_overlap_index = np.flatnonzero(self_overlap_bool)
                 x_op = self.x[self_overlap_bool]
@@ -942,7 +941,6 @@ class Data1D(plottable_1D, DataInfo):
                 b = Uncertainty(other._operation.y[i], other._operation.dy[i]**2)
             else:
                 b = other
-
             output = operation(a, b)
             result.y[i] = output.x
             result.dy[i] = math.sqrt(math.fabs(output.variance))
