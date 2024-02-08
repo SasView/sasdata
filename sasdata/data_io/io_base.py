@@ -2,14 +2,13 @@ import os
 import logging
 import sys
 import time
+from pathlib import Path
 from zipfile import ZipFile
 from collections import defaultdict
 from types import ModuleType
+from typing import Union
 
 from sasdata.data_util.registry import ExtensionRegistry
-
-# Default readers are defined in the readers sub-module
-from sasdata.dataloader import readers
 
 logger = logging.getLogger(__name__)
 
@@ -39,51 +38,45 @@ class Registry(ExtensionRegistry):
         self.as_super = super(Registry, self)
         self.as_super.__init__()
 
-        # Writers
-        self.writers = defaultdict(list)
-
         # List of wildcards
         self.wildcards = ['All (*.*)|*.*']
 
         # Creation time, for testing
         self._created = time.time()
 
-        # Register default readers
-        readers.read_associations(self)
+        # List of modules this registry object can interact with
+        self.plugins = defaultdict(list)
 
-    def find_plugins(self, dir: str):
-        """
-        Find readers in a given directory. This method
-        can be used to inspect user plug-in directories to
-        find new readers/writers.
-        :param dir: directory to search into
+    def find_plugins(self, path: Union[Path, str], ) -> int:
+        """Find plugin modules in the given directory. This method can be used to inspect user plugin directories.
+        :param path: directory to search into
         :return: number of readers found
         """
         readers_found = 0
-        temp_path = os.path.abspath(dir)
+        temp_path = os.path.abspath(path)
         if not os.path.isdir(temp_path):
-            temp_path = os.path.join(os.getcwd(), dir)
+            temp_path = os.path.join(os.getcwd(), path)
         if not os.path.isdir(temp_path):
-            temp_path = os.path.join(os.path.dirname(__file__), dir)
+            temp_path = os.path.join(os.path.dirname(__file__), path)
         if not os.path.isdir(temp_path):
-            temp_path = os.path.join(os.path.dirname(sys.path[0]), dir)
+            temp_path = os.path.join(os.path.dirname(sys.path[0]), path)
 
-        dir = temp_path
+        path = temp_path
         # Check whether the directory exists
-        if not os.path.isdir(dir):
-            msg = f"DataLoader could nt locate plugin folder. {dir} does not exist"
+        if not os.path.isdir(path):
+            msg = f"DataLoader could nt locate plugin folder. {path} does not exist"
             logger.warning(msg)
             return readers_found
 
-        for item in os.listdir(dir):
-            full_path = os.path.join(dir, item)
+        for item in os.listdir(path):
+            full_path = os.path.join(path, item)
             if os.path.isfile(full_path):
 
                 # Process python files
                 if item.endswith('.py'):
                     toks = os.path.splitext(os.path.basename(item))
                     try:
-                        sys.path.insert(0, os.path.abspath(dir))
+                        sys.path.insert(0, os.path.abspath(path))
                         module = __import__(toks[0], globals(), locals())
                         if self._identify_plugin(module):
                             readers_found += 1
@@ -189,12 +182,13 @@ class Registry(ExtensionRegistry):
             logger.error(msg)
         return reader_found
 
-    def _identify_plugin(self, module: ModuleType):
+    def _identify_plugin(self, module: ModuleType, attr: list[str]) -> bool:
         """
         Look into a module to find whether it contains a
         Reader class. If so, add it to readers and (potentially)
         to the list of writers.
         :param module: module object
+        :param attr: A list of
         :returns: True if successful
         """
         reader_found = False
