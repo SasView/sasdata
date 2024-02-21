@@ -1,15 +1,11 @@
-import os
 import logging
-import sys
 import time
-from zipfile import ZipFile
 from collections import defaultdict
 from types import ModuleType
+from typing import Union
+from abc import abstractmethod
 
-from sasdata.data_util.registry import ExtensionRegistry
-
-# Default readers are defined in the readers sub-module
-from sasdata.dataloader import readers
+from sasdata.data_io.registry import ExtensionRegistry, FILE_LIKE
 
 logger = logging.getLogger(__name__)
 
@@ -32,10 +28,16 @@ logger = logging.getLogger(__name__)
 
 class Registry(ExtensionRegistry):
     """
-    Registry class for file format extensions.
-    Readers and writers are supported.
+    Registry class to track and handle modules that can perform a specific set of actions.
     """
-    def __init__(self):
+    cls_name = ''
+    fnc = ''
+
+    def __init__(self, files: Union):
+        """
+        Creates an instance of the Registry class, using the given function name
+        :param files: A function name to use as a basis for registering extensions
+        """
         self.as_super = super(Registry, self)
         self.as_super.__init__()
 
@@ -48,8 +50,10 @@ class Registry(ExtensionRegistry):
         # Creation time, for testing
         self._created = time.time()
 
-        # Register default readers
-        readers.read_associations(self)
+        # The function modules will need to have
+        # Defaults to the read method if no value is supplied
+        self.cls_name = self.cls_name if self.cls_name else 'Reader'
+        self.fnc = self.fnc if self.fnc else 'read'
 
     def find_plugins(self, dir: str):
         """
@@ -59,63 +63,7 @@ class Registry(ExtensionRegistry):
         :param dir: directory to search into
         :return: number of readers found
         """
-        readers_found = 0
-        temp_path = os.path.abspath(dir)
-        if not os.path.isdir(temp_path):
-            temp_path = os.path.join(os.getcwd(), dir)
-        if not os.path.isdir(temp_path):
-            temp_path = os.path.join(os.path.dirname(__file__), dir)
-        if not os.path.isdir(temp_path):
-            temp_path = os.path.join(os.path.dirname(sys.path[0]), dir)
-
-        dir = temp_path
-        # Check whether the directory exists
-        if not os.path.isdir(dir):
-            msg = f"DataLoader could nt locate plugin folder. {dir} does not exist"
-            logger.warning(msg)
-            return readers_found
-
-        for item in os.listdir(dir):
-            full_path = os.path.join(dir, item)
-            if os.path.isfile(full_path):
-
-                # Process python files
-                if item.endswith('.py'):
-                    toks = os.path.splitext(os.path.basename(item))
-                    try:
-                        sys.path.insert(0, os.path.abspath(dir))
-                        module = __import__(toks[0], globals(), locals())
-                        if self._identify_plugin(module):
-                            readers_found += 1
-                    except Exception as exc:
-                        msg = f"Loader: Error importing {item}\n  {str(exc)}"
-                        logger.error(msg)
-
-                # Process zip files
-                elif item.endswith('.zip'):
-                    try:
-                        # Find the modules in the zip file
-                        zfile = ZipFile(item)
-                        nlist = zfile.namelist()
-
-                        sys.path.insert(0, item)
-                        for mfile in nlist:
-                            try:
-                                # Change OS path to python path
-                                fullname = mfile.replace('/', '.')
-                                fullname = os.path.splitext(fullname)[0]
-                                module = __import__(fullname, globals(), locals(), [""])
-                                if self._identify_plugin(module):
-                                    readers_found += 1
-                            except Exception as exc:
-                                msg = f"Loader: Error importing {mfile}\n  {str(exc)}"
-                                logger.error(msg)
-
-                    except Exception as exc:
-                        msg = f"Loader: Error importing  {item}\n  {str(exc)}"
-                        logger.error(msg)
-
-        return readers_found
+        pass
 
     def associate_file_type(self, ext: str, module: ModuleType) -> bool:
         """
@@ -125,107 +73,27 @@ class Registry(ExtensionRegistry):
         :param ext: file extension [string]
         :param module: module object
         """
-        reader_found = False
+        pass
 
-        if hasattr(module, "Reader"):
-            try:
-                # Find supported extensions
-                loader = module.Reader()
-                if ext not in self.modules:
-                    self.modules[ext] = []
-                # Append the new reader to the list
-                self.modules[ext].append(loader.read)
-
-                reader_found = True
-
-                # Keep track of wildcards
-                type_name = module.__name__
-                if hasattr(loader, 'type_name'):
-                    type_name = loader.type_name
-
-                wcard = f"{type_name} files (*{ext.lower()})|*{ext.lower()}"
-                if wcard not in self.wildcards:
-                    self.wildcards.append(wcard)
-
-                # Check whether writing is supported
-                if hasattr(loader, 'write'):
-                    if ext not in self.writers:
-                        self.writers[ext] = []
-                    # Append the new writer to the list
-                    self.writers[ext].append(loader.write)
-
-            except Exception as exc:
-                msg = f"Loader: Error accessing  Reader in {module.__name__}\n {str(exc)}"
-                logger.error(msg)
-        return reader_found
-
-    def associate_file_reader(self, file_extension, reader):
+    def associate_plugin(self, file_extension: str, module: ModuleType) -> None:
         """
-        Append a reader object to readers
+        Append a module to the list of plugins
         :param file_extension: file extension [string]
         :param reader: reader object
         """
-        reader_found = False
+        if self._is_plugin_module(module):
+            self.associate_file_type(file_extension, module)
 
-        try:
-            # Find supported extensions
-            if file_extension not in self.modules:
-                self.modules[file_extension] = []
-            # Append the new reader to the list
-            self.modules[file_extension].append(reader.read)
-
-            reader_found = True
-
-            # Keep track of wildcards
-            if hasattr(reader, 'type_name'):
-                type_name = reader.type_name
-
-                wcard = f"{type_name} files (*{file_extension.lower()})|*{file_extension.lower()}"
-                if wcard not in self.wildcards:
-                    self.wildcards.append(wcard)
-
-        except Exception as exc:
-            msg = f"Loader: Error accessing Reader in {reader.__name__}\n  {str(exc)}"
-            logger.error(msg)
-        return reader_found
-
-    def _identify_plugin(self, module: ModuleType):
+    @abstractmethod
+    def _is_plugin_module(self, module: ModuleType) -> bool:
         """
-        Look into a module to find whether it contains a
-        Reader class. If so, add it to readers and (potentially)
-        to the list of writers.
+        Look in a module and return whether it contains the expected class or not.
         :param module: module object
-        :returns: True if successful
+        :returns: Is the class in the module?
         """
-        reader_found = False
+        raise NotImplementedError(f"The _identify_plugin method is required for the class {self.__class__.__name__}.")
 
-        if hasattr(module, "Reader"):
-            try:
-                # Find supported extensions
-                reader = module.Reader()
-                for ext in reader.ext:
-                    if ext not in self.modules:
-                        self.modules[ext] = []
-                    # When finding a reader at run time,
-                    # treat this reader as the new default
-                    self.modules[ext].insert(0, reader.read)
-
-                    reader_found = True
-
-                    # Keep track of wildcards
-                    file_description = reader.type_name if hasattr(reader, 'type_name') else module.__name__
-                    wcard = f"{file_description} files (*{ext.lower()})|*{ext.lower()}"
-                    if wcard not in self.wildcards:
-                        self.wildcards.append(wcard)
-
-                # Check whether writing is supported
-                if hasattr(reader, 'write'):
-                    for ext in reader.ext:
-                        if ext not in self.writers:
-                            self.writers[ext] = []
-                        self.writers[ext].insert(0, reader.write)
-
-            except Exception as exc:
-                msg = f"Loader: Error accessing Reader in {module.__name__}\n {str(exc)}"
-                logger.error(msg)
-        return reader_found
+    @abstractmethod
+    def __call__(self, *args, **kwargs):
+        """Enable direct calling of the class to allow transient instances."""
+        raise NotImplementedError(f"The __call__ method is required in the class {self.__class__.__name__}.")
