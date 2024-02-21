@@ -5,6 +5,7 @@ All generic functionality required for file import is built into this class.
 
 import codecs
 import logging
+import os.path
 from abc import abstractmethod
 from pathlib import Path
 from typing import List, Union, Optional, Any
@@ -39,16 +40,16 @@ class Importer:
     # The following are class-level objects that should not be modified at the instance level
     # String to describe the type of data this reader can load
     type_name = ""
-    # Wildcards to display
-    type = []
-    # List of allowed extensions
-    ext = []
+    # Dictionary mapping allowed extensions to their respective descriptions
+    ext = {}
     # Bypass extension check and try to load anyway
-    allow_all = False
+    allow_all = True
 
     def __init__(self):
         # List of Data1D and Data2D objects to be sent back to data_loader
         self.imported_data = []
+        # For non-transient importers, keep a handle on all data loaded since inception
+        self._all_data = {}
         # Path object using the file path sent to reader
         self.filepath = None
         # Starting file position to begin reading data from
