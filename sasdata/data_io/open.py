@@ -10,6 +10,7 @@ from io import BytesIO, FileIO, StringIO
 from typing import Union, Optional
 
 PATHLIKE = Union[str, Path, path]
+FILELIKE = Union[BytesIO, FileIO, StringIO]
 
 
 class CustomFileOpen:
@@ -45,7 +46,7 @@ class CustomFileOpen:
             Closes any active file handles.
         """
 
-    def __init__(self, file: Union[PATHLIKE, BytesIO, FileIO, StringIO], mode: Optional[str] = 'rb',
+    def __init__(self, file: Union[PATHLIKE, FILELIKE], mode: Optional[str] = 'rb',
                  full_path: Optional[PATHLIKE] = None):
         """Create an instance of the file handler.
 

@@ -1,5 +1,5 @@
 """
-This is the base file importer class most importers should inherit from.
+This is the base file importer class all importers should inherit from.
 All generic functionality required for file import is built into this class.
 """
 
