@@ -3,22 +3,25 @@
 Test Data
 =========
 
-Test data sets are included as a convenience to our users. Look in the \test 
+Test data sets are included as a convenience to our users. Look in the \\example_data 
 sub-folder in your SasView installation folder.
 
-The test data sets are organized based on their data structure:
+The test data sets are organized based on their data structure & purpose:
 
 - *1D data*
-- *convertible 1D data*
 - *2D data*
-- *coordinate data*
-- *image data*
-- *SESANS data*
+- *convertible data* (as used by the File Converter tool)
+- *coordinate data* (as used by the Generic Scattering Calculator tool)
 - *DLS data*
+- *image data* (as used by the Image Viewer tool)
+- *magnetic data* (from polarised SANS)
 - *NR data*
-- *save states*
-- *upcoming formats*
-- *other test data*
+- *SESANS data*
+- *other formats*
+- *saved states*
+- *other test data* (such as distribution weights files)
+
+For information on the structure of these files, please see :ref:`Formats`.
 
 .. ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
 
@@ -35,22 +38,28 @@ OR:
 - the *Q* data and the *I(Q)* data in separate files *with no other information*;
   data in the this format need to be converted to a single file multi-column format
   with the :ref:`File_Converter_Tool` before they can be analysed in SasView; see
-  `Convertible 1D Data`_ below.
+  `Convertible Data`_ below.
 
 1D Test Data
 ............
 **Example data files are located in the \\1d_data sub-folder.**
 
-1umSlitSmearSphere
-  - Simulated NIST USANS data from a 1% dispersion of 1 micron spheres in D2O.
-
 10wtAOT_Reline_120_reduced / Anton-Paar / saxsess_example
   - SAXS data from Anton-Paar SAXSess instruments saved in Otto Glatter's PDH format.
+
+1umSlitSmearSphere
+  - Simulated NIST USANS data from a 1% dispersion of 1 micron spheres in D2O.
   
 33837rear_1D_1.75_16.5
   - TOF-SANS data from a magnetically-oriented surfactant liquid crystal collected on
     the SANS2D instrument at ISIS.
   - The files were output by the Mantid framework v3.6.
+
+98929
+  - Simple two-column text variant of ISIS_98929 (see below).
+
+Anton-Paar
+  - Example of the Anton-Paar XML format.
 
 AOT_Microemulsion
   - TOF-SANS data from Aerosol-OT surfactant-stabilised oil-in-water microemulsions
@@ -91,7 +100,7 @@ ISIS_83404 / ISIS_98929
     instrument at ISIS. The data exhibit a broad lamellar peak from the semi-
     crystalline nanostructure.
   - This is the *same data* as that in the BSL/OTOKO Z8300* / Z9800* convertible
-    files (see `Convertible 1D Data`_) but in an amalgamated format!
+    files (see `Convertible Data`_) but in an amalgamated format!
   - Suitable for testing :ref:`Correlation_Function_Analysis` .
 
 ISIS_Polymer_Blend_RT2
@@ -128,41 +137,6 @@ VTMA
   - Multi-frame USAXS data from a thermo-mechanical analysis scan performed at
     the APS.
   - Suitable for testing :ref:`Batch_Fit_Mode` .
-
-.. ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
-
-Convertible 1D Data
-^^^^^^^^^^^^^^^^^^^
-**Example data files are located in the \\convertible_files sub-folder.**
-
-APS_X / APS_Y
-  - ASCII format 1D SAXS data output by a reduction software package at the APS.
-  - Suitable for testing the :ref:`File_Converter_Tool` .
-
-FIT2D_I / FIT2D_Q
-  - ASCII format 1D SAXS data output by the FIT2D software package at the ESRF.
-  - Suitable for testing the :ref:`File_Converter_Tool` .
-
-Z8300*.I1D / Z8300*.QAX / Z9800*.I1D / Z9800*.QAX
-  - Binary BSL/OTOKO format 1D TOF-SANS data from polyamide-6 fibres hydrated
-    in D2O collected on the LOQ instrument at ISIS. The data exhibit a broad
-    lamellar peak from the semi-crystalline nanostructure.
-  - This is the *same data* as that in ISIS_83404 / ISIS_98929 (see `1D Data`_)
-    but in a historical separated format developed at the SRS Daresbury!
-  - Suitable for testing the :ref:`File_Converter_Tool` .
-  - Suitable for testing :ref:`Correlation_Function_Analysis` after conversion.
-
-LMOG_100254_merged_ISIS2D
-  - ASCII format TOF-SANS data from low-molecular weight organo-gelator system
-    collected on the LOQ instrument at ISIS.
-  - The data are written in the historical COLETTE (or RKH) 2D format.
-  - Suitable for testing the :ref:`File_Converter_Tool` .
-
-YBCO_12685__ISIS2D
-  - ASCII format TOF-SANS data from a Nb/YBaCuO superconductor sample collected
-    on the SANS2D instrument at ISIS.
-  - The data are written in the historical COLETTE (or RKH) 2D format.
-  - Suitable for testing the :ref:`File_Converter_Tool` .
 
 .. ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
 
@@ -210,6 +184,45 @@ SILIC010
 
 .. ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
 
+Convertible Data
+^^^^^^^^^^^^^^^^
+**Example data files are located in the \\convertible_files sub-folder.**
+
+APS_X / APS_Y
+  - ASCII format 1D SAXS data output by a reduction software package at the APS.
+  - Suitable for testing the :ref:`File_Converter_Tool` .
+
+FIT2D_I / FIT2D_Q
+  - ASCII format 1D SAXS data output by the FIT2D software package at the ESRF.
+  - Suitable for testing the :ref:`File_Converter_Tool` .
+
+X25000.L2D
+  - Binary BSL/OTOKO format 2D TOF-SANS data collected on the LOQ instrument at ISIS.
+  - Suitable for testing the :ref:`File_Converter_Tool` .
+
+Z8300*.I1D / Z8300*.QAX / Z9800*.I1D / Z9800*.QAX
+  - Binary BSL/OTOKO format 1D TOF-SANS data from polyamide-6 fibres hydrated
+    in D2O collected on the LOQ instrument at ISIS. The data exhibit a broad
+    lamellar peak from the semi-crystalline nanostructure.
+  - This is the *same data* as that in ISIS_83404 / ISIS_98929 (see `1D Data`_)
+    but in a historical separated format developed at the SRS Daresbury!
+  - Suitable for testing the :ref:`File_Converter_Tool` .
+  - Suitable for testing :ref:`Correlation_Function_Analysis` after conversion.
+
+LMOG_100254_merged_ISIS2D
+  - ASCII format TOF-SANS data from low-molecular weight organo-gelator system
+    collected on the LOQ instrument at ISIS.
+  - The data are written in the historical COLETTE (or RKH) 2D format.
+  - Suitable for testing the :ref:`File_Converter_Tool` .
+
+YBCO_12685__ISIS2D
+  - ASCII format TOF-SANS data from a Nb/YBaCuO superconductor sample collected
+    on the SANS2D instrument at ISIS.
+  - The data are written in the historical COLETTE (or RKH) 2D format.
+  - Suitable for testing the :ref:`File_Converter_Tool` .
+
+.. ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
+
 Coordinate Data
 ^^^^^^^^^^^^^^^
 Coordinate data, such as PDB (Protein Data Bank) or OMF/SLD (micromagnetic simulation)
@@ -229,26 +242,42 @@ Coordinate Test Data
 A_Raw_Example-1
   - OMF format data file from a simulation of magnetic spheres.
 
-five_tetrahedra_cube
-  - VTK format file describing a cube formed of five finite elements.
-
-sphere_R= x with x = 0_0025, 0_2025, 4 and 2500
-  - VTK format data files describing a homogeneously magnetised sphere. The ratio R 
-    between nuclear and magnetic SLD is varied from mostly magnetic to only nuclear
-    structural scattering.
-
 diamond
   - PDB format data file describing the structure of diamond.
 
 dna
   - PDB format data file describing the structure of DNA.
 
-sld_file
-  - Example SLD format data file.
+five_tetrahedra_cube
+  - VTK format file describing a cube formed of five finite elements.
 
 mag_cylinder
   - SLD file that describes a single cylinder of radius 2nm and length of 4nm.
     The cylinder has equal nuclear and magnetic SLD, magnetised along the length.
+
+sld_file
+  - Example SLD format data file.
+
+sphere_R= x with x = 0_0025, 0_2025, 4 and 2500
+  - VTK format data files describing a homogeneously magnetised sphere. The ratio R 
+    between nuclear and magnetic SLD is varied from mostly magnetic to only nuclear
+    structural scattering.
+
+.. ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
+
+DLS Data
+^^^^^^^^
+DLS (Dynamic Light Scattering) data sets primarily contain the intensity
+autocorrelation function as a function of the delay time (in microseconds).
+
+DLS Test Data
+................
+**Example data files are located in the \\dls_data sub-folder.**
+
+dls_monodisperse / dls_polydisperse
+  - DLS data from a very dilute dispersion of 3 nm polymer latex nanoparticles in
+    H/D-water.
+  - Suitable for testing the cumulants_dls model.
 
 .. ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
 
@@ -268,6 +297,38 @@ ISIS_98940
     gives rise to an anisotropic 2D scattering pattern.
   - The image data is presented in Windows Bitmap (.bmp), GIF (.gif), JPEG (.jpg),
     Portable Network Grpahics (.png), and TIFF (.tif) formats.
+
+.. ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
+
+Magnetic Data
+^^^^^^^^^^^^^
+Polarised SANS data.
+
+Magnetic Test Data
+..................
+**Example data files are located in the \\magnetic_data sub-folder.**
+
+S50
+  - 2D and 1D sector data from 10 nm nanospheres in d8-toluene (c_Fe2O3 = 50 mg/ml,
+    ~1 vol%) at an aligning magnetic field of 1.5 T in horizontal direction.
+  - See `10.1088/1367-2630/14/1/013025 <https://dx.doi.org/10.1088/1367-2630/14/1/013025>`_
+
+.. ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
+
+Reflectometry Data
+^^^^^^^^^^^^^^^^^^
+Neutron (NR) or X-ray (XR) Reflectometry data sets primarily contain the
+interfacial reflectivity as a function of *Q*.
+
+.. note:: The Refl1D reflectivity model-fitting software uses the same fitting
+         engine (Bumps) as SasView.
+
+Reflectometry Test Data
+.......................
+**Example data files are located in the \\reflectometry_data sub-folder.**
+
+NR_Ni_down_state / NR_Ni_up_state
+  - Polarised (spin down/up) NR data from a Ni multilayer sample.
 
 .. ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
 
@@ -297,41 +358,8 @@ spheres2micron_long
 
 .. ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
 
-DLS Data
-^^^^^^^^
-DLS (Dynamic Light Scattering) data sets primarily contain the intensity
-autocorrelation function as a function of the delay time (in microseconds).
-
-DLS Test Data
-................
-**Example data files are located in the \\dls_data sub-folder.**
-
-dls_monodisperse / dls_polydisperse
-  - DLS data from a very dilute dispersion of 3 nm polymer latex nanoparticles in
-    h/d-water.
-  - Suitable for testing the cumulants_dls model.
-
-.. ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
-
-NR Data
-^^^^^^^
-Neutron (NR) or X-ray (XR) Reflectometry data sets primarily contain the
-interfacial reflectivity as a function of *Q*.
-
-.. note:: The Refl1D reflectivity model-fitting software uses the same fitting
-         engine (Bumps) as SasView.
-
-NR Test Data
-................
-**Example data files are located in the \\nr_data sub-folder.**
-
-NR_Ni_down_state / NR_Ni_up_state
-  - Polarised (spin down/up) NR data from a Ni multilayer sample.
-
-.. ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
-
-Save States
-^^^^^^^^^^^
+Saved States
+^^^^^^^^^^^^
 Saved states are projects and analyses saved by the SasView program.
 
 A single analysis file contains the data and parameters for a single fit
@@ -342,9 +370,27 @@ SasView session.
 
 Saved State Test Data
 .....................
+**Example data files are located in the \\saved_states sub-folder.**
+
+constrained_fit_project
+  - A saved fitting project.
+  - The file contents are written in XML.
+
+fit_pr_and_invariant_project
+  - A saved fitting and invariant analysis project.
+  - The file contents are written in XML.
+
 fitstate.fitv
   - A saved fitting analysis.
   - The file contents are written in XML.
+
+project_multiplicative_constraint
+  - A saved fitting project with multiple parameter constraints.
+  - The file contents are written in XML.
+
+project_new_style
+  - A complex saved fitting project.
+  - The file contents are written in JSON.
 
 prstate.prv
   - A saved P(r) analysis.
@@ -358,28 +404,13 @@ test002.inv
   - A saved invariant analysis.
   - The file contents are written in XML.
 
-constrained_fit_project
-  - A saved fitting project.
-  - The file contents are written in XML.
-
-fit_pr_and_invariant_project
-  - A saved fitting and invariant analysis project.
-  - The file contents are written in XML.
-
-project_multiplicative_constraint
-  - A saved fitting project with multiple parameter constraints.
-  - The file contents are written in XML.
-
-project_new_style
-  - A complex saved fitting project.
-  - The file contents are written in JSON.
-
 .. ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
 
-Upcoming Formats
-^^^^^^^^^^^^^^^^
-Data in this folder are in formats that are not yet implemented in SasView but
-which might be in future versions of the program.
+Other Formats
+^^^^^^^^^^^^^
+Data in the \\other_formats folder are alternative variations of formats used
+by SasView, or formats that are not yet implemented but which might be in future
+versions of the program.
 
 1000A_sphere_sm
   - CanSAS 1D format data from 1000 |Ang| spheres.
@@ -390,8 +421,9 @@ which might be in future versions of the program.
 
 Other Test Data
 ^^^^^^^^^^^^^^^
-Data in this folder include weights for testing user-defined distributions (i.e.,
-polydispersity) on angular (theta/phi) or size (radius/length) parameters.
+Data in the \\other_files folder include weights for testing user-defined
+distributions (i.e., polydispersity) on angular (theta/phi) or size (radius/length)
+parameters.
 
 .. note:: Please read the help documentation on :ref:`polydispersityhelp` before
           attempting to use user-defined distributions.
@@ -406,4 +438,4 @@ THETA_weights.txt
 
 .. ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
 
-.. note::  This help document was last changed by Steve King, 26Oct2021
+.. note::  This help document was last changed by Steve King, 25Jan2024
