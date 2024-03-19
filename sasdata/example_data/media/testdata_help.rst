@@ -354,7 +354,7 @@ spheres2micron
 
 spheres2micron_long
   - SESANS data from 2 micron polystyrene spheres in 53% H2O / 47% D2O collected
-    on the LARMOR instrument at ISIS over spin-echo lengths 400 < |:math:`\delta` < 200000 |Ang| .
+    on the LARMOR instrument at ISIS over spin-echo lengths 400 < :math:`\delta` < 200000 |Ang| .
 
 .. ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
 
