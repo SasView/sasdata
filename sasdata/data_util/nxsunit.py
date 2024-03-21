@@ -445,3 +445,18 @@ class Converter:
         if not units:
             return value
         return self.scale(units, value)
+
+    def are_units_sensible(self, units: str) -> bool:
+        """A check to see if the units passed to the method make sense based on the condition type used."""
+        compatible = self.get_compatible_units()
+        std_units = standardize_units(units)
+        if len(compatible) == len(std_units):
+            for comp, unit in zip(compatible, std_units):
+                if unit not in comp:
+                    # If any part of the units are incompatible, they cannot be scaled
+                    return False
+        else:
+            # If the number of unit blocks are different, the units are not compatible
+            return False
+        # If we make it here, all checks were successful
+        return True
