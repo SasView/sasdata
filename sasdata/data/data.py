@@ -18,3 +18,24 @@ class DataMixin:
     noise: np.ndarray
     # A series of external conditions applied during the measurement that resulted in this data set.
     conditions: ConditionVector
+
+
+class SASData(DataMixin):
+    def __init__(self, *args, **kwargs):
+        pass
+
+
+class PinholeData(SASData):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+class SlitData(SASData):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+class SESANSData(DataMixin):
+    def __init__(self, *args, **kwargs):
+        pass
+
