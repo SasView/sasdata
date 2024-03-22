@@ -20,6 +20,11 @@ class DataMixin:
     conditions: ConditionVector
 
 
+class Data(DataMixin):
+    # TODO: Define more for this class as more functionality is required.
+    pass
+
+
 class SASData(DataMixin):
     def __init__(self, *args, **kwargs):
         pass
