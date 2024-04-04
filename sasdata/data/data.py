@@ -22,12 +22,13 @@ class DataMixin:
 
 class Data(DataMixin):
     # TODO: Define more for this class as more functionality is required.
-    pass
-
-
-class SASData(DataMixin):
     def __init__(self, *args, **kwargs):
-        pass
+        super().__init__(*args, **kwargs)
+
+
+class SASData(Data):
+    def __init__(self, *args, **kwargs):
+        super().__init__()
 
 
 class PinholeData(SASData):
@@ -40,7 +41,7 @@ class SlitData(SASData):
         super().__init__(*args, **kwargs)
 
 
-class SESANSData(DataMixin):
+class SESANSData(Data):
     def __init__(self, *args, **kwargs):
-        pass
+        super().__init__(*args, **kwargs)
 
