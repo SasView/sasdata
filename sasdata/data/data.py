@@ -34,6 +34,7 @@ class SASData(Data):
 class PinholeData(SASData):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.resolution_matrix = None
 
 
 class SlitData(SASData):
