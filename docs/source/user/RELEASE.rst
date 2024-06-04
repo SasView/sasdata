@@ -26,7 +26,7 @@ Feature Enhancements
 ____________________
 * Refactor nxsunit by @krzywon in https://github.com/SasView/sasdata/pull/13
 * Enable the sector slicing to allow both sides independantly by @butlerpd in https://github.com/SasView/sasdata/pull/36
-* 31: Load data from URIs by @krzywon in https://github.com/SasView/sasdata/pull/37
+* Load data from URIs by @krzywon in https://github.com/SasView/sasdata/pull/37
 * SasData counterpart to SasView SlicerExtension_1344 by @jack-rooks in https://github.com/SasView/sasdata/pull/61
 
 Bug Fixes
@@ -37,19 +37,19 @@ _________
 
 Documentation Changes
 _____________________
-* 14: Rework readme by @krzywon in https://github.com/SasView/sasdata/pull/15
-* 29: Building sasdata documentation by @krzywon in https://github.com/SasView/sasdata/pull/53
-* 55: Generate Developer Docs by @krzywon in https://github.com/SasView/sasdata/pull/56
+* Rework readme by @krzywon in https://github.com/SasView/sasdata/pull/15
+* Building sasdata documentation by @krzywon in https://github.com/SasView/sasdata/pull/53
+* Generate Developer Docs by @krzywon in https://github.com/SasView/sasdata/pull/56
 
 Infrastructure Changes
 ______________________
 * Remove entry_point from setup.py by @krzywon in https://github.com/SasView/sasdata/pull/2
-* 32: Dependency cleanup by @krzywon in https://github.com/SasView/sasdata/pull/33
-* 8: Move example data to sasdata by @krzywon in https://github.com/SasView/sasdata/pull/49
+* Dependency cleanup by @krzywon in https://github.com/SasView/sasdata/pull/33
+* Move example data to sasdata by @krzywon in https://github.com/SasView/sasdata/pull/49
 * CI updates by @krzywon in https://github.com/SasView/sasdata/pull/50
-* 57: Restrict lxml to versions less than 5.0 by @krzywon in https://github.com/SasView/sasdata/pull/63
+* Restrict lxml to versions less than 5.0 by @krzywon in https://github.com/SasView/sasdata/pull/63
 * Update example data by @smk78 in https://github.com/SasView/sasdata/pull/58
-* 67: Fix broken unit test(s) by @krzywon in https://github.com/SasView/sasdata/pull/68
+* Fix broken unit test(s) by @krzywon in https://github.com/SasView/sasdata/pull/68
 
 New in Version 0.8.1
 --------------------
