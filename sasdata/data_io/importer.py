@@ -59,6 +59,7 @@ class Importer:
         # Open file handle
         self.f_open = None
 
+    # TODO: Optional arguments (**kwargs)
     def read(self, filepath: Union[str, Path], file_handler: Optional[CustomFileOpen] = None,
              f_pos: Optional[int] = 0) -> List[Any]:
         """
