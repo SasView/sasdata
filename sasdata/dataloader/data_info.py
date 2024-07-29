@@ -411,7 +411,7 @@ class Sample(object):
         return _str
 
 
-class Process(object):
+class Process:
     """
     Class that holds information about the processes
     performed on the data.
