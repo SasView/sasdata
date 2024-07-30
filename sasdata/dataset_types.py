@@ -2,8 +2,6 @@
 
 from dataclasses import dataclass
 
-import sasdata.quantities.units as units
-
 #
 #   VERY ROUGH DRAFT - FOR PROTOTYPING PURPOSES
 #
@@ -19,7 +17,7 @@ class DatasetType:
 one_dim = DatasetType(
             name="1D I vs Q",
             required=["Q", "I"],
-            optional=["dI", "dQ", "Shadowfactor", "Qmean", "dQl", "dQw"],
+            optional=["dI", "dQ", "shadow"],
             expected_orders=[
                 ["Q", "I", "dI"],
                 ["Q", "dQ", "I", "dI"]])
@@ -27,7 +25,7 @@ one_dim = DatasetType(
 two_dim = DatasetType(
             name="2D I vs Q",
             required=["Qx", "Qy", "I"],
-            optional=["dQx", "dQy", "dI", "Qz", "ShadowFactor", "mask"],
+            optional=["dQx", "dQy", "dI", "Qz", "shadow"],
             expected_orders=[
                 ["Qx", "Qy", "I"],
                 ["Qx", "Qy", "I", "dI"],
@@ -35,8 +33,8 @@ two_dim = DatasetType(
 
 sesans = DatasetType(
     name="SESANS",
-    required=["SpinEchoLength", "Depolarisation", "Wavelength"],
-    optional=["Transmission", "Polarisation"],
+    required=["z", "G"],
+    optional=["stuff", "other stuff", "more stuff"],
     expected_orders=[["z", "G"]])
 
 dataset_types = {dataset.name for dataset in [one_dim, two_dim, sesans]}
@@ -47,26 +45,22 @@ dataset_types = {dataset.name for dataset in [one_dim, two_dim, sesans]}
 #
 # The unit options should only be those compatible with the field
 #
-
-unit_kinds = {
-    "Q": units.inverse_length,
-    "I": units.inverse_length,
-    "Qx": units.inverse_length,
-    "Qy": units.inverse_length,
-    "Qz": units.inverse_length,
-    "dI": units.inverse_length,
-    "dQ": units.inverse_length,
-    "dQx": units.inverse_length,
-    "dQy": units.inverse_length,
-    "dQz": units.inverse_length,
-    "SpinEchoLength": units.length,
-    "Depolarisation": units.inverse_volume,
-    "Wavelength": units.length,
-    "Transmission": units.dimensionless,
-    "Polarisation": units.dimensionless,
-    "shadow": units.dimensionless,
-    "temperature": units.temperature,
-    "magnetic field": units.magnetic_flux_density
+default_units = {
+    "Q": "1/A",
+    "I": "1/cm",
+    "Qx": "1/A",
+    "Qy": "1/A",
+    "Qz": "1/A",
+    "dI": "1/A",
+    "dQ": "1/A",
+    "dQx": "1/A",
+    "dQy": "1/A",
+    "dQz": "1/A",
+    "z": "A",
+    "G": "<none>",
+    "shaddow": "<none>",
+    "temperature": "K",
+    "magnetic field": "T"
 }
 
 #
