@@ -7,7 +7,7 @@ from data.models import DataSet, MetaData, OperationTree, Quantity, ReferenceQua
 
 
 class TestCreateOperationTree(APITestCase):
-    """Tests for datasets with operation trees."""
+    """Tests for creating datasets with operation trees."""
 
     @classmethod
     def setUpTestData(cls):
@@ -299,6 +299,8 @@ class TestCreateOperationTree(APITestCase):
 
 
 class TestCreateInvalidOperationTree(APITestCase):
+    """Tests for creating datasets with invalid operation trees."""
+
     @classmethod
     def setUpTestData(cls):
         cls.dataset = {
@@ -493,6 +495,8 @@ class TestCreateInvalidOperationTree(APITestCase):
 
 
 class TestGetOperationTree(APITestCase):
+    """Tests for retrieving datasets with operation trees."""
+
     @classmethod
     def setUpTestData(cls):
         cls.user = User.objects.create_user(

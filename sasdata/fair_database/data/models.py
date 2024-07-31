@@ -3,22 +3,25 @@ from django.contrib.auth.models import User
 from django.core.files.storage import FileSystemStorage
 
 
+# method for empty list default value
 def empty_list():
     return []
 
 
+# method for empty dictionary default value
 def empty_dict():
     return {}
 
 
 class Data(models.Model):
-    """Base model for data."""
+    """Base model for data with access-related information."""
 
     #  owner of the data
     current_user = models.ForeignKey(
         User, blank=True, null=True, on_delete=models.CASCADE, related_name="+"
     )
 
+    # users that have been granted view access to the data
     users = models.ManyToManyField(User, blank=True, related_name="+")
 
     # is the data public?
@@ -58,6 +61,7 @@ class DataSet(Data):
     # associated files
     files = models.ManyToManyField(DataFile)
 
+    # session the dataset is a part of, if any
     session = models.ForeignKey(
         "Session",
         on_delete=models.CASCADE,
@@ -86,8 +90,10 @@ class Quantity(models.Model):
     # hash value
     hash = models.IntegerField()
 
+    # label, e.g. Q or I(Q)
     label = models.CharField(max_length=50)
 
+    # data set the quantity is a part of
     dataset = models.ForeignKey(
         DataSet, on_delete=models.CASCADE, related_name="data_contents"
     )
@@ -115,6 +121,7 @@ class ReferenceQuantity(models.Model):
     # hash value
     hash = models.IntegerField()
 
+    # Quantity whose OperationTree this is a reference for
     derived_quantity = models.ForeignKey(
         Quantity,
         related_name="references",
@@ -122,10 +129,10 @@ class ReferenceQuantity(models.Model):
     )
 
 
+# TODO: update based on changes in sasdata/metadata.py
 class MetaData(models.Model):
     """Database model for scattering metadata"""
 
-    # TODO: update based on changes in sasdata/metadata.py
     # title
     title = models.CharField(max_length=500, default="Title")
 
@@ -153,6 +160,7 @@ class MetaData(models.Model):
 class OperationTree(models.Model):
     """Database model for tree of operations performed on a DataSet."""
 
+    # possible operations
     OPERATION_CHOICES = {
         "zero": "0 [Add.Id.]",
         "one": "1 [Mul.Id.]",
@@ -177,8 +185,11 @@ class OperationTree(models.Model):
     # parameters
     parameters = models.JSONField(default=empty_dict)
 
+    # label (a or b) if the operation is a parameter of a child operation
+    # maintains ordering of binary operation parameters
     label = models.CharField(max_length=10, blank=True, null=True)
 
+    # operation this operation is a parameter for, if any
     child_operation = models.ForeignKey(
         "self",
         on_delete=models.CASCADE,
@@ -188,7 +199,7 @@ class OperationTree(models.Model):
     )
 
     # quantity the operation produces
-    # only set for base of tree (the most recent operation)
+    # only set for base of tree (the quantity's most recent operation)
     quantity = models.OneToOneField(
         Quantity,
         on_delete=models.CASCADE,

@@ -10,6 +10,7 @@ from rest_framework import status
 from data.models import DataFile, DataSet, MetaData, OperationTree, Quantity
 
 
+# path to a file in example_data/1d_data
 def find(filename):
     return os.path.join(
         os.path.dirname(__file__), "../../../example_data/1d_data", filename
@@ -245,6 +246,7 @@ class TestDataSet(APITestCase):
         request = self.client.post("/v1/data/set/", data=dataset, format="json")
         self.assertEqual(request.status_code, status.HTTP_400_BAD_REQUEST)
 
+    # Test that a dataset cannot be created without metadata
     def test_metadata_required(self):
         dataset = {
             "name": "No metadata",
@@ -368,6 +370,7 @@ class TestSingleDataSet(APITestCase):
                 "files": [],
                 "metadata": None,
                 "data_contents": [],
+                "session": None,
             },
         )
 
@@ -398,6 +401,7 @@ class TestSingleDataSet(APITestCase):
                     "sample": "none",
                 },
                 "data_contents": [],
+                "session": None,
             },
         )
         self.assertEqual(request1.data, request2.data)
@@ -420,6 +424,7 @@ class TestSingleDataSet(APITestCase):
                     "sample": "none",
                 },
                 "data_contents": [],
+                "session": None,
             },
         )
 
@@ -440,6 +445,7 @@ class TestSingleDataSet(APITestCase):
                 "files": [],
                 "metadata": None,
                 "data_contents": [],
+                "session": None,
             },
         )
 
@@ -532,6 +538,33 @@ class TestSingleDataSet(APITestCase):
         metadata.title = "Metadata"
         metadata.save()
 
+    # Test updating a dataset's files
+    def test_update_dataset_files(self):
+        request = self.auth_client1.put("/v1/data/set/2/", data={"files": [1]})
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(DataSet.objects.get(id=2).files.all()), 1)
+        self.private_dataset.files.remove(self.file)
+
+    # Test replacing a dataset's files
+    def test_update_dataset_replace_files(self):
+        file = DataFile.objects.create(
+            id=2, file_name="cyl_testdata1.txt", is_public=True, current_user=self.user1
+        )
+        file.file.save("cyl_testdata1.txt", open(find("cyl_testdata1.txt")))
+        request = self.auth_client1.put("/v1/data/set/1/", data={"files": [2]})
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(DataSet.objects.get(id=1).files.all()), 1)
+        self.assertTrue(file in DataSet.objects.get(id=1).files.all())
+        self.public_dataset.files.add(self.file)
+        self.public_dataset.files.remove(file)
+
+    # Test updating a dataset to have no files
+    def test_update_dataset_clear_files(self):
+        request = self.auth_client1.put("/v1/data/set/1/", data={"files": [""]})
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(DataSet.objects.get(id=1).files.all()), 0)
+        self.public_dataset.files.add(self.file)
+
     # Test that a dataset cannot be updated to be private and unowned
     def test_update_dataset_no_private_unowned(self):
         request1 = self.auth_client1.put("/v1/data/set/2/", data={"current_user": ""})
@@ -539,13 +572,11 @@ class TestSingleDataSet(APITestCase):
             "/v1/data/set/1/", data={"current_user": "", "is_public": False}
         )
         public_dataset = DataSet.objects.get(id=1)
-        self.assertEqual(request1.status_code, status.HTTP_200_OK)
-        self.assertEqual(request2.status_code, status.HTTP_200_OK)
+        self.assertEqual(request1.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(request2.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(DataSet.objects.get(id=2).current_user, self.user1)
         self.assertEqual(public_dataset.current_user, self.user1)
-        self.assertFalse(public_dataset.is_public)
-        public_dataset.is_public = True
-        public_dataset.save()
+        self.assertTrue(public_dataset.is_public)
 
     # Test deleting a dataset
     def test_delete_dataset(self):

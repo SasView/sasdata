@@ -434,6 +434,7 @@ class TestSingleSession(APITestCase):
         session.is_public = False
         session.save()
 
+    # Test creating a published state by updating a session
     def test_update_session_new_published_state(self):
         request = self.auth_client1.put(
             "/v1/data/session/1/",
@@ -478,6 +479,7 @@ class TestSingleSession(APITestCase):
         session.is_public = False
         session.save()
 
+    # Test updating a published state through its session
     def test_update_session_published_state(self):
         request = self.auth_client1.put(
             "/v1/data/session/2/",

@@ -7,6 +7,8 @@ from django.contrib.auth.models import User
 
 # Create your tests here.
 class AuthTests(TestCase):
+    """Tests for authentication endpoints."""
+
     @classmethod
     def setUpTestData(cls):
         cls.client1 = APIClient()
@@ -33,6 +35,7 @@ class AuthTests(TestCase):
         cls.client_authenticated = APIClient()
         cls.client_authenticated.force_authenticate(user=cls.user)
 
+    # Create an authentication header for a given token
     def auth_header(self, response):
         return {"Authorization": "Token " + response.data["token"]}
 
@@ -125,6 +128,7 @@ class AuthTests(TestCase):
         self.assertEqual(response2.status_code, status.HTTP_401_UNAUTHORIZED)
         User.objects.get(username="testUser").delete()
 
+    # Test multiple logins for the same account log out independently
     def test_multiple_logout(self):
         self.client1.post("/auth/login/", data=self.login_data_2)
         token = self.client2.post("/auth/login/", data=self.login_data_2)

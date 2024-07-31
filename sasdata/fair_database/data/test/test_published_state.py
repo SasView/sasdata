@@ -7,6 +7,7 @@ from data.models import PublishedState, Session
 
 
 # TODO: account for non-placeholder doi
+# Get the placeholder DOI for a session based on id
 def doi_generator(id: int):
     return "http://127.0.0.1:8000/v1/data/session/" + str(id) + "/"
 

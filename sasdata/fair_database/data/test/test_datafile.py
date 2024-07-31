@@ -11,6 +11,7 @@ from rest_framework import status
 from data.models import DataFile
 
 
+# path to a file in example_data/1d_data
 def find(filename):
     return os.path.join(
         os.path.dirname(__file__), "../../../example_data/1d_data", filename
