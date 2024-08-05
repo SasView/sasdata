@@ -1,4 +1,4 @@
-from typing import Generic, TypeVar
+from typing import TypeVar
 
 from numpy._typing import ArrayLike
 
@@ -8,14 +8,11 @@ from sasdata.quantities.quantities import Unit, Quantity
 class RawMetaData:
     pass
 
-class MetaData:
-    pass
-
 
 FieldDataType = TypeVar("FieldDataType")
 OutputDataType = TypeVar("OutputDataType")
 
-class Accessor(Generic[FieldDataType, OutputDataType]):
+class Accessor[FieldDataType, OutputDataType]:
     def __init__(self, target_field: str):
         self._target_field = target_field
 
@@ -33,18 +30,29 @@ class QuantityAccessor(Accessor[ArrayLike, Quantity[ArrayLike]]):
         super().__init__(target_field)
         self._units_field = units_field
 
-    def _get_units(self) -> Unit:
+    def _units(self) -> Unit:
         pass
 
     def _raw_values(self) -> ArrayLike:
         pass
 
+    @property
+    def value(self) -> Quantity[ArrayLike]:
+        return Quantity(self._raw_values(), self._units())
 
-class StringAccessor(Accessor[str]):
+
+class StringAccessor(Accessor[str, str]):
+
+    def _raw_values(self) -> str:
+        pass
+
     @property
     def value(self) -> str:
         return self._raw_values()
 
+#
+# Quantity specific accessors, provides helper methods for quantities with known dimensionality
+#
 
 class LengthAccessor(QuantityAccessor):
     @property
@@ -62,3 +70,15 @@ class TemperatureAccessor(QuantityAccessor):
 
 class AbsoluteTemperatureAccessor(QuantityAccessor):
     pass
+
+
+#
+# Main metadata object
+#
+
+
+class MetaData:
+    def __init__(self, raw: RawMetaData):
+        self._raw = raw
+
+    # Put the structure of the metadata that should be exposed to a power-user / developer in here
