@@ -1,5 +1,6 @@
 from dataclasses import dataclass
-from units_temp import Quantity, NamedQuantity
+from quantities.quantities import Quantity, NamedQuantity
+from sasdata.metadata import MetaData
 
 import numpy as np
 
