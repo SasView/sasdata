@@ -5,6 +5,11 @@ from numpy._typing import ArrayLike
 
 from sasdata.quantities.units import Unit
 
+
+class UnitError(Exception):
+    """ Errors caused by unit specification not being correct """
+
+
 QuantityType = TypeVar("QuantityType")
 
 class Quantity[QuantityType]:
@@ -13,7 +18,10 @@ class Quantity[QuantityType]:
         self.units = units
 
     def in_units_of(self, units: Unit) -> QuantityType:
-        pass
+        if self.units.equivalent(units):
+            return (units.scale / self.units.scale) * self.value
+        else:
+            raise UnitError(f"Target units ({units}) not compatible with existing units ({self.units}).")
 
     def __mul__(self: Self, other: ArrayLike | Self ) -> Self:
         if isinstance(other, Quantity):
@@ -43,36 +51,3 @@ class Quantity[QuantityType]:
         if isinstance(other, Quantity):
             pass
 
-
-class ExpressionMethod:
-    pass
-
-
-class SetExpressionMethod(ExpressionMethod):
-    pass
-
-
-class AnyExpressionMethod(ExpressionMethod):
-    pass
-
-
-class ForceExpressionMethod(ExpressionMethod):
-    pass
-
-
-class UnitToken:
-    def __init__(self, unit: Collection[NamedUnit], method: ExpressionMethod):
-        pass
-
-unit_dictionary = {
-    "Amps": Unit(1, Dimensions(current=1), UnitName("A")),
-    "Coulombs": Unit(1, Dimensions(current=1, time=1), UnitName("C"))
-}
-
-@dataclass
-class Disambiguator:
-    A: Unit = unit_dictionary["Amps"]
-    C: Unit = unit_dictionary["Coulombs"]
-
-def parse_units(unit_string: str, disambiguator: Disambiguator = Disambiguator()) -> Unit:
-    pass
