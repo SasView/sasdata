@@ -218,11 +218,11 @@ with open("units.py", 'w', encoding=encoding) as fid:
     for length_symbol, length_special_symbol, _, length_name, length_scale, _ in length_units:
         for mass_symbol, mass_special_symbol, mass_name, _, mass_scale, _ in mass_units:
 
-            name = length_name + "_per_cubic_" + mass_name
+            name = mass_name + "_per_cubic_" + length_name
 
             dimensions = Dimensions(length=-3, time=1)
 
-            fid.write(f"{speed_name} "
+            fid.write(f"{name} "
                       f"= Unit({mass_scale / length_scale**3}, "
                       f"Dimensions(-3, 1, 0, 0, 0), "
                       f"name='{name}', "
