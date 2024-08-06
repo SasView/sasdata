@@ -3,6 +3,8 @@ from typing import Sequence, Self, TypeVar
 
 import numpy as np
 
+from sasdata.quantities.unicode_superscript import int_as_unicode_superscript
+
 
 class Dimensions:
     """
@@ -72,15 +74,58 @@ class Dimensions:
         return NotImplemented
 
     def __hash__(self):
-        return hash((self.length, self.time, self.mass, self.current, self.temperature))
+        """ Unique representation of units using Godel like encoding"""
+
+        two_powers = 0
+        if self.length < 0:
+            two_powers += 1
+
+        if self.time < 0:
+            two_powers += 2
+
+        if self.mass < 0:
+            two_powers += 4
+
+        if self.current < 0:
+            two_powers += 8
+
+        if self.temperature < 0:
+            two_powers += 16
+
+        return 2**two_powers * 3**abs(self.length) * 5**abs(self.time) * \
+            7**abs(self.mass) * 11**abs(self.current) * 13**abs(self.temperature)
+
+    def __repr__(self):
+        s = ""
+        for name, size in [
+            ("L", self.length),
+            ("T", self.time),
+            ("M", self.mass),
+            ("C", self.current),
+            ("K", self.temperature)]:
+
+            if size == 0:
+                pass
+            elif size == 1:
+                s += f"{name}"
+            else:
+                s += f"{name}{int_as_unicode_superscript(size)}"
+
+        return s
 
 class Unit:
     def __init__(self,
                  si_scaling_factor: float,
-                 dimensions: Dimensions):
+                 dimensions: Dimensions,
+                 name: str | None = None,
+                 ascii_symbol: str | None = None,
+                 symbol: str | None = None):
 
         self.scale = si_scaling_factor
         self.dimensions = dimensions
+        self.name = name
+        self.ascii_symbol = ascii_symbol
+        self.symbol = symbol
 
     def _components(self, tokens: Sequence["UnitToken"]):
         pass
@@ -116,3 +161,8 @@ class Unit:
 
     def __eq__(self: Self, other: Self):
         return self.equivalent(other) and np.abs(np.log(self.scale/other.scale)) < 1e-5
+
+class UnitGroup:
+    def __init__(self, name: str, units: list[Unit]):
+        self.name = name
+        self.units = sorted(units, key=lambda unit: unit.scale)
