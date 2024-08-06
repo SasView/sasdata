@@ -2,11 +2,10 @@
 Builds a data file containing details of units
 """
 
-from collections import defaultdict, namedtuple
-
 import numpy as np
+from collections import defaultdict, namedtuple
+from _units_base import Dimensions, Unit
 from _autogen_warning import warning_text
-from _units_base import Dimensions
 
 Magnitude = namedtuple("Magnitude", ["symbol", "special_symbol", "latex_symbol", "name", "scale"])
 
@@ -61,11 +60,10 @@ derived_si_units = [
 
 non_si_dimensioned_units: list[tuple[str, str | None, str, str, float, int, int, int, int, int, int, int, list]] = [
     UnitData("Ang", "Å", r"\AA", "angstrom", "angstroms", 1e-10, 1, 0, 0, 0, 0, 0, 0, []),
-    UnitData("micron", None, None, "micron", "microns", 1e-6, 1, 0, 0, 0, 0, 0, 0, []),
     UnitData("min", None, None, "minute", "minutes", 60, 0, 1, 0, 0, 0, 0, 0, []),
-    UnitData("h", None, None, "hour", "hours", 3600, 0, 1, 0, 0, 0, 0, 0, []),
-    UnitData("d", None, None, "day", "days", 3600*24, 0, 1, 0, 0, 0, 0, 0, []),
-    UnitData("y", None, None, "year", "years", 3600*24*365.2425, 0, 1, 0, 0, 0, 0, 0, []),
+    UnitData("h", None, None, "hour", "hours", 360, 0, 1, 0, 0, 0, 0, 0, []),
+    UnitData("d", None, None, "day", "days", 360*24, 0, 1, 0, 0, 0, 0, 0, []),
+    UnitData("y", None, None, "year", "years", 360*24*365.2425, 0, 1, 0, 0, 0, 0, 0, []),
     UnitData("deg", None, None, "degree", "degrees", 180/np.pi, 0, 0, 0, 0, 0, 0, 1, []),
     UnitData("rad", None, None, "radian", "radians", 1, 0, 0, 0, 0, 0, 0, 1, []),
     UnitData("rot", None, None, "rotation", "rotations", 2*np.pi, 0, 0, 0, 0, 0, 0, 1, []),
@@ -111,7 +109,7 @@ aliases_2 = {
     "Ang": ["A", "Å"],
     "au": ["amu"],
     "percent": ["%"],
-    "deg": ["degr", "Deg", "degree", "degrees", "Degrees"],
+    "deg": ["degr", "Deg", "degrees", "Degrees"],
     "none": ["Counts", "counts", "cnts", "Cnts", "a.u.", "fraction", "Fraction"],
     "K": ["C"] # Ugh, cansas
 }
@@ -136,7 +134,7 @@ with open("units.py", 'w', encoding=encoding) as fid:
               "# Included from _units_base.py\n"
               "#\n\n")
 
-    with open("_units_base.py") as base:
+    with open("_units_base.py", 'r') as base:
         for line in base:
             # unicode_superscript is a local module when called from
             # _unit_tables.py but a submodule of sasdata.quantities
@@ -408,7 +406,7 @@ with open("accessors.py", 'w', encoding=encoding) as fid:
 
     fid.write('"""'+(warning_text%"_build_tables.py, _accessor_base.py")+'"""\n\n')
 
-    with open("_accessor_base.py") as base:
+    with open("_accessor_base.py", 'r') as base:
         for line in base:
             fid.write(line)
 
