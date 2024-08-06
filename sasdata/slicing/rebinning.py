@@ -1,13 +1,14 @@
-import time
 from abc import ABC, abstractmethod
+from typing import Optional
 from dataclasses import dataclass
 
 import numpy as np
 
 from sasdata.slicing.meshes.mesh import Mesh
-from sasdata.slicing.meshes.meshmerge import meshmerge
 from sasdata.slicing.meshes.voronoi_mesh import voronoi_mesh
+from sasdata.slicing.meshes.meshmerge import meshmerge
 
+import time
 
 @dataclass
 class CacheData:
@@ -23,10 +24,10 @@ class Rebinner(ABC):
     def __init__(self):
         """ Base class for rebinning methods"""
 
-        self._bin_mesh_cache: Mesh | None = None # cached version of the output bin mesh
+        self._bin_mesh_cache: Optional[Mesh] = None # cached version of the output bin mesh
 
         # Output dependent caching
-        self._input_cache: CacheData | None = None
+        self._input_cache: Optional[CacheData] = None
 
 
     @abstractmethod

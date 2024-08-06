@@ -5,7 +5,8 @@ It's pretty hard to test componentwise, but we can do some tests of the general 
 """
 
 from sasdata.slicing.meshes.meshmerge import meshmerge
-from test.slicers.meshes_for_testing import expected_grid_mappings, expected_shape_mappings, grid_mesh, shape_mesh
+from test.slicers.meshes_for_testing import (
+    grid_mesh, shape_mesh, expected_grid_mappings, expected_shape_mappings)
 
 
 def test_meshmerge_mappings():

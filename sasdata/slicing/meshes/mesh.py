@@ -1,12 +1,12 @@
-from collections.abc import Sequence
+from typing import Sequence
+
+import numpy as np
 
 import matplotlib.pyplot as plt
-import numpy as np
 from matplotlib import cm
 from matplotlib.collections import LineCollection
 
 from sasdata.slicing.meshes.util import closed_loop_edges
-
 
 class Mesh:
     def __init__(self,
@@ -131,6 +131,8 @@ class Mesh:
 
         x = x.reshape(-1)
         y = y.reshape(-1)
+
+        xy = np.concatenate(([x], [y]), axis=1)
 
         # The most simple implementation is not particularly fast, especially in python
         #

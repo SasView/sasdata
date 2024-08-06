@@ -1,13 +1,14 @@
 """ Algorithms for interpolation and rebinning """
-
-from enum import Enum
+from typing import TypeVar
 
 import numpy as np
 from numpy._typing import ArrayLike
-from scipy.sparse import coo_matrix
+from scipy.interpolate import interp1d
 
 from sasdata.quantities.quantity import Quantity
+from scipy.sparse import coo_matrix
 
+from enum import Enum
 
 class InterpolationOptions(Enum):
     NEAREST_NEIGHBOUR = 0
@@ -123,68 +124,11 @@ def calculate_interpolation_matrix_1d(input_axis: Quantity[ArrayLike],
 
         case InterpolationOptions.CUBIC:
             # Cubic interpolation, much harder to implement because we can't just cheat and use numpy
-
-            input_indices = np.arange(n_in, dtype=int)
-            output_indices = np.arange(n_out, dtype=int)
-
-            # Find the location of the largest value in sorted_in that
-            # is less than every value of sorted_out
-            lower_bound = (
-                np.sum(np.where(np.less.outer(sorted_in, sorted_out), 1, 0), axis=0) - 1
-            )
-
-            # We're using the Finite Difference Cubic Hermite spline
-            # https://en.wikipedia.org/wiki/Cubic_Hermite_spline#Interpolation_on_an_arbitrary_interval
-            # https://en.wikipedia.org/wiki/Cubic_Hermite_spline#Finite_difference
-
-            x1 = sorted_in[lower_bound]  # xₖ on the wiki
-            x2 = sorted_in[lower_bound + 1]  # xₖ₊₁ on the wiki
-
-            x0 = sorted_in[lower_bound[lower_bound - 1 >= 0] - 1]  # xpₖ₋₁ on the wiki
-            x0 = np.hstack([np.zeros(x1.size - x0.size), x0])
-
-            x3 = sorted_in[
-                lower_bound[lower_bound + 2 < sorted_in.size] + 2
-            ]  # xₖ₊₂ on the wiki
-            x3 = np.hstack([x3, np.zeros(x2.size - x3.size)])
-
-            t = (sorted_out - x1) / (x2 - x1)  # t on the wiki
-
-            y0 = (
-                -t * (x1 - x2) * (t**2 - 2 * t + 1) / (2 * x0 - 2 * x1)
-            )  # The coefficient to pₖ₋₁ on the wiki
-            y1 = (
-                -t * (t**2 - 2 * t + 1) * (x0 - 2 * x1 + x2)
-                + (x0 - x1) * (3 * t**3 - 5 * t**2 + 2)
-            ) / (2 * (x0 - x1))  # The coefficient to pₖ
-            y2 = (
-                t
-                * (
-                    -t * (t - 1) * (x1 - 2 * x2 + x3)
-                    + (x2 - x3) * (-3 * t**2 + 4 * t + 1)
-                )
-                / (2 * (x2 - x3))
-            )  # The coefficient to pₗ₊₁
-            y3 = t**2 * (t - 1) * (x1 - x2) / (2 * (x2 - x3))  # The coefficient to pₖ₊₂
-
-            conversion_matrix = np.zeros((n_in, n_out))
-
-            (row, column) = np.indices(conversion_matrix.shape)
-
-            mask1 = row == lower_bound[column]
-
-            conversion_matrix[np.roll(mask1, -1, axis=0)] = y0
-            conversion_matrix[mask1] = y1
-            conversion_matrix[np.roll(mask1, 1, axis=0)] = y2
-
-            # Special boundary condition for y3
-            pick = np.roll(mask1, 2, axis=0)
-            pick[0:1, :] = 0
-            if pick.any():
-                conversion_matrix[pick] = y3
+            raise NotImplementedError("Cubic interpolation not implemented yet")
 
         case _:
             raise InterpolationError(f"Unsupported interpolation order: {order}")
+
 
     if mask is None:
         return conversion_matrix, None

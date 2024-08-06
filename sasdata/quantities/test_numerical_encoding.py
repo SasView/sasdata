@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 
-from sasdata.quantities.numerical_encoding import numerical_decode, numerical_encode
+from sasdata.quantities.numerical_encoding import numerical_encode, numerical_decode
 
 
 @pytest.mark.parametrize("value", [-100.0, -10.0, -1.0, 0.0, 0.5, 1.0, 10.0, 100.0, 1e100])
@@ -63,4 +63,6 @@ def test_numpy_dtypes_encode_decode(dtype):
 ])
 def test_coo_matrix_encode_decode(shape, n, m, dtype):
 
+    i_indices =
+    
     values = np.arange(10)
