@@ -1,18 +1,10 @@
-import re
+from dataclasses import dataclass
+from typing import Sequence, Self, TypeVar
 from fractions import Fraction
 
 import numpy as np
 
-_ascii_version = "0123456789-"
-_unicode_version = "⁰¹²³⁴⁵⁶⁷⁸⁹⁻"
-
-def int_as_unicode_superscript(number: int):
-    string = str(number)
-
-    for old, new in zip(_ascii_version, _unicode_version):
-        string = string.replace(old, new)
-
-    return string
+from unicode_superscript import int_as_unicode_superscript
 
 class DimensionError(Exception):
     pass
@@ -289,112 +281,11 @@ class NamedUnit(Unit):
     def __repr__(self):
         return self.name
 
-    def __eq__(self, other):
-        """Match other units exactly or match strings against ANY of our names"""
-        match other:
-            case str():
-                return self.name == other or self.name == f"{other}s" or self.ascii_symbol == other or self.symbol == other
-            case NamedUnit():
-                return self.name == other.name \
-                    and self.ascii_symbol == other.ascii_symbol and self.symbol == other.symbol
-            case Unit():
-                return self.equivalent(other) and np.abs(np.log(self.scale/other.scale)) < 1e-5
-            case _:
-                return False
-
-
-    def startswith(self, prefix: str) -> bool:
-        """Check if any representation of the unit begins with the prefix string"""
-        prefix = prefix.lower()
-        return (self.name is not None and self.name.lower().startswith(prefix)) \
-                or (self.ascii_symbol is not None and self.ascii_symbol.lower().startswith(prefix)) \
-                or (self.symbol is not None and self.symbol.lower().startswith(prefix))
-
-
-class UnknownUnit(NamedUnit):
-    """A unit for an unknown quantity
-
-    While this library attempts to handle all known SI units, it is
-    likely that users will want to express quantities of arbitrary
-    units (for example, calculating donuts per person for a meeting).
-    The arbitrary unit allows for these unforseeable quantities."""
-
-    def __init__(self,
-                 numerator: str | list[str] | dict[str, int | float],
-                 denominator: None | list[str] | dict[str, int | float] = None):
-        if numerator is None:
-            return TypeError
-        self._numerator = UnknownUnit._parse_arg(numerator)
-        self._denominator = UnknownUnit._parse_arg(denominator)
-        self._unit = NamedUnit(1, Dimensions(), "")  # Unitless
-
-        super().__init__(si_scaling_factor=1, dimensions=self._unit.dimensions, symbol=self._name())
-
-    @staticmethod
-    def _parse_arg(arg: str | list[str] | dict[str, int | float] | None) -> dict[str, int | float]:
-        """Parse the different possibilities for constructor arguments
-
-        Both the numerator and the denominator could be a string, a
-        list of strings, or a dict.  Parse any of these values into a
-        dictionary of names and powers.
-
-        """
-        match arg:
-            case None:
-                return {}
-            case str():
-                return {UnknownUnit._valid_name(arg): 1}
-            case list():
-                result: dict[str, int | float] = {}
-                for key in arg:
-                    if key in result:
-                        result[key] += 1
-                    else:
-                        UnknownUnit._valid_name(key)
-                        result[key] = 1
-                return result
-            case dict():
-                for key in arg:
-                    UnknownUnit._valid_name(key)
-                return arg
-            case _:
-                raise TypeError
-
-    @staticmethod
-    def _valid_name(name: str) -> str:
-        """Confirms that the name of a unit is appropriate
-
-        This mostly confirms that the unit does not contain math
-        operators that would act on other units, like / or ^
-        """
-
-        if re.search(r"[*/^\s]", name):
-            raise RuntimeError(f'Unit name "{name}" contains invalid characters (*, /, ^, or whitespace)')
-
-        return name
-
-    def _name(self):
-        num = []
-        for key, value in self._numerator.items():
-            if value == 1:
-                num.append(key)
-            else:
-                num.append(f"{key}^{value}")
-        den = []
-        for key, value in self._denominator.items():
-            den.append(f"{key}^{-value}")
-        num.sort()
-        den.sort()
-        return " ".join(num + den)
-
-    def __eq__(self, other):
-        match other:
-            case UnknownUnit():
-                return self._numerator == other._numerator and self._denominator == other._denominator and self._unit == other._unit
-            case Unit():
-                return not self._numerator and not self._denominator and self._unit == other
-            case _:
-                return False
+#
+# Parsing plan:
+#  Require unknown amounts of units to be explicitly positive or negative?
+#
+#
 
 
     def __mul__(self: Self, other: "Unit"):
@@ -453,55 +344,16 @@ class UnknownUnit(NamedUnit):
     def __rtruediv__(self: Self, other: "Unit") -> "UnknownUnit":
         return (self/other) ** -1
 
-    def __pow__(self, power: int | float) -> "UnknownUnit":
-        match power:
-            case int() | float():
-                num = {key: value * power for key, value in self._numerator.items()}
-                den = {key: value * power for key, value in self._denominator.items()}
-                if power < 0:
-                    num, den = den, num
-                    num = {k: -v for k,v in num.items()}
-                    den = {k: -v for k,v in den.items()}
+        return new_scale, new_dimensions, token
+class GreedyAbsDimensionUnitFormatProcessor(UnitFormatProcessor):
+    """ This processor minimises the dimensionality of the unit by multiplying by as many
+    units of the specified type as needed """
+    def __init__(self, unit: Unit):
+        self.unit = unit
 
-                result = UnknownUnit(num, den)
-                result._unit = self._unit ** power
-                return result
-            case _:
-                return NotImplemented
 
-    def equivalent(self: Self, other: "Unit"):
-        match other:
-            case UnknownUnit():
-                return self._unit.equivalent(other._unit) and sorted(self._numerator) == sorted(other._numerator) and sorted(self._denominator) == sorted(other._denominator)
-            case _:
-                return False
-
-    def _reduce(self):
-        """Remove redundant units"""
-        for k in self._denominator:
-            if k in self._numerator:
-                common = min(self._numerator[k], self._denominator[k])
-                self._numerator[k] -= common
-                self._denominator[k] -= common
-        dead_nums = [k for k in self._numerator if self._numerator[k] == 0]
-        for k in dead_nums:
-            del self._numerator[k]
-        dead_dens = [k for k in self._denominator if self._denominator[k] == 0]
-        for k in dead_dens:
-            del self._denominator[k]
-        return self
-
-    def __str__(self):
-        result = self._name()
-        if type(self._unit) is NamedUnit and self._unit.name.strip():
-            result += f" {self._unit.name.strip()}"
-        if type(self._unit) is Unit and str(self._unit).strip():
-            result += f" {str(self._unit).strip()}"
-        return result
-
-    def __repr__(self):
-        return str(self)
-
+class GreedyAbsDimensionUnitFormatProcessor(UnitFormatProcessor):
+    pass
 
 class UnitGroup:
     """ A group of units that all have the same dimensionality """

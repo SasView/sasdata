@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from sasdata.metadata import Metadata
 from transforms.operation import Operation
 
 
@@ -11,8 +12,8 @@ class ModellingRequirements:
     dimensionality: int
     operation: Operation
 
-
-    def from_qi_transformation(self, data: np.ndarray) -> np.ndaarray:
+    def from_qi_transformation(self, data: np.ndarray, metadata: Metadata) -> np.ndarray:
+        """ Transformation for going from qi to this data"""
         pass
 
 
