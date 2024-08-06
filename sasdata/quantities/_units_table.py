@@ -22,31 +22,36 @@ smaller_magnitudes = [
     ("f", None, "femto", 1e-15),
     ("a", None, "atto", 1e-18)]
 
+unusual_magnitudes = [
+    ("d", None, "deci", 1e-1),
+    ("c", None, "centi", 1e-2)
+]
+
 all_magnitudes = bigger_magnitudes + smaller_magnitudes
 
 # Length, time, mass, current, temperature
 base_si_units = [
-    ("m", None, "meter", "meters", 1, 1, 0, 0, 0, 0, all_magnitudes),
-    ("s", None, "second", "seconds", 1, 0, 1, 0, 0, 0, smaller_magnitudes),
-    ("g", None, "gram", "grams", 1e-3, 0, 0, 1, 0, 0, all_magnitudes),
-    ("A", None, "amp", "amps", 1, 0, 0, 0, 1, 0, all_magnitudes),
-    ("K", None, "kelvin", "kelvin", 1, 0, 0, 0, 0, 1, all_magnitudes) ]
+    ("m", None, "meter", "meters", 1, 1, 0, 0, 0, 0, 0, 0, all_magnitudes + unusual_magnitudes),
+    ("s", None, "second", "seconds", 1, 0, 1, 0, 0, 0, 0, 0, smaller_magnitudes),
+    ("g", None, "gram", "grams", 1e-3, 0, 0, 1, 0, 0, 0, 0, all_magnitudes),
+    ("A", None, "amp", "amps", 1, 0, 0, 0, 1, 0, 0, 0, all_magnitudes),
+    ("K", None, "kelvin", "kelvin", 1, 0, 0, 0, 0, 1, 0, 0, all_magnitudes) ]
 
 derived_si_units = [
-    ("Hz", None, "hertz", "hertz", 1, 0, -1, 0, 0, 0, all_magnitudes),
-    ("N", None, "newton", "newtons", 1, 1, -2, 1, 0, 0, all_magnitudes),
-    ("Pa", None, "pascal", "pascals", 1, -1, -2, 1, 0, 0, all_magnitudes),
-    ("J", None, "joule", "joules", 1, 2, -2, 1, 0, 0, all_magnitudes),
-    ("W", None, "watt", "watts", 1, 2, -3, 1, 0, 0, all_magnitudes),
-    ("C", None, "coulomb", "coulombs", 1, 0, 1, 0, 1, 0, all_magnitudes),
-    ("V", None, "volts", "volts", 1, 2, -3, 1, -1, 0, all_magnitudes),
-    ("Ohm", "Ω", "ohm", "ohms", 1, 2, -3, 1, -2, 0, all_magnitudes),
-    ("F", None, "farad", "farads", 1, -2, 4, -1, 2, 0, all_magnitudes),
-    ("S", None, "siemens", "siemens", 1, -2, 3, -1, 2, 0, all_magnitudes),
-    ("Wb", None, "weber", "webers", 1, 2, -2, 1, -1, 0, all_magnitudes),
-    ("T", None, "tesla", "tesla", 1, 0, -2, 1, -1, 0, all_magnitudes),
-    ("H", None, "henry", "henry", 1, 2, -2, 1, -2, 0, all_magnitudes),
-    ("C", None, "degree Celsius", "degrees Celsius", 1, 0, 0, 0, 0, 1, [])
+    ("Hz", None, "hertz", "hertz", 1, 0, -1, 0, 0, 0, 0, 0, all_magnitudes),
+    ("N", None, "newton", "newtons", 1, 1, -2, 1, 0, 0, 0, 0, all_magnitudes),
+    ("Pa", None, "pascal", "pascals", 1, -1, -2, 1, 0, 0, 0, 0, all_magnitudes),
+    ("J", None, "joule", "joules", 1, 2, -2, 1, 0, 0, 0, 0, all_magnitudes),
+    ("W", None, "watt", "watts", 1, 2, -3, 1, 0, 0, 0, 0, all_magnitudes),
+    ("C", None, "coulomb", "coulombs", 1, 0, 1, 0, 1, 0, 0, 0, all_magnitudes),
+    ("V", None, "volts", "volts", 1, 2, -3, 1, -1, 0, 0, 0, all_magnitudes),
+    ("Ohm", "Ω", "ohm", "ohms", 1, 2, -3, 1, -2, 0, 0, 0, all_magnitudes),
+    ("F", None, "farad", "farads", 1, -2, 4, -1, 2, 0, 0, 0, all_magnitudes),
+    ("S", None, "siemens", "siemens", 1, -2, 3, -1, 2, 0, 0, 0, all_magnitudes),
+    ("Wb", None, "weber", "webers", 1, 2, -2, 1, -1, 0, 0, 0, all_magnitudes),
+    ("T", None, "tesla", "tesla", 1, 0, -2, 1, -1, 0, 0, 0, all_magnitudes),
+    ("H", None, "henry", "henry", 1, 2, -2, 1, -2, 0, 0, 0, all_magnitudes),
+    ("C", None, "degree Celsius", "degrees Celsius", 1, 0, 0, 0, 0, 1, 0, 0, [])
 ]
 
 non_si_units = [
@@ -109,13 +114,13 @@ with open("units.py", 'w', encoding=encoding) as fid:
     unit_types_temp = defaultdict(list) # Keep track of unit types
     unit_types = defaultdict(list)
 
-    for symbol, special_symbol, singular, plural, scale, length, time, mass, current, temperature, magnitudes in all_units:
+    for symbol, special_symbol, singular, plural, scale, length, time, mass, current, temperature, moles_hint, angle_hint, magnitudes in all_units:
 
         formatted_plural = format_name(plural)
         formatted_singular = format_name(singular)
 
-        dimensions = Dimensions(length, time, mass, current, temperature)
-        fid.write(f"{formatted_plural} = Unit({scale}, Dimensions({length}, {time}, {mass}, {current}, {temperature}),"
+        dimensions = Dimensions(length, time, mass, current, temperature, moles_hint, angle_hint)
+        fid.write(f"{formatted_plural} = Unit({scale}, Dimensions({length}, {time}, {mass}, {current}, {temperature}, {moles_hint}, {angle_hint}),"
                       f"name='{formatted_plural}',"
                       f"ascii_symbol='{symbol}',"
                       f"symbol='{symbol if special_symbol is None else special_symbol}')\n")
@@ -144,7 +149,7 @@ with open("units.py", 'w', encoding=encoding) as fid:
             combined_scale = scale * mag_scale
 
             # Units
-            dimensions = Dimensions(length, time, mass, current, temperature)
+            dimensions = Dimensions(length, time, mass, current, temperature, moles_hint, angle_hint)
             fid.write(f"{combined_name_plural} = Unit({combined_scale}, "
                       f"Dimensions({length}, {time}, {mass}, {current}, {temperature}),"
                       f"name='{combined_name_plural}',"
@@ -180,7 +185,7 @@ with open("units.py", 'w', encoding=encoding) as fid:
             unit_name = prefix + name
             unit_special_symbol = (symbol if special_symbol is None else special_symbol) + unicode_suffix
             unit_symbol = symbol + f"^{power}"
-            fid.write(f"{unit_name} = Unit({scale**power}, Dimensions({power}, 0, 0, 0, 0), "
+            fid.write(f"{unit_name} = Unit({scale**power}, Dimensions(length={power}), "
                       f"name='{unit_name}', "
                       f"ascii_symbol='{unit_symbol}', "
                       f"symbol='{unit_special_symbol}')\n")
@@ -198,13 +203,13 @@ with open("units.py", 'w', encoding=encoding) as fid:
 
             fid.write(f"{speed_name} "
                       f"= Unit({length_scale / time_scale}, "
-                      f"Dimensions(1, -1, 0, 0, 0), "
+                      f"Dimensions(length=1, time=-1), "
                       f"name='{speed_name}', "
                       f"ascii_symbol='{length_symbol}/{time_symbol}', "
                       f"symbol='{length_special_symbol}{time_special_symbol}⁻¹')\n")
 
             fid.write(f"{accel_name} = Unit({length_scale / time_scale}, "
-                      f"Dimensions(1, -2, 0, 0, 0), "
+                      f"Dimensions(length=1, time=-2), "
                       f"name='{accel_name}', "
                       f"ascii_symbol='{length_symbol}/{time_symbol}^2', "
                       f"symbol='{length_special_symbol}{time_special_symbol}⁻²')\n")
@@ -255,7 +260,6 @@ with open("units.py", 'w', encoding=encoding) as fid:
 
     for dimension_name, dimensions in dimension_names:
 
-        print(dimensions, hash(dimensions))
 
         fid.write(f"\n"
                   f"{dimension_name} = UnitGroup(\n"

@@ -103,6 +103,11 @@ class Unit:
         return Unit(self.scale**power, self.dimensions**power)
 
 
+
+class UnitError(Exception):
+    """ Errors caused by unit specification not being correct """
+
+
 QuantityType = TypeVar("QuantityType")
 class Quantity(Generic[QuantityType]):
     def __init__(self, value: QuantityType, units: Unit):
@@ -110,7 +115,10 @@ class Quantity(Generic[QuantityType]):
         self.units = units
 
     def in_units_of(self, units: Unit) -> QuantityType:
-        pass
+        if self.units.equivalent(units):
+            return (units.scale / self.units.scale) * self.value
+        else:
+            raise UnitError(f"Target units ({units}) not compatible with existing units ({self.units}).")
 
 class ExpressionMethod:
     pass
