@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 from numpy._typing import ArrayLike
 
-from sasdata.quantities.units_base import Unit
+from sasdata.quantities.units import Unit
 
 QuantityType = TypeVar("QuantityType")
 
