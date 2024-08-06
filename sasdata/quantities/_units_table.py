@@ -50,20 +50,23 @@ derived_si_units = [
 ]
 
 non_si_units = [
-    ("A", "Å", "angstrom", "angstroms", 1e-10, 1, 0, 0, 0, 0, []),
-    ("Ang", None, "angstrom", "angstroms", 1e-10, 1, 0, 0, 0, 0, []),
+    ("Ang", "Å", "angstrom", "angstroms", 1e-10, 1, 0, 0, 0, 0, []),
     ("min", None, "minute", "minutes", 60, 0, 1, 0, 0, 0, []),
-    ("hr", None, "hour", "hours", 360, 0, 1, 0, 0, 0, []),
+    ("h", None, "hour", "hours", 360, 0, 1, 0, 0, 0, []),
     ("d", None, "day", "days", 360*24, 0, 1, 0, 0, 0, []),
-    ("day", None, "day", "days", 360*24, 0, 1, 0, 0, 0, []),
     ("y", None, "year", "years", 360*24*365.2425, 0, 1, 0, 0, 0, []),
-    ("yr", None, "year", "years", 360*24*365.2425, 0, 1, 0, 0, 0, []),
     ("deg", None, "degree", "degrees", 180/np.pi, 0, 0, 0, 0, 0, []),
     ("rad", None, "radian", "radians", 1, 0, 0, 0, 0, 0, []),
     ("sr", None, "stradian", "stradians", 1, 0, 0, 0, 0, 0, []),
     ("none", None, "none", "none", 1, 0, 0, 0, 0, 0, [])
 ]
 
+aliases = {
+    "y": ["yr", "year"],
+    "d": ["day"],
+    "h": ["hr", "hour"],
+    "Ang": ["A", "Å"]
+}
 
 
 all_units = base_si_units + derived_si_units + non_si_units
@@ -215,8 +218,8 @@ with open("units.py", 'w', encoding=encoding) as fid:
             unit_types[hash(accel_dimensions)].append(accel_name)
 
     # Density
-    for length_symbol, length_special_symbol, _, length_name, length_scale, _ in length_units:
-        for mass_symbol, mass_special_symbol, mass_name, _, mass_scale, _ in mass_units:
+    for length_symbol, length_special_symbol, length_name, _, length_scale, _ in length_units:
+        for mass_symbol, mass_special_symbol, _, mass_name, mass_scale, _ in mass_units:
 
             name = mass_name + "_per_cubic_" + length_name
 
@@ -230,6 +233,15 @@ with open("units.py", 'w', encoding=encoding) as fid:
                       f"symbol='{mass_special_symbol}{length_special_symbol}⁻³')\n")
 
             unit_types[hash(dimensions)].append(name)
+
+    #
+    # Add aliases to symbol lookup table
+    #
+
+    for base_name in aliases:
+        alias_list = aliases[base_name]
+        for alias in alias_list:
+            symbol_lookup[alias] = symbol_lookup[base_name]
 
     #
     # Write out the symbol lookup table
