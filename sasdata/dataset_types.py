@@ -2,6 +2,8 @@
 
 from dataclasses import dataclass
 
+import sasdata.quantities.units as units
+
 #
 #   VERY ROUGH DRAFT - FOR PROTOTYPING PURPOSES
 #
@@ -45,22 +47,23 @@ dataset_types = {dataset.name for dataset in [one_dim, two_dim, sesans]}
 #
 # The unit options should only be those compatible with the field
 #
-default_units = {
-    "Q": "1/A",
-    "I": "1/cm",
-    "Qx": "1/A",
-    "Qy": "1/A",
-    "Qz": "1/A",
-    "dI": "1/A",
-    "dQ": "1/A",
-    "dQx": "1/A",
-    "dQy": "1/A",
-    "dQz": "1/A",
-    "z": "A",
-    "G": "<none>",
-    "shaddow": "<none>",
-    "temperature": "K",
-    "magnetic field": "T"
+
+unit_kinds = {
+    "Q": units.inverse_length,
+    "I": units.inverse_length,
+    "Qx": units.inverse_length,
+    "Qy": units.inverse_length,
+    "Qz": units.inverse_length,
+    "dI": units.inverse_length,
+    "dQ": units.inverse_length,
+    "dQx": units.inverse_length,
+    "dQy": units.inverse_length,
+    "dQz": units.inverse_length,
+    "z": units.length,
+    "G": units.area,
+    "shaddow": units.dimensionless,
+    "temperature": units.temperature,
+    "magnetic field": units.magnetic_flux_density
 }
 
 #
