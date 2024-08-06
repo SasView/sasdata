@@ -34,7 +34,7 @@ tests = [
 
     EqualUnits("Resistance",
                units.ohms,
-               units.volts / units.amps,
+               units.volts / units.amperes,
                1e-3/units.millisiemens)
 
 
