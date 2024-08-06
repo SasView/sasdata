@@ -61,7 +61,7 @@ unit_kinds = {
     "dQz": units.inverse_length,
     "z": units.length,
     "G": units.area,
-    "shaddow": units.dimensionless,
+    "shadow": units.dimensionless,
     "temperature": units.temperature,
     "magnetic field": units.magnetic_flux_density
 }
