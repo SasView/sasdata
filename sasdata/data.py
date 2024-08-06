@@ -1,19 +1,45 @@
+from enum import Enum
+from typing import TypeVar, Any, Self
 from dataclasses import dataclass
-from quantities.quantities import Quantity, NamedQuantity
-from sasdata.metadata import MetaData
 
 import numpy as np
 
-from sasdata.model_requirements import ModellingRequirements
+from sasdata.quantities.quantity import NamedQuantity
+from sasdata.metadata import Metadata
+from sasdata.quantities.accessors import AccessorTarget
+from sasdata.data_backing import Group, key_tree
 
 
+class SasData:
+    def __init__(self, name: str,
+                 data_contents: list[NamedQuantity],
+                 raw_metadata: Group,
+                 verbose: bool=False):
 
+        self.name = name
+        self._data_contents = data_contents
+        self._raw_metadata = raw_metadata
+        self._verbose = verbose
 
-@dataclass
-class SASData:
-    abscissae: list[NamedQuantity[np.ndarray]]
-    ordinate: NamedQuantity[np.ndarray]
-    other: list[NamedQuantity[np.ndarray]]
+        self.metadata = Metadata(AccessorTarget(raw_metadata, verbose=verbose))
 
-    metadata: MetaData
-    model_requirements: ModellingRequirements
+        # Components that need to be organised after creation
+        self.ordinate: NamedQuantity[np.ndarray] = None # TODO: fill out
+        self.abscissae: list[NamedQuantity[np.ndarray]] = None # TODO: fill out
+        self.mask = None # TODO: fill out
+        self.model_requirements = None # TODO: fill out
+
+    def summary(self, indent = "  ", include_raw=False):
+        s = f"{self.name}\n"
+
+        for data in self._data_contents:
+            s += f"{indent}{data}\n"
+
+        s += f"Metadata:\n"
+        s += "\n"
+        s += self.metadata.summary()
+
+        if include_raw:
+            s += key_tree(self._raw_metadata)
+
+        return s
