@@ -60,7 +60,8 @@ non_si_units = [
     ("yr", None, "year", "years", 360*24*365.2425, 0, 1, 0, 0, 0, []),
     ("deg", None, "degree", "degrees", 180/np.pi, 0, 0, 0, 0, 0, []),
     ("rad", None, "radian", "radians", 1, 0, 0, 0, 0, 0, []),
-    ("sr", None, "stradian", "stradians", 1, 0, 0, 0, 0, 0, [])
+    ("sr", None, "stradian", "stradians", 1, 0, 0, 0, 0, 0, []),
+    ("none", None, "none", "none", 1, 0, 0, 0, 0, 0, [])
 ]
 
 
@@ -166,6 +167,7 @@ with open("units.py", 'w', encoding=encoding) as fid:
 
     length_units = unit_types_temp[hash(Dimensions(length=1))]
     time_units = unit_types_temp[hash(Dimensions(time=1))]
+    mass_units = unit_types_temp[hash(Dimensions(mass=1))]
 
     # Length based
     for symbol, special_symbol, singular, plural, scale, _ in length_units:
@@ -212,6 +214,23 @@ with open("units.py", 'w', encoding=encoding) as fid:
             unit_types[hash(speed_dimensions)].append(speed_name)
             unit_types[hash(accel_dimensions)].append(accel_name)
 
+    # Density
+    for length_symbol, length_special_symbol, _, length_name, length_scale, _ in length_units:
+        for mass_symbol, mass_special_symbol, mass_name, _, mass_scale, _ in mass_units:
+
+            name = length_name + "_per_cubic_" + mass_name
+
+            dimensions = Dimensions(length=-3, time=1)
+
+            fid.write(f"{speed_name} "
+                      f"= Unit({mass_scale / length_scale**3}, "
+                      f"Dimensions(-3, 1, 0, 0, 0), "
+                      f"name='{name}', "
+                      f"ascii_symbol='{mass_symbol} {length_symbol}^-3', "
+                      f"symbol='{mass_special_symbol}{length_special_symbol}⁻³')\n")
+
+            unit_types[hash(dimensions)].append(name)
+
     #
     # Write out the symbol lookup table
     #
@@ -236,6 +255,7 @@ with open("units.py", 'w', encoding=encoding) as fid:
         ("rate", Dimensions(time=-1)),
         ("speed", Dimensions(length=1, time=-1)),
         ("acceleration", Dimensions(length=1, time=-2)),
+        ("density", Dimensions(length=-3, mass=1)),
         ("force", Dimensions(1, -2, 1, 0, 0)),
         ("pressure", Dimensions(-1, -2, 1, 0, 0)),
         ("energy", Dimensions(2, -2, 1, 0, 0)),
@@ -248,7 +268,8 @@ with open("units.py", 'w', encoding=encoding) as fid:
         ("magnetic_flux", Dimensions(2, -2, 1, -1, 0)),
         ("magnetic_flux_density", Dimensions(0, -2, 1, -1, 0)),
         ("inductance", Dimensions(2, -2, 1, -2, 0)),
-        ("temperature", Dimensions(temperature=1))
+        ("temperature", Dimensions(temperature=1)),
+        ("dimensionless", Dimensions())
     ]
 
     fid.write("\n#\n# Units by type \n#\n\n")
