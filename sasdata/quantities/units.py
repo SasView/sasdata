@@ -21,13 +21,14 @@ import numpy as np
 
 from sasdata.quantities.unicode_superscript import int_as_unicode_superscript
 
-
 class Dimensions:
     """
 
-    Note that some SI Base units are
+    Note that some SI Base units are not useful from the perspecive of the sasview project, and make things
+    behave badly. In particular: moles and angular measures are dimensionless, and candelas are really a weighted
+    measure of power.
 
-    For example, moles and angular measures are dimensionless from this perspective, and candelas are
+    We do however track angle and amount, because its really useful for formatting units
 
     """
     def __init__(self,
@@ -35,13 +36,17 @@ class Dimensions:
                  time: int = 0,
                  mass: int = 0,
                  current: int = 0,
-                 temperature: int = 0):
+                 temperature: int = 0,
+                 moles_hint: int = 0,
+                 angle_hint: int = 0):
 
         self.length = length
         self.time = time
         self.mass = mass
         self.current = current
         self.temperature = temperature
+        self.moles_hint = moles_hint
+        self.angle_hint = angle_hint
 
     def __mul__(self: Self, other: Self):
 
@@ -53,7 +58,9 @@ class Dimensions:
             self.time + other.time,
             self.mass + other.mass,
             self.current + other.current,
-            self.temperature + other.temperature)
+            self.temperature + other.temperature,
+            self.moles_hint + other.moles_hint,
+            self.angle_hint + other.angle_hint)
 
     def __truediv__(self: Self, other: Self):
 
@@ -65,7 +72,9 @@ class Dimensions:
             self.time - other.time,
             self.mass - other.mass,
             self.current - other.current,
-            self.temperature - other.temperature)
+            self.temperature - other.temperature,
+            self.moles_hint - other.moles_hint,
+            self.angle_hint - other.angle_hint)
 
     def __pow__(self, power: int):
 
@@ -77,7 +86,9 @@ class Dimensions:
             self.time * power,
             self.mass * power,
             self.current * power,
-            self.temperature * power)
+            self.temperature * power,
+            self.moles_hint * power,
+            self.angle_hint * power)
 
     def __eq__(self: Self, other: Self):
         if isinstance(other, Dimensions):
@@ -85,7 +96,9 @@ class Dimensions:
                     self.time == other.time and
                     self.mass == other.mass and
                     self.current == other.current and
-                    self.temperature == other.temperature)
+                    self.temperature == other.temperature and
+                    self.moles_hint == other.moles_hint and
+                    self.angle_hint == other.angle_hint)
 
         return NotImplemented
 
@@ -108,17 +121,26 @@ class Dimensions:
         if self.temperature < 0:
             two_powers += 16
 
+        if self.moles_hint < 0:
+            two_powers += 32
+
+        if self.angle_hint < 0:
+            two_powers += 64
+
         return 2**two_powers * 3**abs(self.length) * 5**abs(self.time) * \
-            7**abs(self.mass) * 11**abs(self.current) * 13**abs(self.temperature)
+            7**abs(self.mass) * 11**abs(self.current) * 13**abs(self.temperature) * \
+            17**abs(self.moles_hint) * 19**abs(self.angle_hint)
 
     def __repr__(self):
         s = ""
         for name, size in [
-            ("L", self.length),
-            ("T", self.time),
-            ("M", self.mass),
-            ("C", self.current),
-            ("K", self.temperature)]:
+            ("length", self.length),
+            ("time", self.time),
+            ("mass", self.mass),
+            ("current", self.current),
+            ("temperature", self.temperature),
+            ("amount", self.moles_hint),
+            ("angle", self.angle_hint)]:
 
             if size == 0:
                 pass
@@ -178,7 +200,60 @@ class Unit:
     def __eq__(self: Self, other: Self):
         return self.equivalent(other) and np.abs(np.log(self.scale/other.scale)) < 1e-5
 
+    def si_equivalent(self):
+        """ Get the SI unit corresponding to this unit"""
+        return Unit(1, self.dimensions)
+
+    def _format_unit(self, format_process: list["UnitFormatProcessor"]):
+        for processor in format_process:
+            pass
+
+#
+# Parsing plan:
+#  Require unknown amounts of units to be explicitly positive or negative?
+#
+#
+
+
+
+@dataclass
+class ProcessedUnitToken:
+    """ Mid processing representation of formatted units """
+    base_string: str
+    exponent_string: str
+    latex_exponent_string: str
+    exponent: int
+
+class UnitFormatProcessor:
+    """ Represents a step in the unit processing pipeline"""
+    def apply(self, scale, dimensions) -> tuple[ProcessedUnitToken, float, Dimensions]:
+        """ This will be called to deal with each processing stage"""
+
+class RequiredUnitFormatProcessor(UnitFormatProcessor):
+    """ This unit is required to exist in the formatting """
+    def __init__(self, unit: Unit, power: int = 1):
+        self.unit = unit
+        self.power = power
+    def apply(self, scale, dimensions) -> tuple[float, Dimensions, ProcessedUnitToken]:
+        new_scale = scale / (self.unit.scale * self.power)
+        new_dimensions = self.unit.dimensions / (dimensions**self.power)
+        token = ProcessedUnitToken(self.unit, self.power)
+
+        return new_scale, new_dimensions, token
+class GreedyAbsDimensionUnitFormatProcessor(UnitFormatProcessor):
+    """ This processor minimises the dimensionality of the unit by multiplying by as many
+    units of the specified type as needed """
+    def __init__(self, unit: Unit):
+        self.unit = unit
+
+    def apply(self, scale, dimensions) -> tuple[ProcessedUnitToken, float, Dimensions]:
+        pass
+
+class GreedyAbsDimensionUnitFormatProcessor(UnitFormatProcessor):
+    pass
+
 class UnitGroup:
+    """ A group of units that all have the same dimensionality """
     def __init__(self, name: str, units: list[Unit]):
         self.name = name
         self.units = sorted(units, key=lambda unit: unit.scale)
@@ -188,7 +263,7 @@ class UnitGroup:
 # Specific units 
 #
 
-meters = Unit(1, Dimensions(1, 0, 0, 0, 0),name='meters',ascii_symbol='m',symbol='m')
+meters = Unit(1, Dimensions(1, 0, 0, 0, 0, 0, 0),name='meters',ascii_symbol='m',symbol='m')
 exameters = Unit(1e+18, Dimensions(1, 0, 0, 0, 0),name='exameters',ascii_symbol='Em',symbol='Em')
 petameters = Unit(1000000000000000.0, Dimensions(1, 0, 0, 0, 0),name='petameters',ascii_symbol='Pm',symbol='Pm')
 terameters = Unit(1000000000000.0, Dimensions(1, 0, 0, 0, 0),name='terameters',ascii_symbol='Tm',symbol='Tm')
@@ -201,14 +276,16 @@ nanometers = Unit(1e-09, Dimensions(1, 0, 0, 0, 0),name='nanometers',ascii_symbo
 picometers = Unit(1e-12, Dimensions(1, 0, 0, 0, 0),name='picometers',ascii_symbol='pm',symbol='pm')
 femtometers = Unit(1e-15, Dimensions(1, 0, 0, 0, 0),name='femtometers',ascii_symbol='fm',symbol='fm')
 attometers = Unit(1e-18, Dimensions(1, 0, 0, 0, 0),name='attometers',ascii_symbol='am',symbol='am')
-seconds = Unit(1, Dimensions(0, 1, 0, 0, 0),name='seconds',ascii_symbol='s',symbol='s')
+decimeters = Unit(0.1, Dimensions(1, 0, 0, 0, 0),name='decimeters',ascii_symbol='dm',symbol='dm')
+centimeters = Unit(0.01, Dimensions(1, 0, 0, 0, 0),name='centimeters',ascii_symbol='cm',symbol='cm')
+seconds = Unit(1, Dimensions(0, 1, 0, 0, 0, 0, 0),name='seconds',ascii_symbol='s',symbol='s')
 milliseconds = Unit(0.001, Dimensions(0, 1, 0, 0, 0),name='milliseconds',ascii_symbol='ms',symbol='ms')
 microseconds = Unit(1e-06, Dimensions(0, 1, 0, 0, 0),name='microseconds',ascii_symbol='us',symbol='µs')
 nanoseconds = Unit(1e-09, Dimensions(0, 1, 0, 0, 0),name='nanoseconds',ascii_symbol='ns',symbol='ns')
 picoseconds = Unit(1e-12, Dimensions(0, 1, 0, 0, 0),name='picoseconds',ascii_symbol='ps',symbol='ps')
 femtoseconds = Unit(1e-15, Dimensions(0, 1, 0, 0, 0),name='femtoseconds',ascii_symbol='fs',symbol='fs')
 attoseconds = Unit(1e-18, Dimensions(0, 1, 0, 0, 0),name='attoseconds',ascii_symbol='as',symbol='as')
-grams = Unit(0.001, Dimensions(0, 0, 1, 0, 0),name='grams',ascii_symbol='g',symbol='g')
+grams = Unit(0.001, Dimensions(0, 0, 1, 0, 0, 0, 0),name='grams',ascii_symbol='g',symbol='g')
 exagrams = Unit(1000000000000000.0, Dimensions(0, 0, 1, 0, 0),name='exagrams',ascii_symbol='Eg',symbol='Eg')
 petagrams = Unit(1000000000000.0, Dimensions(0, 0, 1, 0, 0),name='petagrams',ascii_symbol='Pg',symbol='Pg')
 teragrams = Unit(1000000000.0, Dimensions(0, 0, 1, 0, 0),name='teragrams',ascii_symbol='Tg',symbol='Tg')
@@ -221,7 +298,7 @@ nanograms = Unit(1.0000000000000002e-12, Dimensions(0, 0, 1, 0, 0),name='nanogra
 picograms = Unit(1e-15, Dimensions(0, 0, 1, 0, 0),name='picograms',ascii_symbol='pg',symbol='pg')
 femtograms = Unit(1e-18, Dimensions(0, 0, 1, 0, 0),name='femtograms',ascii_symbol='fg',symbol='fg')
 attograms = Unit(1.0000000000000001e-21, Dimensions(0, 0, 1, 0, 0),name='attograms',ascii_symbol='ag',symbol='ag')
-amps = Unit(1, Dimensions(0, 0, 0, 1, 0),name='amps',ascii_symbol='A',symbol='A')
+amps = Unit(1, Dimensions(0, 0, 0, 1, 0, 0, 0),name='amps',ascii_symbol='A',symbol='A')
 exaamps = Unit(1e+18, Dimensions(0, 0, 0, 1, 0),name='exaamps',ascii_symbol='EA',symbol='EA')
 petaamps = Unit(1000000000000000.0, Dimensions(0, 0, 0, 1, 0),name='petaamps',ascii_symbol='PA',symbol='PA')
 teraamps = Unit(1000000000000.0, Dimensions(0, 0, 0, 1, 0),name='teraamps',ascii_symbol='TA',symbol='TA')
@@ -234,7 +311,7 @@ nanoamps = Unit(1e-09, Dimensions(0, 0, 0, 1, 0),name='nanoamps',ascii_symbol='n
 picoamps = Unit(1e-12, Dimensions(0, 0, 0, 1, 0),name='picoamps',ascii_symbol='pA',symbol='pA')
 femtoamps = Unit(1e-15, Dimensions(0, 0, 0, 1, 0),name='femtoamps',ascii_symbol='fA',symbol='fA')
 attoamps = Unit(1e-18, Dimensions(0, 0, 0, 1, 0),name='attoamps',ascii_symbol='aA',symbol='aA')
-kelvin = Unit(1, Dimensions(0, 0, 0, 0, 1),name='kelvin',ascii_symbol='K',symbol='K')
+kelvin = Unit(1, Dimensions(0, 0, 0, 0, 1, 0, 0),name='kelvin',ascii_symbol='K',symbol='K')
 exakelvin = Unit(1e+18, Dimensions(0, 0, 0, 0, 1),name='exakelvin',ascii_symbol='EK',symbol='EK')
 petakelvin = Unit(1000000000000000.0, Dimensions(0, 0, 0, 0, 1),name='petakelvin',ascii_symbol='PK',symbol='PK')
 terakelvin = Unit(1000000000000.0, Dimensions(0, 0, 0, 0, 1),name='terakelvin',ascii_symbol='TK',symbol='TK')
@@ -247,7 +324,7 @@ nanokelvin = Unit(1e-09, Dimensions(0, 0, 0, 0, 1),name='nanokelvin',ascii_symbo
 picokelvin = Unit(1e-12, Dimensions(0, 0, 0, 0, 1),name='picokelvin',ascii_symbol='pK',symbol='pK')
 femtokelvin = Unit(1e-15, Dimensions(0, 0, 0, 0, 1),name='femtokelvin',ascii_symbol='fK',symbol='fK')
 attokelvin = Unit(1e-18, Dimensions(0, 0, 0, 0, 1),name='attokelvin',ascii_symbol='aK',symbol='aK')
-hertz = Unit(1, Dimensions(0, -1, 0, 0, 0),name='hertz',ascii_symbol='Hz',symbol='Hz')
+hertz = Unit(1, Dimensions(0, -1, 0, 0, 0, 0, 0),name='hertz',ascii_symbol='Hz',symbol='Hz')
 exahertz = Unit(1e+18, Dimensions(0, -1, 0, 0, 0),name='exahertz',ascii_symbol='EHz',symbol='EHz')
 petahertz = Unit(1000000000000000.0, Dimensions(0, -1, 0, 0, 0),name='petahertz',ascii_symbol='PHz',symbol='PHz')
 terahertz = Unit(1000000000000.0, Dimensions(0, -1, 0, 0, 0),name='terahertz',ascii_symbol='THz',symbol='THz')
@@ -260,7 +337,7 @@ nanohertz = Unit(1e-09, Dimensions(0, -1, 0, 0, 0),name='nanohertz',ascii_symbol
 picohertz = Unit(1e-12, Dimensions(0, -1, 0, 0, 0),name='picohertz',ascii_symbol='pHz',symbol='pHz')
 femtohertz = Unit(1e-15, Dimensions(0, -1, 0, 0, 0),name='femtohertz',ascii_symbol='fHz',symbol='fHz')
 attohertz = Unit(1e-18, Dimensions(0, -1, 0, 0, 0),name='attohertz',ascii_symbol='aHz',symbol='aHz')
-newtons = Unit(1, Dimensions(1, -2, 1, 0, 0),name='newtons',ascii_symbol='N',symbol='N')
+newtons = Unit(1, Dimensions(1, -2, 1, 0, 0, 0, 0),name='newtons',ascii_symbol='N',symbol='N')
 exanewtons = Unit(1e+18, Dimensions(1, -2, 1, 0, 0),name='exanewtons',ascii_symbol='EN',symbol='EN')
 petanewtons = Unit(1000000000000000.0, Dimensions(1, -2, 1, 0, 0),name='petanewtons',ascii_symbol='PN',symbol='PN')
 teranewtons = Unit(1000000000000.0, Dimensions(1, -2, 1, 0, 0),name='teranewtons',ascii_symbol='TN',symbol='TN')
@@ -273,7 +350,7 @@ nanonewtons = Unit(1e-09, Dimensions(1, -2, 1, 0, 0),name='nanonewtons',ascii_sy
 piconewtons = Unit(1e-12, Dimensions(1, -2, 1, 0, 0),name='piconewtons',ascii_symbol='pN',symbol='pN')
 femtonewtons = Unit(1e-15, Dimensions(1, -2, 1, 0, 0),name='femtonewtons',ascii_symbol='fN',symbol='fN')
 attonewtons = Unit(1e-18, Dimensions(1, -2, 1, 0, 0),name='attonewtons',ascii_symbol='aN',symbol='aN')
-pascals = Unit(1, Dimensions(-1, -2, 1, 0, 0),name='pascals',ascii_symbol='Pa',symbol='Pa')
+pascals = Unit(1, Dimensions(-1, -2, 1, 0, 0, 0, 0),name='pascals',ascii_symbol='Pa',symbol='Pa')
 exapascals = Unit(1e+18, Dimensions(-1, -2, 1, 0, 0),name='exapascals',ascii_symbol='EPa',symbol='EPa')
 petapascals = Unit(1000000000000000.0, Dimensions(-1, -2, 1, 0, 0),name='petapascals',ascii_symbol='PPa',symbol='PPa')
 terapascals = Unit(1000000000000.0, Dimensions(-1, -2, 1, 0, 0),name='terapascals',ascii_symbol='TPa',symbol='TPa')
@@ -286,7 +363,7 @@ nanopascals = Unit(1e-09, Dimensions(-1, -2, 1, 0, 0),name='nanopascals',ascii_s
 picopascals = Unit(1e-12, Dimensions(-1, -2, 1, 0, 0),name='picopascals',ascii_symbol='pPa',symbol='pPa')
 femtopascals = Unit(1e-15, Dimensions(-1, -2, 1, 0, 0),name='femtopascals',ascii_symbol='fPa',symbol='fPa')
 attopascals = Unit(1e-18, Dimensions(-1, -2, 1, 0, 0),name='attopascals',ascii_symbol='aPa',symbol='aPa')
-joules = Unit(1, Dimensions(2, -2, 1, 0, 0),name='joules',ascii_symbol='J',symbol='J')
+joules = Unit(1, Dimensions(2, -2, 1, 0, 0, 0, 0),name='joules',ascii_symbol='J',symbol='J')
 exajoules = Unit(1e+18, Dimensions(2, -2, 1, 0, 0),name='exajoules',ascii_symbol='EJ',symbol='EJ')
 petajoules = Unit(1000000000000000.0, Dimensions(2, -2, 1, 0, 0),name='petajoules',ascii_symbol='PJ',symbol='PJ')
 terajoules = Unit(1000000000000.0, Dimensions(2, -2, 1, 0, 0),name='terajoules',ascii_symbol='TJ',symbol='TJ')
@@ -299,7 +376,7 @@ nanojoules = Unit(1e-09, Dimensions(2, -2, 1, 0, 0),name='nanojoules',ascii_symb
 picojoules = Unit(1e-12, Dimensions(2, -2, 1, 0, 0),name='picojoules',ascii_symbol='pJ',symbol='pJ')
 femtojoules = Unit(1e-15, Dimensions(2, -2, 1, 0, 0),name='femtojoules',ascii_symbol='fJ',symbol='fJ')
 attojoules = Unit(1e-18, Dimensions(2, -2, 1, 0, 0),name='attojoules',ascii_symbol='aJ',symbol='aJ')
-watts = Unit(1, Dimensions(2, -3, 1, 0, 0),name='watts',ascii_symbol='W',symbol='W')
+watts = Unit(1, Dimensions(2, -3, 1, 0, 0, 0, 0),name='watts',ascii_symbol='W',symbol='W')
 exawatts = Unit(1e+18, Dimensions(2, -3, 1, 0, 0),name='exawatts',ascii_symbol='EW',symbol='EW')
 petawatts = Unit(1000000000000000.0, Dimensions(2, -3, 1, 0, 0),name='petawatts',ascii_symbol='PW',symbol='PW')
 terawatts = Unit(1000000000000.0, Dimensions(2, -3, 1, 0, 0),name='terawatts',ascii_symbol='TW',symbol='TW')
@@ -312,7 +389,7 @@ nanowatts = Unit(1e-09, Dimensions(2, -3, 1, 0, 0),name='nanowatts',ascii_symbol
 picowatts = Unit(1e-12, Dimensions(2, -3, 1, 0, 0),name='picowatts',ascii_symbol='pW',symbol='pW')
 femtowatts = Unit(1e-15, Dimensions(2, -3, 1, 0, 0),name='femtowatts',ascii_symbol='fW',symbol='fW')
 attowatts = Unit(1e-18, Dimensions(2, -3, 1, 0, 0),name='attowatts',ascii_symbol='aW',symbol='aW')
-coulombs = Unit(1, Dimensions(0, 1, 0, 1, 0),name='coulombs',ascii_symbol='C',symbol='C')
+coulombs = Unit(1, Dimensions(0, 1, 0, 1, 0, 0, 0),name='coulombs',ascii_symbol='C',symbol='C')
 exacoulombs = Unit(1e+18, Dimensions(0, 1, 0, 1, 0),name='exacoulombs',ascii_symbol='EC',symbol='EC')
 petacoulombs = Unit(1000000000000000.0, Dimensions(0, 1, 0, 1, 0),name='petacoulombs',ascii_symbol='PC',symbol='PC')
 teracoulombs = Unit(1000000000000.0, Dimensions(0, 1, 0, 1, 0),name='teracoulombs',ascii_symbol='TC',symbol='TC')
@@ -325,7 +402,7 @@ nanocoulombs = Unit(1e-09, Dimensions(0, 1, 0, 1, 0),name='nanocoulombs',ascii_s
 picocoulombs = Unit(1e-12, Dimensions(0, 1, 0, 1, 0),name='picocoulombs',ascii_symbol='pC',symbol='pC')
 femtocoulombs = Unit(1e-15, Dimensions(0, 1, 0, 1, 0),name='femtocoulombs',ascii_symbol='fC',symbol='fC')
 attocoulombs = Unit(1e-18, Dimensions(0, 1, 0, 1, 0),name='attocoulombs',ascii_symbol='aC',symbol='aC')
-volts = Unit(1, Dimensions(2, -3, 1, -1, 0),name='volts',ascii_symbol='V',symbol='V')
+volts = Unit(1, Dimensions(2, -3, 1, -1, 0, 0, 0),name='volts',ascii_symbol='V',symbol='V')
 exavolts = Unit(1e+18, Dimensions(2, -3, 1, -1, 0),name='exavolts',ascii_symbol='EV',symbol='EV')
 petavolts = Unit(1000000000000000.0, Dimensions(2, -3, 1, -1, 0),name='petavolts',ascii_symbol='PV',symbol='PV')
 teravolts = Unit(1000000000000.0, Dimensions(2, -3, 1, -1, 0),name='teravolts',ascii_symbol='TV',symbol='TV')
@@ -338,7 +415,7 @@ nanovolts = Unit(1e-09, Dimensions(2, -3, 1, -1, 0),name='nanovolts',ascii_symbo
 picovolts = Unit(1e-12, Dimensions(2, -3, 1, -1, 0),name='picovolts',ascii_symbol='pV',symbol='pV')
 femtovolts = Unit(1e-15, Dimensions(2, -3, 1, -1, 0),name='femtovolts',ascii_symbol='fV',symbol='fV')
 attovolts = Unit(1e-18, Dimensions(2, -3, 1, -1, 0),name='attovolts',ascii_symbol='aV',symbol='aV')
-ohms = Unit(1, Dimensions(2, -3, 1, -2, 0),name='ohms',ascii_symbol='Ohm',symbol='Ω')
+ohms = Unit(1, Dimensions(2, -3, 1, -2, 0, 0, 0),name='ohms',ascii_symbol='Ohm',symbol='Ω')
 exaohms = Unit(1e+18, Dimensions(2, -3, 1, -2, 0),name='exaohms',ascii_symbol='EOhm',symbol='EΩ')
 petaohms = Unit(1000000000000000.0, Dimensions(2, -3, 1, -2, 0),name='petaohms',ascii_symbol='POhm',symbol='PΩ')
 teraohms = Unit(1000000000000.0, Dimensions(2, -3, 1, -2, 0),name='teraohms',ascii_symbol='TOhm',symbol='TΩ')
@@ -351,7 +428,7 @@ nanoohms = Unit(1e-09, Dimensions(2, -3, 1, -2, 0),name='nanoohms',ascii_symbol=
 picoohms = Unit(1e-12, Dimensions(2, -3, 1, -2, 0),name='picoohms',ascii_symbol='pOhm',symbol='pΩ')
 femtoohms = Unit(1e-15, Dimensions(2, -3, 1, -2, 0),name='femtoohms',ascii_symbol='fOhm',symbol='fΩ')
 attoohms = Unit(1e-18, Dimensions(2, -3, 1, -2, 0),name='attoohms',ascii_symbol='aOhm',symbol='aΩ')
-farads = Unit(1, Dimensions(-2, 4, -1, 2, 0),name='farads',ascii_symbol='F',symbol='F')
+farads = Unit(1, Dimensions(-2, 4, -1, 2, 0, 0, 0),name='farads',ascii_symbol='F',symbol='F')
 exafarads = Unit(1e+18, Dimensions(-2, 4, -1, 2, 0),name='exafarads',ascii_symbol='EF',symbol='EF')
 petafarads = Unit(1000000000000000.0, Dimensions(-2, 4, -1, 2, 0),name='petafarads',ascii_symbol='PF',symbol='PF')
 terafarads = Unit(1000000000000.0, Dimensions(-2, 4, -1, 2, 0),name='terafarads',ascii_symbol='TF',symbol='TF')
@@ -364,7 +441,7 @@ nanofarads = Unit(1e-09, Dimensions(-2, 4, -1, 2, 0),name='nanofarads',ascii_sym
 picofarads = Unit(1e-12, Dimensions(-2, 4, -1, 2, 0),name='picofarads',ascii_symbol='pF',symbol='pF')
 femtofarads = Unit(1e-15, Dimensions(-2, 4, -1, 2, 0),name='femtofarads',ascii_symbol='fF',symbol='fF')
 attofarads = Unit(1e-18, Dimensions(-2, 4, -1, 2, 0),name='attofarads',ascii_symbol='aF',symbol='aF')
-siemens = Unit(1, Dimensions(-2, 3, -1, 2, 0),name='siemens',ascii_symbol='S',symbol='S')
+siemens = Unit(1, Dimensions(-2, 3, -1, 2, 0, 0, 0),name='siemens',ascii_symbol='S',symbol='S')
 exasiemens = Unit(1e+18, Dimensions(-2, 3, -1, 2, 0),name='exasiemens',ascii_symbol='ES',symbol='ES')
 petasiemens = Unit(1000000000000000.0, Dimensions(-2, 3, -1, 2, 0),name='petasiemens',ascii_symbol='PS',symbol='PS')
 terasiemens = Unit(1000000000000.0, Dimensions(-2, 3, -1, 2, 0),name='terasiemens',ascii_symbol='TS',symbol='TS')
@@ -377,7 +454,7 @@ nanosiemens = Unit(1e-09, Dimensions(-2, 3, -1, 2, 0),name='nanosiemens',ascii_s
 picosiemens = Unit(1e-12, Dimensions(-2, 3, -1, 2, 0),name='picosiemens',ascii_symbol='pS',symbol='pS')
 femtosiemens = Unit(1e-15, Dimensions(-2, 3, -1, 2, 0),name='femtosiemens',ascii_symbol='fS',symbol='fS')
 attosiemens = Unit(1e-18, Dimensions(-2, 3, -1, 2, 0),name='attosiemens',ascii_symbol='aS',symbol='aS')
-webers = Unit(1, Dimensions(2, -2, 1, -1, 0),name='webers',ascii_symbol='Wb',symbol='Wb')
+webers = Unit(1, Dimensions(2, -2, 1, -1, 0, 0, 0),name='webers',ascii_symbol='Wb',symbol='Wb')
 exawebers = Unit(1e+18, Dimensions(2, -2, 1, -1, 0),name='exawebers',ascii_symbol='EWb',symbol='EWb')
 petawebers = Unit(1000000000000000.0, Dimensions(2, -2, 1, -1, 0),name='petawebers',ascii_symbol='PWb',symbol='PWb')
 terawebers = Unit(1000000000000.0, Dimensions(2, -2, 1, -1, 0),name='terawebers',ascii_symbol='TWb',symbol='TWb')
@@ -390,7 +467,7 @@ nanowebers = Unit(1e-09, Dimensions(2, -2, 1, -1, 0),name='nanowebers',ascii_sym
 picowebers = Unit(1e-12, Dimensions(2, -2, 1, -1, 0),name='picowebers',ascii_symbol='pWb',symbol='pWb')
 femtowebers = Unit(1e-15, Dimensions(2, -2, 1, -1, 0),name='femtowebers',ascii_symbol='fWb',symbol='fWb')
 attowebers = Unit(1e-18, Dimensions(2, -2, 1, -1, 0),name='attowebers',ascii_symbol='aWb',symbol='aWb')
-tesla = Unit(1, Dimensions(0, -2, 1, -1, 0),name='tesla',ascii_symbol='T',symbol='T')
+tesla = Unit(1, Dimensions(0, -2, 1, -1, 0, 0, 0),name='tesla',ascii_symbol='T',symbol='T')
 exatesla = Unit(1e+18, Dimensions(0, -2, 1, -1, 0),name='exatesla',ascii_symbol='ET',symbol='ET')
 petatesla = Unit(1000000000000000.0, Dimensions(0, -2, 1, -1, 0),name='petatesla',ascii_symbol='PT',symbol='PT')
 teratesla = Unit(1000000000000.0, Dimensions(0, -2, 1, -1, 0),name='teratesla',ascii_symbol='TT',symbol='TT')
@@ -403,7 +480,7 @@ nanotesla = Unit(1e-09, Dimensions(0, -2, 1, -1, 0),name='nanotesla',ascii_symbo
 picotesla = Unit(1e-12, Dimensions(0, -2, 1, -1, 0),name='picotesla',ascii_symbol='pT',symbol='pT')
 femtotesla = Unit(1e-15, Dimensions(0, -2, 1, -1, 0),name='femtotesla',ascii_symbol='fT',symbol='fT')
 attotesla = Unit(1e-18, Dimensions(0, -2, 1, -1, 0),name='attotesla',ascii_symbol='aT',symbol='aT')
-henry = Unit(1, Dimensions(2, -2, 1, -2, 0),name='henry',ascii_symbol='H',symbol='H')
+henry = Unit(1, Dimensions(2, -2, 1, -2, 0, 0, 0),name='henry',ascii_symbol='H',symbol='H')
 exahenry = Unit(1e+18, Dimensions(2, -2, 1, -2, 0),name='exahenry',ascii_symbol='EH',symbol='EH')
 petahenry = Unit(1000000000000000.0, Dimensions(2, -2, 1, -2, 0),name='petahenry',ascii_symbol='PH',symbol='PH')
 terahenry = Unit(1000000000000.0, Dimensions(2, -2, 1, -2, 0),name='terahenry',ascii_symbol='TH',symbol='TH')
@@ -416,576 +493,806 @@ nanohenry = Unit(1e-09, Dimensions(2, -2, 1, -2, 0),name='nanohenry',ascii_symbo
 picohenry = Unit(1e-12, Dimensions(2, -2, 1, -2, 0),name='picohenry',ascii_symbol='pH',symbol='pH')
 femtohenry = Unit(1e-15, Dimensions(2, -2, 1, -2, 0),name='femtohenry',ascii_symbol='fH',symbol='fH')
 attohenry = Unit(1e-18, Dimensions(2, -2, 1, -2, 0),name='attohenry',ascii_symbol='aH',symbol='aH')
-degrees_celsius = Unit(1, Dimensions(0, 0, 0, 0, 1),name='degrees_celsius',ascii_symbol='C',symbol='C')
-angstroms = Unit(1e-10, Dimensions(1, 0, 0, 0, 0),name='angstroms',ascii_symbol='Ang',symbol='Å')
-minutes = Unit(60, Dimensions(0, 1, 0, 0, 0),name='minutes',ascii_symbol='min',symbol='min')
-hours = Unit(360, Dimensions(0, 1, 0, 0, 0),name='hours',ascii_symbol='h',symbol='h')
-days = Unit(8640, Dimensions(0, 1, 0, 0, 0),name='days',ascii_symbol='d',symbol='d')
-years = Unit(3155695.2, Dimensions(0, 1, 0, 0, 0),name='years',ascii_symbol='y',symbol='y')
-degrees = Unit(57.29577951308232, Dimensions(0, 0, 0, 0, 0),name='degrees',ascii_symbol='deg',symbol='deg')
-radians = Unit(1, Dimensions(0, 0, 0, 0, 0),name='radians',ascii_symbol='rad',symbol='rad')
-stradians = Unit(1, Dimensions(0, 0, 0, 0, 0),name='stradians',ascii_symbol='sr',symbol='sr')
-none = Unit(1, Dimensions(0, 0, 0, 0, 0),name='none',ascii_symbol='none',symbol='none')
-square_meters = Unit(1, Dimensions(2, 0, 0, 0, 0), name='square_meters', ascii_symbol='m^2', symbol='m²')
-cubic_meters = Unit(1, Dimensions(3, 0, 0, 0, 0), name='cubic_meters', ascii_symbol='m^3', symbol='m³')
-per_meter = Unit(1.0, Dimensions(-1, 0, 0, 0, 0), name='per_meter', ascii_symbol='m^-1', symbol='m⁻¹')
-per_square_meter = Unit(1.0, Dimensions(-2, 0, 0, 0, 0), name='per_square_meter', ascii_symbol='m^-2', symbol='m⁻²')
-per_cubic_meter = Unit(1.0, Dimensions(-3, 0, 0, 0, 0), name='per_cubic_meter', ascii_symbol='m^-3', symbol='m⁻³')
-square_exameters = Unit(1e+36, Dimensions(2, 0, 0, 0, 0), name='square_exameters', ascii_symbol='Em^2', symbol='Em²')
-cubic_exameters = Unit(1e+54, Dimensions(3, 0, 0, 0, 0), name='cubic_exameters', ascii_symbol='Em^3', symbol='Em³')
-per_exameter = Unit(1e-18, Dimensions(-1, 0, 0, 0, 0), name='per_exameter', ascii_symbol='Em^-1', symbol='Em⁻¹')
-per_square_exameter = Unit(1e-36, Dimensions(-2, 0, 0, 0, 0), name='per_square_exameter', ascii_symbol='Em^-2', symbol='Em⁻²')
-per_cubic_exameter = Unit(1e-54, Dimensions(-3, 0, 0, 0, 0), name='per_cubic_exameter', ascii_symbol='Em^-3', symbol='Em⁻³')
-square_petameters = Unit(1e+30, Dimensions(2, 0, 0, 0, 0), name='square_petameters', ascii_symbol='Pm^2', symbol='Pm²')
-cubic_petameters = Unit(1e+45, Dimensions(3, 0, 0, 0, 0), name='cubic_petameters', ascii_symbol='Pm^3', symbol='Pm³')
-per_petameter = Unit(1e-15, Dimensions(-1, 0, 0, 0, 0), name='per_petameter', ascii_symbol='Pm^-1', symbol='Pm⁻¹')
-per_square_petameter = Unit(1e-30, Dimensions(-2, 0, 0, 0, 0), name='per_square_petameter', ascii_symbol='Pm^-2', symbol='Pm⁻²')
-per_cubic_petameter = Unit(1e-45, Dimensions(-3, 0, 0, 0, 0), name='per_cubic_petameter', ascii_symbol='Pm^-3', symbol='Pm⁻³')
-square_terameters = Unit(1e+24, Dimensions(2, 0, 0, 0, 0), name='square_terameters', ascii_symbol='Tm^2', symbol='Tm²')
-cubic_terameters = Unit(1e+36, Dimensions(3, 0, 0, 0, 0), name='cubic_terameters', ascii_symbol='Tm^3', symbol='Tm³')
-per_terameter = Unit(1e-12, Dimensions(-1, 0, 0, 0, 0), name='per_terameter', ascii_symbol='Tm^-1', symbol='Tm⁻¹')
-per_square_terameter = Unit(1e-24, Dimensions(-2, 0, 0, 0, 0), name='per_square_terameter', ascii_symbol='Tm^-2', symbol='Tm⁻²')
-per_cubic_terameter = Unit(1e-36, Dimensions(-3, 0, 0, 0, 0), name='per_cubic_terameter', ascii_symbol='Tm^-3', symbol='Tm⁻³')
-square_gigameters = Unit(1e+18, Dimensions(2, 0, 0, 0, 0), name='square_gigameters', ascii_symbol='Gm^2', symbol='Gm²')
-cubic_gigameters = Unit(1e+27, Dimensions(3, 0, 0, 0, 0), name='cubic_gigameters', ascii_symbol='Gm^3', symbol='Gm³')
-per_gigameter = Unit(1e-09, Dimensions(-1, 0, 0, 0, 0), name='per_gigameter', ascii_symbol='Gm^-1', symbol='Gm⁻¹')
-per_square_gigameter = Unit(1e-18, Dimensions(-2, 0, 0, 0, 0), name='per_square_gigameter', ascii_symbol='Gm^-2', symbol='Gm⁻²')
-per_cubic_gigameter = Unit(1e-27, Dimensions(-3, 0, 0, 0, 0), name='per_cubic_gigameter', ascii_symbol='Gm^-3', symbol='Gm⁻³')
-square_megameters = Unit(1000000000000.0, Dimensions(2, 0, 0, 0, 0), name='square_megameters', ascii_symbol='Mm^2', symbol='Mm²')
-cubic_megameters = Unit(1e+18, Dimensions(3, 0, 0, 0, 0), name='cubic_megameters', ascii_symbol='Mm^3', symbol='Mm³')
-per_megameter = Unit(1e-06, Dimensions(-1, 0, 0, 0, 0), name='per_megameter', ascii_symbol='Mm^-1', symbol='Mm⁻¹')
-per_square_megameter = Unit(1e-12, Dimensions(-2, 0, 0, 0, 0), name='per_square_megameter', ascii_symbol='Mm^-2', symbol='Mm⁻²')
-per_cubic_megameter = Unit(1e-18, Dimensions(-3, 0, 0, 0, 0), name='per_cubic_megameter', ascii_symbol='Mm^-3', symbol='Mm⁻³')
-square_kilometers = Unit(1000000.0, Dimensions(2, 0, 0, 0, 0), name='square_kilometers', ascii_symbol='km^2', symbol='km²')
-cubic_kilometers = Unit(1000000000.0, Dimensions(3, 0, 0, 0, 0), name='cubic_kilometers', ascii_symbol='km^3', symbol='km³')
-per_kilometer = Unit(0.001, Dimensions(-1, 0, 0, 0, 0), name='per_kilometer', ascii_symbol='km^-1', symbol='km⁻¹')
-per_square_kilometer = Unit(1e-06, Dimensions(-2, 0, 0, 0, 0), name='per_square_kilometer', ascii_symbol='km^-2', symbol='km⁻²')
-per_cubic_kilometer = Unit(1e-09, Dimensions(-3, 0, 0, 0, 0), name='per_cubic_kilometer', ascii_symbol='km^-3', symbol='km⁻³')
-square_millimeters = Unit(1e-06, Dimensions(2, 0, 0, 0, 0), name='square_millimeters', ascii_symbol='mm^2', symbol='mm²')
-cubic_millimeters = Unit(1e-09, Dimensions(3, 0, 0, 0, 0), name='cubic_millimeters', ascii_symbol='mm^3', symbol='mm³')
-per_millimeter = Unit(1000.0, Dimensions(-1, 0, 0, 0, 0), name='per_millimeter', ascii_symbol='mm^-1', symbol='mm⁻¹')
-per_square_millimeter = Unit(1000000.0, Dimensions(-2, 0, 0, 0, 0), name='per_square_millimeter', ascii_symbol='mm^-2', symbol='mm⁻²')
-per_cubic_millimeter = Unit(999999999.9999999, Dimensions(-3, 0, 0, 0, 0), name='per_cubic_millimeter', ascii_symbol='mm^-3', symbol='mm⁻³')
-square_micrometers = Unit(1e-12, Dimensions(2, 0, 0, 0, 0), name='square_micrometers', ascii_symbol='um^2', symbol='µm²')
-cubic_micrometers = Unit(9.999999999999999e-19, Dimensions(3, 0, 0, 0, 0), name='cubic_micrometers', ascii_symbol='um^3', symbol='µm³')
-per_micrometer = Unit(1000000.0, Dimensions(-1, 0, 0, 0, 0), name='per_micrometer', ascii_symbol='um^-1', symbol='µm⁻¹')
-per_square_micrometer = Unit(1000000000000.0001, Dimensions(-2, 0, 0, 0, 0), name='per_square_micrometer', ascii_symbol='um^-2', symbol='µm⁻²')
-per_cubic_micrometer = Unit(1.0000000000000001e+18, Dimensions(-3, 0, 0, 0, 0), name='per_cubic_micrometer', ascii_symbol='um^-3', symbol='µm⁻³')
-square_nanometers = Unit(1e-18, Dimensions(2, 0, 0, 0, 0), name='square_nanometers', ascii_symbol='nm^2', symbol='nm²')
-cubic_nanometers = Unit(1.0000000000000002e-27, Dimensions(3, 0, 0, 0, 0), name='cubic_nanometers', ascii_symbol='nm^3', symbol='nm³')
-per_nanometer = Unit(999999999.9999999, Dimensions(-1, 0, 0, 0, 0), name='per_nanometer', ascii_symbol='nm^-1', symbol='nm⁻¹')
-per_square_nanometer = Unit(9.999999999999999e+17, Dimensions(-2, 0, 0, 0, 0), name='per_square_nanometer', ascii_symbol='nm^-2', symbol='nm⁻²')
-per_cubic_nanometer = Unit(9.999999999999999e+26, Dimensions(-3, 0, 0, 0, 0), name='per_cubic_nanometer', ascii_symbol='nm^-3', symbol='nm⁻³')
-square_picometers = Unit(1e-24, Dimensions(2, 0, 0, 0, 0), name='square_picometers', ascii_symbol='pm^2', symbol='pm²')
-cubic_picometers = Unit(1e-36, Dimensions(3, 0, 0, 0, 0), name='cubic_picometers', ascii_symbol='pm^3', symbol='pm³')
-per_picometer = Unit(1000000000000.0, Dimensions(-1, 0, 0, 0, 0), name='per_picometer', ascii_symbol='pm^-1', symbol='pm⁻¹')
-per_square_picometer = Unit(1e+24, Dimensions(-2, 0, 0, 0, 0), name='per_square_picometer', ascii_symbol='pm^-2', symbol='pm⁻²')
-per_cubic_picometer = Unit(1e+36, Dimensions(-3, 0, 0, 0, 0), name='per_cubic_picometer', ascii_symbol='pm^-3', symbol='pm⁻³')
-square_femtometers = Unit(1e-30, Dimensions(2, 0, 0, 0, 0), name='square_femtometers', ascii_symbol='fm^2', symbol='fm²')
-cubic_femtometers = Unit(1.0000000000000003e-45, Dimensions(3, 0, 0, 0, 0), name='cubic_femtometers', ascii_symbol='fm^3', symbol='fm³')
-per_femtometer = Unit(999999999999999.9, Dimensions(-1, 0, 0, 0, 0), name='per_femtometer', ascii_symbol='fm^-1', symbol='fm⁻¹')
-per_square_femtometer = Unit(9.999999999999999e+29, Dimensions(-2, 0, 0, 0, 0), name='per_square_femtometer', ascii_symbol='fm^-2', symbol='fm⁻²')
-per_cubic_femtometer = Unit(9.999999999999998e+44, Dimensions(-3, 0, 0, 0, 0), name='per_cubic_femtometer', ascii_symbol='fm^-3', symbol='fm⁻³')
-square_attometers = Unit(1.0000000000000001e-36, Dimensions(2, 0, 0, 0, 0), name='square_attometers', ascii_symbol='am^2', symbol='am²')
-cubic_attometers = Unit(1.0000000000000002e-54, Dimensions(3, 0, 0, 0, 0), name='cubic_attometers', ascii_symbol='am^3', symbol='am³')
-per_attometer = Unit(9.999999999999999e+17, Dimensions(-1, 0, 0, 0, 0), name='per_attometer', ascii_symbol='am^-1', symbol='am⁻¹')
-per_square_attometer = Unit(9.999999999999999e+35, Dimensions(-2, 0, 0, 0, 0), name='per_square_attometer', ascii_symbol='am^-2', symbol='am⁻²')
-per_cubic_attometer = Unit(9.999999999999997e+53, Dimensions(-3, 0, 0, 0, 0), name='per_cubic_attometer', ascii_symbol='am^-3', symbol='am⁻³')
-square_angstroms = Unit(1.0000000000000001e-20, Dimensions(2, 0, 0, 0, 0), name='square_angstroms', ascii_symbol='Ang^2', symbol='Å²')
-cubic_angstroms = Unit(1e-30, Dimensions(3, 0, 0, 0, 0), name='cubic_angstroms', ascii_symbol='Ang^3', symbol='Å³')
-per_angstrom = Unit(10000000000.0, Dimensions(-1, 0, 0, 0, 0), name='per_angstrom', ascii_symbol='Ang^-1', symbol='Å⁻¹')
-per_square_angstrom = Unit(1e+20, Dimensions(-2, 0, 0, 0, 0), name='per_square_angstrom', ascii_symbol='Ang^-2', symbol='Å⁻²')
-per_cubic_angstrom = Unit(9.999999999999999e+29, Dimensions(-3, 0, 0, 0, 0), name='per_cubic_angstrom', ascii_symbol='Ang^-3', symbol='Å⁻³')
-meters_per_second = Unit(1.0, Dimensions(1, -1, 0, 0, 0), name='meters_per_second', ascii_symbol='m/s', symbol='NoneNone⁻¹')
-meters_per_square_second = Unit(1.0, Dimensions(1, -2, 0, 0, 0), name='meters_per_square_second', ascii_symbol='m/s^2', symbol='NoneNone⁻²')
-meters_per_millisecond = Unit(1000.0, Dimensions(1, -1, 0, 0, 0), name='meters_per_millisecond', ascii_symbol='m/ms', symbol='Nonems⁻¹')
-meters_per_square_millisecond = Unit(1000.0, Dimensions(1, -2, 0, 0, 0), name='meters_per_square_millisecond', ascii_symbol='m/ms^2', symbol='Nonems⁻²')
-meters_per_microsecond = Unit(1000000.0, Dimensions(1, -1, 0, 0, 0), name='meters_per_microsecond', ascii_symbol='m/us', symbol='Noneµs⁻¹')
-meters_per_square_microsecond = Unit(1000000.0, Dimensions(1, -2, 0, 0, 0), name='meters_per_square_microsecond', ascii_symbol='m/us^2', symbol='Noneµs⁻²')
-meters_per_nanosecond = Unit(999999999.9999999, Dimensions(1, -1, 0, 0, 0), name='meters_per_nanosecond', ascii_symbol='m/ns', symbol='Nonens⁻¹')
-meters_per_square_nanosecond = Unit(999999999.9999999, Dimensions(1, -2, 0, 0, 0), name='meters_per_square_nanosecond', ascii_symbol='m/ns^2', symbol='Nonens⁻²')
-meters_per_picosecond = Unit(1000000000000.0, Dimensions(1, -1, 0, 0, 0), name='meters_per_picosecond', ascii_symbol='m/ps', symbol='Noneps⁻¹')
-meters_per_square_picosecond = Unit(1000000000000.0, Dimensions(1, -2, 0, 0, 0), name='meters_per_square_picosecond', ascii_symbol='m/ps^2', symbol='Noneps⁻²')
-meters_per_femtosecond = Unit(999999999999999.9, Dimensions(1, -1, 0, 0, 0), name='meters_per_femtosecond', ascii_symbol='m/fs', symbol='Nonefs⁻¹')
-meters_per_square_femtosecond = Unit(999999999999999.9, Dimensions(1, -2, 0, 0, 0), name='meters_per_square_femtosecond', ascii_symbol='m/fs^2', symbol='Nonefs⁻²')
-meters_per_attosecond = Unit(9.999999999999999e+17, Dimensions(1, -1, 0, 0, 0), name='meters_per_attosecond', ascii_symbol='m/as', symbol='Noneas⁻¹')
-meters_per_square_attosecond = Unit(9.999999999999999e+17, Dimensions(1, -2, 0, 0, 0), name='meters_per_square_attosecond', ascii_symbol='m/as^2', symbol='Noneas⁻²')
-meters_per_minute = Unit(0.016666666666666666, Dimensions(1, -1, 0, 0, 0), name='meters_per_minute', ascii_symbol='m/min', symbol='NoneNone⁻¹')
-meters_per_square_minute = Unit(0.016666666666666666, Dimensions(1, -2, 0, 0, 0), name='meters_per_square_minute', ascii_symbol='m/min^2', symbol='NoneNone⁻²')
-meters_per_hour = Unit(0.002777777777777778, Dimensions(1, -1, 0, 0, 0), name='meters_per_hour', ascii_symbol='m/h', symbol='NoneNone⁻¹')
-meters_per_square_hour = Unit(0.002777777777777778, Dimensions(1, -2, 0, 0, 0), name='meters_per_square_hour', ascii_symbol='m/h^2', symbol='NoneNone⁻²')
-meters_per_day = Unit(0.00011574074074074075, Dimensions(1, -1, 0, 0, 0), name='meters_per_day', ascii_symbol='m/d', symbol='NoneNone⁻¹')
-meters_per_square_day = Unit(0.00011574074074074075, Dimensions(1, -2, 0, 0, 0), name='meters_per_square_day', ascii_symbol='m/d^2', symbol='NoneNone⁻²')
-meters_per_year = Unit(3.168873850681143e-07, Dimensions(1, -1, 0, 0, 0), name='meters_per_year', ascii_symbol='m/y', symbol='NoneNone⁻¹')
-meters_per_square_year = Unit(3.168873850681143e-07, Dimensions(1, -2, 0, 0, 0), name='meters_per_square_year', ascii_symbol='m/y^2', symbol='NoneNone⁻²')
-exameters_per_second = Unit(1e+18, Dimensions(1, -1, 0, 0, 0), name='exameters_per_second', ascii_symbol='Em/s', symbol='EmNone⁻¹')
-exameters_per_square_second = Unit(1e+18, Dimensions(1, -2, 0, 0, 0), name='exameters_per_square_second', ascii_symbol='Em/s^2', symbol='EmNone⁻²')
-exameters_per_millisecond = Unit(1e+21, Dimensions(1, -1, 0, 0, 0), name='exameters_per_millisecond', ascii_symbol='Em/ms', symbol='Emms⁻¹')
-exameters_per_square_millisecond = Unit(1e+21, Dimensions(1, -2, 0, 0, 0), name='exameters_per_square_millisecond', ascii_symbol='Em/ms^2', symbol='Emms⁻²')
-exameters_per_microsecond = Unit(1e+24, Dimensions(1, -1, 0, 0, 0), name='exameters_per_microsecond', ascii_symbol='Em/us', symbol='Emµs⁻¹')
-exameters_per_square_microsecond = Unit(1e+24, Dimensions(1, -2, 0, 0, 0), name='exameters_per_square_microsecond', ascii_symbol='Em/us^2', symbol='Emµs⁻²')
-exameters_per_nanosecond = Unit(9.999999999999999e+26, Dimensions(1, -1, 0, 0, 0), name='exameters_per_nanosecond', ascii_symbol='Em/ns', symbol='Emns⁻¹')
-exameters_per_square_nanosecond = Unit(9.999999999999999e+26, Dimensions(1, -2, 0, 0, 0), name='exameters_per_square_nanosecond', ascii_symbol='Em/ns^2', symbol='Emns⁻²')
-exameters_per_picosecond = Unit(1e+30, Dimensions(1, -1, 0, 0, 0), name='exameters_per_picosecond', ascii_symbol='Em/ps', symbol='Emps⁻¹')
-exameters_per_square_picosecond = Unit(1e+30, Dimensions(1, -2, 0, 0, 0), name='exameters_per_square_picosecond', ascii_symbol='Em/ps^2', symbol='Emps⁻²')
-exameters_per_femtosecond = Unit(1e+33, Dimensions(1, -1, 0, 0, 0), name='exameters_per_femtosecond', ascii_symbol='Em/fs', symbol='Emfs⁻¹')
-exameters_per_square_femtosecond = Unit(1e+33, Dimensions(1, -2, 0, 0, 0), name='exameters_per_square_femtosecond', ascii_symbol='Em/fs^2', symbol='Emfs⁻²')
-exameters_per_attosecond = Unit(9.999999999999999e+35, Dimensions(1, -1, 0, 0, 0), name='exameters_per_attosecond', ascii_symbol='Em/as', symbol='Emas⁻¹')
-exameters_per_square_attosecond = Unit(9.999999999999999e+35, Dimensions(1, -2, 0, 0, 0), name='exameters_per_square_attosecond', ascii_symbol='Em/as^2', symbol='Emas⁻²')
-exameters_per_minute = Unit(1.6666666666666666e+16, Dimensions(1, -1, 0, 0, 0), name='exameters_per_minute', ascii_symbol='Em/min', symbol='EmNone⁻¹')
-exameters_per_square_minute = Unit(1.6666666666666666e+16, Dimensions(1, -2, 0, 0, 0), name='exameters_per_square_minute', ascii_symbol='Em/min^2', symbol='EmNone⁻²')
-exameters_per_hour = Unit(2777777777777778.0, Dimensions(1, -1, 0, 0, 0), name='exameters_per_hour', ascii_symbol='Em/h', symbol='EmNone⁻¹')
-exameters_per_square_hour = Unit(2777777777777778.0, Dimensions(1, -2, 0, 0, 0), name='exameters_per_square_hour', ascii_symbol='Em/h^2', symbol='EmNone⁻²')
-exameters_per_day = Unit(115740740740740.73, Dimensions(1, -1, 0, 0, 0), name='exameters_per_day', ascii_symbol='Em/d', symbol='EmNone⁻¹')
-exameters_per_square_day = Unit(115740740740740.73, Dimensions(1, -2, 0, 0, 0), name='exameters_per_square_day', ascii_symbol='Em/d^2', symbol='EmNone⁻²')
-exameters_per_year = Unit(316887385068.1143, Dimensions(1, -1, 0, 0, 0), name='exameters_per_year', ascii_symbol='Em/y', symbol='EmNone⁻¹')
-exameters_per_square_year = Unit(316887385068.1143, Dimensions(1, -2, 0, 0, 0), name='exameters_per_square_year', ascii_symbol='Em/y^2', symbol='EmNone⁻²')
-petameters_per_second = Unit(1000000000000000.0, Dimensions(1, -1, 0, 0, 0), name='petameters_per_second', ascii_symbol='Pm/s', symbol='PmNone⁻¹')
-petameters_per_square_second = Unit(1000000000000000.0, Dimensions(1, -2, 0, 0, 0), name='petameters_per_square_second', ascii_symbol='Pm/s^2', symbol='PmNone⁻²')
-petameters_per_millisecond = Unit(1e+18, Dimensions(1, -1, 0, 0, 0), name='petameters_per_millisecond', ascii_symbol='Pm/ms', symbol='Pmms⁻¹')
-petameters_per_square_millisecond = Unit(1e+18, Dimensions(1, -2, 0, 0, 0), name='petameters_per_square_millisecond', ascii_symbol='Pm/ms^2', symbol='Pmms⁻²')
-petameters_per_microsecond = Unit(1e+21, Dimensions(1, -1, 0, 0, 0), name='petameters_per_microsecond', ascii_symbol='Pm/us', symbol='Pmµs⁻¹')
-petameters_per_square_microsecond = Unit(1e+21, Dimensions(1, -2, 0, 0, 0), name='petameters_per_square_microsecond', ascii_symbol='Pm/us^2', symbol='Pmµs⁻²')
-petameters_per_nanosecond = Unit(1e+24, Dimensions(1, -1, 0, 0, 0), name='petameters_per_nanosecond', ascii_symbol='Pm/ns', symbol='Pmns⁻¹')
-petameters_per_square_nanosecond = Unit(1e+24, Dimensions(1, -2, 0, 0, 0), name='petameters_per_square_nanosecond', ascii_symbol='Pm/ns^2', symbol='Pmns⁻²')
-petameters_per_picosecond = Unit(1e+27, Dimensions(1, -1, 0, 0, 0), name='petameters_per_picosecond', ascii_symbol='Pm/ps', symbol='Pmps⁻¹')
-petameters_per_square_picosecond = Unit(1e+27, Dimensions(1, -2, 0, 0, 0), name='petameters_per_square_picosecond', ascii_symbol='Pm/ps^2', symbol='Pmps⁻²')
-petameters_per_femtosecond = Unit(9.999999999999999e+29, Dimensions(1, -1, 0, 0, 0), name='petameters_per_femtosecond', ascii_symbol='Pm/fs', symbol='Pmfs⁻¹')
-petameters_per_square_femtosecond = Unit(9.999999999999999e+29, Dimensions(1, -2, 0, 0, 0), name='petameters_per_square_femtosecond', ascii_symbol='Pm/fs^2', symbol='Pmfs⁻²')
-petameters_per_attosecond = Unit(1e+33, Dimensions(1, -1, 0, 0, 0), name='petameters_per_attosecond', ascii_symbol='Pm/as', symbol='Pmas⁻¹')
-petameters_per_square_attosecond = Unit(1e+33, Dimensions(1, -2, 0, 0, 0), name='petameters_per_square_attosecond', ascii_symbol='Pm/as^2', symbol='Pmas⁻²')
-petameters_per_minute = Unit(16666666666666.666, Dimensions(1, -1, 0, 0, 0), name='petameters_per_minute', ascii_symbol='Pm/min', symbol='PmNone⁻¹')
-petameters_per_square_minute = Unit(16666666666666.666, Dimensions(1, -2, 0, 0, 0), name='petameters_per_square_minute', ascii_symbol='Pm/min^2', symbol='PmNone⁻²')
-petameters_per_hour = Unit(2777777777777.778, Dimensions(1, -1, 0, 0, 0), name='petameters_per_hour', ascii_symbol='Pm/h', symbol='PmNone⁻¹')
-petameters_per_square_hour = Unit(2777777777777.778, Dimensions(1, -2, 0, 0, 0), name='petameters_per_square_hour', ascii_symbol='Pm/h^2', symbol='PmNone⁻²')
-petameters_per_day = Unit(115740740740.74074, Dimensions(1, -1, 0, 0, 0), name='petameters_per_day', ascii_symbol='Pm/d', symbol='PmNone⁻¹')
-petameters_per_square_day = Unit(115740740740.74074, Dimensions(1, -2, 0, 0, 0), name='petameters_per_square_day', ascii_symbol='Pm/d^2', symbol='PmNone⁻²')
-petameters_per_year = Unit(316887385.0681143, Dimensions(1, -1, 0, 0, 0), name='petameters_per_year', ascii_symbol='Pm/y', symbol='PmNone⁻¹')
-petameters_per_square_year = Unit(316887385.0681143, Dimensions(1, -2, 0, 0, 0), name='petameters_per_square_year', ascii_symbol='Pm/y^2', symbol='PmNone⁻²')
-terameters_per_second = Unit(1000000000000.0, Dimensions(1, -1, 0, 0, 0), name='terameters_per_second', ascii_symbol='Tm/s', symbol='TmNone⁻¹')
-terameters_per_square_second = Unit(1000000000000.0, Dimensions(1, -2, 0, 0, 0), name='terameters_per_square_second', ascii_symbol='Tm/s^2', symbol='TmNone⁻²')
-terameters_per_millisecond = Unit(1000000000000000.0, Dimensions(1, -1, 0, 0, 0), name='terameters_per_millisecond', ascii_symbol='Tm/ms', symbol='Tmms⁻¹')
-terameters_per_square_millisecond = Unit(1000000000000000.0, Dimensions(1, -2, 0, 0, 0), name='terameters_per_square_millisecond', ascii_symbol='Tm/ms^2', symbol='Tmms⁻²')
-terameters_per_microsecond = Unit(1e+18, Dimensions(1, -1, 0, 0, 0), name='terameters_per_microsecond', ascii_symbol='Tm/us', symbol='Tmµs⁻¹')
-terameters_per_square_microsecond = Unit(1e+18, Dimensions(1, -2, 0, 0, 0), name='terameters_per_square_microsecond', ascii_symbol='Tm/us^2', symbol='Tmµs⁻²')
-terameters_per_nanosecond = Unit(1e+21, Dimensions(1, -1, 0, 0, 0), name='terameters_per_nanosecond', ascii_symbol='Tm/ns', symbol='Tmns⁻¹')
-terameters_per_square_nanosecond = Unit(1e+21, Dimensions(1, -2, 0, 0, 0), name='terameters_per_square_nanosecond', ascii_symbol='Tm/ns^2', symbol='Tmns⁻²')
-terameters_per_picosecond = Unit(1e+24, Dimensions(1, -1, 0, 0, 0), name='terameters_per_picosecond', ascii_symbol='Tm/ps', symbol='Tmps⁻¹')
-terameters_per_square_picosecond = Unit(1e+24, Dimensions(1, -2, 0, 0, 0), name='terameters_per_square_picosecond', ascii_symbol='Tm/ps^2', symbol='Tmps⁻²')
-terameters_per_femtosecond = Unit(9.999999999999999e+26, Dimensions(1, -1, 0, 0, 0), name='terameters_per_femtosecond', ascii_symbol='Tm/fs', symbol='Tmfs⁻¹')
-terameters_per_square_femtosecond = Unit(9.999999999999999e+26, Dimensions(1, -2, 0, 0, 0), name='terameters_per_square_femtosecond', ascii_symbol='Tm/fs^2', symbol='Tmfs⁻²')
-terameters_per_attosecond = Unit(9.999999999999999e+29, Dimensions(1, -1, 0, 0, 0), name='terameters_per_attosecond', ascii_symbol='Tm/as', symbol='Tmas⁻¹')
-terameters_per_square_attosecond = Unit(9.999999999999999e+29, Dimensions(1, -2, 0, 0, 0), name='terameters_per_square_attosecond', ascii_symbol='Tm/as^2', symbol='Tmas⁻²')
-terameters_per_minute = Unit(16666666666.666666, Dimensions(1, -1, 0, 0, 0), name='terameters_per_minute', ascii_symbol='Tm/min', symbol='TmNone⁻¹')
-terameters_per_square_minute = Unit(16666666666.666666, Dimensions(1, -2, 0, 0, 0), name='terameters_per_square_minute', ascii_symbol='Tm/min^2', symbol='TmNone⁻²')
-terameters_per_hour = Unit(2777777777.7777777, Dimensions(1, -1, 0, 0, 0), name='terameters_per_hour', ascii_symbol='Tm/h', symbol='TmNone⁻¹')
-terameters_per_square_hour = Unit(2777777777.7777777, Dimensions(1, -2, 0, 0, 0), name='terameters_per_square_hour', ascii_symbol='Tm/h^2', symbol='TmNone⁻²')
-terameters_per_day = Unit(115740740.74074075, Dimensions(1, -1, 0, 0, 0), name='terameters_per_day', ascii_symbol='Tm/d', symbol='TmNone⁻¹')
-terameters_per_square_day = Unit(115740740.74074075, Dimensions(1, -2, 0, 0, 0), name='terameters_per_square_day', ascii_symbol='Tm/d^2', symbol='TmNone⁻²')
-terameters_per_year = Unit(316887.38506811426, Dimensions(1, -1, 0, 0, 0), name='terameters_per_year', ascii_symbol='Tm/y', symbol='TmNone⁻¹')
-terameters_per_square_year = Unit(316887.38506811426, Dimensions(1, -2, 0, 0, 0), name='terameters_per_square_year', ascii_symbol='Tm/y^2', symbol='TmNone⁻²')
-gigameters_per_second = Unit(1000000000.0, Dimensions(1, -1, 0, 0, 0), name='gigameters_per_second', ascii_symbol='Gm/s', symbol='GmNone⁻¹')
-gigameters_per_square_second = Unit(1000000000.0, Dimensions(1, -2, 0, 0, 0), name='gigameters_per_square_second', ascii_symbol='Gm/s^2', symbol='GmNone⁻²')
-gigameters_per_millisecond = Unit(1000000000000.0, Dimensions(1, -1, 0, 0, 0), name='gigameters_per_millisecond', ascii_symbol='Gm/ms', symbol='Gmms⁻¹')
-gigameters_per_square_millisecond = Unit(1000000000000.0, Dimensions(1, -2, 0, 0, 0), name='gigameters_per_square_millisecond', ascii_symbol='Gm/ms^2', symbol='Gmms⁻²')
-gigameters_per_microsecond = Unit(1000000000000000.0, Dimensions(1, -1, 0, 0, 0), name='gigameters_per_microsecond', ascii_symbol='Gm/us', symbol='Gmµs⁻¹')
-gigameters_per_square_microsecond = Unit(1000000000000000.0, Dimensions(1, -2, 0, 0, 0), name='gigameters_per_square_microsecond', ascii_symbol='Gm/us^2', symbol='Gmµs⁻²')
-gigameters_per_nanosecond = Unit(1e+18, Dimensions(1, -1, 0, 0, 0), name='gigameters_per_nanosecond', ascii_symbol='Gm/ns', symbol='Gmns⁻¹')
-gigameters_per_square_nanosecond = Unit(1e+18, Dimensions(1, -2, 0, 0, 0), name='gigameters_per_square_nanosecond', ascii_symbol='Gm/ns^2', symbol='Gmns⁻²')
-gigameters_per_picosecond = Unit(1e+21, Dimensions(1, -1, 0, 0, 0), name='gigameters_per_picosecond', ascii_symbol='Gm/ps', symbol='Gmps⁻¹')
-gigameters_per_square_picosecond = Unit(1e+21, Dimensions(1, -2, 0, 0, 0), name='gigameters_per_square_picosecond', ascii_symbol='Gm/ps^2', symbol='Gmps⁻²')
-gigameters_per_femtosecond = Unit(1e+24, Dimensions(1, -1, 0, 0, 0), name='gigameters_per_femtosecond', ascii_symbol='Gm/fs', symbol='Gmfs⁻¹')
-gigameters_per_square_femtosecond = Unit(1e+24, Dimensions(1, -2, 0, 0, 0), name='gigameters_per_square_femtosecond', ascii_symbol='Gm/fs^2', symbol='Gmfs⁻²')
-gigameters_per_attosecond = Unit(9.999999999999999e+26, Dimensions(1, -1, 0, 0, 0), name='gigameters_per_attosecond', ascii_symbol='Gm/as', symbol='Gmas⁻¹')
-gigameters_per_square_attosecond = Unit(9.999999999999999e+26, Dimensions(1, -2, 0, 0, 0), name='gigameters_per_square_attosecond', ascii_symbol='Gm/as^2', symbol='Gmas⁻²')
-gigameters_per_minute = Unit(16666666.666666666, Dimensions(1, -1, 0, 0, 0), name='gigameters_per_minute', ascii_symbol='Gm/min', symbol='GmNone⁻¹')
-gigameters_per_square_minute = Unit(16666666.666666666, Dimensions(1, -2, 0, 0, 0), name='gigameters_per_square_minute', ascii_symbol='Gm/min^2', symbol='GmNone⁻²')
-gigameters_per_hour = Unit(2777777.777777778, Dimensions(1, -1, 0, 0, 0), name='gigameters_per_hour', ascii_symbol='Gm/h', symbol='GmNone⁻¹')
-gigameters_per_square_hour = Unit(2777777.777777778, Dimensions(1, -2, 0, 0, 0), name='gigameters_per_square_hour', ascii_symbol='Gm/h^2', symbol='GmNone⁻²')
-gigameters_per_day = Unit(115740.74074074074, Dimensions(1, -1, 0, 0, 0), name='gigameters_per_day', ascii_symbol='Gm/d', symbol='GmNone⁻¹')
-gigameters_per_square_day = Unit(115740.74074074074, Dimensions(1, -2, 0, 0, 0), name='gigameters_per_square_day', ascii_symbol='Gm/d^2', symbol='GmNone⁻²')
-gigameters_per_year = Unit(316.88738506811427, Dimensions(1, -1, 0, 0, 0), name='gigameters_per_year', ascii_symbol='Gm/y', symbol='GmNone⁻¹')
-gigameters_per_square_year = Unit(316.88738506811427, Dimensions(1, -2, 0, 0, 0), name='gigameters_per_square_year', ascii_symbol='Gm/y^2', symbol='GmNone⁻²')
-megameters_per_second = Unit(1000000.0, Dimensions(1, -1, 0, 0, 0), name='megameters_per_second', ascii_symbol='Mm/s', symbol='MmNone⁻¹')
-megameters_per_square_second = Unit(1000000.0, Dimensions(1, -2, 0, 0, 0), name='megameters_per_square_second', ascii_symbol='Mm/s^2', symbol='MmNone⁻²')
-megameters_per_millisecond = Unit(1000000000.0, Dimensions(1, -1, 0, 0, 0), name='megameters_per_millisecond', ascii_symbol='Mm/ms', symbol='Mmms⁻¹')
-megameters_per_square_millisecond = Unit(1000000000.0, Dimensions(1, -2, 0, 0, 0), name='megameters_per_square_millisecond', ascii_symbol='Mm/ms^2', symbol='Mmms⁻²')
-megameters_per_microsecond = Unit(1000000000000.0, Dimensions(1, -1, 0, 0, 0), name='megameters_per_microsecond', ascii_symbol='Mm/us', symbol='Mmµs⁻¹')
-megameters_per_square_microsecond = Unit(1000000000000.0, Dimensions(1, -2, 0, 0, 0), name='megameters_per_square_microsecond', ascii_symbol='Mm/us^2', symbol='Mmµs⁻²')
-megameters_per_nanosecond = Unit(1000000000000000.0, Dimensions(1, -1, 0, 0, 0), name='megameters_per_nanosecond', ascii_symbol='Mm/ns', symbol='Mmns⁻¹')
-megameters_per_square_nanosecond = Unit(1000000000000000.0, Dimensions(1, -2, 0, 0, 0), name='megameters_per_square_nanosecond', ascii_symbol='Mm/ns^2', symbol='Mmns⁻²')
-megameters_per_picosecond = Unit(1e+18, Dimensions(1, -1, 0, 0, 0), name='megameters_per_picosecond', ascii_symbol='Mm/ps', symbol='Mmps⁻¹')
-megameters_per_square_picosecond = Unit(1e+18, Dimensions(1, -2, 0, 0, 0), name='megameters_per_square_picosecond', ascii_symbol='Mm/ps^2', symbol='Mmps⁻²')
-megameters_per_femtosecond = Unit(9.999999999999999e+20, Dimensions(1, -1, 0, 0, 0), name='megameters_per_femtosecond', ascii_symbol='Mm/fs', symbol='Mmfs⁻¹')
-megameters_per_square_femtosecond = Unit(9.999999999999999e+20, Dimensions(1, -2, 0, 0, 0), name='megameters_per_square_femtosecond', ascii_symbol='Mm/fs^2', symbol='Mmfs⁻²')
-megameters_per_attosecond = Unit(1e+24, Dimensions(1, -1, 0, 0, 0), name='megameters_per_attosecond', ascii_symbol='Mm/as', symbol='Mmas⁻¹')
-megameters_per_square_attosecond = Unit(1e+24, Dimensions(1, -2, 0, 0, 0), name='megameters_per_square_attosecond', ascii_symbol='Mm/as^2', symbol='Mmas⁻²')
-megameters_per_minute = Unit(16666.666666666668, Dimensions(1, -1, 0, 0, 0), name='megameters_per_minute', ascii_symbol='Mm/min', symbol='MmNone⁻¹')
-megameters_per_square_minute = Unit(16666.666666666668, Dimensions(1, -2, 0, 0, 0), name='megameters_per_square_minute', ascii_symbol='Mm/min^2', symbol='MmNone⁻²')
-megameters_per_hour = Unit(2777.777777777778, Dimensions(1, -1, 0, 0, 0), name='megameters_per_hour', ascii_symbol='Mm/h', symbol='MmNone⁻¹')
-megameters_per_square_hour = Unit(2777.777777777778, Dimensions(1, -2, 0, 0, 0), name='megameters_per_square_hour', ascii_symbol='Mm/h^2', symbol='MmNone⁻²')
-megameters_per_day = Unit(115.74074074074075, Dimensions(1, -1, 0, 0, 0), name='megameters_per_day', ascii_symbol='Mm/d', symbol='MmNone⁻¹')
-megameters_per_square_day = Unit(115.74074074074075, Dimensions(1, -2, 0, 0, 0), name='megameters_per_square_day', ascii_symbol='Mm/d^2', symbol='MmNone⁻²')
-megameters_per_year = Unit(0.3168873850681143, Dimensions(1, -1, 0, 0, 0), name='megameters_per_year', ascii_symbol='Mm/y', symbol='MmNone⁻¹')
-megameters_per_square_year = Unit(0.3168873850681143, Dimensions(1, -2, 0, 0, 0), name='megameters_per_square_year', ascii_symbol='Mm/y^2', symbol='MmNone⁻²')
-kilometers_per_second = Unit(1000.0, Dimensions(1, -1, 0, 0, 0), name='kilometers_per_second', ascii_symbol='km/s', symbol='kmNone⁻¹')
-kilometers_per_square_second = Unit(1000.0, Dimensions(1, -2, 0, 0, 0), name='kilometers_per_square_second', ascii_symbol='km/s^2', symbol='kmNone⁻²')
-kilometers_per_millisecond = Unit(1000000.0, Dimensions(1, -1, 0, 0, 0), name='kilometers_per_millisecond', ascii_symbol='km/ms', symbol='kmms⁻¹')
-kilometers_per_square_millisecond = Unit(1000000.0, Dimensions(1, -2, 0, 0, 0), name='kilometers_per_square_millisecond', ascii_symbol='km/ms^2', symbol='kmms⁻²')
-kilometers_per_microsecond = Unit(1000000000.0, Dimensions(1, -1, 0, 0, 0), name='kilometers_per_microsecond', ascii_symbol='km/us', symbol='kmµs⁻¹')
-kilometers_per_square_microsecond = Unit(1000000000.0, Dimensions(1, -2, 0, 0, 0), name='kilometers_per_square_microsecond', ascii_symbol='km/us^2', symbol='kmµs⁻²')
-kilometers_per_nanosecond = Unit(999999999999.9999, Dimensions(1, -1, 0, 0, 0), name='kilometers_per_nanosecond', ascii_symbol='km/ns', symbol='kmns⁻¹')
-kilometers_per_square_nanosecond = Unit(999999999999.9999, Dimensions(1, -2, 0, 0, 0), name='kilometers_per_square_nanosecond', ascii_symbol='km/ns^2', symbol='kmns⁻²')
-kilometers_per_picosecond = Unit(1000000000000000.0, Dimensions(1, -1, 0, 0, 0), name='kilometers_per_picosecond', ascii_symbol='km/ps', symbol='kmps⁻¹')
-kilometers_per_square_picosecond = Unit(1000000000000000.0, Dimensions(1, -2, 0, 0, 0), name='kilometers_per_square_picosecond', ascii_symbol='km/ps^2', symbol='kmps⁻²')
-kilometers_per_femtosecond = Unit(9.999999999999999e+17, Dimensions(1, -1, 0, 0, 0), name='kilometers_per_femtosecond', ascii_symbol='km/fs', symbol='kmfs⁻¹')
-kilometers_per_square_femtosecond = Unit(9.999999999999999e+17, Dimensions(1, -2, 0, 0, 0), name='kilometers_per_square_femtosecond', ascii_symbol='km/fs^2', symbol='kmfs⁻²')
-kilometers_per_attosecond = Unit(9.999999999999999e+20, Dimensions(1, -1, 0, 0, 0), name='kilometers_per_attosecond', ascii_symbol='km/as', symbol='kmas⁻¹')
-kilometers_per_square_attosecond = Unit(9.999999999999999e+20, Dimensions(1, -2, 0, 0, 0), name='kilometers_per_square_attosecond', ascii_symbol='km/as^2', symbol='kmas⁻²')
-kilometers_per_minute = Unit(16.666666666666668, Dimensions(1, -1, 0, 0, 0), name='kilometers_per_minute', ascii_symbol='km/min', symbol='kmNone⁻¹')
-kilometers_per_square_minute = Unit(16.666666666666668, Dimensions(1, -2, 0, 0, 0), name='kilometers_per_square_minute', ascii_symbol='km/min^2', symbol='kmNone⁻²')
-kilometers_per_hour = Unit(2.7777777777777777, Dimensions(1, -1, 0, 0, 0), name='kilometers_per_hour', ascii_symbol='km/h', symbol='kmNone⁻¹')
-kilometers_per_square_hour = Unit(2.7777777777777777, Dimensions(1, -2, 0, 0, 0), name='kilometers_per_square_hour', ascii_symbol='km/h^2', symbol='kmNone⁻²')
-kilometers_per_day = Unit(0.11574074074074074, Dimensions(1, -1, 0, 0, 0), name='kilometers_per_day', ascii_symbol='km/d', symbol='kmNone⁻¹')
-kilometers_per_square_day = Unit(0.11574074074074074, Dimensions(1, -2, 0, 0, 0), name='kilometers_per_square_day', ascii_symbol='km/d^2', symbol='kmNone⁻²')
-kilometers_per_year = Unit(0.0003168873850681143, Dimensions(1, -1, 0, 0, 0), name='kilometers_per_year', ascii_symbol='km/y', symbol='kmNone⁻¹')
-kilometers_per_square_year = Unit(0.0003168873850681143, Dimensions(1, -2, 0, 0, 0), name='kilometers_per_square_year', ascii_symbol='km/y^2', symbol='kmNone⁻²')
-millimeters_per_second = Unit(0.001, Dimensions(1, -1, 0, 0, 0), name='millimeters_per_second', ascii_symbol='mm/s', symbol='mmNone⁻¹')
-millimeters_per_square_second = Unit(0.001, Dimensions(1, -2, 0, 0, 0), name='millimeters_per_square_second', ascii_symbol='mm/s^2', symbol='mmNone⁻²')
-millimeters_per_millisecond = Unit(1.0, Dimensions(1, -1, 0, 0, 0), name='millimeters_per_millisecond', ascii_symbol='mm/ms', symbol='mmms⁻¹')
-millimeters_per_square_millisecond = Unit(1.0, Dimensions(1, -2, 0, 0, 0), name='millimeters_per_square_millisecond', ascii_symbol='mm/ms^2', symbol='mmms⁻²')
-millimeters_per_microsecond = Unit(1000.0000000000001, Dimensions(1, -1, 0, 0, 0), name='millimeters_per_microsecond', ascii_symbol='mm/us', symbol='mmµs⁻¹')
-millimeters_per_square_microsecond = Unit(1000.0000000000001, Dimensions(1, -2, 0, 0, 0), name='millimeters_per_square_microsecond', ascii_symbol='mm/us^2', symbol='mmµs⁻²')
-millimeters_per_nanosecond = Unit(1000000.0, Dimensions(1, -1, 0, 0, 0), name='millimeters_per_nanosecond', ascii_symbol='mm/ns', symbol='mmns⁻¹')
-millimeters_per_square_nanosecond = Unit(1000000.0, Dimensions(1, -2, 0, 0, 0), name='millimeters_per_square_nanosecond', ascii_symbol='mm/ns^2', symbol='mmns⁻²')
-millimeters_per_picosecond = Unit(1000000000.0, Dimensions(1, -1, 0, 0, 0), name='millimeters_per_picosecond', ascii_symbol='mm/ps', symbol='mmps⁻¹')
-millimeters_per_square_picosecond = Unit(1000000000.0, Dimensions(1, -2, 0, 0, 0), name='millimeters_per_square_picosecond', ascii_symbol='mm/ps^2', symbol='mmps⁻²')
-millimeters_per_femtosecond = Unit(1000000000000.0, Dimensions(1, -1, 0, 0, 0), name='millimeters_per_femtosecond', ascii_symbol='mm/fs', symbol='mmfs⁻¹')
-millimeters_per_square_femtosecond = Unit(1000000000000.0, Dimensions(1, -2, 0, 0, 0), name='millimeters_per_square_femtosecond', ascii_symbol='mm/fs^2', symbol='mmfs⁻²')
-millimeters_per_attosecond = Unit(1000000000000000.0, Dimensions(1, -1, 0, 0, 0), name='millimeters_per_attosecond', ascii_symbol='mm/as', symbol='mmas⁻¹')
-millimeters_per_square_attosecond = Unit(1000000000000000.0, Dimensions(1, -2, 0, 0, 0), name='millimeters_per_square_attosecond', ascii_symbol='mm/as^2', symbol='mmas⁻²')
-millimeters_per_minute = Unit(1.6666666666666667e-05, Dimensions(1, -1, 0, 0, 0), name='millimeters_per_minute', ascii_symbol='mm/min', symbol='mmNone⁻¹')
-millimeters_per_square_minute = Unit(1.6666666666666667e-05, Dimensions(1, -2, 0, 0, 0), name='millimeters_per_square_minute', ascii_symbol='mm/min^2', symbol='mmNone⁻²')
-millimeters_per_hour = Unit(2.777777777777778e-06, Dimensions(1, -1, 0, 0, 0), name='millimeters_per_hour', ascii_symbol='mm/h', symbol='mmNone⁻¹')
-millimeters_per_square_hour = Unit(2.777777777777778e-06, Dimensions(1, -2, 0, 0, 0), name='millimeters_per_square_hour', ascii_symbol='mm/h^2', symbol='mmNone⁻²')
-millimeters_per_day = Unit(1.1574074074074074e-07, Dimensions(1, -1, 0, 0, 0), name='millimeters_per_day', ascii_symbol='mm/d', symbol='mmNone⁻¹')
-millimeters_per_square_day = Unit(1.1574074074074074e-07, Dimensions(1, -2, 0, 0, 0), name='millimeters_per_square_day', ascii_symbol='mm/d^2', symbol='mmNone⁻²')
-millimeters_per_year = Unit(3.168873850681143e-10, Dimensions(1, -1, 0, 0, 0), name='millimeters_per_year', ascii_symbol='mm/y', symbol='mmNone⁻¹')
-millimeters_per_square_year = Unit(3.168873850681143e-10, Dimensions(1, -2, 0, 0, 0), name='millimeters_per_square_year', ascii_symbol='mm/y^2', symbol='mmNone⁻²')
-micrometers_per_second = Unit(1e-06, Dimensions(1, -1, 0, 0, 0), name='micrometers_per_second', ascii_symbol='um/s', symbol='µmNone⁻¹')
-micrometers_per_square_second = Unit(1e-06, Dimensions(1, -2, 0, 0, 0), name='micrometers_per_square_second', ascii_symbol='um/s^2', symbol='µmNone⁻²')
-micrometers_per_millisecond = Unit(0.001, Dimensions(1, -1, 0, 0, 0), name='micrometers_per_millisecond', ascii_symbol='um/ms', symbol='µmms⁻¹')
-micrometers_per_square_millisecond = Unit(0.001, Dimensions(1, -2, 0, 0, 0), name='micrometers_per_square_millisecond', ascii_symbol='um/ms^2', symbol='µmms⁻²')
-micrometers_per_microsecond = Unit(1.0, Dimensions(1, -1, 0, 0, 0), name='micrometers_per_microsecond', ascii_symbol='um/us', symbol='µmµs⁻¹')
-micrometers_per_square_microsecond = Unit(1.0, Dimensions(1, -2, 0, 0, 0), name='micrometers_per_square_microsecond', ascii_symbol='um/us^2', symbol='µmµs⁻²')
-micrometers_per_nanosecond = Unit(999.9999999999999, Dimensions(1, -1, 0, 0, 0), name='micrometers_per_nanosecond', ascii_symbol='um/ns', symbol='µmns⁻¹')
-micrometers_per_square_nanosecond = Unit(999.9999999999999, Dimensions(1, -2, 0, 0, 0), name='micrometers_per_square_nanosecond', ascii_symbol='um/ns^2', symbol='µmns⁻²')
-micrometers_per_picosecond = Unit(1000000.0, Dimensions(1, -1, 0, 0, 0), name='micrometers_per_picosecond', ascii_symbol='um/ps', symbol='µmps⁻¹')
-micrometers_per_square_picosecond = Unit(1000000.0, Dimensions(1, -2, 0, 0, 0), name='micrometers_per_square_picosecond', ascii_symbol='um/ps^2', symbol='µmps⁻²')
-micrometers_per_femtosecond = Unit(999999999.9999999, Dimensions(1, -1, 0, 0, 0), name='micrometers_per_femtosecond', ascii_symbol='um/fs', symbol='µmfs⁻¹')
-micrometers_per_square_femtosecond = Unit(999999999.9999999, Dimensions(1, -2, 0, 0, 0), name='micrometers_per_square_femtosecond', ascii_symbol='um/fs^2', symbol='µmfs⁻²')
-micrometers_per_attosecond = Unit(999999999999.9999, Dimensions(1, -1, 0, 0, 0), name='micrometers_per_attosecond', ascii_symbol='um/as', symbol='µmas⁻¹')
-micrometers_per_square_attosecond = Unit(999999999999.9999, Dimensions(1, -2, 0, 0, 0), name='micrometers_per_square_attosecond', ascii_symbol='um/as^2', symbol='µmas⁻²')
-micrometers_per_minute = Unit(1.6666666666666667e-08, Dimensions(1, -1, 0, 0, 0), name='micrometers_per_minute', ascii_symbol='um/min', symbol='µmNone⁻¹')
-micrometers_per_square_minute = Unit(1.6666666666666667e-08, Dimensions(1, -2, 0, 0, 0), name='micrometers_per_square_minute', ascii_symbol='um/min^2', symbol='µmNone⁻²')
-micrometers_per_hour = Unit(2.7777777777777776e-09, Dimensions(1, -1, 0, 0, 0), name='micrometers_per_hour', ascii_symbol='um/h', symbol='µmNone⁻¹')
-micrometers_per_square_hour = Unit(2.7777777777777776e-09, Dimensions(1, -2, 0, 0, 0), name='micrometers_per_square_hour', ascii_symbol='um/h^2', symbol='µmNone⁻²')
-micrometers_per_day = Unit(1.1574074074074074e-10, Dimensions(1, -1, 0, 0, 0), name='micrometers_per_day', ascii_symbol='um/d', symbol='µmNone⁻¹')
-micrometers_per_square_day = Unit(1.1574074074074074e-10, Dimensions(1, -2, 0, 0, 0), name='micrometers_per_square_day', ascii_symbol='um/d^2', symbol='µmNone⁻²')
-micrometers_per_year = Unit(3.168873850681143e-13, Dimensions(1, -1, 0, 0, 0), name='micrometers_per_year', ascii_symbol='um/y', symbol='µmNone⁻¹')
-micrometers_per_square_year = Unit(3.168873850681143e-13, Dimensions(1, -2, 0, 0, 0), name='micrometers_per_square_year', ascii_symbol='um/y^2', symbol='µmNone⁻²')
-nanometers_per_second = Unit(1e-09, Dimensions(1, -1, 0, 0, 0), name='nanometers_per_second', ascii_symbol='nm/s', symbol='nmNone⁻¹')
-nanometers_per_square_second = Unit(1e-09, Dimensions(1, -2, 0, 0, 0), name='nanometers_per_square_second', ascii_symbol='nm/s^2', symbol='nmNone⁻²')
-nanometers_per_millisecond = Unit(1e-06, Dimensions(1, -1, 0, 0, 0), name='nanometers_per_millisecond', ascii_symbol='nm/ms', symbol='nmms⁻¹')
-nanometers_per_square_millisecond = Unit(1e-06, Dimensions(1, -2, 0, 0, 0), name='nanometers_per_square_millisecond', ascii_symbol='nm/ms^2', symbol='nmms⁻²')
-nanometers_per_microsecond = Unit(0.001, Dimensions(1, -1, 0, 0, 0), name='nanometers_per_microsecond', ascii_symbol='nm/us', symbol='nmµs⁻¹')
-nanometers_per_square_microsecond = Unit(0.001, Dimensions(1, -2, 0, 0, 0), name='nanometers_per_square_microsecond', ascii_symbol='nm/us^2', symbol='nmµs⁻²')
-nanometers_per_nanosecond = Unit(1.0, Dimensions(1, -1, 0, 0, 0), name='nanometers_per_nanosecond', ascii_symbol='nm/ns', symbol='nmns⁻¹')
-nanometers_per_square_nanosecond = Unit(1.0, Dimensions(1, -2, 0, 0, 0), name='nanometers_per_square_nanosecond', ascii_symbol='nm/ns^2', symbol='nmns⁻²')
-nanometers_per_picosecond = Unit(1000.0000000000001, Dimensions(1, -1, 0, 0, 0), name='nanometers_per_picosecond', ascii_symbol='nm/ps', symbol='nmps⁻¹')
-nanometers_per_square_picosecond = Unit(1000.0000000000001, Dimensions(1, -2, 0, 0, 0), name='nanometers_per_square_picosecond', ascii_symbol='nm/ps^2', symbol='nmps⁻²')
-nanometers_per_femtosecond = Unit(1000000.0, Dimensions(1, -1, 0, 0, 0), name='nanometers_per_femtosecond', ascii_symbol='nm/fs', symbol='nmfs⁻¹')
-nanometers_per_square_femtosecond = Unit(1000000.0, Dimensions(1, -2, 0, 0, 0), name='nanometers_per_square_femtosecond', ascii_symbol='nm/fs^2', symbol='nmfs⁻²')
-nanometers_per_attosecond = Unit(1000000000.0, Dimensions(1, -1, 0, 0, 0), name='nanometers_per_attosecond', ascii_symbol='nm/as', symbol='nmas⁻¹')
-nanometers_per_square_attosecond = Unit(1000000000.0, Dimensions(1, -2, 0, 0, 0), name='nanometers_per_square_attosecond', ascii_symbol='nm/as^2', symbol='nmas⁻²')
-nanometers_per_minute = Unit(1.6666666666666667e-11, Dimensions(1, -1, 0, 0, 0), name='nanometers_per_minute', ascii_symbol='nm/min', symbol='nmNone⁻¹')
-nanometers_per_square_minute = Unit(1.6666666666666667e-11, Dimensions(1, -2, 0, 0, 0), name='nanometers_per_square_minute', ascii_symbol='nm/min^2', symbol='nmNone⁻²')
-nanometers_per_hour = Unit(2.777777777777778e-12, Dimensions(1, -1, 0, 0, 0), name='nanometers_per_hour', ascii_symbol='nm/h', symbol='nmNone⁻¹')
-nanometers_per_square_hour = Unit(2.777777777777778e-12, Dimensions(1, -2, 0, 0, 0), name='nanometers_per_square_hour', ascii_symbol='nm/h^2', symbol='nmNone⁻²')
-nanometers_per_day = Unit(1.1574074074074076e-13, Dimensions(1, -1, 0, 0, 0), name='nanometers_per_day', ascii_symbol='nm/d', symbol='nmNone⁻¹')
-nanometers_per_square_day = Unit(1.1574074074074076e-13, Dimensions(1, -2, 0, 0, 0), name='nanometers_per_square_day', ascii_symbol='nm/d^2', symbol='nmNone⁻²')
-nanometers_per_year = Unit(3.1688738506811433e-16, Dimensions(1, -1, 0, 0, 0), name='nanometers_per_year', ascii_symbol='nm/y', symbol='nmNone⁻¹')
-nanometers_per_square_year = Unit(3.1688738506811433e-16, Dimensions(1, -2, 0, 0, 0), name='nanometers_per_square_year', ascii_symbol='nm/y^2', symbol='nmNone⁻²')
-picometers_per_second = Unit(1e-12, Dimensions(1, -1, 0, 0, 0), name='picometers_per_second', ascii_symbol='pm/s', symbol='pmNone⁻¹')
-picometers_per_square_second = Unit(1e-12, Dimensions(1, -2, 0, 0, 0), name='picometers_per_square_second', ascii_symbol='pm/s^2', symbol='pmNone⁻²')
-picometers_per_millisecond = Unit(1e-09, Dimensions(1, -1, 0, 0, 0), name='picometers_per_millisecond', ascii_symbol='pm/ms', symbol='pmms⁻¹')
-picometers_per_square_millisecond = Unit(1e-09, Dimensions(1, -2, 0, 0, 0), name='picometers_per_square_millisecond', ascii_symbol='pm/ms^2', symbol='pmms⁻²')
-picometers_per_microsecond = Unit(1e-06, Dimensions(1, -1, 0, 0, 0), name='picometers_per_microsecond', ascii_symbol='pm/us', symbol='pmµs⁻¹')
-picometers_per_square_microsecond = Unit(1e-06, Dimensions(1, -2, 0, 0, 0), name='picometers_per_square_microsecond', ascii_symbol='pm/us^2', symbol='pmµs⁻²')
-picometers_per_nanosecond = Unit(0.001, Dimensions(1, -1, 0, 0, 0), name='picometers_per_nanosecond', ascii_symbol='pm/ns', symbol='pmns⁻¹')
-picometers_per_square_nanosecond = Unit(0.001, Dimensions(1, -2, 0, 0, 0), name='picometers_per_square_nanosecond', ascii_symbol='pm/ns^2', symbol='pmns⁻²')
-picometers_per_picosecond = Unit(1.0, Dimensions(1, -1, 0, 0, 0), name='picometers_per_picosecond', ascii_symbol='pm/ps', symbol='pmps⁻¹')
-picometers_per_square_picosecond = Unit(1.0, Dimensions(1, -2, 0, 0, 0), name='picometers_per_square_picosecond', ascii_symbol='pm/ps^2', symbol='pmps⁻²')
-picometers_per_femtosecond = Unit(999.9999999999999, Dimensions(1, -1, 0, 0, 0), name='picometers_per_femtosecond', ascii_symbol='pm/fs', symbol='pmfs⁻¹')
-picometers_per_square_femtosecond = Unit(999.9999999999999, Dimensions(1, -2, 0, 0, 0), name='picometers_per_square_femtosecond', ascii_symbol='pm/fs^2', symbol='pmfs⁻²')
-picometers_per_attosecond = Unit(999999.9999999999, Dimensions(1, -1, 0, 0, 0), name='picometers_per_attosecond', ascii_symbol='pm/as', symbol='pmas⁻¹')
-picometers_per_square_attosecond = Unit(999999.9999999999, Dimensions(1, -2, 0, 0, 0), name='picometers_per_square_attosecond', ascii_symbol='pm/as^2', symbol='pmas⁻²')
-picometers_per_minute = Unit(1.6666666666666667e-14, Dimensions(1, -1, 0, 0, 0), name='picometers_per_minute', ascii_symbol='pm/min', symbol='pmNone⁻¹')
-picometers_per_square_minute = Unit(1.6666666666666667e-14, Dimensions(1, -2, 0, 0, 0), name='picometers_per_square_minute', ascii_symbol='pm/min^2', symbol='pmNone⁻²')
-picometers_per_hour = Unit(2.7777777777777776e-15, Dimensions(1, -1, 0, 0, 0), name='picometers_per_hour', ascii_symbol='pm/h', symbol='pmNone⁻¹')
-picometers_per_square_hour = Unit(2.7777777777777776e-15, Dimensions(1, -2, 0, 0, 0), name='picometers_per_square_hour', ascii_symbol='pm/h^2', symbol='pmNone⁻²')
-picometers_per_day = Unit(1.1574074074074073e-16, Dimensions(1, -1, 0, 0, 0), name='picometers_per_day', ascii_symbol='pm/d', symbol='pmNone⁻¹')
-picometers_per_square_day = Unit(1.1574074074074073e-16, Dimensions(1, -2, 0, 0, 0), name='picometers_per_square_day', ascii_symbol='pm/d^2', symbol='pmNone⁻²')
-picometers_per_year = Unit(3.168873850681143e-19, Dimensions(1, -1, 0, 0, 0), name='picometers_per_year', ascii_symbol='pm/y', symbol='pmNone⁻¹')
-picometers_per_square_year = Unit(3.168873850681143e-19, Dimensions(1, -2, 0, 0, 0), name='picometers_per_square_year', ascii_symbol='pm/y^2', symbol='pmNone⁻²')
-femtometers_per_second = Unit(1e-15, Dimensions(1, -1, 0, 0, 0), name='femtometers_per_second', ascii_symbol='fm/s', symbol='fmNone⁻¹')
-femtometers_per_square_second = Unit(1e-15, Dimensions(1, -2, 0, 0, 0), name='femtometers_per_square_second', ascii_symbol='fm/s^2', symbol='fmNone⁻²')
-femtometers_per_millisecond = Unit(1e-12, Dimensions(1, -1, 0, 0, 0), name='femtometers_per_millisecond', ascii_symbol='fm/ms', symbol='fmms⁻¹')
-femtometers_per_square_millisecond = Unit(1e-12, Dimensions(1, -2, 0, 0, 0), name='femtometers_per_square_millisecond', ascii_symbol='fm/ms^2', symbol='fmms⁻²')
-femtometers_per_microsecond = Unit(1e-09, Dimensions(1, -1, 0, 0, 0), name='femtometers_per_microsecond', ascii_symbol='fm/us', symbol='fmµs⁻¹')
-femtometers_per_square_microsecond = Unit(1e-09, Dimensions(1, -2, 0, 0, 0), name='femtometers_per_square_microsecond', ascii_symbol='fm/us^2', symbol='fmµs⁻²')
-femtometers_per_nanosecond = Unit(1e-06, Dimensions(1, -1, 0, 0, 0), name='femtometers_per_nanosecond', ascii_symbol='fm/ns', symbol='fmns⁻¹')
-femtometers_per_square_nanosecond = Unit(1e-06, Dimensions(1, -2, 0, 0, 0), name='femtometers_per_square_nanosecond', ascii_symbol='fm/ns^2', symbol='fmns⁻²')
-femtometers_per_picosecond = Unit(0.001, Dimensions(1, -1, 0, 0, 0), name='femtometers_per_picosecond', ascii_symbol='fm/ps', symbol='fmps⁻¹')
-femtometers_per_square_picosecond = Unit(0.001, Dimensions(1, -2, 0, 0, 0), name='femtometers_per_square_picosecond', ascii_symbol='fm/ps^2', symbol='fmps⁻²')
-femtometers_per_femtosecond = Unit(1.0, Dimensions(1, -1, 0, 0, 0), name='femtometers_per_femtosecond', ascii_symbol='fm/fs', symbol='fmfs⁻¹')
-femtometers_per_square_femtosecond = Unit(1.0, Dimensions(1, -2, 0, 0, 0), name='femtometers_per_square_femtosecond', ascii_symbol='fm/fs^2', symbol='fmfs⁻²')
-femtometers_per_attosecond = Unit(1000.0, Dimensions(1, -1, 0, 0, 0), name='femtometers_per_attosecond', ascii_symbol='fm/as', symbol='fmas⁻¹')
-femtometers_per_square_attosecond = Unit(1000.0, Dimensions(1, -2, 0, 0, 0), name='femtometers_per_square_attosecond', ascii_symbol='fm/as^2', symbol='fmas⁻²')
-femtometers_per_minute = Unit(1.6666666666666667e-17, Dimensions(1, -1, 0, 0, 0), name='femtometers_per_minute', ascii_symbol='fm/min', symbol='fmNone⁻¹')
-femtometers_per_square_minute = Unit(1.6666666666666667e-17, Dimensions(1, -2, 0, 0, 0), name='femtometers_per_square_minute', ascii_symbol='fm/min^2', symbol='fmNone⁻²')
-femtometers_per_hour = Unit(2.777777777777778e-18, Dimensions(1, -1, 0, 0, 0), name='femtometers_per_hour', ascii_symbol='fm/h', symbol='fmNone⁻¹')
-femtometers_per_square_hour = Unit(2.777777777777778e-18, Dimensions(1, -2, 0, 0, 0), name='femtometers_per_square_hour', ascii_symbol='fm/h^2', symbol='fmNone⁻²')
-femtometers_per_day = Unit(1.1574074074074075e-19, Dimensions(1, -1, 0, 0, 0), name='femtometers_per_day', ascii_symbol='fm/d', symbol='fmNone⁻¹')
-femtometers_per_square_day = Unit(1.1574074074074075e-19, Dimensions(1, -2, 0, 0, 0), name='femtometers_per_square_day', ascii_symbol='fm/d^2', symbol='fmNone⁻²')
-femtometers_per_year = Unit(3.168873850681143e-22, Dimensions(1, -1, 0, 0, 0), name='femtometers_per_year', ascii_symbol='fm/y', symbol='fmNone⁻¹')
-femtometers_per_square_year = Unit(3.168873850681143e-22, Dimensions(1, -2, 0, 0, 0), name='femtometers_per_square_year', ascii_symbol='fm/y^2', symbol='fmNone⁻²')
-attometers_per_second = Unit(1e-18, Dimensions(1, -1, 0, 0, 0), name='attometers_per_second', ascii_symbol='am/s', symbol='amNone⁻¹')
-attometers_per_square_second = Unit(1e-18, Dimensions(1, -2, 0, 0, 0), name='attometers_per_square_second', ascii_symbol='am/s^2', symbol='amNone⁻²')
-attometers_per_millisecond = Unit(1e-15, Dimensions(1, -1, 0, 0, 0), name='attometers_per_millisecond', ascii_symbol='am/ms', symbol='amms⁻¹')
-attometers_per_square_millisecond = Unit(1e-15, Dimensions(1, -2, 0, 0, 0), name='attometers_per_square_millisecond', ascii_symbol='am/ms^2', symbol='amms⁻²')
-attometers_per_microsecond = Unit(1.0000000000000002e-12, Dimensions(1, -1, 0, 0, 0), name='attometers_per_microsecond', ascii_symbol='am/us', symbol='amµs⁻¹')
-attometers_per_square_microsecond = Unit(1.0000000000000002e-12, Dimensions(1, -2, 0, 0, 0), name='attometers_per_square_microsecond', ascii_symbol='am/us^2', symbol='amµs⁻²')
-attometers_per_nanosecond = Unit(1e-09, Dimensions(1, -1, 0, 0, 0), name='attometers_per_nanosecond', ascii_symbol='am/ns', symbol='amns⁻¹')
-attometers_per_square_nanosecond = Unit(1e-09, Dimensions(1, -2, 0, 0, 0), name='attometers_per_square_nanosecond', ascii_symbol='am/ns^2', symbol='amns⁻²')
-attometers_per_picosecond = Unit(1.0000000000000002e-06, Dimensions(1, -1, 0, 0, 0), name='attometers_per_picosecond', ascii_symbol='am/ps', symbol='amps⁻¹')
-attometers_per_square_picosecond = Unit(1.0000000000000002e-06, Dimensions(1, -2, 0, 0, 0), name='attometers_per_square_picosecond', ascii_symbol='am/ps^2', symbol='amps⁻²')
-attometers_per_femtosecond = Unit(0.001, Dimensions(1, -1, 0, 0, 0), name='attometers_per_femtosecond', ascii_symbol='am/fs', symbol='amfs⁻¹')
-attometers_per_square_femtosecond = Unit(0.001, Dimensions(1, -2, 0, 0, 0), name='attometers_per_square_femtosecond', ascii_symbol='am/fs^2', symbol='amfs⁻²')
-attometers_per_attosecond = Unit(1.0, Dimensions(1, -1, 0, 0, 0), name='attometers_per_attosecond', ascii_symbol='am/as', symbol='amas⁻¹')
-attometers_per_square_attosecond = Unit(1.0, Dimensions(1, -2, 0, 0, 0), name='attometers_per_square_attosecond', ascii_symbol='am/as^2', symbol='amas⁻²')
-attometers_per_minute = Unit(1.6666666666666668e-20, Dimensions(1, -1, 0, 0, 0), name='attometers_per_minute', ascii_symbol='am/min', symbol='amNone⁻¹')
-attometers_per_square_minute = Unit(1.6666666666666668e-20, Dimensions(1, -2, 0, 0, 0), name='attometers_per_square_minute', ascii_symbol='am/min^2', symbol='amNone⁻²')
-attometers_per_hour = Unit(2.7777777777777778e-21, Dimensions(1, -1, 0, 0, 0), name='attometers_per_hour', ascii_symbol='am/h', symbol='amNone⁻¹')
-attometers_per_square_hour = Unit(2.7777777777777778e-21, Dimensions(1, -2, 0, 0, 0), name='attometers_per_square_hour', ascii_symbol='am/h^2', symbol='amNone⁻²')
-attometers_per_day = Unit(1.1574074074074074e-22, Dimensions(1, -1, 0, 0, 0), name='attometers_per_day', ascii_symbol='am/d', symbol='amNone⁻¹')
-attometers_per_square_day = Unit(1.1574074074074074e-22, Dimensions(1, -2, 0, 0, 0), name='attometers_per_square_day', ascii_symbol='am/d^2', symbol='amNone⁻²')
-attometers_per_year = Unit(3.1688738506811433e-25, Dimensions(1, -1, 0, 0, 0), name='attometers_per_year', ascii_symbol='am/y', symbol='amNone⁻¹')
-attometers_per_square_year = Unit(3.1688738506811433e-25, Dimensions(1, -2, 0, 0, 0), name='attometers_per_square_year', ascii_symbol='am/y^2', symbol='amNone⁻²')
-angstroms_per_second = Unit(1e-10, Dimensions(1, -1, 0, 0, 0), name='angstroms_per_second', ascii_symbol='Ang/s', symbol='ÅNone⁻¹')
-angstroms_per_square_second = Unit(1e-10, Dimensions(1, -2, 0, 0, 0), name='angstroms_per_square_second', ascii_symbol='Ang/s^2', symbol='ÅNone⁻²')
-angstroms_per_millisecond = Unit(1e-07, Dimensions(1, -1, 0, 0, 0), name='angstroms_per_millisecond', ascii_symbol='Ang/ms', symbol='Åms⁻¹')
-angstroms_per_square_millisecond = Unit(1e-07, Dimensions(1, -2, 0, 0, 0), name='angstroms_per_square_millisecond', ascii_symbol='Ang/ms^2', symbol='Åms⁻²')
-angstroms_per_microsecond = Unit(0.0001, Dimensions(1, -1, 0, 0, 0), name='angstroms_per_microsecond', ascii_symbol='Ang/us', symbol='Åµs⁻¹')
-angstroms_per_square_microsecond = Unit(0.0001, Dimensions(1, -2, 0, 0, 0), name='angstroms_per_square_microsecond', ascii_symbol='Ang/us^2', symbol='Åµs⁻²')
-angstroms_per_nanosecond = Unit(0.09999999999999999, Dimensions(1, -1, 0, 0, 0), name='angstroms_per_nanosecond', ascii_symbol='Ang/ns', symbol='Åns⁻¹')
-angstroms_per_square_nanosecond = Unit(0.09999999999999999, Dimensions(1, -2, 0, 0, 0), name='angstroms_per_square_nanosecond', ascii_symbol='Ang/ns^2', symbol='Åns⁻²')
-angstroms_per_picosecond = Unit(100.0, Dimensions(1, -1, 0, 0, 0), name='angstroms_per_picosecond', ascii_symbol='Ang/ps', symbol='Åps⁻¹')
-angstroms_per_square_picosecond = Unit(100.0, Dimensions(1, -2, 0, 0, 0), name='angstroms_per_square_picosecond', ascii_symbol='Ang/ps^2', symbol='Åps⁻²')
-angstroms_per_femtosecond = Unit(100000.0, Dimensions(1, -1, 0, 0, 0), name='angstroms_per_femtosecond', ascii_symbol='Ang/fs', symbol='Åfs⁻¹')
-angstroms_per_square_femtosecond = Unit(100000.0, Dimensions(1, -2, 0, 0, 0), name='angstroms_per_square_femtosecond', ascii_symbol='Ang/fs^2', symbol='Åfs⁻²')
-angstroms_per_attosecond = Unit(100000000.0, Dimensions(1, -1, 0, 0, 0), name='angstroms_per_attosecond', ascii_symbol='Ang/as', symbol='Åas⁻¹')
-angstroms_per_square_attosecond = Unit(100000000.0, Dimensions(1, -2, 0, 0, 0), name='angstroms_per_square_attosecond', ascii_symbol='Ang/as^2', symbol='Åas⁻²')
-angstroms_per_minute = Unit(1.6666666666666668e-12, Dimensions(1, -1, 0, 0, 0), name='angstroms_per_minute', ascii_symbol='Ang/min', symbol='ÅNone⁻¹')
-angstroms_per_square_minute = Unit(1.6666666666666668e-12, Dimensions(1, -2, 0, 0, 0), name='angstroms_per_square_minute', ascii_symbol='Ang/min^2', symbol='ÅNone⁻²')
-angstroms_per_hour = Unit(2.777777777777778e-13, Dimensions(1, -1, 0, 0, 0), name='angstroms_per_hour', ascii_symbol='Ang/h', symbol='ÅNone⁻¹')
-angstroms_per_square_hour = Unit(2.777777777777778e-13, Dimensions(1, -2, 0, 0, 0), name='angstroms_per_square_hour', ascii_symbol='Ang/h^2', symbol='ÅNone⁻²')
-angstroms_per_day = Unit(1.1574074074074074e-14, Dimensions(1, -1, 0, 0, 0), name='angstroms_per_day', ascii_symbol='Ang/d', symbol='ÅNone⁻¹')
-angstroms_per_square_day = Unit(1.1574074074074074e-14, Dimensions(1, -2, 0, 0, 0), name='angstroms_per_square_day', ascii_symbol='Ang/d^2', symbol='ÅNone⁻²')
-angstroms_per_year = Unit(3.168873850681143e-17, Dimensions(1, -1, 0, 0, 0), name='angstroms_per_year', ascii_symbol='Ang/y', symbol='ÅNone⁻¹')
-angstroms_per_square_year = Unit(3.168873850681143e-17, Dimensions(1, -2, 0, 0, 0), name='angstroms_per_square_year', ascii_symbol='Ang/y^2', symbol='ÅNone⁻²')
-grams_per_cubic_meter = Unit(0.001, Dimensions(-3, 1, 0, 0, 0), name='grams_per_cubic_meter', ascii_symbol='g m^-3', symbol='NoneNone⁻³')
-exagrams_per_cubic_meter = Unit(1000000000000000.0, Dimensions(-3, 1, 0, 0, 0), name='exagrams_per_cubic_meter', ascii_symbol='Eg m^-3', symbol='EgNone⁻³')
-petagrams_per_cubic_meter = Unit(1000000000000.0, Dimensions(-3, 1, 0, 0, 0), name='petagrams_per_cubic_meter', ascii_symbol='Pg m^-3', symbol='PgNone⁻³')
-teragrams_per_cubic_meter = Unit(1000000000.0, Dimensions(-3, 1, 0, 0, 0), name='teragrams_per_cubic_meter', ascii_symbol='Tg m^-3', symbol='TgNone⁻³')
-gigagrams_per_cubic_meter = Unit(1000000.0, Dimensions(-3, 1, 0, 0, 0), name='gigagrams_per_cubic_meter', ascii_symbol='Gg m^-3', symbol='GgNone⁻³')
-megagrams_per_cubic_meter = Unit(1000.0, Dimensions(-3, 1, 0, 0, 0), name='megagrams_per_cubic_meter', ascii_symbol='Mg m^-3', symbol='MgNone⁻³')
-kilograms_per_cubic_meter = Unit(1.0, Dimensions(-3, 1, 0, 0, 0), name='kilograms_per_cubic_meter', ascii_symbol='kg m^-3', symbol='kgNone⁻³')
-milligrams_per_cubic_meter = Unit(1e-06, Dimensions(-3, 1, 0, 0, 0), name='milligrams_per_cubic_meter', ascii_symbol='mg m^-3', symbol='mgNone⁻³')
-micrograms_per_cubic_meter = Unit(1e-09, Dimensions(-3, 1, 0, 0, 0), name='micrograms_per_cubic_meter', ascii_symbol='ug m^-3', symbol='µgNone⁻³')
-nanograms_per_cubic_meter = Unit(1.0000000000000002e-12, Dimensions(-3, 1, 0, 0, 0), name='nanograms_per_cubic_meter', ascii_symbol='ng m^-3', symbol='ngNone⁻³')
-picograms_per_cubic_meter = Unit(1e-15, Dimensions(-3, 1, 0, 0, 0), name='picograms_per_cubic_meter', ascii_symbol='pg m^-3', symbol='pgNone⁻³')
-femtograms_per_cubic_meter = Unit(1e-18, Dimensions(-3, 1, 0, 0, 0), name='femtograms_per_cubic_meter', ascii_symbol='fg m^-3', symbol='fgNone⁻³')
-attograms_per_cubic_meter = Unit(1.0000000000000001e-21, Dimensions(-3, 1, 0, 0, 0), name='attograms_per_cubic_meter', ascii_symbol='ag m^-3', symbol='agNone⁻³')
-grams_per_cubic_exameter = Unit(1e-57, Dimensions(-3, 1, 0, 0, 0), name='grams_per_cubic_exameter', ascii_symbol='g Em^-3', symbol='NoneEm⁻³')
-exagrams_per_cubic_exameter = Unit(1e-39, Dimensions(-3, 1, 0, 0, 0), name='exagrams_per_cubic_exameter', ascii_symbol='Eg Em^-3', symbol='EgEm⁻³')
-petagrams_per_cubic_exameter = Unit(9.999999999999999e-43, Dimensions(-3, 1, 0, 0, 0), name='petagrams_per_cubic_exameter', ascii_symbol='Pg Em^-3', symbol='PgEm⁻³')
-teragrams_per_cubic_exameter = Unit(1e-45, Dimensions(-3, 1, 0, 0, 0), name='teragrams_per_cubic_exameter', ascii_symbol='Tg Em^-3', symbol='TgEm⁻³')
-gigagrams_per_cubic_exameter = Unit(1e-48, Dimensions(-3, 1, 0, 0, 0), name='gigagrams_per_cubic_exameter', ascii_symbol='Gg Em^-3', symbol='GgEm⁻³')
-megagrams_per_cubic_exameter = Unit(9.999999999999999e-52, Dimensions(-3, 1, 0, 0, 0), name='megagrams_per_cubic_exameter', ascii_symbol='Mg Em^-3', symbol='MgEm⁻³')
-kilograms_per_cubic_exameter = Unit(9.999999999999999e-55, Dimensions(-3, 1, 0, 0, 0), name='kilograms_per_cubic_exameter', ascii_symbol='kg Em^-3', symbol='kgEm⁻³')
-milligrams_per_cubic_exameter = Unit(9.999999999999998e-61, Dimensions(-3, 1, 0, 0, 0), name='milligrams_per_cubic_exameter', ascii_symbol='mg Em^-3', symbol='mgEm⁻³')
-micrograms_per_cubic_exameter = Unit(9.999999999999999e-64, Dimensions(-3, 1, 0, 0, 0), name='micrograms_per_cubic_exameter', ascii_symbol='ug Em^-3', symbol='µgEm⁻³')
-nanograms_per_cubic_exameter = Unit(1.0000000000000001e-66, Dimensions(-3, 1, 0, 0, 0), name='nanograms_per_cubic_exameter', ascii_symbol='ng Em^-3', symbol='ngEm⁻³')
-picograms_per_cubic_exameter = Unit(1e-69, Dimensions(-3, 1, 0, 0, 0), name='picograms_per_cubic_exameter', ascii_symbol='pg Em^-3', symbol='pgEm⁻³')
-femtograms_per_cubic_exameter = Unit(1e-72, Dimensions(-3, 1, 0, 0, 0), name='femtograms_per_cubic_exameter', ascii_symbol='fg Em^-3', symbol='fgEm⁻³')
-attograms_per_cubic_exameter = Unit(1e-75, Dimensions(-3, 1, 0, 0, 0), name='attograms_per_cubic_exameter', ascii_symbol='ag Em^-3', symbol='agEm⁻³')
-grams_per_cubic_petameter = Unit(1.0000000000000001e-48, Dimensions(-3, 1, 0, 0, 0), name='grams_per_cubic_petameter', ascii_symbol='g Pm^-3', symbol='NonePm⁻³')
-exagrams_per_cubic_petameter = Unit(1e-30, Dimensions(-3, 1, 0, 0, 0), name='exagrams_per_cubic_petameter', ascii_symbol='Eg Pm^-3', symbol='EgPm⁻³')
-petagrams_per_cubic_petameter = Unit(1e-33, Dimensions(-3, 1, 0, 0, 0), name='petagrams_per_cubic_petameter', ascii_symbol='Pg Pm^-3', symbol='PgPm⁻³')
-teragrams_per_cubic_petameter = Unit(1.0000000000000001e-36, Dimensions(-3, 1, 0, 0, 0), name='teragrams_per_cubic_petameter', ascii_symbol='Tg Pm^-3', symbol='TgPm⁻³')
-gigagrams_per_cubic_petameter = Unit(1.0000000000000001e-39, Dimensions(-3, 1, 0, 0, 0), name='gigagrams_per_cubic_petameter', ascii_symbol='Gg Pm^-3', symbol='GgPm⁻³')
-megagrams_per_cubic_petameter = Unit(1e-42, Dimensions(-3, 1, 0, 0, 0), name='megagrams_per_cubic_petameter', ascii_symbol='Mg Pm^-3', symbol='MgPm⁻³')
-kilograms_per_cubic_petameter = Unit(1.0000000000000001e-45, Dimensions(-3, 1, 0, 0, 0), name='kilograms_per_cubic_petameter', ascii_symbol='kg Pm^-3', symbol='kgPm⁻³')
-milligrams_per_cubic_petameter = Unit(1e-51, Dimensions(-3, 1, 0, 0, 0), name='milligrams_per_cubic_petameter', ascii_symbol='mg Pm^-3', symbol='mgPm⁻³')
-micrograms_per_cubic_petameter = Unit(1.0000000000000002e-54, Dimensions(-3, 1, 0, 0, 0), name='micrograms_per_cubic_petameter', ascii_symbol='ug Pm^-3', symbol='µgPm⁻³')
-nanograms_per_cubic_petameter = Unit(1.0000000000000002e-57, Dimensions(-3, 1, 0, 0, 0), name='nanograms_per_cubic_petameter', ascii_symbol='ng Pm^-3', symbol='ngPm⁻³')
-picograms_per_cubic_petameter = Unit(1.0000000000000001e-60, Dimensions(-3, 1, 0, 0, 0), name='picograms_per_cubic_petameter', ascii_symbol='pg Pm^-3', symbol='pgPm⁻³')
-femtograms_per_cubic_petameter = Unit(1.0000000000000002e-63, Dimensions(-3, 1, 0, 0, 0), name='femtograms_per_cubic_petameter', ascii_symbol='fg Pm^-3', symbol='fgPm⁻³')
-attograms_per_cubic_petameter = Unit(1.0000000000000001e-66, Dimensions(-3, 1, 0, 0, 0), name='attograms_per_cubic_petameter', ascii_symbol='ag Pm^-3', symbol='agPm⁻³')
-grams_per_cubic_terameter = Unit(1e-39, Dimensions(-3, 1, 0, 0, 0), name='grams_per_cubic_terameter', ascii_symbol='g Tm^-3', symbol='NoneTm⁻³')
-exagrams_per_cubic_terameter = Unit(1e-21, Dimensions(-3, 1, 0, 0, 0), name='exagrams_per_cubic_terameter', ascii_symbol='Eg Tm^-3', symbol='EgTm⁻³')
-petagrams_per_cubic_terameter = Unit(1e-24, Dimensions(-3, 1, 0, 0, 0), name='petagrams_per_cubic_terameter', ascii_symbol='Pg Tm^-3', symbol='PgTm⁻³')
-teragrams_per_cubic_terameter = Unit(1e-27, Dimensions(-3, 1, 0, 0, 0), name='teragrams_per_cubic_terameter', ascii_symbol='Tg Tm^-3', symbol='TgTm⁻³')
-gigagrams_per_cubic_terameter = Unit(9.999999999999999e-31, Dimensions(-3, 1, 0, 0, 0), name='gigagrams_per_cubic_terameter', ascii_symbol='Gg Tm^-3', symbol='GgTm⁻³')
-megagrams_per_cubic_terameter = Unit(9.999999999999999e-34, Dimensions(-3, 1, 0, 0, 0), name='megagrams_per_cubic_terameter', ascii_symbol='Mg Tm^-3', symbol='MgTm⁻³')
-kilograms_per_cubic_terameter = Unit(1e-36, Dimensions(-3, 1, 0, 0, 0), name='kilograms_per_cubic_terameter', ascii_symbol='kg Tm^-3', symbol='kgTm⁻³')
-milligrams_per_cubic_terameter = Unit(9.999999999999999e-43, Dimensions(-3, 1, 0, 0, 0), name='milligrams_per_cubic_terameter', ascii_symbol='mg Tm^-3', symbol='mgTm⁻³')
-micrograms_per_cubic_terameter = Unit(1e-45, Dimensions(-3, 1, 0, 0, 0), name='micrograms_per_cubic_terameter', ascii_symbol='ug Tm^-3', symbol='µgTm⁻³')
-nanograms_per_cubic_terameter = Unit(1.0000000000000001e-48, Dimensions(-3, 1, 0, 0, 0), name='nanograms_per_cubic_terameter', ascii_symbol='ng Tm^-3', symbol='ngTm⁻³')
-picograms_per_cubic_terameter = Unit(1e-51, Dimensions(-3, 1, 0, 0, 0), name='picograms_per_cubic_terameter', ascii_symbol='pg Tm^-3', symbol='pgTm⁻³')
-femtograms_per_cubic_terameter = Unit(1e-54, Dimensions(-3, 1, 0, 0, 0), name='femtograms_per_cubic_terameter', ascii_symbol='fg Tm^-3', symbol='fgTm⁻³')
-attograms_per_cubic_terameter = Unit(1.0000000000000001e-57, Dimensions(-3, 1, 0, 0, 0), name='attograms_per_cubic_terameter', ascii_symbol='ag Tm^-3', symbol='agTm⁻³')
-grams_per_cubic_gigameter = Unit(1e-30, Dimensions(-3, 1, 0, 0, 0), name='grams_per_cubic_gigameter', ascii_symbol='g Gm^-3', symbol='NoneGm⁻³')
-exagrams_per_cubic_gigameter = Unit(1e-12, Dimensions(-3, 1, 0, 0, 0), name='exagrams_per_cubic_gigameter', ascii_symbol='Eg Gm^-3', symbol='EgGm⁻³')
-petagrams_per_cubic_gigameter = Unit(1e-15, Dimensions(-3, 1, 0, 0, 0), name='petagrams_per_cubic_gigameter', ascii_symbol='Pg Gm^-3', symbol='PgGm⁻³')
-teragrams_per_cubic_gigameter = Unit(1e-18, Dimensions(-3, 1, 0, 0, 0), name='teragrams_per_cubic_gigameter', ascii_symbol='Tg Gm^-3', symbol='TgGm⁻³')
-gigagrams_per_cubic_gigameter = Unit(1e-21, Dimensions(-3, 1, 0, 0, 0), name='gigagrams_per_cubic_gigameter', ascii_symbol='Gg Gm^-3', symbol='GgGm⁻³')
-megagrams_per_cubic_gigameter = Unit(1e-24, Dimensions(-3, 1, 0, 0, 0), name='megagrams_per_cubic_gigameter', ascii_symbol='Mg Gm^-3', symbol='MgGm⁻³')
-kilograms_per_cubic_gigameter = Unit(1e-27, Dimensions(-3, 1, 0, 0, 0), name='kilograms_per_cubic_gigameter', ascii_symbol='kg Gm^-3', symbol='kgGm⁻³')
-milligrams_per_cubic_gigameter = Unit(9.999999999999999e-34, Dimensions(-3, 1, 0, 0, 0), name='milligrams_per_cubic_gigameter', ascii_symbol='mg Gm^-3', symbol='mgGm⁻³')
-micrograms_per_cubic_gigameter = Unit(1.0000000000000001e-36, Dimensions(-3, 1, 0, 0, 0), name='micrograms_per_cubic_gigameter', ascii_symbol='ug Gm^-3', symbol='µgGm⁻³')
-nanograms_per_cubic_gigameter = Unit(1.0000000000000001e-39, Dimensions(-3, 1, 0, 0, 0), name='nanograms_per_cubic_gigameter', ascii_symbol='ng Gm^-3', symbol='ngGm⁻³')
-picograms_per_cubic_gigameter = Unit(1e-42, Dimensions(-3, 1, 0, 0, 0), name='picograms_per_cubic_gigameter', ascii_symbol='pg Gm^-3', symbol='pgGm⁻³')
-femtograms_per_cubic_gigameter = Unit(1e-45, Dimensions(-3, 1, 0, 0, 0), name='femtograms_per_cubic_gigameter', ascii_symbol='fg Gm^-3', symbol='fgGm⁻³')
-attograms_per_cubic_gigameter = Unit(1.0000000000000001e-48, Dimensions(-3, 1, 0, 0, 0), name='attograms_per_cubic_gigameter', ascii_symbol='ag Gm^-3', symbol='agGm⁻³')
-grams_per_cubic_megameter = Unit(1.0000000000000001e-21, Dimensions(-3, 1, 0, 0, 0), name='grams_per_cubic_megameter', ascii_symbol='g Mm^-3', symbol='NoneMm⁻³')
-exagrams_per_cubic_megameter = Unit(0.001, Dimensions(-3, 1, 0, 0, 0), name='exagrams_per_cubic_megameter', ascii_symbol='Eg Mm^-3', symbol='EgMm⁻³')
-petagrams_per_cubic_megameter = Unit(1e-06, Dimensions(-3, 1, 0, 0, 0), name='petagrams_per_cubic_megameter', ascii_symbol='Pg Mm^-3', symbol='PgMm⁻³')
-teragrams_per_cubic_megameter = Unit(1e-09, Dimensions(-3, 1, 0, 0, 0), name='teragrams_per_cubic_megameter', ascii_symbol='Tg Mm^-3', symbol='TgMm⁻³')
-gigagrams_per_cubic_megameter = Unit(1e-12, Dimensions(-3, 1, 0, 0, 0), name='gigagrams_per_cubic_megameter', ascii_symbol='Gg Mm^-3', symbol='GgMm⁻³')
-megagrams_per_cubic_megameter = Unit(1e-15, Dimensions(-3, 1, 0, 0, 0), name='megagrams_per_cubic_megameter', ascii_symbol='Mg Mm^-3', symbol='MgMm⁻³')
-kilograms_per_cubic_megameter = Unit(1e-18, Dimensions(-3, 1, 0, 0, 0), name='kilograms_per_cubic_megameter', ascii_symbol='kg Mm^-3', symbol='kgMm⁻³')
-milligrams_per_cubic_megameter = Unit(1e-24, Dimensions(-3, 1, 0, 0, 0), name='milligrams_per_cubic_megameter', ascii_symbol='mg Mm^-3', symbol='mgMm⁻³')
-micrograms_per_cubic_megameter = Unit(1e-27, Dimensions(-3, 1, 0, 0, 0), name='micrograms_per_cubic_megameter', ascii_symbol='ug Mm^-3', symbol='µgMm⁻³')
-nanograms_per_cubic_megameter = Unit(1.0000000000000003e-30, Dimensions(-3, 1, 0, 0, 0), name='nanograms_per_cubic_megameter', ascii_symbol='ng Mm^-3', symbol='ngMm⁻³')
-picograms_per_cubic_megameter = Unit(1e-33, Dimensions(-3, 1, 0, 0, 0), name='picograms_per_cubic_megameter', ascii_symbol='pg Mm^-3', symbol='pgMm⁻³')
-femtograms_per_cubic_megameter = Unit(1.0000000000000001e-36, Dimensions(-3, 1, 0, 0, 0), name='femtograms_per_cubic_megameter', ascii_symbol='fg Mm^-3', symbol='fgMm⁻³')
-attograms_per_cubic_megameter = Unit(1.0000000000000001e-39, Dimensions(-3, 1, 0, 0, 0), name='attograms_per_cubic_megameter', ascii_symbol='ag Mm^-3', symbol='agMm⁻³')
-grams_per_cubic_kilometer = Unit(1e-12, Dimensions(-3, 1, 0, 0, 0), name='grams_per_cubic_kilometer', ascii_symbol='g km^-3', symbol='Nonekm⁻³')
-exagrams_per_cubic_kilometer = Unit(1000000.0, Dimensions(-3, 1, 0, 0, 0), name='exagrams_per_cubic_kilometer', ascii_symbol='Eg km^-3', symbol='Egkm⁻³')
-petagrams_per_cubic_kilometer = Unit(1000.0, Dimensions(-3, 1, 0, 0, 0), name='petagrams_per_cubic_kilometer', ascii_symbol='Pg km^-3', symbol='Pgkm⁻³')
-teragrams_per_cubic_kilometer = Unit(1.0, Dimensions(-3, 1, 0, 0, 0), name='teragrams_per_cubic_kilometer', ascii_symbol='Tg km^-3', symbol='Tgkm⁻³')
-gigagrams_per_cubic_kilometer = Unit(0.001, Dimensions(-3, 1, 0, 0, 0), name='gigagrams_per_cubic_kilometer', ascii_symbol='Gg km^-3', symbol='Ggkm⁻³')
-megagrams_per_cubic_kilometer = Unit(1e-06, Dimensions(-3, 1, 0, 0, 0), name='megagrams_per_cubic_kilometer', ascii_symbol='Mg km^-3', symbol='Mgkm⁻³')
-kilograms_per_cubic_kilometer = Unit(1e-09, Dimensions(-3, 1, 0, 0, 0), name='kilograms_per_cubic_kilometer', ascii_symbol='kg km^-3', symbol='kgkm⁻³')
-milligrams_per_cubic_kilometer = Unit(9.999999999999999e-16, Dimensions(-3, 1, 0, 0, 0), name='milligrams_per_cubic_kilometer', ascii_symbol='mg km^-3', symbol='mgkm⁻³')
-micrograms_per_cubic_kilometer = Unit(1e-18, Dimensions(-3, 1, 0, 0, 0), name='micrograms_per_cubic_kilometer', ascii_symbol='ug km^-3', symbol='µgkm⁻³')
-nanograms_per_cubic_kilometer = Unit(1.0000000000000001e-21, Dimensions(-3, 1, 0, 0, 0), name='nanograms_per_cubic_kilometer', ascii_symbol='ng km^-3', symbol='ngkm⁻³')
-picograms_per_cubic_kilometer = Unit(1.0000000000000001e-24, Dimensions(-3, 1, 0, 0, 0), name='picograms_per_cubic_kilometer', ascii_symbol='pg km^-3', symbol='pgkm⁻³')
-femtograms_per_cubic_kilometer = Unit(1e-27, Dimensions(-3, 1, 0, 0, 0), name='femtograms_per_cubic_kilometer', ascii_symbol='fg km^-3', symbol='fgkm⁻³')
-attograms_per_cubic_kilometer = Unit(1e-30, Dimensions(-3, 1, 0, 0, 0), name='attograms_per_cubic_kilometer', ascii_symbol='ag km^-3', symbol='agkm⁻³')
-grams_per_cubic_millimeter = Unit(1000000.0, Dimensions(-3, 1, 0, 0, 0), name='grams_per_cubic_millimeter', ascii_symbol='g mm^-3', symbol='Nonemm⁻³')
-exagrams_per_cubic_millimeter = Unit(1e+24, Dimensions(-3, 1, 0, 0, 0), name='exagrams_per_cubic_millimeter', ascii_symbol='Eg mm^-3', symbol='Egmm⁻³')
-petagrams_per_cubic_millimeter = Unit(1e+21, Dimensions(-3, 1, 0, 0, 0), name='petagrams_per_cubic_millimeter', ascii_symbol='Pg mm^-3', symbol='Pgmm⁻³')
-teragrams_per_cubic_millimeter = Unit(1e+18, Dimensions(-3, 1, 0, 0, 0), name='teragrams_per_cubic_millimeter', ascii_symbol='Tg mm^-3', symbol='Tgmm⁻³')
-gigagrams_per_cubic_millimeter = Unit(1000000000000000.0, Dimensions(-3, 1, 0, 0, 0), name='gigagrams_per_cubic_millimeter', ascii_symbol='Gg mm^-3', symbol='Ggmm⁻³')
-megagrams_per_cubic_millimeter = Unit(999999999999.9999, Dimensions(-3, 1, 0, 0, 0), name='megagrams_per_cubic_millimeter', ascii_symbol='Mg mm^-3', symbol='Mgmm⁻³')
-kilograms_per_cubic_millimeter = Unit(999999999.9999999, Dimensions(-3, 1, 0, 0, 0), name='kilograms_per_cubic_millimeter', ascii_symbol='kg mm^-3', symbol='kgmm⁻³')
-milligrams_per_cubic_millimeter = Unit(999.9999999999999, Dimensions(-3, 1, 0, 0, 0), name='milligrams_per_cubic_millimeter', ascii_symbol='mg mm^-3', symbol='mgmm⁻³')
-micrograms_per_cubic_millimeter = Unit(1.0, Dimensions(-3, 1, 0, 0, 0), name='micrograms_per_cubic_millimeter', ascii_symbol='ug mm^-3', symbol='µgmm⁻³')
-nanograms_per_cubic_millimeter = Unit(0.001, Dimensions(-3, 1, 0, 0, 0), name='nanograms_per_cubic_millimeter', ascii_symbol='ng mm^-3', symbol='ngmm⁻³')
-picograms_per_cubic_millimeter = Unit(1e-06, Dimensions(-3, 1, 0, 0, 0), name='picograms_per_cubic_millimeter', ascii_symbol='pg mm^-3', symbol='pgmm⁻³')
-femtograms_per_cubic_millimeter = Unit(1e-09, Dimensions(-3, 1, 0, 0, 0), name='femtograms_per_cubic_millimeter', ascii_symbol='fg mm^-3', symbol='fgmm⁻³')
-attograms_per_cubic_millimeter = Unit(1e-12, Dimensions(-3, 1, 0, 0, 0), name='attograms_per_cubic_millimeter', ascii_symbol='ag mm^-3', symbol='agmm⁻³')
-grams_per_cubic_micrometer = Unit(1000000000000000.1, Dimensions(-3, 1, 0, 0, 0), name='grams_per_cubic_micrometer', ascii_symbol='g um^-3', symbol='Noneµm⁻³')
-exagrams_per_cubic_micrometer = Unit(1.0000000000000001e+33, Dimensions(-3, 1, 0, 0, 0), name='exagrams_per_cubic_micrometer', ascii_symbol='Eg um^-3', symbol='Egµm⁻³')
-petagrams_per_cubic_micrometer = Unit(1.0000000000000002e+30, Dimensions(-3, 1, 0, 0, 0), name='petagrams_per_cubic_micrometer', ascii_symbol='Pg um^-3', symbol='Pgµm⁻³')
-teragrams_per_cubic_micrometer = Unit(1.0000000000000002e+27, Dimensions(-3, 1, 0, 0, 0), name='teragrams_per_cubic_micrometer', ascii_symbol='Tg um^-3', symbol='Tgµm⁻³')
-gigagrams_per_cubic_micrometer = Unit(1.0000000000000001e+24, Dimensions(-3, 1, 0, 0, 0), name='gigagrams_per_cubic_micrometer', ascii_symbol='Gg um^-3', symbol='Ggµm⁻³')
-megagrams_per_cubic_micrometer = Unit(1.0000000000000001e+21, Dimensions(-3, 1, 0, 0, 0), name='megagrams_per_cubic_micrometer', ascii_symbol='Mg um^-3', symbol='Mgµm⁻³')
-kilograms_per_cubic_micrometer = Unit(1.0000000000000001e+18, Dimensions(-3, 1, 0, 0, 0), name='kilograms_per_cubic_micrometer', ascii_symbol='kg um^-3', symbol='kgµm⁻³')
-milligrams_per_cubic_micrometer = Unit(1000000000000.0001, Dimensions(-3, 1, 0, 0, 0), name='milligrams_per_cubic_micrometer', ascii_symbol='mg um^-3', symbol='mgµm⁻³')
-micrograms_per_cubic_micrometer = Unit(1000000000.0000002, Dimensions(-3, 1, 0, 0, 0), name='micrograms_per_cubic_micrometer', ascii_symbol='ug um^-3', symbol='µgµm⁻³')
-nanograms_per_cubic_micrometer = Unit(1000000.0000000003, Dimensions(-3, 1, 0, 0, 0), name='nanograms_per_cubic_micrometer', ascii_symbol='ng um^-3', symbol='ngµm⁻³')
-picograms_per_cubic_micrometer = Unit(1000.0000000000002, Dimensions(-3, 1, 0, 0, 0), name='picograms_per_cubic_micrometer', ascii_symbol='pg um^-3', symbol='pgµm⁻³')
-femtograms_per_cubic_micrometer = Unit(1.0000000000000002, Dimensions(-3, 1, 0, 0, 0), name='femtograms_per_cubic_micrometer', ascii_symbol='fg um^-3', symbol='fgµm⁻³')
-attograms_per_cubic_micrometer = Unit(0.0010000000000000002, Dimensions(-3, 1, 0, 0, 0), name='attograms_per_cubic_micrometer', ascii_symbol='ag um^-3', symbol='agµm⁻³')
-grams_per_cubic_nanometer = Unit(9.999999999999998e+23, Dimensions(-3, 1, 0, 0, 0), name='grams_per_cubic_nanometer', ascii_symbol='g nm^-3', symbol='Nonenm⁻³')
-exagrams_per_cubic_nanometer = Unit(9.999999999999997e+41, Dimensions(-3, 1, 0, 0, 0), name='exagrams_per_cubic_nanometer', ascii_symbol='Eg nm^-3', symbol='Egnm⁻³')
-petagrams_per_cubic_nanometer = Unit(9.999999999999998e+38, Dimensions(-3, 1, 0, 0, 0), name='petagrams_per_cubic_nanometer', ascii_symbol='Pg nm^-3', symbol='Pgnm⁻³')
-teragrams_per_cubic_nanometer = Unit(9.999999999999997e+35, Dimensions(-3, 1, 0, 0, 0), name='teragrams_per_cubic_nanometer', ascii_symbol='Tg nm^-3', symbol='Tgnm⁻³')
-gigagrams_per_cubic_nanometer = Unit(9.999999999999998e+32, Dimensions(-3, 1, 0, 0, 0), name='gigagrams_per_cubic_nanometer', ascii_symbol='Gg nm^-3', symbol='Ggnm⁻³')
-megagrams_per_cubic_nanometer = Unit(9.999999999999997e+29, Dimensions(-3, 1, 0, 0, 0), name='megagrams_per_cubic_nanometer', ascii_symbol='Mg nm^-3', symbol='Mgnm⁻³')
-kilograms_per_cubic_nanometer = Unit(9.999999999999997e+26, Dimensions(-3, 1, 0, 0, 0), name='kilograms_per_cubic_nanometer', ascii_symbol='kg nm^-3', symbol='kgnm⁻³')
-milligrams_per_cubic_nanometer = Unit(9.999999999999997e+20, Dimensions(-3, 1, 0, 0, 0), name='milligrams_per_cubic_nanometer', ascii_symbol='mg nm^-3', symbol='mgnm⁻³')
-micrograms_per_cubic_nanometer = Unit(9.999999999999999e+17, Dimensions(-3, 1, 0, 0, 0), name='micrograms_per_cubic_nanometer', ascii_symbol='ug nm^-3', symbol='µgnm⁻³')
-nanograms_per_cubic_nanometer = Unit(1000000000000000.0, Dimensions(-3, 1, 0, 0, 0), name='nanograms_per_cubic_nanometer', ascii_symbol='ng nm^-3', symbol='ngnm⁻³')
-picograms_per_cubic_nanometer = Unit(999999999999.9999, Dimensions(-3, 1, 0, 0, 0), name='picograms_per_cubic_nanometer', ascii_symbol='pg nm^-3', symbol='pgnm⁻³')
-femtograms_per_cubic_nanometer = Unit(999999999.9999999, Dimensions(-3, 1, 0, 0, 0), name='femtograms_per_cubic_nanometer', ascii_symbol='fg nm^-3', symbol='fgnm⁻³')
-attograms_per_cubic_nanometer = Unit(999999.9999999999, Dimensions(-3, 1, 0, 0, 0), name='attograms_per_cubic_nanometer', ascii_symbol='ag nm^-3', symbol='agnm⁻³')
-grams_per_cubic_picometer = Unit(1.0000000000000001e+33, Dimensions(-3, 1, 0, 0, 0), name='grams_per_cubic_picometer', ascii_symbol='g pm^-3', symbol='Nonepm⁻³')
-exagrams_per_cubic_picometer = Unit(1e+51, Dimensions(-3, 1, 0, 0, 0), name='exagrams_per_cubic_picometer', ascii_symbol='Eg pm^-3', symbol='Egpm⁻³')
-petagrams_per_cubic_picometer = Unit(1e+48, Dimensions(-3, 1, 0, 0, 0), name='petagrams_per_cubic_picometer', ascii_symbol='Pg pm^-3', symbol='Pgpm⁻³')
-teragrams_per_cubic_picometer = Unit(1.0000000000000001e+45, Dimensions(-3, 1, 0, 0, 0), name='teragrams_per_cubic_picometer', ascii_symbol='Tg pm^-3', symbol='Tgpm⁻³')
-gigagrams_per_cubic_picometer = Unit(1e+42, Dimensions(-3, 1, 0, 0, 0), name='gigagrams_per_cubic_picometer', ascii_symbol='Gg pm^-3', symbol='Ggpm⁻³')
-megagrams_per_cubic_picometer = Unit(1.0000000000000001e+39, Dimensions(-3, 1, 0, 0, 0), name='megagrams_per_cubic_picometer', ascii_symbol='Mg pm^-3', symbol='Mgpm⁻³')
-kilograms_per_cubic_picometer = Unit(1e+36, Dimensions(-3, 1, 0, 0, 0), name='kilograms_per_cubic_picometer', ascii_symbol='kg pm^-3', symbol='kgpm⁻³')
-milligrams_per_cubic_picometer = Unit(1e+30, Dimensions(-3, 1, 0, 0, 0), name='milligrams_per_cubic_picometer', ascii_symbol='mg pm^-3', symbol='mgpm⁻³')
-micrograms_per_cubic_picometer = Unit(1.0000000000000002e+27, Dimensions(-3, 1, 0, 0, 0), name='micrograms_per_cubic_picometer', ascii_symbol='ug pm^-3', symbol='µgpm⁻³')
-nanograms_per_cubic_picometer = Unit(1.0000000000000003e+24, Dimensions(-3, 1, 0, 0, 0), name='nanograms_per_cubic_picometer', ascii_symbol='ng pm^-3', symbol='ngpm⁻³')
-picograms_per_cubic_picometer = Unit(1.0000000000000001e+21, Dimensions(-3, 1, 0, 0, 0), name='picograms_per_cubic_picometer', ascii_symbol='pg pm^-3', symbol='pgpm⁻³')
-femtograms_per_cubic_picometer = Unit(1.0000000000000001e+18, Dimensions(-3, 1, 0, 0, 0), name='femtograms_per_cubic_picometer', ascii_symbol='fg pm^-3', symbol='fgpm⁻³')
-attograms_per_cubic_picometer = Unit(1000000000000000.1, Dimensions(-3, 1, 0, 0, 0), name='attograms_per_cubic_picometer', ascii_symbol='ag pm^-3', symbol='agpm⁻³')
-grams_per_cubic_femtometer = Unit(9.999999999999997e+41, Dimensions(-3, 1, 0, 0, 0), name='grams_per_cubic_femtometer', ascii_symbol='g fm^-3', symbol='Nonefm⁻³')
-exagrams_per_cubic_femtometer = Unit(9.999999999999998e+59, Dimensions(-3, 1, 0, 0, 0), name='exagrams_per_cubic_femtometer', ascii_symbol='Eg fm^-3', symbol='Egfm⁻³')
-petagrams_per_cubic_femtometer = Unit(9.999999999999997e+56, Dimensions(-3, 1, 0, 0, 0), name='petagrams_per_cubic_femtometer', ascii_symbol='Pg fm^-3', symbol='Pgfm⁻³')
-teragrams_per_cubic_femtometer = Unit(9.999999999999997e+53, Dimensions(-3, 1, 0, 0, 0), name='teragrams_per_cubic_femtometer', ascii_symbol='Tg fm^-3', symbol='Tgfm⁻³')
-gigagrams_per_cubic_femtometer = Unit(9.999999999999997e+50, Dimensions(-3, 1, 0, 0, 0), name='gigagrams_per_cubic_femtometer', ascii_symbol='Gg fm^-3', symbol='Ggfm⁻³')
-megagrams_per_cubic_femtometer = Unit(9.999999999999997e+47, Dimensions(-3, 1, 0, 0, 0), name='megagrams_per_cubic_femtometer', ascii_symbol='Mg fm^-3', symbol='Mgfm⁻³')
-kilograms_per_cubic_femtometer = Unit(9.999999999999998e+44, Dimensions(-3, 1, 0, 0, 0), name='kilograms_per_cubic_femtometer', ascii_symbol='kg fm^-3', symbol='kgfm⁻³')
-milligrams_per_cubic_femtometer = Unit(9.999999999999996e+38, Dimensions(-3, 1, 0, 0, 0), name='milligrams_per_cubic_femtometer', ascii_symbol='mg fm^-3', symbol='mgfm⁻³')
-micrograms_per_cubic_femtometer = Unit(9.999999999999997e+35, Dimensions(-3, 1, 0, 0, 0), name='micrograms_per_cubic_femtometer', ascii_symbol='ug fm^-3', symbol='µgfm⁻³')
-nanograms_per_cubic_femtometer = Unit(1e+33, Dimensions(-3, 1, 0, 0, 0), name='nanograms_per_cubic_femtometer', ascii_symbol='ng fm^-3', symbol='ngfm⁻³')
-picograms_per_cubic_femtometer = Unit(9.999999999999997e+29, Dimensions(-3, 1, 0, 0, 0), name='picograms_per_cubic_femtometer', ascii_symbol='pg fm^-3', symbol='pgfm⁻³')
-femtograms_per_cubic_femtometer = Unit(9.999999999999997e+26, Dimensions(-3, 1, 0, 0, 0), name='femtograms_per_cubic_femtometer', ascii_symbol='fg fm^-3', symbol='fgfm⁻³')
-attograms_per_cubic_femtometer = Unit(9.999999999999998e+23, Dimensions(-3, 1, 0, 0, 0), name='attograms_per_cubic_femtometer', ascii_symbol='ag fm^-3', symbol='agfm⁻³')
-grams_per_cubic_attometer = Unit(9.999999999999998e+50, Dimensions(-3, 1, 0, 0, 0), name='grams_per_cubic_attometer', ascii_symbol='g am^-3', symbol='Noneam⁻³')
-exagrams_per_cubic_attometer = Unit(9.999999999999999e+68, Dimensions(-3, 1, 0, 0, 0), name='exagrams_per_cubic_attometer', ascii_symbol='Eg am^-3', symbol='Egam⁻³')
-petagrams_per_cubic_attometer = Unit(9.999999999999998e+65, Dimensions(-3, 1, 0, 0, 0), name='petagrams_per_cubic_attometer', ascii_symbol='Pg am^-3', symbol='Pgam⁻³')
-teragrams_per_cubic_attometer = Unit(9.999999999999999e+62, Dimensions(-3, 1, 0, 0, 0), name='teragrams_per_cubic_attometer', ascii_symbol='Tg am^-3', symbol='Tgam⁻³')
-gigagrams_per_cubic_attometer = Unit(9.999999999999998e+59, Dimensions(-3, 1, 0, 0, 0), name='gigagrams_per_cubic_attometer', ascii_symbol='Gg am^-3', symbol='Ggam⁻³')
-megagrams_per_cubic_attometer = Unit(9.999999999999999e+56, Dimensions(-3, 1, 0, 0, 0), name='megagrams_per_cubic_attometer', ascii_symbol='Mg am^-3', symbol='Mgam⁻³')
-kilograms_per_cubic_attometer = Unit(9.999999999999999e+53, Dimensions(-3, 1, 0, 0, 0), name='kilograms_per_cubic_attometer', ascii_symbol='kg am^-3', symbol='kgam⁻³')
-milligrams_per_cubic_attometer = Unit(9.999999999999997e+47, Dimensions(-3, 1, 0, 0, 0), name='milligrams_per_cubic_attometer', ascii_symbol='mg am^-3', symbol='mgam⁻³')
-micrograms_per_cubic_attometer = Unit(1e+45, Dimensions(-3, 1, 0, 0, 0), name='micrograms_per_cubic_attometer', ascii_symbol='ug am^-3', symbol='µgam⁻³')
-nanograms_per_cubic_attometer = Unit(1e+42, Dimensions(-3, 1, 0, 0, 0), name='nanograms_per_cubic_attometer', ascii_symbol='ng am^-3', symbol='ngam⁻³')
-picograms_per_cubic_attometer = Unit(1e+39, Dimensions(-3, 1, 0, 0, 0), name='picograms_per_cubic_attometer', ascii_symbol='pg am^-3', symbol='pgam⁻³')
-femtograms_per_cubic_attometer = Unit(9.999999999999999e+35, Dimensions(-3, 1, 0, 0, 0), name='femtograms_per_cubic_attometer', ascii_symbol='fg am^-3', symbol='fgam⁻³')
-attograms_per_cubic_attometer = Unit(1e+33, Dimensions(-3, 1, 0, 0, 0), name='attograms_per_cubic_attometer', ascii_symbol='ag am^-3', symbol='agam⁻³')
-grams_per_cubic_angstrom = Unit(9.999999999999999e+26, Dimensions(-3, 1, 0, 0, 0), name='grams_per_cubic_angstrom', ascii_symbol='g Ang^-3', symbol='NoneÅ⁻³')
-exagrams_per_cubic_angstrom = Unit(1e+45, Dimensions(-3, 1, 0, 0, 0), name='exagrams_per_cubic_angstrom', ascii_symbol='Eg Ang^-3', symbol='EgÅ⁻³')
-petagrams_per_cubic_angstrom = Unit(9.999999999999999e+41, Dimensions(-3, 1, 0, 0, 0), name='petagrams_per_cubic_angstrom', ascii_symbol='Pg Ang^-3', symbol='PgÅ⁻³')
-teragrams_per_cubic_angstrom = Unit(1e+39, Dimensions(-3, 1, 0, 0, 0), name='teragrams_per_cubic_angstrom', ascii_symbol='Tg Ang^-3', symbol='TgÅ⁻³')
-gigagrams_per_cubic_angstrom = Unit(9.999999999999999e+35, Dimensions(-3, 1, 0, 0, 0), name='gigagrams_per_cubic_angstrom', ascii_symbol='Gg Ang^-3', symbol='GgÅ⁻³')
-megagrams_per_cubic_angstrom = Unit(1e+33, Dimensions(-3, 1, 0, 0, 0), name='megagrams_per_cubic_angstrom', ascii_symbol='Mg Ang^-3', symbol='MgÅ⁻³')
-kilograms_per_cubic_angstrom = Unit(9.999999999999999e+29, Dimensions(-3, 1, 0, 0, 0), name='kilograms_per_cubic_angstrom', ascii_symbol='kg Ang^-3', symbol='kgÅ⁻³')
-milligrams_per_cubic_angstrom = Unit(9.999999999999998e+23, Dimensions(-3, 1, 0, 0, 0), name='milligrams_per_cubic_angstrom', ascii_symbol='mg Ang^-3', symbol='mgÅ⁻³')
-micrograms_per_cubic_angstrom = Unit(1e+21, Dimensions(-3, 1, 0, 0, 0), name='micrograms_per_cubic_angstrom', ascii_symbol='ug Ang^-3', symbol='µgÅ⁻³')
-nanograms_per_cubic_angstrom = Unit(1.0000000000000001e+18, Dimensions(-3, 1, 0, 0, 0), name='nanograms_per_cubic_angstrom', ascii_symbol='ng Ang^-3', symbol='ngÅ⁻³')
-picograms_per_cubic_angstrom = Unit(1000000000000000.0, Dimensions(-3, 1, 0, 0, 0), name='picograms_per_cubic_angstrom', ascii_symbol='pg Ang^-3', symbol='pgÅ⁻³')
-femtograms_per_cubic_angstrom = Unit(1000000000000.0, Dimensions(-3, 1, 0, 0, 0), name='femtograms_per_cubic_angstrom', ascii_symbol='fg Ang^-3', symbol='fgÅ⁻³')
-attograms_per_cubic_angstrom = Unit(1000000000.0, Dimensions(-3, 1, 0, 0, 0), name='attograms_per_cubic_angstrom', ascii_symbol='ag Ang^-3', symbol='agÅ⁻³')
+degrees_celsius = Unit(1, Dimensions(0, 0, 0, 0, 1, 0, 0),name='degrees_celsius',ascii_symbol='C',symbol='C')
+angstroms = Unit(1e-10, Dimensions(1, 0, 0, 0, 0, 0, 0),name='angstroms',ascii_symbol='Ang',symbol='Å')
+minutes = Unit(60, Dimensions(0, 1, 0, 0, 0, 0, 0),name='minutes',ascii_symbol='min',symbol='min')
+hours = Unit(360, Dimensions(0, 1, 0, 0, 0, 0, 0),name='hours',ascii_symbol='h',symbol='h')
+days = Unit(8640, Dimensions(0, 1, 0, 0, 0, 0, 0),name='days',ascii_symbol='d',symbol='d')
+years = Unit(3155695.2, Dimensions(0, 1, 0, 0, 0, 0, 0),name='years',ascii_symbol='y',symbol='y')
+degrees = Unit(57.29577951308232, Dimensions(0, 0, 0, 0, 0, 0, 1),name='degrees',ascii_symbol='deg',symbol='deg')
+radians = Unit(1, Dimensions(0, 0, 0, 0, 0, 0, 1),name='radians',ascii_symbol='rad',symbol='rad')
+stradians = Unit(1, Dimensions(0, 0, 0, 0, 0, 0, 2),name='stradians',ascii_symbol='sr',symbol='sr')
+none = Unit(1, Dimensions(0, 0, 0, 0, 0, 0, 0),name='none',ascii_symbol='none',symbol='none')
+litres = Unit(0.001, Dimensions(3, 0, 0, 0, 0, 0, 0),name='litres',ascii_symbol='l',symbol='l')
+electronvolts = Unit(1.602e-19, Dimensions(2, -2, 1, 0, 0, 0, 0),name='electronvolts',ascii_symbol='eV',symbol='eV')
+exaelectronvolts = Unit(0.1602, Dimensions(2, -2, 1, 0, 0),name='exaelectronvolts',ascii_symbol='EeV',symbol='EeV')
+petaelectronvolts = Unit(0.0001602, Dimensions(2, -2, 1, 0, 0),name='petaelectronvolts',ascii_symbol='PeV',symbol='PeV')
+teraelectronvolts = Unit(1.602e-07, Dimensions(2, -2, 1, 0, 0),name='teraelectronvolts',ascii_symbol='TeV',symbol='TeV')
+gigaelectronvolts = Unit(1.602e-10, Dimensions(2, -2, 1, 0, 0),name='gigaelectronvolts',ascii_symbol='GeV',symbol='GeV')
+megaelectronvolts = Unit(1.602e-13, Dimensions(2, -2, 1, 0, 0),name='megaelectronvolts',ascii_symbol='MeV',symbol='MeV')
+kiloelectronvolts = Unit(1.602e-16, Dimensions(2, -2, 1, 0, 0),name='kiloelectronvolts',ascii_symbol='keV',symbol='keV')
+millielectronvolts = Unit(1.602e-22, Dimensions(2, -2, 1, 0, 0),name='millielectronvolts',ascii_symbol='meV',symbol='meV')
+microelectronvolts = Unit(1.6019999999999998e-25, Dimensions(2, -2, 1, 0, 0),name='microelectronvolts',ascii_symbol='ueV',symbol='µeV')
+nanoelectronvolts = Unit(1.602e-28, Dimensions(2, -2, 1, 0, 0),name='nanoelectronvolts',ascii_symbol='neV',symbol='neV')
+picoelectronvolts = Unit(1.6019999999999998e-31, Dimensions(2, -2, 1, 0, 0),name='picoelectronvolts',ascii_symbol='peV',symbol='peV')
+femtoelectronvolts = Unit(1.602e-34, Dimensions(2, -2, 1, 0, 0),name='femtoelectronvolts',ascii_symbol='feV',symbol='feV')
+attoelectronvolts = Unit(1.6020000000000002e-37, Dimensions(2, -2, 1, 0, 0),name='attoelectronvolts',ascii_symbol='aeV',symbol='aeV')
+atomic_mass_units = Unit(1.661e-27, Dimensions(0, 0, 1, 0, 0, 0, 0),name='atomic_mass_units',ascii_symbol='au',symbol='au')
+moles = Unit(6.022e+23, Dimensions(0, 0, 0, 0, 0, 1, 0),name='moles',ascii_symbol='mol',symbol='mol')
+millimoles = Unit(6.022e+20, Dimensions(0, 0, 0, 0, 0),name='millimoles',ascii_symbol='mmol',symbol='mmol')
+micromoles = Unit(6.022e+17, Dimensions(0, 0, 0, 0, 0),name='micromoles',ascii_symbol='umol',symbol='µmol')
+nanomoles = Unit(602200000000000.1, Dimensions(0, 0, 0, 0, 0),name='nanomoles',ascii_symbol='nmol',symbol='nmol')
+picomoles = Unit(602200000000.0, Dimensions(0, 0, 0, 0, 0),name='picomoles',ascii_symbol='pmol',symbol='pmol')
+femtomoles = Unit(602200000.0000001, Dimensions(0, 0, 0, 0, 0),name='femtomoles',ascii_symbol='fmol',symbol='fmol')
+attomoles = Unit(602200.0000000001, Dimensions(0, 0, 0, 0, 0),name='attomoles',ascii_symbol='amol',symbol='amol')
+square_meters = Unit(1, Dimensions(length=2), name='square_meters', ascii_symbol='m^2', symbol='m²')
+cubic_meters = Unit(1, Dimensions(length=3), name='cubic_meters', ascii_symbol='m^3', symbol='m³')
+per_meter = Unit(1.0, Dimensions(length=-1), name='per_meter', ascii_symbol='m^-1', symbol='m⁻¹')
+per_square_meter = Unit(1.0, Dimensions(length=-2), name='per_square_meter', ascii_symbol='m^-2', symbol='m⁻²')
+per_cubic_meter = Unit(1.0, Dimensions(length=-3), name='per_cubic_meter', ascii_symbol='m^-3', symbol='m⁻³')
+square_exameters = Unit(1e+36, Dimensions(length=2), name='square_exameters', ascii_symbol='Em^2', symbol='Em²')
+cubic_exameters = Unit(1e+54, Dimensions(length=3), name='cubic_exameters', ascii_symbol='Em^3', symbol='Em³')
+per_exameter = Unit(1e-18, Dimensions(length=-1), name='per_exameter', ascii_symbol='Em^-1', symbol='Em⁻¹')
+per_square_exameter = Unit(1e-36, Dimensions(length=-2), name='per_square_exameter', ascii_symbol='Em^-2', symbol='Em⁻²')
+per_cubic_exameter = Unit(1e-54, Dimensions(length=-3), name='per_cubic_exameter', ascii_symbol='Em^-3', symbol='Em⁻³')
+square_petameters = Unit(1e+30, Dimensions(length=2), name='square_petameters', ascii_symbol='Pm^2', symbol='Pm²')
+cubic_petameters = Unit(1e+45, Dimensions(length=3), name='cubic_petameters', ascii_symbol='Pm^3', symbol='Pm³')
+per_petameter = Unit(1e-15, Dimensions(length=-1), name='per_petameter', ascii_symbol='Pm^-1', symbol='Pm⁻¹')
+per_square_petameter = Unit(1e-30, Dimensions(length=-2), name='per_square_petameter', ascii_symbol='Pm^-2', symbol='Pm⁻²')
+per_cubic_petameter = Unit(1e-45, Dimensions(length=-3), name='per_cubic_petameter', ascii_symbol='Pm^-3', symbol='Pm⁻³')
+square_terameters = Unit(1e+24, Dimensions(length=2), name='square_terameters', ascii_symbol='Tm^2', symbol='Tm²')
+cubic_terameters = Unit(1e+36, Dimensions(length=3), name='cubic_terameters', ascii_symbol='Tm^3', symbol='Tm³')
+per_terameter = Unit(1e-12, Dimensions(length=-1), name='per_terameter', ascii_symbol='Tm^-1', symbol='Tm⁻¹')
+per_square_terameter = Unit(1e-24, Dimensions(length=-2), name='per_square_terameter', ascii_symbol='Tm^-2', symbol='Tm⁻²')
+per_cubic_terameter = Unit(1e-36, Dimensions(length=-3), name='per_cubic_terameter', ascii_symbol='Tm^-3', symbol='Tm⁻³')
+square_gigameters = Unit(1e+18, Dimensions(length=2), name='square_gigameters', ascii_symbol='Gm^2', symbol='Gm²')
+cubic_gigameters = Unit(1e+27, Dimensions(length=3), name='cubic_gigameters', ascii_symbol='Gm^3', symbol='Gm³')
+per_gigameter = Unit(1e-09, Dimensions(length=-1), name='per_gigameter', ascii_symbol='Gm^-1', symbol='Gm⁻¹')
+per_square_gigameter = Unit(1e-18, Dimensions(length=-2), name='per_square_gigameter', ascii_symbol='Gm^-2', symbol='Gm⁻²')
+per_cubic_gigameter = Unit(1e-27, Dimensions(length=-3), name='per_cubic_gigameter', ascii_symbol='Gm^-3', symbol='Gm⁻³')
+square_megameters = Unit(1000000000000.0, Dimensions(length=2), name='square_megameters', ascii_symbol='Mm^2', symbol='Mm²')
+cubic_megameters = Unit(1e+18, Dimensions(length=3), name='cubic_megameters', ascii_symbol='Mm^3', symbol='Mm³')
+per_megameter = Unit(1e-06, Dimensions(length=-1), name='per_megameter', ascii_symbol='Mm^-1', symbol='Mm⁻¹')
+per_square_megameter = Unit(1e-12, Dimensions(length=-2), name='per_square_megameter', ascii_symbol='Mm^-2', symbol='Mm⁻²')
+per_cubic_megameter = Unit(1e-18, Dimensions(length=-3), name='per_cubic_megameter', ascii_symbol='Mm^-3', symbol='Mm⁻³')
+square_kilometers = Unit(1000000.0, Dimensions(length=2), name='square_kilometers', ascii_symbol='km^2', symbol='km²')
+cubic_kilometers = Unit(1000000000.0, Dimensions(length=3), name='cubic_kilometers', ascii_symbol='km^3', symbol='km³')
+per_kilometer = Unit(0.001, Dimensions(length=-1), name='per_kilometer', ascii_symbol='km^-1', symbol='km⁻¹')
+per_square_kilometer = Unit(1e-06, Dimensions(length=-2), name='per_square_kilometer', ascii_symbol='km^-2', symbol='km⁻²')
+per_cubic_kilometer = Unit(1e-09, Dimensions(length=-3), name='per_cubic_kilometer', ascii_symbol='km^-3', symbol='km⁻³')
+square_millimeters = Unit(1e-06, Dimensions(length=2), name='square_millimeters', ascii_symbol='mm^2', symbol='mm²')
+cubic_millimeters = Unit(1e-09, Dimensions(length=3), name='cubic_millimeters', ascii_symbol='mm^3', symbol='mm³')
+per_millimeter = Unit(1000.0, Dimensions(length=-1), name='per_millimeter', ascii_symbol='mm^-1', symbol='mm⁻¹')
+per_square_millimeter = Unit(1000000.0, Dimensions(length=-2), name='per_square_millimeter', ascii_symbol='mm^-2', symbol='mm⁻²')
+per_cubic_millimeter = Unit(999999999.9999999, Dimensions(length=-3), name='per_cubic_millimeter', ascii_symbol='mm^-3', symbol='mm⁻³')
+square_micrometers = Unit(1e-12, Dimensions(length=2), name='square_micrometers', ascii_symbol='um^2', symbol='µm²')
+cubic_micrometers = Unit(9.999999999999999e-19, Dimensions(length=3), name='cubic_micrometers', ascii_symbol='um^3', symbol='µm³')
+per_micrometer = Unit(1000000.0, Dimensions(length=-1), name='per_micrometer', ascii_symbol='um^-1', symbol='µm⁻¹')
+per_square_micrometer = Unit(1000000000000.0001, Dimensions(length=-2), name='per_square_micrometer', ascii_symbol='um^-2', symbol='µm⁻²')
+per_cubic_micrometer = Unit(1.0000000000000001e+18, Dimensions(length=-3), name='per_cubic_micrometer', ascii_symbol='um^-3', symbol='µm⁻³')
+square_nanometers = Unit(1e-18, Dimensions(length=2), name='square_nanometers', ascii_symbol='nm^2', symbol='nm²')
+cubic_nanometers = Unit(1.0000000000000002e-27, Dimensions(length=3), name='cubic_nanometers', ascii_symbol='nm^3', symbol='nm³')
+per_nanometer = Unit(999999999.9999999, Dimensions(length=-1), name='per_nanometer', ascii_symbol='nm^-1', symbol='nm⁻¹')
+per_square_nanometer = Unit(9.999999999999999e+17, Dimensions(length=-2), name='per_square_nanometer', ascii_symbol='nm^-2', symbol='nm⁻²')
+per_cubic_nanometer = Unit(9.999999999999999e+26, Dimensions(length=-3), name='per_cubic_nanometer', ascii_symbol='nm^-3', symbol='nm⁻³')
+square_picometers = Unit(1e-24, Dimensions(length=2), name='square_picometers', ascii_symbol='pm^2', symbol='pm²')
+cubic_picometers = Unit(1e-36, Dimensions(length=3), name='cubic_picometers', ascii_symbol='pm^3', symbol='pm³')
+per_picometer = Unit(1000000000000.0, Dimensions(length=-1), name='per_picometer', ascii_symbol='pm^-1', symbol='pm⁻¹')
+per_square_picometer = Unit(1e+24, Dimensions(length=-2), name='per_square_picometer', ascii_symbol='pm^-2', symbol='pm⁻²')
+per_cubic_picometer = Unit(1e+36, Dimensions(length=-3), name='per_cubic_picometer', ascii_symbol='pm^-3', symbol='pm⁻³')
+square_femtometers = Unit(1e-30, Dimensions(length=2), name='square_femtometers', ascii_symbol='fm^2', symbol='fm²')
+cubic_femtometers = Unit(1.0000000000000003e-45, Dimensions(length=3), name='cubic_femtometers', ascii_symbol='fm^3', symbol='fm³')
+per_femtometer = Unit(999999999999999.9, Dimensions(length=-1), name='per_femtometer', ascii_symbol='fm^-1', symbol='fm⁻¹')
+per_square_femtometer = Unit(9.999999999999999e+29, Dimensions(length=-2), name='per_square_femtometer', ascii_symbol='fm^-2', symbol='fm⁻²')
+per_cubic_femtometer = Unit(9.999999999999998e+44, Dimensions(length=-3), name='per_cubic_femtometer', ascii_symbol='fm^-3', symbol='fm⁻³')
+square_attometers = Unit(1.0000000000000001e-36, Dimensions(length=2), name='square_attometers', ascii_symbol='am^2', symbol='am²')
+cubic_attometers = Unit(1.0000000000000002e-54, Dimensions(length=3), name='cubic_attometers', ascii_symbol='am^3', symbol='am³')
+per_attometer = Unit(9.999999999999999e+17, Dimensions(length=-1), name='per_attometer', ascii_symbol='am^-1', symbol='am⁻¹')
+per_square_attometer = Unit(9.999999999999999e+35, Dimensions(length=-2), name='per_square_attometer', ascii_symbol='am^-2', symbol='am⁻²')
+per_cubic_attometer = Unit(9.999999999999997e+53, Dimensions(length=-3), name='per_cubic_attometer', ascii_symbol='am^-3', symbol='am⁻³')
+square_decimeters = Unit(0.010000000000000002, Dimensions(length=2), name='square_decimeters', ascii_symbol='dm^2', symbol='dm²')
+cubic_decimeters = Unit(0.0010000000000000002, Dimensions(length=3), name='cubic_decimeters', ascii_symbol='dm^3', symbol='dm³')
+per_decimeter = Unit(10.0, Dimensions(length=-1), name='per_decimeter', ascii_symbol='dm^-1', symbol='dm⁻¹')
+per_square_decimeter = Unit(99.99999999999999, Dimensions(length=-2), name='per_square_decimeter', ascii_symbol='dm^-2', symbol='dm⁻²')
+per_cubic_decimeter = Unit(999.9999999999999, Dimensions(length=-3), name='per_cubic_decimeter', ascii_symbol='dm^-3', symbol='dm⁻³')
+square_centimeters = Unit(0.0001, Dimensions(length=2), name='square_centimeters', ascii_symbol='cm^2', symbol='cm²')
+cubic_centimeters = Unit(1.0000000000000002e-06, Dimensions(length=3), name='cubic_centimeters', ascii_symbol='cm^3', symbol='cm³')
+per_centimeter = Unit(100.0, Dimensions(length=-1), name='per_centimeter', ascii_symbol='cm^-1', symbol='cm⁻¹')
+per_square_centimeter = Unit(10000.0, Dimensions(length=-2), name='per_square_centimeter', ascii_symbol='cm^-2', symbol='cm⁻²')
+per_cubic_centimeter = Unit(999999.9999999999, Dimensions(length=-3), name='per_cubic_centimeter', ascii_symbol='cm^-3', symbol='cm⁻³')
+square_angstroms = Unit(1.0000000000000001e-20, Dimensions(length=2), name='square_angstroms', ascii_symbol='Ang^2', symbol='Å²')
+cubic_angstroms = Unit(1e-30, Dimensions(length=3), name='cubic_angstroms', ascii_symbol='Ang^3', symbol='Å³')
+per_angstrom = Unit(10000000000.0, Dimensions(length=-1), name='per_angstrom', ascii_symbol='Ang^-1', symbol='Å⁻¹')
+per_square_angstrom = Unit(1e+20, Dimensions(length=-2), name='per_square_angstrom', ascii_symbol='Ang^-2', symbol='Å⁻²')
+per_cubic_angstrom = Unit(9.999999999999999e+29, Dimensions(length=-3), name='per_cubic_angstrom', ascii_symbol='Ang^-3', symbol='Å⁻³')
+meters_per_second = Unit(1.0, Dimensions(length=1, time=-1), name='meters_per_second', ascii_symbol='m/s', symbol='NoneNone⁻¹')
+meters_per_square_second = Unit(1.0, Dimensions(length=1, time=-2), name='meters_per_square_second', ascii_symbol='m/s^2', symbol='NoneNone⁻²')
+meters_per_millisecond = Unit(1000.0, Dimensions(length=1, time=-1), name='meters_per_millisecond', ascii_symbol='m/ms', symbol='Nonems⁻¹')
+meters_per_square_millisecond = Unit(1000.0, Dimensions(length=1, time=-2), name='meters_per_square_millisecond', ascii_symbol='m/ms^2', symbol='Nonems⁻²')
+meters_per_microsecond = Unit(1000000.0, Dimensions(length=1, time=-1), name='meters_per_microsecond', ascii_symbol='m/us', symbol='Noneµs⁻¹')
+meters_per_square_microsecond = Unit(1000000.0, Dimensions(length=1, time=-2), name='meters_per_square_microsecond', ascii_symbol='m/us^2', symbol='Noneµs⁻²')
+meters_per_nanosecond = Unit(999999999.9999999, Dimensions(length=1, time=-1), name='meters_per_nanosecond', ascii_symbol='m/ns', symbol='Nonens⁻¹')
+meters_per_square_nanosecond = Unit(999999999.9999999, Dimensions(length=1, time=-2), name='meters_per_square_nanosecond', ascii_symbol='m/ns^2', symbol='Nonens⁻²')
+meters_per_picosecond = Unit(1000000000000.0, Dimensions(length=1, time=-1), name='meters_per_picosecond', ascii_symbol='m/ps', symbol='Noneps⁻¹')
+meters_per_square_picosecond = Unit(1000000000000.0, Dimensions(length=1, time=-2), name='meters_per_square_picosecond', ascii_symbol='m/ps^2', symbol='Noneps⁻²')
+meters_per_femtosecond = Unit(999999999999999.9, Dimensions(length=1, time=-1), name='meters_per_femtosecond', ascii_symbol='m/fs', symbol='Nonefs⁻¹')
+meters_per_square_femtosecond = Unit(999999999999999.9, Dimensions(length=1, time=-2), name='meters_per_square_femtosecond', ascii_symbol='m/fs^2', symbol='Nonefs⁻²')
+meters_per_attosecond = Unit(9.999999999999999e+17, Dimensions(length=1, time=-1), name='meters_per_attosecond', ascii_symbol='m/as', symbol='Noneas⁻¹')
+meters_per_square_attosecond = Unit(9.999999999999999e+17, Dimensions(length=1, time=-2), name='meters_per_square_attosecond', ascii_symbol='m/as^2', symbol='Noneas⁻²')
+meters_per_minute = Unit(0.016666666666666666, Dimensions(length=1, time=-1), name='meters_per_minute', ascii_symbol='m/min', symbol='NoneNone⁻¹')
+meters_per_square_minute = Unit(0.016666666666666666, Dimensions(length=1, time=-2), name='meters_per_square_minute', ascii_symbol='m/min^2', symbol='NoneNone⁻²')
+meters_per_hour = Unit(0.002777777777777778, Dimensions(length=1, time=-1), name='meters_per_hour', ascii_symbol='m/h', symbol='NoneNone⁻¹')
+meters_per_square_hour = Unit(0.002777777777777778, Dimensions(length=1, time=-2), name='meters_per_square_hour', ascii_symbol='m/h^2', symbol='NoneNone⁻²')
+meters_per_day = Unit(0.00011574074074074075, Dimensions(length=1, time=-1), name='meters_per_day', ascii_symbol='m/d', symbol='NoneNone⁻¹')
+meters_per_square_day = Unit(0.00011574074074074075, Dimensions(length=1, time=-2), name='meters_per_square_day', ascii_symbol='m/d^2', symbol='NoneNone⁻²')
+meters_per_year = Unit(3.168873850681143e-07, Dimensions(length=1, time=-1), name='meters_per_year', ascii_symbol='m/y', symbol='NoneNone⁻¹')
+meters_per_square_year = Unit(3.168873850681143e-07, Dimensions(length=1, time=-2), name='meters_per_square_year', ascii_symbol='m/y^2', symbol='NoneNone⁻²')
+exameters_per_second = Unit(1e+18, Dimensions(length=1, time=-1), name='exameters_per_second', ascii_symbol='Em/s', symbol='EmNone⁻¹')
+exameters_per_square_second = Unit(1e+18, Dimensions(length=1, time=-2), name='exameters_per_square_second', ascii_symbol='Em/s^2', symbol='EmNone⁻²')
+exameters_per_millisecond = Unit(1e+21, Dimensions(length=1, time=-1), name='exameters_per_millisecond', ascii_symbol='Em/ms', symbol='Emms⁻¹')
+exameters_per_square_millisecond = Unit(1e+21, Dimensions(length=1, time=-2), name='exameters_per_square_millisecond', ascii_symbol='Em/ms^2', symbol='Emms⁻²')
+exameters_per_microsecond = Unit(1e+24, Dimensions(length=1, time=-1), name='exameters_per_microsecond', ascii_symbol='Em/us', symbol='Emµs⁻¹')
+exameters_per_square_microsecond = Unit(1e+24, Dimensions(length=1, time=-2), name='exameters_per_square_microsecond', ascii_symbol='Em/us^2', symbol='Emµs⁻²')
+exameters_per_nanosecond = Unit(9.999999999999999e+26, Dimensions(length=1, time=-1), name='exameters_per_nanosecond', ascii_symbol='Em/ns', symbol='Emns⁻¹')
+exameters_per_square_nanosecond = Unit(9.999999999999999e+26, Dimensions(length=1, time=-2), name='exameters_per_square_nanosecond', ascii_symbol='Em/ns^2', symbol='Emns⁻²')
+exameters_per_picosecond = Unit(1e+30, Dimensions(length=1, time=-1), name='exameters_per_picosecond', ascii_symbol='Em/ps', symbol='Emps⁻¹')
+exameters_per_square_picosecond = Unit(1e+30, Dimensions(length=1, time=-2), name='exameters_per_square_picosecond', ascii_symbol='Em/ps^2', symbol='Emps⁻²')
+exameters_per_femtosecond = Unit(1e+33, Dimensions(length=1, time=-1), name='exameters_per_femtosecond', ascii_symbol='Em/fs', symbol='Emfs⁻¹')
+exameters_per_square_femtosecond = Unit(1e+33, Dimensions(length=1, time=-2), name='exameters_per_square_femtosecond', ascii_symbol='Em/fs^2', symbol='Emfs⁻²')
+exameters_per_attosecond = Unit(9.999999999999999e+35, Dimensions(length=1, time=-1), name='exameters_per_attosecond', ascii_symbol='Em/as', symbol='Emas⁻¹')
+exameters_per_square_attosecond = Unit(9.999999999999999e+35, Dimensions(length=1, time=-2), name='exameters_per_square_attosecond', ascii_symbol='Em/as^2', symbol='Emas⁻²')
+exameters_per_minute = Unit(1.6666666666666666e+16, Dimensions(length=1, time=-1), name='exameters_per_minute', ascii_symbol='Em/min', symbol='EmNone⁻¹')
+exameters_per_square_minute = Unit(1.6666666666666666e+16, Dimensions(length=1, time=-2), name='exameters_per_square_minute', ascii_symbol='Em/min^2', symbol='EmNone⁻²')
+exameters_per_hour = Unit(2777777777777778.0, Dimensions(length=1, time=-1), name='exameters_per_hour', ascii_symbol='Em/h', symbol='EmNone⁻¹')
+exameters_per_square_hour = Unit(2777777777777778.0, Dimensions(length=1, time=-2), name='exameters_per_square_hour', ascii_symbol='Em/h^2', symbol='EmNone⁻²')
+exameters_per_day = Unit(115740740740740.73, Dimensions(length=1, time=-1), name='exameters_per_day', ascii_symbol='Em/d', symbol='EmNone⁻¹')
+exameters_per_square_day = Unit(115740740740740.73, Dimensions(length=1, time=-2), name='exameters_per_square_day', ascii_symbol='Em/d^2', symbol='EmNone⁻²')
+exameters_per_year = Unit(316887385068.1143, Dimensions(length=1, time=-1), name='exameters_per_year', ascii_symbol='Em/y', symbol='EmNone⁻¹')
+exameters_per_square_year = Unit(316887385068.1143, Dimensions(length=1, time=-2), name='exameters_per_square_year', ascii_symbol='Em/y^2', symbol='EmNone⁻²')
+petameters_per_second = Unit(1000000000000000.0, Dimensions(length=1, time=-1), name='petameters_per_second', ascii_symbol='Pm/s', symbol='PmNone⁻¹')
+petameters_per_square_second = Unit(1000000000000000.0, Dimensions(length=1, time=-2), name='petameters_per_square_second', ascii_symbol='Pm/s^2', symbol='PmNone⁻²')
+petameters_per_millisecond = Unit(1e+18, Dimensions(length=1, time=-1), name='petameters_per_millisecond', ascii_symbol='Pm/ms', symbol='Pmms⁻¹')
+petameters_per_square_millisecond = Unit(1e+18, Dimensions(length=1, time=-2), name='petameters_per_square_millisecond', ascii_symbol='Pm/ms^2', symbol='Pmms⁻²')
+petameters_per_microsecond = Unit(1e+21, Dimensions(length=1, time=-1), name='petameters_per_microsecond', ascii_symbol='Pm/us', symbol='Pmµs⁻¹')
+petameters_per_square_microsecond = Unit(1e+21, Dimensions(length=1, time=-2), name='petameters_per_square_microsecond', ascii_symbol='Pm/us^2', symbol='Pmµs⁻²')
+petameters_per_nanosecond = Unit(1e+24, Dimensions(length=1, time=-1), name='petameters_per_nanosecond', ascii_symbol='Pm/ns', symbol='Pmns⁻¹')
+petameters_per_square_nanosecond = Unit(1e+24, Dimensions(length=1, time=-2), name='petameters_per_square_nanosecond', ascii_symbol='Pm/ns^2', symbol='Pmns⁻²')
+petameters_per_picosecond = Unit(1e+27, Dimensions(length=1, time=-1), name='petameters_per_picosecond', ascii_symbol='Pm/ps', symbol='Pmps⁻¹')
+petameters_per_square_picosecond = Unit(1e+27, Dimensions(length=1, time=-2), name='petameters_per_square_picosecond', ascii_symbol='Pm/ps^2', symbol='Pmps⁻²')
+petameters_per_femtosecond = Unit(9.999999999999999e+29, Dimensions(length=1, time=-1), name='petameters_per_femtosecond', ascii_symbol='Pm/fs', symbol='Pmfs⁻¹')
+petameters_per_square_femtosecond = Unit(9.999999999999999e+29, Dimensions(length=1, time=-2), name='petameters_per_square_femtosecond', ascii_symbol='Pm/fs^2', symbol='Pmfs⁻²')
+petameters_per_attosecond = Unit(1e+33, Dimensions(length=1, time=-1), name='petameters_per_attosecond', ascii_symbol='Pm/as', symbol='Pmas⁻¹')
+petameters_per_square_attosecond = Unit(1e+33, Dimensions(length=1, time=-2), name='petameters_per_square_attosecond', ascii_symbol='Pm/as^2', symbol='Pmas⁻²')
+petameters_per_minute = Unit(16666666666666.666, Dimensions(length=1, time=-1), name='petameters_per_minute', ascii_symbol='Pm/min', symbol='PmNone⁻¹')
+petameters_per_square_minute = Unit(16666666666666.666, Dimensions(length=1, time=-2), name='petameters_per_square_minute', ascii_symbol='Pm/min^2', symbol='PmNone⁻²')
+petameters_per_hour = Unit(2777777777777.778, Dimensions(length=1, time=-1), name='petameters_per_hour', ascii_symbol='Pm/h', symbol='PmNone⁻¹')
+petameters_per_square_hour = Unit(2777777777777.778, Dimensions(length=1, time=-2), name='petameters_per_square_hour', ascii_symbol='Pm/h^2', symbol='PmNone⁻²')
+petameters_per_day = Unit(115740740740.74074, Dimensions(length=1, time=-1), name='petameters_per_day', ascii_symbol='Pm/d', symbol='PmNone⁻¹')
+petameters_per_square_day = Unit(115740740740.74074, Dimensions(length=1, time=-2), name='petameters_per_square_day', ascii_symbol='Pm/d^2', symbol='PmNone⁻²')
+petameters_per_year = Unit(316887385.0681143, Dimensions(length=1, time=-1), name='petameters_per_year', ascii_symbol='Pm/y', symbol='PmNone⁻¹')
+petameters_per_square_year = Unit(316887385.0681143, Dimensions(length=1, time=-2), name='petameters_per_square_year', ascii_symbol='Pm/y^2', symbol='PmNone⁻²')
+terameters_per_second = Unit(1000000000000.0, Dimensions(length=1, time=-1), name='terameters_per_second', ascii_symbol='Tm/s', symbol='TmNone⁻¹')
+terameters_per_square_second = Unit(1000000000000.0, Dimensions(length=1, time=-2), name='terameters_per_square_second', ascii_symbol='Tm/s^2', symbol='TmNone⁻²')
+terameters_per_millisecond = Unit(1000000000000000.0, Dimensions(length=1, time=-1), name='terameters_per_millisecond', ascii_symbol='Tm/ms', symbol='Tmms⁻¹')
+terameters_per_square_millisecond = Unit(1000000000000000.0, Dimensions(length=1, time=-2), name='terameters_per_square_millisecond', ascii_symbol='Tm/ms^2', symbol='Tmms⁻²')
+terameters_per_microsecond = Unit(1e+18, Dimensions(length=1, time=-1), name='terameters_per_microsecond', ascii_symbol='Tm/us', symbol='Tmµs⁻¹')
+terameters_per_square_microsecond = Unit(1e+18, Dimensions(length=1, time=-2), name='terameters_per_square_microsecond', ascii_symbol='Tm/us^2', symbol='Tmµs⁻²')
+terameters_per_nanosecond = Unit(1e+21, Dimensions(length=1, time=-1), name='terameters_per_nanosecond', ascii_symbol='Tm/ns', symbol='Tmns⁻¹')
+terameters_per_square_nanosecond = Unit(1e+21, Dimensions(length=1, time=-2), name='terameters_per_square_nanosecond', ascii_symbol='Tm/ns^2', symbol='Tmns⁻²')
+terameters_per_picosecond = Unit(1e+24, Dimensions(length=1, time=-1), name='terameters_per_picosecond', ascii_symbol='Tm/ps', symbol='Tmps⁻¹')
+terameters_per_square_picosecond = Unit(1e+24, Dimensions(length=1, time=-2), name='terameters_per_square_picosecond', ascii_symbol='Tm/ps^2', symbol='Tmps⁻²')
+terameters_per_femtosecond = Unit(9.999999999999999e+26, Dimensions(length=1, time=-1), name='terameters_per_femtosecond', ascii_symbol='Tm/fs', symbol='Tmfs⁻¹')
+terameters_per_square_femtosecond = Unit(9.999999999999999e+26, Dimensions(length=1, time=-2), name='terameters_per_square_femtosecond', ascii_symbol='Tm/fs^2', symbol='Tmfs⁻²')
+terameters_per_attosecond = Unit(9.999999999999999e+29, Dimensions(length=1, time=-1), name='terameters_per_attosecond', ascii_symbol='Tm/as', symbol='Tmas⁻¹')
+terameters_per_square_attosecond = Unit(9.999999999999999e+29, Dimensions(length=1, time=-2), name='terameters_per_square_attosecond', ascii_symbol='Tm/as^2', symbol='Tmas⁻²')
+terameters_per_minute = Unit(16666666666.666666, Dimensions(length=1, time=-1), name='terameters_per_minute', ascii_symbol='Tm/min', symbol='TmNone⁻¹')
+terameters_per_square_minute = Unit(16666666666.666666, Dimensions(length=1, time=-2), name='terameters_per_square_minute', ascii_symbol='Tm/min^2', symbol='TmNone⁻²')
+terameters_per_hour = Unit(2777777777.7777777, Dimensions(length=1, time=-1), name='terameters_per_hour', ascii_symbol='Tm/h', symbol='TmNone⁻¹')
+terameters_per_square_hour = Unit(2777777777.7777777, Dimensions(length=1, time=-2), name='terameters_per_square_hour', ascii_symbol='Tm/h^2', symbol='TmNone⁻²')
+terameters_per_day = Unit(115740740.74074075, Dimensions(length=1, time=-1), name='terameters_per_day', ascii_symbol='Tm/d', symbol='TmNone⁻¹')
+terameters_per_square_day = Unit(115740740.74074075, Dimensions(length=1, time=-2), name='terameters_per_square_day', ascii_symbol='Tm/d^2', symbol='TmNone⁻²')
+terameters_per_year = Unit(316887.38506811426, Dimensions(length=1, time=-1), name='terameters_per_year', ascii_symbol='Tm/y', symbol='TmNone⁻¹')
+terameters_per_square_year = Unit(316887.38506811426, Dimensions(length=1, time=-2), name='terameters_per_square_year', ascii_symbol='Tm/y^2', symbol='TmNone⁻²')
+gigameters_per_second = Unit(1000000000.0, Dimensions(length=1, time=-1), name='gigameters_per_second', ascii_symbol='Gm/s', symbol='GmNone⁻¹')
+gigameters_per_square_second = Unit(1000000000.0, Dimensions(length=1, time=-2), name='gigameters_per_square_second', ascii_symbol='Gm/s^2', symbol='GmNone⁻²')
+gigameters_per_millisecond = Unit(1000000000000.0, Dimensions(length=1, time=-1), name='gigameters_per_millisecond', ascii_symbol='Gm/ms', symbol='Gmms⁻¹')
+gigameters_per_square_millisecond = Unit(1000000000000.0, Dimensions(length=1, time=-2), name='gigameters_per_square_millisecond', ascii_symbol='Gm/ms^2', symbol='Gmms⁻²')
+gigameters_per_microsecond = Unit(1000000000000000.0, Dimensions(length=1, time=-1), name='gigameters_per_microsecond', ascii_symbol='Gm/us', symbol='Gmµs⁻¹')
+gigameters_per_square_microsecond = Unit(1000000000000000.0, Dimensions(length=1, time=-2), name='gigameters_per_square_microsecond', ascii_symbol='Gm/us^2', symbol='Gmµs⁻²')
+gigameters_per_nanosecond = Unit(1e+18, Dimensions(length=1, time=-1), name='gigameters_per_nanosecond', ascii_symbol='Gm/ns', symbol='Gmns⁻¹')
+gigameters_per_square_nanosecond = Unit(1e+18, Dimensions(length=1, time=-2), name='gigameters_per_square_nanosecond', ascii_symbol='Gm/ns^2', symbol='Gmns⁻²')
+gigameters_per_picosecond = Unit(1e+21, Dimensions(length=1, time=-1), name='gigameters_per_picosecond', ascii_symbol='Gm/ps', symbol='Gmps⁻¹')
+gigameters_per_square_picosecond = Unit(1e+21, Dimensions(length=1, time=-2), name='gigameters_per_square_picosecond', ascii_symbol='Gm/ps^2', symbol='Gmps⁻²')
+gigameters_per_femtosecond = Unit(1e+24, Dimensions(length=1, time=-1), name='gigameters_per_femtosecond', ascii_symbol='Gm/fs', symbol='Gmfs⁻¹')
+gigameters_per_square_femtosecond = Unit(1e+24, Dimensions(length=1, time=-2), name='gigameters_per_square_femtosecond', ascii_symbol='Gm/fs^2', symbol='Gmfs⁻²')
+gigameters_per_attosecond = Unit(9.999999999999999e+26, Dimensions(length=1, time=-1), name='gigameters_per_attosecond', ascii_symbol='Gm/as', symbol='Gmas⁻¹')
+gigameters_per_square_attosecond = Unit(9.999999999999999e+26, Dimensions(length=1, time=-2), name='gigameters_per_square_attosecond', ascii_symbol='Gm/as^2', symbol='Gmas⁻²')
+gigameters_per_minute = Unit(16666666.666666666, Dimensions(length=1, time=-1), name='gigameters_per_minute', ascii_symbol='Gm/min', symbol='GmNone⁻¹')
+gigameters_per_square_minute = Unit(16666666.666666666, Dimensions(length=1, time=-2), name='gigameters_per_square_minute', ascii_symbol='Gm/min^2', symbol='GmNone⁻²')
+gigameters_per_hour = Unit(2777777.777777778, Dimensions(length=1, time=-1), name='gigameters_per_hour', ascii_symbol='Gm/h', symbol='GmNone⁻¹')
+gigameters_per_square_hour = Unit(2777777.777777778, Dimensions(length=1, time=-2), name='gigameters_per_square_hour', ascii_symbol='Gm/h^2', symbol='GmNone⁻²')
+gigameters_per_day = Unit(115740.74074074074, Dimensions(length=1, time=-1), name='gigameters_per_day', ascii_symbol='Gm/d', symbol='GmNone⁻¹')
+gigameters_per_square_day = Unit(115740.74074074074, Dimensions(length=1, time=-2), name='gigameters_per_square_day', ascii_symbol='Gm/d^2', symbol='GmNone⁻²')
+gigameters_per_year = Unit(316.88738506811427, Dimensions(length=1, time=-1), name='gigameters_per_year', ascii_symbol='Gm/y', symbol='GmNone⁻¹')
+gigameters_per_square_year = Unit(316.88738506811427, Dimensions(length=1, time=-2), name='gigameters_per_square_year', ascii_symbol='Gm/y^2', symbol='GmNone⁻²')
+megameters_per_second = Unit(1000000.0, Dimensions(length=1, time=-1), name='megameters_per_second', ascii_symbol='Mm/s', symbol='MmNone⁻¹')
+megameters_per_square_second = Unit(1000000.0, Dimensions(length=1, time=-2), name='megameters_per_square_second', ascii_symbol='Mm/s^2', symbol='MmNone⁻²')
+megameters_per_millisecond = Unit(1000000000.0, Dimensions(length=1, time=-1), name='megameters_per_millisecond', ascii_symbol='Mm/ms', symbol='Mmms⁻¹')
+megameters_per_square_millisecond = Unit(1000000000.0, Dimensions(length=1, time=-2), name='megameters_per_square_millisecond', ascii_symbol='Mm/ms^2', symbol='Mmms⁻²')
+megameters_per_microsecond = Unit(1000000000000.0, Dimensions(length=1, time=-1), name='megameters_per_microsecond', ascii_symbol='Mm/us', symbol='Mmµs⁻¹')
+megameters_per_square_microsecond = Unit(1000000000000.0, Dimensions(length=1, time=-2), name='megameters_per_square_microsecond', ascii_symbol='Mm/us^2', symbol='Mmµs⁻²')
+megameters_per_nanosecond = Unit(1000000000000000.0, Dimensions(length=1, time=-1), name='megameters_per_nanosecond', ascii_symbol='Mm/ns', symbol='Mmns⁻¹')
+megameters_per_square_nanosecond = Unit(1000000000000000.0, Dimensions(length=1, time=-2), name='megameters_per_square_nanosecond', ascii_symbol='Mm/ns^2', symbol='Mmns⁻²')
+megameters_per_picosecond = Unit(1e+18, Dimensions(length=1, time=-1), name='megameters_per_picosecond', ascii_symbol='Mm/ps', symbol='Mmps⁻¹')
+megameters_per_square_picosecond = Unit(1e+18, Dimensions(length=1, time=-2), name='megameters_per_square_picosecond', ascii_symbol='Mm/ps^2', symbol='Mmps⁻²')
+megameters_per_femtosecond = Unit(9.999999999999999e+20, Dimensions(length=1, time=-1), name='megameters_per_femtosecond', ascii_symbol='Mm/fs', symbol='Mmfs⁻¹')
+megameters_per_square_femtosecond = Unit(9.999999999999999e+20, Dimensions(length=1, time=-2), name='megameters_per_square_femtosecond', ascii_symbol='Mm/fs^2', symbol='Mmfs⁻²')
+megameters_per_attosecond = Unit(1e+24, Dimensions(length=1, time=-1), name='megameters_per_attosecond', ascii_symbol='Mm/as', symbol='Mmas⁻¹')
+megameters_per_square_attosecond = Unit(1e+24, Dimensions(length=1, time=-2), name='megameters_per_square_attosecond', ascii_symbol='Mm/as^2', symbol='Mmas⁻²')
+megameters_per_minute = Unit(16666.666666666668, Dimensions(length=1, time=-1), name='megameters_per_minute', ascii_symbol='Mm/min', symbol='MmNone⁻¹')
+megameters_per_square_minute = Unit(16666.666666666668, Dimensions(length=1, time=-2), name='megameters_per_square_minute', ascii_symbol='Mm/min^2', symbol='MmNone⁻²')
+megameters_per_hour = Unit(2777.777777777778, Dimensions(length=1, time=-1), name='megameters_per_hour', ascii_symbol='Mm/h', symbol='MmNone⁻¹')
+megameters_per_square_hour = Unit(2777.777777777778, Dimensions(length=1, time=-2), name='megameters_per_square_hour', ascii_symbol='Mm/h^2', symbol='MmNone⁻²')
+megameters_per_day = Unit(115.74074074074075, Dimensions(length=1, time=-1), name='megameters_per_day', ascii_symbol='Mm/d', symbol='MmNone⁻¹')
+megameters_per_square_day = Unit(115.74074074074075, Dimensions(length=1, time=-2), name='megameters_per_square_day', ascii_symbol='Mm/d^2', symbol='MmNone⁻²')
+megameters_per_year = Unit(0.3168873850681143, Dimensions(length=1, time=-1), name='megameters_per_year', ascii_symbol='Mm/y', symbol='MmNone⁻¹')
+megameters_per_square_year = Unit(0.3168873850681143, Dimensions(length=1, time=-2), name='megameters_per_square_year', ascii_symbol='Mm/y^2', symbol='MmNone⁻²')
+kilometers_per_second = Unit(1000.0, Dimensions(length=1, time=-1), name='kilometers_per_second', ascii_symbol='km/s', symbol='kmNone⁻¹')
+kilometers_per_square_second = Unit(1000.0, Dimensions(length=1, time=-2), name='kilometers_per_square_second', ascii_symbol='km/s^2', symbol='kmNone⁻²')
+kilometers_per_millisecond = Unit(1000000.0, Dimensions(length=1, time=-1), name='kilometers_per_millisecond', ascii_symbol='km/ms', symbol='kmms⁻¹')
+kilometers_per_square_millisecond = Unit(1000000.0, Dimensions(length=1, time=-2), name='kilometers_per_square_millisecond', ascii_symbol='km/ms^2', symbol='kmms⁻²')
+kilometers_per_microsecond = Unit(1000000000.0, Dimensions(length=1, time=-1), name='kilometers_per_microsecond', ascii_symbol='km/us', symbol='kmµs⁻¹')
+kilometers_per_square_microsecond = Unit(1000000000.0, Dimensions(length=1, time=-2), name='kilometers_per_square_microsecond', ascii_symbol='km/us^2', symbol='kmµs⁻²')
+kilometers_per_nanosecond = Unit(999999999999.9999, Dimensions(length=1, time=-1), name='kilometers_per_nanosecond', ascii_symbol='km/ns', symbol='kmns⁻¹')
+kilometers_per_square_nanosecond = Unit(999999999999.9999, Dimensions(length=1, time=-2), name='kilometers_per_square_nanosecond', ascii_symbol='km/ns^2', symbol='kmns⁻²')
+kilometers_per_picosecond = Unit(1000000000000000.0, Dimensions(length=1, time=-1), name='kilometers_per_picosecond', ascii_symbol='km/ps', symbol='kmps⁻¹')
+kilometers_per_square_picosecond = Unit(1000000000000000.0, Dimensions(length=1, time=-2), name='kilometers_per_square_picosecond', ascii_symbol='km/ps^2', symbol='kmps⁻²')
+kilometers_per_femtosecond = Unit(9.999999999999999e+17, Dimensions(length=1, time=-1), name='kilometers_per_femtosecond', ascii_symbol='km/fs', symbol='kmfs⁻¹')
+kilometers_per_square_femtosecond = Unit(9.999999999999999e+17, Dimensions(length=1, time=-2), name='kilometers_per_square_femtosecond', ascii_symbol='km/fs^2', symbol='kmfs⁻²')
+kilometers_per_attosecond = Unit(9.999999999999999e+20, Dimensions(length=1, time=-1), name='kilometers_per_attosecond', ascii_symbol='km/as', symbol='kmas⁻¹')
+kilometers_per_square_attosecond = Unit(9.999999999999999e+20, Dimensions(length=1, time=-2), name='kilometers_per_square_attosecond', ascii_symbol='km/as^2', symbol='kmas⁻²')
+kilometers_per_minute = Unit(16.666666666666668, Dimensions(length=1, time=-1), name='kilometers_per_minute', ascii_symbol='km/min', symbol='kmNone⁻¹')
+kilometers_per_square_minute = Unit(16.666666666666668, Dimensions(length=1, time=-2), name='kilometers_per_square_minute', ascii_symbol='km/min^2', symbol='kmNone⁻²')
+kilometers_per_hour = Unit(2.7777777777777777, Dimensions(length=1, time=-1), name='kilometers_per_hour', ascii_symbol='km/h', symbol='kmNone⁻¹')
+kilometers_per_square_hour = Unit(2.7777777777777777, Dimensions(length=1, time=-2), name='kilometers_per_square_hour', ascii_symbol='km/h^2', symbol='kmNone⁻²')
+kilometers_per_day = Unit(0.11574074074074074, Dimensions(length=1, time=-1), name='kilometers_per_day', ascii_symbol='km/d', symbol='kmNone⁻¹')
+kilometers_per_square_day = Unit(0.11574074074074074, Dimensions(length=1, time=-2), name='kilometers_per_square_day', ascii_symbol='km/d^2', symbol='kmNone⁻²')
+kilometers_per_year = Unit(0.0003168873850681143, Dimensions(length=1, time=-1), name='kilometers_per_year', ascii_symbol='km/y', symbol='kmNone⁻¹')
+kilometers_per_square_year = Unit(0.0003168873850681143, Dimensions(length=1, time=-2), name='kilometers_per_square_year', ascii_symbol='km/y^2', symbol='kmNone⁻²')
+millimeters_per_second = Unit(0.001, Dimensions(length=1, time=-1), name='millimeters_per_second', ascii_symbol='mm/s', symbol='mmNone⁻¹')
+millimeters_per_square_second = Unit(0.001, Dimensions(length=1, time=-2), name='millimeters_per_square_second', ascii_symbol='mm/s^2', symbol='mmNone⁻²')
+millimeters_per_millisecond = Unit(1.0, Dimensions(length=1, time=-1), name='millimeters_per_millisecond', ascii_symbol='mm/ms', symbol='mmms⁻¹')
+millimeters_per_square_millisecond = Unit(1.0, Dimensions(length=1, time=-2), name='millimeters_per_square_millisecond', ascii_symbol='mm/ms^2', symbol='mmms⁻²')
+millimeters_per_microsecond = Unit(1000.0000000000001, Dimensions(length=1, time=-1), name='millimeters_per_microsecond', ascii_symbol='mm/us', symbol='mmµs⁻¹')
+millimeters_per_square_microsecond = Unit(1000.0000000000001, Dimensions(length=1, time=-2), name='millimeters_per_square_microsecond', ascii_symbol='mm/us^2', symbol='mmµs⁻²')
+millimeters_per_nanosecond = Unit(1000000.0, Dimensions(length=1, time=-1), name='millimeters_per_nanosecond', ascii_symbol='mm/ns', symbol='mmns⁻¹')
+millimeters_per_square_nanosecond = Unit(1000000.0, Dimensions(length=1, time=-2), name='millimeters_per_square_nanosecond', ascii_symbol='mm/ns^2', symbol='mmns⁻²')
+millimeters_per_picosecond = Unit(1000000000.0, Dimensions(length=1, time=-1), name='millimeters_per_picosecond', ascii_symbol='mm/ps', symbol='mmps⁻¹')
+millimeters_per_square_picosecond = Unit(1000000000.0, Dimensions(length=1, time=-2), name='millimeters_per_square_picosecond', ascii_symbol='mm/ps^2', symbol='mmps⁻²')
+millimeters_per_femtosecond = Unit(1000000000000.0, Dimensions(length=1, time=-1), name='millimeters_per_femtosecond', ascii_symbol='mm/fs', symbol='mmfs⁻¹')
+millimeters_per_square_femtosecond = Unit(1000000000000.0, Dimensions(length=1, time=-2), name='millimeters_per_square_femtosecond', ascii_symbol='mm/fs^2', symbol='mmfs⁻²')
+millimeters_per_attosecond = Unit(1000000000000000.0, Dimensions(length=1, time=-1), name='millimeters_per_attosecond', ascii_symbol='mm/as', symbol='mmas⁻¹')
+millimeters_per_square_attosecond = Unit(1000000000000000.0, Dimensions(length=1, time=-2), name='millimeters_per_square_attosecond', ascii_symbol='mm/as^2', symbol='mmas⁻²')
+millimeters_per_minute = Unit(1.6666666666666667e-05, Dimensions(length=1, time=-1), name='millimeters_per_minute', ascii_symbol='mm/min', symbol='mmNone⁻¹')
+millimeters_per_square_minute = Unit(1.6666666666666667e-05, Dimensions(length=1, time=-2), name='millimeters_per_square_minute', ascii_symbol='mm/min^2', symbol='mmNone⁻²')
+millimeters_per_hour = Unit(2.777777777777778e-06, Dimensions(length=1, time=-1), name='millimeters_per_hour', ascii_symbol='mm/h', symbol='mmNone⁻¹')
+millimeters_per_square_hour = Unit(2.777777777777778e-06, Dimensions(length=1, time=-2), name='millimeters_per_square_hour', ascii_symbol='mm/h^2', symbol='mmNone⁻²')
+millimeters_per_day = Unit(1.1574074074074074e-07, Dimensions(length=1, time=-1), name='millimeters_per_day', ascii_symbol='mm/d', symbol='mmNone⁻¹')
+millimeters_per_square_day = Unit(1.1574074074074074e-07, Dimensions(length=1, time=-2), name='millimeters_per_square_day', ascii_symbol='mm/d^2', symbol='mmNone⁻²')
+millimeters_per_year = Unit(3.168873850681143e-10, Dimensions(length=1, time=-1), name='millimeters_per_year', ascii_symbol='mm/y', symbol='mmNone⁻¹')
+millimeters_per_square_year = Unit(3.168873850681143e-10, Dimensions(length=1, time=-2), name='millimeters_per_square_year', ascii_symbol='mm/y^2', symbol='mmNone⁻²')
+micrometers_per_second = Unit(1e-06, Dimensions(length=1, time=-1), name='micrometers_per_second', ascii_symbol='um/s', symbol='µmNone⁻¹')
+micrometers_per_square_second = Unit(1e-06, Dimensions(length=1, time=-2), name='micrometers_per_square_second', ascii_symbol='um/s^2', symbol='µmNone⁻²')
+micrometers_per_millisecond = Unit(0.001, Dimensions(length=1, time=-1), name='micrometers_per_millisecond', ascii_symbol='um/ms', symbol='µmms⁻¹')
+micrometers_per_square_millisecond = Unit(0.001, Dimensions(length=1, time=-2), name='micrometers_per_square_millisecond', ascii_symbol='um/ms^2', symbol='µmms⁻²')
+micrometers_per_microsecond = Unit(1.0, Dimensions(length=1, time=-1), name='micrometers_per_microsecond', ascii_symbol='um/us', symbol='µmµs⁻¹')
+micrometers_per_square_microsecond = Unit(1.0, Dimensions(length=1, time=-2), name='micrometers_per_square_microsecond', ascii_symbol='um/us^2', symbol='µmµs⁻²')
+micrometers_per_nanosecond = Unit(999.9999999999999, Dimensions(length=1, time=-1), name='micrometers_per_nanosecond', ascii_symbol='um/ns', symbol='µmns⁻¹')
+micrometers_per_square_nanosecond = Unit(999.9999999999999, Dimensions(length=1, time=-2), name='micrometers_per_square_nanosecond', ascii_symbol='um/ns^2', symbol='µmns⁻²')
+micrometers_per_picosecond = Unit(1000000.0, Dimensions(length=1, time=-1), name='micrometers_per_picosecond', ascii_symbol='um/ps', symbol='µmps⁻¹')
+micrometers_per_square_picosecond = Unit(1000000.0, Dimensions(length=1, time=-2), name='micrometers_per_square_picosecond', ascii_symbol='um/ps^2', symbol='µmps⁻²')
+micrometers_per_femtosecond = Unit(999999999.9999999, Dimensions(length=1, time=-1), name='micrometers_per_femtosecond', ascii_symbol='um/fs', symbol='µmfs⁻¹')
+micrometers_per_square_femtosecond = Unit(999999999.9999999, Dimensions(length=1, time=-2), name='micrometers_per_square_femtosecond', ascii_symbol='um/fs^2', symbol='µmfs⁻²')
+micrometers_per_attosecond = Unit(999999999999.9999, Dimensions(length=1, time=-1), name='micrometers_per_attosecond', ascii_symbol='um/as', symbol='µmas⁻¹')
+micrometers_per_square_attosecond = Unit(999999999999.9999, Dimensions(length=1, time=-2), name='micrometers_per_square_attosecond', ascii_symbol='um/as^2', symbol='µmas⁻²')
+micrometers_per_minute = Unit(1.6666666666666667e-08, Dimensions(length=1, time=-1), name='micrometers_per_minute', ascii_symbol='um/min', symbol='µmNone⁻¹')
+micrometers_per_square_minute = Unit(1.6666666666666667e-08, Dimensions(length=1, time=-2), name='micrometers_per_square_minute', ascii_symbol='um/min^2', symbol='µmNone⁻²')
+micrometers_per_hour = Unit(2.7777777777777776e-09, Dimensions(length=1, time=-1), name='micrometers_per_hour', ascii_symbol='um/h', symbol='µmNone⁻¹')
+micrometers_per_square_hour = Unit(2.7777777777777776e-09, Dimensions(length=1, time=-2), name='micrometers_per_square_hour', ascii_symbol='um/h^2', symbol='µmNone⁻²')
+micrometers_per_day = Unit(1.1574074074074074e-10, Dimensions(length=1, time=-1), name='micrometers_per_day', ascii_symbol='um/d', symbol='µmNone⁻¹')
+micrometers_per_square_day = Unit(1.1574074074074074e-10, Dimensions(length=1, time=-2), name='micrometers_per_square_day', ascii_symbol='um/d^2', symbol='µmNone⁻²')
+micrometers_per_year = Unit(3.168873850681143e-13, Dimensions(length=1, time=-1), name='micrometers_per_year', ascii_symbol='um/y', symbol='µmNone⁻¹')
+micrometers_per_square_year = Unit(3.168873850681143e-13, Dimensions(length=1, time=-2), name='micrometers_per_square_year', ascii_symbol='um/y^2', symbol='µmNone⁻²')
+nanometers_per_second = Unit(1e-09, Dimensions(length=1, time=-1), name='nanometers_per_second', ascii_symbol='nm/s', symbol='nmNone⁻¹')
+nanometers_per_square_second = Unit(1e-09, Dimensions(length=1, time=-2), name='nanometers_per_square_second', ascii_symbol='nm/s^2', symbol='nmNone⁻²')
+nanometers_per_millisecond = Unit(1e-06, Dimensions(length=1, time=-1), name='nanometers_per_millisecond', ascii_symbol='nm/ms', symbol='nmms⁻¹')
+nanometers_per_square_millisecond = Unit(1e-06, Dimensions(length=1, time=-2), name='nanometers_per_square_millisecond', ascii_symbol='nm/ms^2', symbol='nmms⁻²')
+nanometers_per_microsecond = Unit(0.001, Dimensions(length=1, time=-1), name='nanometers_per_microsecond', ascii_symbol='nm/us', symbol='nmµs⁻¹')
+nanometers_per_square_microsecond = Unit(0.001, Dimensions(length=1, time=-2), name='nanometers_per_square_microsecond', ascii_symbol='nm/us^2', symbol='nmµs⁻²')
+nanometers_per_nanosecond = Unit(1.0, Dimensions(length=1, time=-1), name='nanometers_per_nanosecond', ascii_symbol='nm/ns', symbol='nmns⁻¹')
+nanometers_per_square_nanosecond = Unit(1.0, Dimensions(length=1, time=-2), name='nanometers_per_square_nanosecond', ascii_symbol='nm/ns^2', symbol='nmns⁻²')
+nanometers_per_picosecond = Unit(1000.0000000000001, Dimensions(length=1, time=-1), name='nanometers_per_picosecond', ascii_symbol='nm/ps', symbol='nmps⁻¹')
+nanometers_per_square_picosecond = Unit(1000.0000000000001, Dimensions(length=1, time=-2), name='nanometers_per_square_picosecond', ascii_symbol='nm/ps^2', symbol='nmps⁻²')
+nanometers_per_femtosecond = Unit(1000000.0, Dimensions(length=1, time=-1), name='nanometers_per_femtosecond', ascii_symbol='nm/fs', symbol='nmfs⁻¹')
+nanometers_per_square_femtosecond = Unit(1000000.0, Dimensions(length=1, time=-2), name='nanometers_per_square_femtosecond', ascii_symbol='nm/fs^2', symbol='nmfs⁻²')
+nanometers_per_attosecond = Unit(1000000000.0, Dimensions(length=1, time=-1), name='nanometers_per_attosecond', ascii_symbol='nm/as', symbol='nmas⁻¹')
+nanometers_per_square_attosecond = Unit(1000000000.0, Dimensions(length=1, time=-2), name='nanometers_per_square_attosecond', ascii_symbol='nm/as^2', symbol='nmas⁻²')
+nanometers_per_minute = Unit(1.6666666666666667e-11, Dimensions(length=1, time=-1), name='nanometers_per_minute', ascii_symbol='nm/min', symbol='nmNone⁻¹')
+nanometers_per_square_minute = Unit(1.6666666666666667e-11, Dimensions(length=1, time=-2), name='nanometers_per_square_minute', ascii_symbol='nm/min^2', symbol='nmNone⁻²')
+nanometers_per_hour = Unit(2.777777777777778e-12, Dimensions(length=1, time=-1), name='nanometers_per_hour', ascii_symbol='nm/h', symbol='nmNone⁻¹')
+nanometers_per_square_hour = Unit(2.777777777777778e-12, Dimensions(length=1, time=-2), name='nanometers_per_square_hour', ascii_symbol='nm/h^2', symbol='nmNone⁻²')
+nanometers_per_day = Unit(1.1574074074074076e-13, Dimensions(length=1, time=-1), name='nanometers_per_day', ascii_symbol='nm/d', symbol='nmNone⁻¹')
+nanometers_per_square_day = Unit(1.1574074074074076e-13, Dimensions(length=1, time=-2), name='nanometers_per_square_day', ascii_symbol='nm/d^2', symbol='nmNone⁻²')
+nanometers_per_year = Unit(3.1688738506811433e-16, Dimensions(length=1, time=-1), name='nanometers_per_year', ascii_symbol='nm/y', symbol='nmNone⁻¹')
+nanometers_per_square_year = Unit(3.1688738506811433e-16, Dimensions(length=1, time=-2), name='nanometers_per_square_year', ascii_symbol='nm/y^2', symbol='nmNone⁻²')
+picometers_per_second = Unit(1e-12, Dimensions(length=1, time=-1), name='picometers_per_second', ascii_symbol='pm/s', symbol='pmNone⁻¹')
+picometers_per_square_second = Unit(1e-12, Dimensions(length=1, time=-2), name='picometers_per_square_second', ascii_symbol='pm/s^2', symbol='pmNone⁻²')
+picometers_per_millisecond = Unit(1e-09, Dimensions(length=1, time=-1), name='picometers_per_millisecond', ascii_symbol='pm/ms', symbol='pmms⁻¹')
+picometers_per_square_millisecond = Unit(1e-09, Dimensions(length=1, time=-2), name='picometers_per_square_millisecond', ascii_symbol='pm/ms^2', symbol='pmms⁻²')
+picometers_per_microsecond = Unit(1e-06, Dimensions(length=1, time=-1), name='picometers_per_microsecond', ascii_symbol='pm/us', symbol='pmµs⁻¹')
+picometers_per_square_microsecond = Unit(1e-06, Dimensions(length=1, time=-2), name='picometers_per_square_microsecond', ascii_symbol='pm/us^2', symbol='pmµs⁻²')
+picometers_per_nanosecond = Unit(0.001, Dimensions(length=1, time=-1), name='picometers_per_nanosecond', ascii_symbol='pm/ns', symbol='pmns⁻¹')
+picometers_per_square_nanosecond = Unit(0.001, Dimensions(length=1, time=-2), name='picometers_per_square_nanosecond', ascii_symbol='pm/ns^2', symbol='pmns⁻²')
+picometers_per_picosecond = Unit(1.0, Dimensions(length=1, time=-1), name='picometers_per_picosecond', ascii_symbol='pm/ps', symbol='pmps⁻¹')
+picometers_per_square_picosecond = Unit(1.0, Dimensions(length=1, time=-2), name='picometers_per_square_picosecond', ascii_symbol='pm/ps^2', symbol='pmps⁻²')
+picometers_per_femtosecond = Unit(999.9999999999999, Dimensions(length=1, time=-1), name='picometers_per_femtosecond', ascii_symbol='pm/fs', symbol='pmfs⁻¹')
+picometers_per_square_femtosecond = Unit(999.9999999999999, Dimensions(length=1, time=-2), name='picometers_per_square_femtosecond', ascii_symbol='pm/fs^2', symbol='pmfs⁻²')
+picometers_per_attosecond = Unit(999999.9999999999, Dimensions(length=1, time=-1), name='picometers_per_attosecond', ascii_symbol='pm/as', symbol='pmas⁻¹')
+picometers_per_square_attosecond = Unit(999999.9999999999, Dimensions(length=1, time=-2), name='picometers_per_square_attosecond', ascii_symbol='pm/as^2', symbol='pmas⁻²')
+picometers_per_minute = Unit(1.6666666666666667e-14, Dimensions(length=1, time=-1), name='picometers_per_minute', ascii_symbol='pm/min', symbol='pmNone⁻¹')
+picometers_per_square_minute = Unit(1.6666666666666667e-14, Dimensions(length=1, time=-2), name='picometers_per_square_minute', ascii_symbol='pm/min^2', symbol='pmNone⁻²')
+picometers_per_hour = Unit(2.7777777777777776e-15, Dimensions(length=1, time=-1), name='picometers_per_hour', ascii_symbol='pm/h', symbol='pmNone⁻¹')
+picometers_per_square_hour = Unit(2.7777777777777776e-15, Dimensions(length=1, time=-2), name='picometers_per_square_hour', ascii_symbol='pm/h^2', symbol='pmNone⁻²')
+picometers_per_day = Unit(1.1574074074074073e-16, Dimensions(length=1, time=-1), name='picometers_per_day', ascii_symbol='pm/d', symbol='pmNone⁻¹')
+picometers_per_square_day = Unit(1.1574074074074073e-16, Dimensions(length=1, time=-2), name='picometers_per_square_day', ascii_symbol='pm/d^2', symbol='pmNone⁻²')
+picometers_per_year = Unit(3.168873850681143e-19, Dimensions(length=1, time=-1), name='picometers_per_year', ascii_symbol='pm/y', symbol='pmNone⁻¹')
+picometers_per_square_year = Unit(3.168873850681143e-19, Dimensions(length=1, time=-2), name='picometers_per_square_year', ascii_symbol='pm/y^2', symbol='pmNone⁻²')
+femtometers_per_second = Unit(1e-15, Dimensions(length=1, time=-1), name='femtometers_per_second', ascii_symbol='fm/s', symbol='fmNone⁻¹')
+femtometers_per_square_second = Unit(1e-15, Dimensions(length=1, time=-2), name='femtometers_per_square_second', ascii_symbol='fm/s^2', symbol='fmNone⁻²')
+femtometers_per_millisecond = Unit(1e-12, Dimensions(length=1, time=-1), name='femtometers_per_millisecond', ascii_symbol='fm/ms', symbol='fmms⁻¹')
+femtometers_per_square_millisecond = Unit(1e-12, Dimensions(length=1, time=-2), name='femtometers_per_square_millisecond', ascii_symbol='fm/ms^2', symbol='fmms⁻²')
+femtometers_per_microsecond = Unit(1e-09, Dimensions(length=1, time=-1), name='femtometers_per_microsecond', ascii_symbol='fm/us', symbol='fmµs⁻¹')
+femtometers_per_square_microsecond = Unit(1e-09, Dimensions(length=1, time=-2), name='femtometers_per_square_microsecond', ascii_symbol='fm/us^2', symbol='fmµs⁻²')
+femtometers_per_nanosecond = Unit(1e-06, Dimensions(length=1, time=-1), name='femtometers_per_nanosecond', ascii_symbol='fm/ns', symbol='fmns⁻¹')
+femtometers_per_square_nanosecond = Unit(1e-06, Dimensions(length=1, time=-2), name='femtometers_per_square_nanosecond', ascii_symbol='fm/ns^2', symbol='fmns⁻²')
+femtometers_per_picosecond = Unit(0.001, Dimensions(length=1, time=-1), name='femtometers_per_picosecond', ascii_symbol='fm/ps', symbol='fmps⁻¹')
+femtometers_per_square_picosecond = Unit(0.001, Dimensions(length=1, time=-2), name='femtometers_per_square_picosecond', ascii_symbol='fm/ps^2', symbol='fmps⁻²')
+femtometers_per_femtosecond = Unit(1.0, Dimensions(length=1, time=-1), name='femtometers_per_femtosecond', ascii_symbol='fm/fs', symbol='fmfs⁻¹')
+femtometers_per_square_femtosecond = Unit(1.0, Dimensions(length=1, time=-2), name='femtometers_per_square_femtosecond', ascii_symbol='fm/fs^2', symbol='fmfs⁻²')
+femtometers_per_attosecond = Unit(1000.0, Dimensions(length=1, time=-1), name='femtometers_per_attosecond', ascii_symbol='fm/as', symbol='fmas⁻¹')
+femtometers_per_square_attosecond = Unit(1000.0, Dimensions(length=1, time=-2), name='femtometers_per_square_attosecond', ascii_symbol='fm/as^2', symbol='fmas⁻²')
+femtometers_per_minute = Unit(1.6666666666666667e-17, Dimensions(length=1, time=-1), name='femtometers_per_minute', ascii_symbol='fm/min', symbol='fmNone⁻¹')
+femtometers_per_square_minute = Unit(1.6666666666666667e-17, Dimensions(length=1, time=-2), name='femtometers_per_square_minute', ascii_symbol='fm/min^2', symbol='fmNone⁻²')
+femtometers_per_hour = Unit(2.777777777777778e-18, Dimensions(length=1, time=-1), name='femtometers_per_hour', ascii_symbol='fm/h', symbol='fmNone⁻¹')
+femtometers_per_square_hour = Unit(2.777777777777778e-18, Dimensions(length=1, time=-2), name='femtometers_per_square_hour', ascii_symbol='fm/h^2', symbol='fmNone⁻²')
+femtometers_per_day = Unit(1.1574074074074075e-19, Dimensions(length=1, time=-1), name='femtometers_per_day', ascii_symbol='fm/d', symbol='fmNone⁻¹')
+femtometers_per_square_day = Unit(1.1574074074074075e-19, Dimensions(length=1, time=-2), name='femtometers_per_square_day', ascii_symbol='fm/d^2', symbol='fmNone⁻²')
+femtometers_per_year = Unit(3.168873850681143e-22, Dimensions(length=1, time=-1), name='femtometers_per_year', ascii_symbol='fm/y', symbol='fmNone⁻¹')
+femtometers_per_square_year = Unit(3.168873850681143e-22, Dimensions(length=1, time=-2), name='femtometers_per_square_year', ascii_symbol='fm/y^2', symbol='fmNone⁻²')
+attometers_per_second = Unit(1e-18, Dimensions(length=1, time=-1), name='attometers_per_second', ascii_symbol='am/s', symbol='amNone⁻¹')
+attometers_per_square_second = Unit(1e-18, Dimensions(length=1, time=-2), name='attometers_per_square_second', ascii_symbol='am/s^2', symbol='amNone⁻²')
+attometers_per_millisecond = Unit(1e-15, Dimensions(length=1, time=-1), name='attometers_per_millisecond', ascii_symbol='am/ms', symbol='amms⁻¹')
+attometers_per_square_millisecond = Unit(1e-15, Dimensions(length=1, time=-2), name='attometers_per_square_millisecond', ascii_symbol='am/ms^2', symbol='amms⁻²')
+attometers_per_microsecond = Unit(1.0000000000000002e-12, Dimensions(length=1, time=-1), name='attometers_per_microsecond', ascii_symbol='am/us', symbol='amµs⁻¹')
+attometers_per_square_microsecond = Unit(1.0000000000000002e-12, Dimensions(length=1, time=-2), name='attometers_per_square_microsecond', ascii_symbol='am/us^2', symbol='amµs⁻²')
+attometers_per_nanosecond = Unit(1e-09, Dimensions(length=1, time=-1), name='attometers_per_nanosecond', ascii_symbol='am/ns', symbol='amns⁻¹')
+attometers_per_square_nanosecond = Unit(1e-09, Dimensions(length=1, time=-2), name='attometers_per_square_nanosecond', ascii_symbol='am/ns^2', symbol='amns⁻²')
+attometers_per_picosecond = Unit(1.0000000000000002e-06, Dimensions(length=1, time=-1), name='attometers_per_picosecond', ascii_symbol='am/ps', symbol='amps⁻¹')
+attometers_per_square_picosecond = Unit(1.0000000000000002e-06, Dimensions(length=1, time=-2), name='attometers_per_square_picosecond', ascii_symbol='am/ps^2', symbol='amps⁻²')
+attometers_per_femtosecond = Unit(0.001, Dimensions(length=1, time=-1), name='attometers_per_femtosecond', ascii_symbol='am/fs', symbol='amfs⁻¹')
+attometers_per_square_femtosecond = Unit(0.001, Dimensions(length=1, time=-2), name='attometers_per_square_femtosecond', ascii_symbol='am/fs^2', symbol='amfs⁻²')
+attometers_per_attosecond = Unit(1.0, Dimensions(length=1, time=-1), name='attometers_per_attosecond', ascii_symbol='am/as', symbol='amas⁻¹')
+attometers_per_square_attosecond = Unit(1.0, Dimensions(length=1, time=-2), name='attometers_per_square_attosecond', ascii_symbol='am/as^2', symbol='amas⁻²')
+attometers_per_minute = Unit(1.6666666666666668e-20, Dimensions(length=1, time=-1), name='attometers_per_minute', ascii_symbol='am/min', symbol='amNone⁻¹')
+attometers_per_square_minute = Unit(1.6666666666666668e-20, Dimensions(length=1, time=-2), name='attometers_per_square_minute', ascii_symbol='am/min^2', symbol='amNone⁻²')
+attometers_per_hour = Unit(2.7777777777777778e-21, Dimensions(length=1, time=-1), name='attometers_per_hour', ascii_symbol='am/h', symbol='amNone⁻¹')
+attometers_per_square_hour = Unit(2.7777777777777778e-21, Dimensions(length=1, time=-2), name='attometers_per_square_hour', ascii_symbol='am/h^2', symbol='amNone⁻²')
+attometers_per_day = Unit(1.1574074074074074e-22, Dimensions(length=1, time=-1), name='attometers_per_day', ascii_symbol='am/d', symbol='amNone⁻¹')
+attometers_per_square_day = Unit(1.1574074074074074e-22, Dimensions(length=1, time=-2), name='attometers_per_square_day', ascii_symbol='am/d^2', symbol='amNone⁻²')
+attometers_per_year = Unit(3.1688738506811433e-25, Dimensions(length=1, time=-1), name='attometers_per_year', ascii_symbol='am/y', symbol='amNone⁻¹')
+attometers_per_square_year = Unit(3.1688738506811433e-25, Dimensions(length=1, time=-2), name='attometers_per_square_year', ascii_symbol='am/y^2', symbol='amNone⁻²')
+decimeters_per_second = Unit(0.1, Dimensions(length=1, time=-1), name='decimeters_per_second', ascii_symbol='dm/s', symbol='dmNone⁻¹')
+decimeters_per_square_second = Unit(0.1, Dimensions(length=1, time=-2), name='decimeters_per_square_second', ascii_symbol='dm/s^2', symbol='dmNone⁻²')
+decimeters_per_millisecond = Unit(100.0, Dimensions(length=1, time=-1), name='decimeters_per_millisecond', ascii_symbol='dm/ms', symbol='dmms⁻¹')
+decimeters_per_square_millisecond = Unit(100.0, Dimensions(length=1, time=-2), name='decimeters_per_square_millisecond', ascii_symbol='dm/ms^2', symbol='dmms⁻²')
+decimeters_per_microsecond = Unit(100000.00000000001, Dimensions(length=1, time=-1), name='decimeters_per_microsecond', ascii_symbol='dm/us', symbol='dmµs⁻¹')
+decimeters_per_square_microsecond = Unit(100000.00000000001, Dimensions(length=1, time=-2), name='decimeters_per_square_microsecond', ascii_symbol='dm/us^2', symbol='dmµs⁻²')
+decimeters_per_nanosecond = Unit(100000000.0, Dimensions(length=1, time=-1), name='decimeters_per_nanosecond', ascii_symbol='dm/ns', symbol='dmns⁻¹')
+decimeters_per_square_nanosecond = Unit(100000000.0, Dimensions(length=1, time=-2), name='decimeters_per_square_nanosecond', ascii_symbol='dm/ns^2', symbol='dmns⁻²')
+decimeters_per_picosecond = Unit(100000000000.0, Dimensions(length=1, time=-1), name='decimeters_per_picosecond', ascii_symbol='dm/ps', symbol='dmps⁻¹')
+decimeters_per_square_picosecond = Unit(100000000000.0, Dimensions(length=1, time=-2), name='decimeters_per_square_picosecond', ascii_symbol='dm/ps^2', symbol='dmps⁻²')
+decimeters_per_femtosecond = Unit(100000000000000.0, Dimensions(length=1, time=-1), name='decimeters_per_femtosecond', ascii_symbol='dm/fs', symbol='dmfs⁻¹')
+decimeters_per_square_femtosecond = Unit(100000000000000.0, Dimensions(length=1, time=-2), name='decimeters_per_square_femtosecond', ascii_symbol='dm/fs^2', symbol='dmfs⁻²')
+decimeters_per_attosecond = Unit(1e+17, Dimensions(length=1, time=-1), name='decimeters_per_attosecond', ascii_symbol='dm/as', symbol='dmas⁻¹')
+decimeters_per_square_attosecond = Unit(1e+17, Dimensions(length=1, time=-2), name='decimeters_per_square_attosecond', ascii_symbol='dm/as^2', symbol='dmas⁻²')
+decimeters_per_minute = Unit(0.0016666666666666668, Dimensions(length=1, time=-1), name='decimeters_per_minute', ascii_symbol='dm/min', symbol='dmNone⁻¹')
+decimeters_per_square_minute = Unit(0.0016666666666666668, Dimensions(length=1, time=-2), name='decimeters_per_square_minute', ascii_symbol='dm/min^2', symbol='dmNone⁻²')
+decimeters_per_hour = Unit(0.0002777777777777778, Dimensions(length=1, time=-1), name='decimeters_per_hour', ascii_symbol='dm/h', symbol='dmNone⁻¹')
+decimeters_per_square_hour = Unit(0.0002777777777777778, Dimensions(length=1, time=-2), name='decimeters_per_square_hour', ascii_symbol='dm/h^2', symbol='dmNone⁻²')
+decimeters_per_day = Unit(1.1574074074074075e-05, Dimensions(length=1, time=-1), name='decimeters_per_day', ascii_symbol='dm/d', symbol='dmNone⁻¹')
+decimeters_per_square_day = Unit(1.1574074074074075e-05, Dimensions(length=1, time=-2), name='decimeters_per_square_day', ascii_symbol='dm/d^2', symbol='dmNone⁻²')
+decimeters_per_year = Unit(3.168873850681143e-08, Dimensions(length=1, time=-1), name='decimeters_per_year', ascii_symbol='dm/y', symbol='dmNone⁻¹')
+decimeters_per_square_year = Unit(3.168873850681143e-08, Dimensions(length=1, time=-2), name='decimeters_per_square_year', ascii_symbol='dm/y^2', symbol='dmNone⁻²')
+centimeters_per_second = Unit(0.01, Dimensions(length=1, time=-1), name='centimeters_per_second', ascii_symbol='cm/s', symbol='cmNone⁻¹')
+centimeters_per_square_second = Unit(0.01, Dimensions(length=1, time=-2), name='centimeters_per_square_second', ascii_symbol='cm/s^2', symbol='cmNone⁻²')
+centimeters_per_millisecond = Unit(10.0, Dimensions(length=1, time=-1), name='centimeters_per_millisecond', ascii_symbol='cm/ms', symbol='cmms⁻¹')
+centimeters_per_square_millisecond = Unit(10.0, Dimensions(length=1, time=-2), name='centimeters_per_square_millisecond', ascii_symbol='cm/ms^2', symbol='cmms⁻²')
+centimeters_per_microsecond = Unit(10000.0, Dimensions(length=1, time=-1), name='centimeters_per_microsecond', ascii_symbol='cm/us', symbol='cmµs⁻¹')
+centimeters_per_square_microsecond = Unit(10000.0, Dimensions(length=1, time=-2), name='centimeters_per_square_microsecond', ascii_symbol='cm/us^2', symbol='cmµs⁻²')
+centimeters_per_nanosecond = Unit(10000000.0, Dimensions(length=1, time=-1), name='centimeters_per_nanosecond', ascii_symbol='cm/ns', symbol='cmns⁻¹')
+centimeters_per_square_nanosecond = Unit(10000000.0, Dimensions(length=1, time=-2), name='centimeters_per_square_nanosecond', ascii_symbol='cm/ns^2', symbol='cmns⁻²')
+centimeters_per_picosecond = Unit(10000000000.0, Dimensions(length=1, time=-1), name='centimeters_per_picosecond', ascii_symbol='cm/ps', symbol='cmps⁻¹')
+centimeters_per_square_picosecond = Unit(10000000000.0, Dimensions(length=1, time=-2), name='centimeters_per_square_picosecond', ascii_symbol='cm/ps^2', symbol='cmps⁻²')
+centimeters_per_femtosecond = Unit(10000000000000.0, Dimensions(length=1, time=-1), name='centimeters_per_femtosecond', ascii_symbol='cm/fs', symbol='cmfs⁻¹')
+centimeters_per_square_femtosecond = Unit(10000000000000.0, Dimensions(length=1, time=-2), name='centimeters_per_square_femtosecond', ascii_symbol='cm/fs^2', symbol='cmfs⁻²')
+centimeters_per_attosecond = Unit(1e+16, Dimensions(length=1, time=-1), name='centimeters_per_attosecond', ascii_symbol='cm/as', symbol='cmas⁻¹')
+centimeters_per_square_attosecond = Unit(1e+16, Dimensions(length=1, time=-2), name='centimeters_per_square_attosecond', ascii_symbol='cm/as^2', symbol='cmas⁻²')
+centimeters_per_minute = Unit(0.00016666666666666666, Dimensions(length=1, time=-1), name='centimeters_per_minute', ascii_symbol='cm/min', symbol='cmNone⁻¹')
+centimeters_per_square_minute = Unit(0.00016666666666666666, Dimensions(length=1, time=-2), name='centimeters_per_square_minute', ascii_symbol='cm/min^2', symbol='cmNone⁻²')
+centimeters_per_hour = Unit(2.777777777777778e-05, Dimensions(length=1, time=-1), name='centimeters_per_hour', ascii_symbol='cm/h', symbol='cmNone⁻¹')
+centimeters_per_square_hour = Unit(2.777777777777778e-05, Dimensions(length=1, time=-2), name='centimeters_per_square_hour', ascii_symbol='cm/h^2', symbol='cmNone⁻²')
+centimeters_per_day = Unit(1.1574074074074074e-06, Dimensions(length=1, time=-1), name='centimeters_per_day', ascii_symbol='cm/d', symbol='cmNone⁻¹')
+centimeters_per_square_day = Unit(1.1574074074074074e-06, Dimensions(length=1, time=-2), name='centimeters_per_square_day', ascii_symbol='cm/d^2', symbol='cmNone⁻²')
+centimeters_per_year = Unit(3.168873850681143e-09, Dimensions(length=1, time=-1), name='centimeters_per_year', ascii_symbol='cm/y', symbol='cmNone⁻¹')
+centimeters_per_square_year = Unit(3.168873850681143e-09, Dimensions(length=1, time=-2), name='centimeters_per_square_year', ascii_symbol='cm/y^2', symbol='cmNone⁻²')
+angstroms_per_second = Unit(1e-10, Dimensions(length=1, time=-1), name='angstroms_per_second', ascii_symbol='Ang/s', symbol='ÅNone⁻¹')
+angstroms_per_square_second = Unit(1e-10, Dimensions(length=1, time=-2), name='angstroms_per_square_second', ascii_symbol='Ang/s^2', symbol='ÅNone⁻²')
+angstroms_per_millisecond = Unit(1e-07, Dimensions(length=1, time=-1), name='angstroms_per_millisecond', ascii_symbol='Ang/ms', symbol='Åms⁻¹')
+angstroms_per_square_millisecond = Unit(1e-07, Dimensions(length=1, time=-2), name='angstroms_per_square_millisecond', ascii_symbol='Ang/ms^2', symbol='Åms⁻²')
+angstroms_per_microsecond = Unit(0.0001, Dimensions(length=1, time=-1), name='angstroms_per_microsecond', ascii_symbol='Ang/us', symbol='Åµs⁻¹')
+angstroms_per_square_microsecond = Unit(0.0001, Dimensions(length=1, time=-2), name='angstroms_per_square_microsecond', ascii_symbol='Ang/us^2', symbol='Åµs⁻²')
+angstroms_per_nanosecond = Unit(0.09999999999999999, Dimensions(length=1, time=-1), name='angstroms_per_nanosecond', ascii_symbol='Ang/ns', symbol='Åns⁻¹')
+angstroms_per_square_nanosecond = Unit(0.09999999999999999, Dimensions(length=1, time=-2), name='angstroms_per_square_nanosecond', ascii_symbol='Ang/ns^2', symbol='Åns⁻²')
+angstroms_per_picosecond = Unit(100.0, Dimensions(length=1, time=-1), name='angstroms_per_picosecond', ascii_symbol='Ang/ps', symbol='Åps⁻¹')
+angstroms_per_square_picosecond = Unit(100.0, Dimensions(length=1, time=-2), name='angstroms_per_square_picosecond', ascii_symbol='Ang/ps^2', symbol='Åps⁻²')
+angstroms_per_femtosecond = Unit(100000.0, Dimensions(length=1, time=-1), name='angstroms_per_femtosecond', ascii_symbol='Ang/fs', symbol='Åfs⁻¹')
+angstroms_per_square_femtosecond = Unit(100000.0, Dimensions(length=1, time=-2), name='angstroms_per_square_femtosecond', ascii_symbol='Ang/fs^2', symbol='Åfs⁻²')
+angstroms_per_attosecond = Unit(100000000.0, Dimensions(length=1, time=-1), name='angstroms_per_attosecond', ascii_symbol='Ang/as', symbol='Åas⁻¹')
+angstroms_per_square_attosecond = Unit(100000000.0, Dimensions(length=1, time=-2), name='angstroms_per_square_attosecond', ascii_symbol='Ang/as^2', symbol='Åas⁻²')
+angstroms_per_minute = Unit(1.6666666666666668e-12, Dimensions(length=1, time=-1), name='angstroms_per_minute', ascii_symbol='Ang/min', symbol='ÅNone⁻¹')
+angstroms_per_square_minute = Unit(1.6666666666666668e-12, Dimensions(length=1, time=-2), name='angstroms_per_square_minute', ascii_symbol='Ang/min^2', symbol='ÅNone⁻²')
+angstroms_per_hour = Unit(2.777777777777778e-13, Dimensions(length=1, time=-1), name='angstroms_per_hour', ascii_symbol='Ang/h', symbol='ÅNone⁻¹')
+angstroms_per_square_hour = Unit(2.777777777777778e-13, Dimensions(length=1, time=-2), name='angstroms_per_square_hour', ascii_symbol='Ang/h^2', symbol='ÅNone⁻²')
+angstroms_per_day = Unit(1.1574074074074074e-14, Dimensions(length=1, time=-1), name='angstroms_per_day', ascii_symbol='Ang/d', symbol='ÅNone⁻¹')
+angstroms_per_square_day = Unit(1.1574074074074074e-14, Dimensions(length=1, time=-2), name='angstroms_per_square_day', ascii_symbol='Ang/d^2', symbol='ÅNone⁻²')
+angstroms_per_year = Unit(3.168873850681143e-17, Dimensions(length=1, time=-1), name='angstroms_per_year', ascii_symbol='Ang/y', symbol='ÅNone⁻¹')
+angstroms_per_square_year = Unit(3.168873850681143e-17, Dimensions(length=1, time=-2), name='angstroms_per_square_year', ascii_symbol='Ang/y^2', symbol='ÅNone⁻²')
+grams_per_cubic_meter = Unit(0.001, Dimensions(length=-3, mass=1), name='grams_per_cubic_meter', ascii_symbol='g m^-3', symbol='NoneNone⁻³')
+exagrams_per_cubic_meter = Unit(1000000000000000.0, Dimensions(length=-3, mass=1), name='exagrams_per_cubic_meter', ascii_symbol='Eg m^-3', symbol='EgNone⁻³')
+petagrams_per_cubic_meter = Unit(1000000000000.0, Dimensions(length=-3, mass=1), name='petagrams_per_cubic_meter', ascii_symbol='Pg m^-3', symbol='PgNone⁻³')
+teragrams_per_cubic_meter = Unit(1000000000.0, Dimensions(length=-3, mass=1), name='teragrams_per_cubic_meter', ascii_symbol='Tg m^-3', symbol='TgNone⁻³')
+gigagrams_per_cubic_meter = Unit(1000000.0, Dimensions(length=-3, mass=1), name='gigagrams_per_cubic_meter', ascii_symbol='Gg m^-3', symbol='GgNone⁻³')
+megagrams_per_cubic_meter = Unit(1000.0, Dimensions(length=-3, mass=1), name='megagrams_per_cubic_meter', ascii_symbol='Mg m^-3', symbol='MgNone⁻³')
+kilograms_per_cubic_meter = Unit(1.0, Dimensions(length=-3, mass=1), name='kilograms_per_cubic_meter', ascii_symbol='kg m^-3', symbol='kgNone⁻³')
+milligrams_per_cubic_meter = Unit(1e-06, Dimensions(length=-3, mass=1), name='milligrams_per_cubic_meter', ascii_symbol='mg m^-3', symbol='mgNone⁻³')
+micrograms_per_cubic_meter = Unit(1e-09, Dimensions(length=-3, mass=1), name='micrograms_per_cubic_meter', ascii_symbol='ug m^-3', symbol='µgNone⁻³')
+nanograms_per_cubic_meter = Unit(1.0000000000000002e-12, Dimensions(length=-3, mass=1), name='nanograms_per_cubic_meter', ascii_symbol='ng m^-3', symbol='ngNone⁻³')
+picograms_per_cubic_meter = Unit(1e-15, Dimensions(length=-3, mass=1), name='picograms_per_cubic_meter', ascii_symbol='pg m^-3', symbol='pgNone⁻³')
+femtograms_per_cubic_meter = Unit(1e-18, Dimensions(length=-3, mass=1), name='femtograms_per_cubic_meter', ascii_symbol='fg m^-3', symbol='fgNone⁻³')
+attograms_per_cubic_meter = Unit(1.0000000000000001e-21, Dimensions(length=-3, mass=1), name='attograms_per_cubic_meter', ascii_symbol='ag m^-3', symbol='agNone⁻³')
+atomic_mass_units_per_cubic_meter = Unit(1.661e-27, Dimensions(length=-3, mass=1), name='atomic_mass_units_per_cubic_meter', ascii_symbol='au m^-3', symbol='NoneNone⁻³')
+grams_per_cubic_exameter = Unit(1e-57, Dimensions(length=-3, mass=1), name='grams_per_cubic_exameter', ascii_symbol='g Em^-3', symbol='NoneEm⁻³')
+exagrams_per_cubic_exameter = Unit(1e-39, Dimensions(length=-3, mass=1), name='exagrams_per_cubic_exameter', ascii_symbol='Eg Em^-3', symbol='EgEm⁻³')
+petagrams_per_cubic_exameter = Unit(9.999999999999999e-43, Dimensions(length=-3, mass=1), name='petagrams_per_cubic_exameter', ascii_symbol='Pg Em^-3', symbol='PgEm⁻³')
+teragrams_per_cubic_exameter = Unit(1e-45, Dimensions(length=-3, mass=1), name='teragrams_per_cubic_exameter', ascii_symbol='Tg Em^-3', symbol='TgEm⁻³')
+gigagrams_per_cubic_exameter = Unit(1e-48, Dimensions(length=-3, mass=1), name='gigagrams_per_cubic_exameter', ascii_symbol='Gg Em^-3', symbol='GgEm⁻³')
+megagrams_per_cubic_exameter = Unit(9.999999999999999e-52, Dimensions(length=-3, mass=1), name='megagrams_per_cubic_exameter', ascii_symbol='Mg Em^-3', symbol='MgEm⁻³')
+kilograms_per_cubic_exameter = Unit(9.999999999999999e-55, Dimensions(length=-3, mass=1), name='kilograms_per_cubic_exameter', ascii_symbol='kg Em^-3', symbol='kgEm⁻³')
+milligrams_per_cubic_exameter = Unit(9.999999999999998e-61, Dimensions(length=-3, mass=1), name='milligrams_per_cubic_exameter', ascii_symbol='mg Em^-3', symbol='mgEm⁻³')
+micrograms_per_cubic_exameter = Unit(9.999999999999999e-64, Dimensions(length=-3, mass=1), name='micrograms_per_cubic_exameter', ascii_symbol='ug Em^-3', symbol='µgEm⁻³')
+nanograms_per_cubic_exameter = Unit(1.0000000000000001e-66, Dimensions(length=-3, mass=1), name='nanograms_per_cubic_exameter', ascii_symbol='ng Em^-3', symbol='ngEm⁻³')
+picograms_per_cubic_exameter = Unit(1e-69, Dimensions(length=-3, mass=1), name='picograms_per_cubic_exameter', ascii_symbol='pg Em^-3', symbol='pgEm⁻³')
+femtograms_per_cubic_exameter = Unit(1e-72, Dimensions(length=-3, mass=1), name='femtograms_per_cubic_exameter', ascii_symbol='fg Em^-3', symbol='fgEm⁻³')
+attograms_per_cubic_exameter = Unit(1e-75, Dimensions(length=-3, mass=1), name='attograms_per_cubic_exameter', ascii_symbol='ag Em^-3', symbol='agEm⁻³')
+atomic_mass_units_per_cubic_exameter = Unit(1.661e-81, Dimensions(length=-3, mass=1), name='atomic_mass_units_per_cubic_exameter', ascii_symbol='au Em^-3', symbol='NoneEm⁻³')
+grams_per_cubic_petameter = Unit(1.0000000000000001e-48, Dimensions(length=-3, mass=1), name='grams_per_cubic_petameter', ascii_symbol='g Pm^-3', symbol='NonePm⁻³')
+exagrams_per_cubic_petameter = Unit(1e-30, Dimensions(length=-3, mass=1), name='exagrams_per_cubic_petameter', ascii_symbol='Eg Pm^-3', symbol='EgPm⁻³')
+petagrams_per_cubic_petameter = Unit(1e-33, Dimensions(length=-3, mass=1), name='petagrams_per_cubic_petameter', ascii_symbol='Pg Pm^-3', symbol='PgPm⁻³')
+teragrams_per_cubic_petameter = Unit(1.0000000000000001e-36, Dimensions(length=-3, mass=1), name='teragrams_per_cubic_petameter', ascii_symbol='Tg Pm^-3', symbol='TgPm⁻³')
+gigagrams_per_cubic_petameter = Unit(1.0000000000000001e-39, Dimensions(length=-3, mass=1), name='gigagrams_per_cubic_petameter', ascii_symbol='Gg Pm^-3', symbol='GgPm⁻³')
+megagrams_per_cubic_petameter = Unit(1e-42, Dimensions(length=-3, mass=1), name='megagrams_per_cubic_petameter', ascii_symbol='Mg Pm^-3', symbol='MgPm⁻³')
+kilograms_per_cubic_petameter = Unit(1.0000000000000001e-45, Dimensions(length=-3, mass=1), name='kilograms_per_cubic_petameter', ascii_symbol='kg Pm^-3', symbol='kgPm⁻³')
+milligrams_per_cubic_petameter = Unit(1e-51, Dimensions(length=-3, mass=1), name='milligrams_per_cubic_petameter', ascii_symbol='mg Pm^-3', symbol='mgPm⁻³')
+micrograms_per_cubic_petameter = Unit(1.0000000000000002e-54, Dimensions(length=-3, mass=1), name='micrograms_per_cubic_petameter', ascii_symbol='ug Pm^-3', symbol='µgPm⁻³')
+nanograms_per_cubic_petameter = Unit(1.0000000000000002e-57, Dimensions(length=-3, mass=1), name='nanograms_per_cubic_petameter', ascii_symbol='ng Pm^-3', symbol='ngPm⁻³')
+picograms_per_cubic_petameter = Unit(1.0000000000000001e-60, Dimensions(length=-3, mass=1), name='picograms_per_cubic_petameter', ascii_symbol='pg Pm^-3', symbol='pgPm⁻³')
+femtograms_per_cubic_petameter = Unit(1.0000000000000002e-63, Dimensions(length=-3, mass=1), name='femtograms_per_cubic_petameter', ascii_symbol='fg Pm^-3', symbol='fgPm⁻³')
+attograms_per_cubic_petameter = Unit(1.0000000000000001e-66, Dimensions(length=-3, mass=1), name='attograms_per_cubic_petameter', ascii_symbol='ag Pm^-3', symbol='agPm⁻³')
+atomic_mass_units_per_cubic_petameter = Unit(1.6610000000000003e-72, Dimensions(length=-3, mass=1), name='atomic_mass_units_per_cubic_petameter', ascii_symbol='au Pm^-3', symbol='NonePm⁻³')
+grams_per_cubic_terameter = Unit(1e-39, Dimensions(length=-3, mass=1), name='grams_per_cubic_terameter', ascii_symbol='g Tm^-3', symbol='NoneTm⁻³')
+exagrams_per_cubic_terameter = Unit(1e-21, Dimensions(length=-3, mass=1), name='exagrams_per_cubic_terameter', ascii_symbol='Eg Tm^-3', symbol='EgTm⁻³')
+petagrams_per_cubic_terameter = Unit(1e-24, Dimensions(length=-3, mass=1), name='petagrams_per_cubic_terameter', ascii_symbol='Pg Tm^-3', symbol='PgTm⁻³')
+teragrams_per_cubic_terameter = Unit(1e-27, Dimensions(length=-3, mass=1), name='teragrams_per_cubic_terameter', ascii_symbol='Tg Tm^-3', symbol='TgTm⁻³')
+gigagrams_per_cubic_terameter = Unit(9.999999999999999e-31, Dimensions(length=-3, mass=1), name='gigagrams_per_cubic_terameter', ascii_symbol='Gg Tm^-3', symbol='GgTm⁻³')
+megagrams_per_cubic_terameter = Unit(9.999999999999999e-34, Dimensions(length=-3, mass=1), name='megagrams_per_cubic_terameter', ascii_symbol='Mg Tm^-3', symbol='MgTm⁻³')
+kilograms_per_cubic_terameter = Unit(1e-36, Dimensions(length=-3, mass=1), name='kilograms_per_cubic_terameter', ascii_symbol='kg Tm^-3', symbol='kgTm⁻³')
+milligrams_per_cubic_terameter = Unit(9.999999999999999e-43, Dimensions(length=-3, mass=1), name='milligrams_per_cubic_terameter', ascii_symbol='mg Tm^-3', symbol='mgTm⁻³')
+micrograms_per_cubic_terameter = Unit(1e-45, Dimensions(length=-3, mass=1), name='micrograms_per_cubic_terameter', ascii_symbol='ug Tm^-3', symbol='µgTm⁻³')
+nanograms_per_cubic_terameter = Unit(1.0000000000000001e-48, Dimensions(length=-3, mass=1), name='nanograms_per_cubic_terameter', ascii_symbol='ng Tm^-3', symbol='ngTm⁻³')
+picograms_per_cubic_terameter = Unit(1e-51, Dimensions(length=-3, mass=1), name='picograms_per_cubic_terameter', ascii_symbol='pg Tm^-3', symbol='pgTm⁻³')
+femtograms_per_cubic_terameter = Unit(1e-54, Dimensions(length=-3, mass=1), name='femtograms_per_cubic_terameter', ascii_symbol='fg Tm^-3', symbol='fgTm⁻³')
+attograms_per_cubic_terameter = Unit(1.0000000000000001e-57, Dimensions(length=-3, mass=1), name='attograms_per_cubic_terameter', ascii_symbol='ag Tm^-3', symbol='agTm⁻³')
+atomic_mass_units_per_cubic_terameter = Unit(1.6610000000000002e-63, Dimensions(length=-3, mass=1), name='atomic_mass_units_per_cubic_terameter', ascii_symbol='au Tm^-3', symbol='NoneTm⁻³')
+grams_per_cubic_gigameter = Unit(1e-30, Dimensions(length=-3, mass=1), name='grams_per_cubic_gigameter', ascii_symbol='g Gm^-3', symbol='NoneGm⁻³')
+exagrams_per_cubic_gigameter = Unit(1e-12, Dimensions(length=-3, mass=1), name='exagrams_per_cubic_gigameter', ascii_symbol='Eg Gm^-3', symbol='EgGm⁻³')
+petagrams_per_cubic_gigameter = Unit(1e-15, Dimensions(length=-3, mass=1), name='petagrams_per_cubic_gigameter', ascii_symbol='Pg Gm^-3', symbol='PgGm⁻³')
+teragrams_per_cubic_gigameter = Unit(1e-18, Dimensions(length=-3, mass=1), name='teragrams_per_cubic_gigameter', ascii_symbol='Tg Gm^-3', symbol='TgGm⁻³')
+gigagrams_per_cubic_gigameter = Unit(1e-21, Dimensions(length=-3, mass=1), name='gigagrams_per_cubic_gigameter', ascii_symbol='Gg Gm^-3', symbol='GgGm⁻³')
+megagrams_per_cubic_gigameter = Unit(1e-24, Dimensions(length=-3, mass=1), name='megagrams_per_cubic_gigameter', ascii_symbol='Mg Gm^-3', symbol='MgGm⁻³')
+kilograms_per_cubic_gigameter = Unit(1e-27, Dimensions(length=-3, mass=1), name='kilograms_per_cubic_gigameter', ascii_symbol='kg Gm^-3', symbol='kgGm⁻³')
+milligrams_per_cubic_gigameter = Unit(9.999999999999999e-34, Dimensions(length=-3, mass=1), name='milligrams_per_cubic_gigameter', ascii_symbol='mg Gm^-3', symbol='mgGm⁻³')
+micrograms_per_cubic_gigameter = Unit(1.0000000000000001e-36, Dimensions(length=-3, mass=1), name='micrograms_per_cubic_gigameter', ascii_symbol='ug Gm^-3', symbol='µgGm⁻³')
+nanograms_per_cubic_gigameter = Unit(1.0000000000000001e-39, Dimensions(length=-3, mass=1), name='nanograms_per_cubic_gigameter', ascii_symbol='ng Gm^-3', symbol='ngGm⁻³')
+picograms_per_cubic_gigameter = Unit(1e-42, Dimensions(length=-3, mass=1), name='picograms_per_cubic_gigameter', ascii_symbol='pg Gm^-3', symbol='pgGm⁻³')
+femtograms_per_cubic_gigameter = Unit(1e-45, Dimensions(length=-3, mass=1), name='femtograms_per_cubic_gigameter', ascii_symbol='fg Gm^-3', symbol='fgGm⁻³')
+attograms_per_cubic_gigameter = Unit(1.0000000000000001e-48, Dimensions(length=-3, mass=1), name='attograms_per_cubic_gigameter', ascii_symbol='ag Gm^-3', symbol='agGm⁻³')
+atomic_mass_units_per_cubic_gigameter = Unit(1.6610000000000002e-54, Dimensions(length=-3, mass=1), name='atomic_mass_units_per_cubic_gigameter', ascii_symbol='au Gm^-3', symbol='NoneGm⁻³')
+grams_per_cubic_megameter = Unit(1.0000000000000001e-21, Dimensions(length=-3, mass=1), name='grams_per_cubic_megameter', ascii_symbol='g Mm^-3', symbol='NoneMm⁻³')
+exagrams_per_cubic_megameter = Unit(0.001, Dimensions(length=-3, mass=1), name='exagrams_per_cubic_megameter', ascii_symbol='Eg Mm^-3', symbol='EgMm⁻³')
+petagrams_per_cubic_megameter = Unit(1e-06, Dimensions(length=-3, mass=1), name='petagrams_per_cubic_megameter', ascii_symbol='Pg Mm^-3', symbol='PgMm⁻³')
+teragrams_per_cubic_megameter = Unit(1e-09, Dimensions(length=-3, mass=1), name='teragrams_per_cubic_megameter', ascii_symbol='Tg Mm^-3', symbol='TgMm⁻³')
+gigagrams_per_cubic_megameter = Unit(1e-12, Dimensions(length=-3, mass=1), name='gigagrams_per_cubic_megameter', ascii_symbol='Gg Mm^-3', symbol='GgMm⁻³')
+megagrams_per_cubic_megameter = Unit(1e-15, Dimensions(length=-3, mass=1), name='megagrams_per_cubic_megameter', ascii_symbol='Mg Mm^-3', symbol='MgMm⁻³')
+kilograms_per_cubic_megameter = Unit(1e-18, Dimensions(length=-3, mass=1), name='kilograms_per_cubic_megameter', ascii_symbol='kg Mm^-3', symbol='kgMm⁻³')
+milligrams_per_cubic_megameter = Unit(1e-24, Dimensions(length=-3, mass=1), name='milligrams_per_cubic_megameter', ascii_symbol='mg Mm^-3', symbol='mgMm⁻³')
+micrograms_per_cubic_megameter = Unit(1e-27, Dimensions(length=-3, mass=1), name='micrograms_per_cubic_megameter', ascii_symbol='ug Mm^-3', symbol='µgMm⁻³')
+nanograms_per_cubic_megameter = Unit(1.0000000000000003e-30, Dimensions(length=-3, mass=1), name='nanograms_per_cubic_megameter', ascii_symbol='ng Mm^-3', symbol='ngMm⁻³')
+picograms_per_cubic_megameter = Unit(1e-33, Dimensions(length=-3, mass=1), name='picograms_per_cubic_megameter', ascii_symbol='pg Mm^-3', symbol='pgMm⁻³')
+femtograms_per_cubic_megameter = Unit(1.0000000000000001e-36, Dimensions(length=-3, mass=1), name='femtograms_per_cubic_megameter', ascii_symbol='fg Mm^-3', symbol='fgMm⁻³')
+attograms_per_cubic_megameter = Unit(1.0000000000000001e-39, Dimensions(length=-3, mass=1), name='attograms_per_cubic_megameter', ascii_symbol='ag Mm^-3', symbol='agMm⁻³')
+atomic_mass_units_per_cubic_megameter = Unit(1.661e-45, Dimensions(length=-3, mass=1), name='atomic_mass_units_per_cubic_megameter', ascii_symbol='au Mm^-3', symbol='NoneMm⁻³')
+grams_per_cubic_kilometer = Unit(1e-12, Dimensions(length=-3, mass=1), name='grams_per_cubic_kilometer', ascii_symbol='g km^-3', symbol='Nonekm⁻³')
+exagrams_per_cubic_kilometer = Unit(1000000.0, Dimensions(length=-3, mass=1), name='exagrams_per_cubic_kilometer', ascii_symbol='Eg km^-3', symbol='Egkm⁻³')
+petagrams_per_cubic_kilometer = Unit(1000.0, Dimensions(length=-3, mass=1), name='petagrams_per_cubic_kilometer', ascii_symbol='Pg km^-3', symbol='Pgkm⁻³')
+teragrams_per_cubic_kilometer = Unit(1.0, Dimensions(length=-3, mass=1), name='teragrams_per_cubic_kilometer', ascii_symbol='Tg km^-3', symbol='Tgkm⁻³')
+gigagrams_per_cubic_kilometer = Unit(0.001, Dimensions(length=-3, mass=1), name='gigagrams_per_cubic_kilometer', ascii_symbol='Gg km^-3', symbol='Ggkm⁻³')
+megagrams_per_cubic_kilometer = Unit(1e-06, Dimensions(length=-3, mass=1), name='megagrams_per_cubic_kilometer', ascii_symbol='Mg km^-3', symbol='Mgkm⁻³')
+kilograms_per_cubic_kilometer = Unit(1e-09, Dimensions(length=-3, mass=1), name='kilograms_per_cubic_kilometer', ascii_symbol='kg km^-3', symbol='kgkm⁻³')
+milligrams_per_cubic_kilometer = Unit(9.999999999999999e-16, Dimensions(length=-3, mass=1), name='milligrams_per_cubic_kilometer', ascii_symbol='mg km^-3', symbol='mgkm⁻³')
+micrograms_per_cubic_kilometer = Unit(1e-18, Dimensions(length=-3, mass=1), name='micrograms_per_cubic_kilometer', ascii_symbol='ug km^-3', symbol='µgkm⁻³')
+nanograms_per_cubic_kilometer = Unit(1.0000000000000001e-21, Dimensions(length=-3, mass=1), name='nanograms_per_cubic_kilometer', ascii_symbol='ng km^-3', symbol='ngkm⁻³')
+picograms_per_cubic_kilometer = Unit(1.0000000000000001e-24, Dimensions(length=-3, mass=1), name='picograms_per_cubic_kilometer', ascii_symbol='pg km^-3', symbol='pgkm⁻³')
+femtograms_per_cubic_kilometer = Unit(1e-27, Dimensions(length=-3, mass=1), name='femtograms_per_cubic_kilometer', ascii_symbol='fg km^-3', symbol='fgkm⁻³')
+attograms_per_cubic_kilometer = Unit(1e-30, Dimensions(length=-3, mass=1), name='attograms_per_cubic_kilometer', ascii_symbol='ag km^-3', symbol='agkm⁻³')
+atomic_mass_units_per_cubic_kilometer = Unit(1.661e-36, Dimensions(length=-3, mass=1), name='atomic_mass_units_per_cubic_kilometer', ascii_symbol='au km^-3', symbol='Nonekm⁻³')
+grams_per_cubic_millimeter = Unit(1000000.0, Dimensions(length=-3, mass=1), name='grams_per_cubic_millimeter', ascii_symbol='g mm^-3', symbol='Nonemm⁻³')
+exagrams_per_cubic_millimeter = Unit(1e+24, Dimensions(length=-3, mass=1), name='exagrams_per_cubic_millimeter', ascii_symbol='Eg mm^-3', symbol='Egmm⁻³')
+petagrams_per_cubic_millimeter = Unit(1e+21, Dimensions(length=-3, mass=1), name='petagrams_per_cubic_millimeter', ascii_symbol='Pg mm^-3', symbol='Pgmm⁻³')
+teragrams_per_cubic_millimeter = Unit(1e+18, Dimensions(length=-3, mass=1), name='teragrams_per_cubic_millimeter', ascii_symbol='Tg mm^-3', symbol='Tgmm⁻³')
+gigagrams_per_cubic_millimeter = Unit(1000000000000000.0, Dimensions(length=-3, mass=1), name='gigagrams_per_cubic_millimeter', ascii_symbol='Gg mm^-3', symbol='Ggmm⁻³')
+megagrams_per_cubic_millimeter = Unit(999999999999.9999, Dimensions(length=-3, mass=1), name='megagrams_per_cubic_millimeter', ascii_symbol='Mg mm^-3', symbol='Mgmm⁻³')
+kilograms_per_cubic_millimeter = Unit(999999999.9999999, Dimensions(length=-3, mass=1), name='kilograms_per_cubic_millimeter', ascii_symbol='kg mm^-3', symbol='kgmm⁻³')
+milligrams_per_cubic_millimeter = Unit(999.9999999999999, Dimensions(length=-3, mass=1), name='milligrams_per_cubic_millimeter', ascii_symbol='mg mm^-3', symbol='mgmm⁻³')
+micrograms_per_cubic_millimeter = Unit(1.0, Dimensions(length=-3, mass=1), name='micrograms_per_cubic_millimeter', ascii_symbol='ug mm^-3', symbol='µgmm⁻³')
+nanograms_per_cubic_millimeter = Unit(0.001, Dimensions(length=-3, mass=1), name='nanograms_per_cubic_millimeter', ascii_symbol='ng mm^-3', symbol='ngmm⁻³')
+picograms_per_cubic_millimeter = Unit(1e-06, Dimensions(length=-3, mass=1), name='picograms_per_cubic_millimeter', ascii_symbol='pg mm^-3', symbol='pgmm⁻³')
+femtograms_per_cubic_millimeter = Unit(1e-09, Dimensions(length=-3, mass=1), name='femtograms_per_cubic_millimeter', ascii_symbol='fg mm^-3', symbol='fgmm⁻³')
+attograms_per_cubic_millimeter = Unit(1e-12, Dimensions(length=-3, mass=1), name='attograms_per_cubic_millimeter', ascii_symbol='ag mm^-3', symbol='agmm⁻³')
+atomic_mass_units_per_cubic_millimeter = Unit(1.661e-18, Dimensions(length=-3, mass=1), name='atomic_mass_units_per_cubic_millimeter', ascii_symbol='au mm^-3', symbol='Nonemm⁻³')
+grams_per_cubic_micrometer = Unit(1000000000000000.1, Dimensions(length=-3, mass=1), name='grams_per_cubic_micrometer', ascii_symbol='g um^-3', symbol='Noneµm⁻³')
+exagrams_per_cubic_micrometer = Unit(1.0000000000000001e+33, Dimensions(length=-3, mass=1), name='exagrams_per_cubic_micrometer', ascii_symbol='Eg um^-3', symbol='Egµm⁻³')
+petagrams_per_cubic_micrometer = Unit(1.0000000000000002e+30, Dimensions(length=-3, mass=1), name='petagrams_per_cubic_micrometer', ascii_symbol='Pg um^-3', symbol='Pgµm⁻³')
+teragrams_per_cubic_micrometer = Unit(1.0000000000000002e+27, Dimensions(length=-3, mass=1), name='teragrams_per_cubic_micrometer', ascii_symbol='Tg um^-3', symbol='Tgµm⁻³')
+gigagrams_per_cubic_micrometer = Unit(1.0000000000000001e+24, Dimensions(length=-3, mass=1), name='gigagrams_per_cubic_micrometer', ascii_symbol='Gg um^-3', symbol='Ggµm⁻³')
+megagrams_per_cubic_micrometer = Unit(1.0000000000000001e+21, Dimensions(length=-3, mass=1), name='megagrams_per_cubic_micrometer', ascii_symbol='Mg um^-3', symbol='Mgµm⁻³')
+kilograms_per_cubic_micrometer = Unit(1.0000000000000001e+18, Dimensions(length=-3, mass=1), name='kilograms_per_cubic_micrometer', ascii_symbol='kg um^-3', symbol='kgµm⁻³')
+milligrams_per_cubic_micrometer = Unit(1000000000000.0001, Dimensions(length=-3, mass=1), name='milligrams_per_cubic_micrometer', ascii_symbol='mg um^-3', symbol='mgµm⁻³')
+micrograms_per_cubic_micrometer = Unit(1000000000.0000002, Dimensions(length=-3, mass=1), name='micrograms_per_cubic_micrometer', ascii_symbol='ug um^-3', symbol='µgµm⁻³')
+nanograms_per_cubic_micrometer = Unit(1000000.0000000003, Dimensions(length=-3, mass=1), name='nanograms_per_cubic_micrometer', ascii_symbol='ng um^-3', symbol='ngµm⁻³')
+picograms_per_cubic_micrometer = Unit(1000.0000000000002, Dimensions(length=-3, mass=1), name='picograms_per_cubic_micrometer', ascii_symbol='pg um^-3', symbol='pgµm⁻³')
+femtograms_per_cubic_micrometer = Unit(1.0000000000000002, Dimensions(length=-3, mass=1), name='femtograms_per_cubic_micrometer', ascii_symbol='fg um^-3', symbol='fgµm⁻³')
+attograms_per_cubic_micrometer = Unit(0.0010000000000000002, Dimensions(length=-3, mass=1), name='attograms_per_cubic_micrometer', ascii_symbol='ag um^-3', symbol='agµm⁻³')
+atomic_mass_units_per_cubic_micrometer = Unit(1.6610000000000004e-09, Dimensions(length=-3, mass=1), name='atomic_mass_units_per_cubic_micrometer', ascii_symbol='au um^-3', symbol='Noneµm⁻³')
+grams_per_cubic_nanometer = Unit(9.999999999999998e+23, Dimensions(length=-3, mass=1), name='grams_per_cubic_nanometer', ascii_symbol='g nm^-3', symbol='Nonenm⁻³')
+exagrams_per_cubic_nanometer = Unit(9.999999999999997e+41, Dimensions(length=-3, mass=1), name='exagrams_per_cubic_nanometer', ascii_symbol='Eg nm^-3', symbol='Egnm⁻³')
+petagrams_per_cubic_nanometer = Unit(9.999999999999998e+38, Dimensions(length=-3, mass=1), name='petagrams_per_cubic_nanometer', ascii_symbol='Pg nm^-3', symbol='Pgnm⁻³')
+teragrams_per_cubic_nanometer = Unit(9.999999999999997e+35, Dimensions(length=-3, mass=1), name='teragrams_per_cubic_nanometer', ascii_symbol='Tg nm^-3', symbol='Tgnm⁻³')
+gigagrams_per_cubic_nanometer = Unit(9.999999999999998e+32, Dimensions(length=-3, mass=1), name='gigagrams_per_cubic_nanometer', ascii_symbol='Gg nm^-3', symbol='Ggnm⁻³')
+megagrams_per_cubic_nanometer = Unit(9.999999999999997e+29, Dimensions(length=-3, mass=1), name='megagrams_per_cubic_nanometer', ascii_symbol='Mg nm^-3', symbol='Mgnm⁻³')
+kilograms_per_cubic_nanometer = Unit(9.999999999999997e+26, Dimensions(length=-3, mass=1), name='kilograms_per_cubic_nanometer', ascii_symbol='kg nm^-3', symbol='kgnm⁻³')
+milligrams_per_cubic_nanometer = Unit(9.999999999999997e+20, Dimensions(length=-3, mass=1), name='milligrams_per_cubic_nanometer', ascii_symbol='mg nm^-3', symbol='mgnm⁻³')
+micrograms_per_cubic_nanometer = Unit(9.999999999999999e+17, Dimensions(length=-3, mass=1), name='micrograms_per_cubic_nanometer', ascii_symbol='ug nm^-3', symbol='µgnm⁻³')
+nanograms_per_cubic_nanometer = Unit(1000000000000000.0, Dimensions(length=-3, mass=1), name='nanograms_per_cubic_nanometer', ascii_symbol='ng nm^-3', symbol='ngnm⁻³')
+picograms_per_cubic_nanometer = Unit(999999999999.9999, Dimensions(length=-3, mass=1), name='picograms_per_cubic_nanometer', ascii_symbol='pg nm^-3', symbol='pgnm⁻³')
+femtograms_per_cubic_nanometer = Unit(999999999.9999999, Dimensions(length=-3, mass=1), name='femtograms_per_cubic_nanometer', ascii_symbol='fg nm^-3', symbol='fgnm⁻³')
+attograms_per_cubic_nanometer = Unit(999999.9999999999, Dimensions(length=-3, mass=1), name='attograms_per_cubic_nanometer', ascii_symbol='ag nm^-3', symbol='agnm⁻³')
+atomic_mass_units_per_cubic_nanometer = Unit(1.6609999999999998, Dimensions(length=-3, mass=1), name='atomic_mass_units_per_cubic_nanometer', ascii_symbol='au nm^-3', symbol='Nonenm⁻³')
+grams_per_cubic_picometer = Unit(1.0000000000000001e+33, Dimensions(length=-3, mass=1), name='grams_per_cubic_picometer', ascii_symbol='g pm^-3', symbol='Nonepm⁻³')
+exagrams_per_cubic_picometer = Unit(1e+51, Dimensions(length=-3, mass=1), name='exagrams_per_cubic_picometer', ascii_symbol='Eg pm^-3', symbol='Egpm⁻³')
+petagrams_per_cubic_picometer = Unit(1e+48, Dimensions(length=-3, mass=1), name='petagrams_per_cubic_picometer', ascii_symbol='Pg pm^-3', symbol='Pgpm⁻³')
+teragrams_per_cubic_picometer = Unit(1.0000000000000001e+45, Dimensions(length=-3, mass=1), name='teragrams_per_cubic_picometer', ascii_symbol='Tg pm^-3', symbol='Tgpm⁻³')
+gigagrams_per_cubic_picometer = Unit(1e+42, Dimensions(length=-3, mass=1), name='gigagrams_per_cubic_picometer', ascii_symbol='Gg pm^-3', symbol='Ggpm⁻³')
+megagrams_per_cubic_picometer = Unit(1.0000000000000001e+39, Dimensions(length=-3, mass=1), name='megagrams_per_cubic_picometer', ascii_symbol='Mg pm^-3', symbol='Mgpm⁻³')
+kilograms_per_cubic_picometer = Unit(1e+36, Dimensions(length=-3, mass=1), name='kilograms_per_cubic_picometer', ascii_symbol='kg pm^-3', symbol='kgpm⁻³')
+milligrams_per_cubic_picometer = Unit(1e+30, Dimensions(length=-3, mass=1), name='milligrams_per_cubic_picometer', ascii_symbol='mg pm^-3', symbol='mgpm⁻³')
+micrograms_per_cubic_picometer = Unit(1.0000000000000002e+27, Dimensions(length=-3, mass=1), name='micrograms_per_cubic_picometer', ascii_symbol='ug pm^-3', symbol='µgpm⁻³')
+nanograms_per_cubic_picometer = Unit(1.0000000000000003e+24, Dimensions(length=-3, mass=1), name='nanograms_per_cubic_picometer', ascii_symbol='ng pm^-3', symbol='ngpm⁻³')
+picograms_per_cubic_picometer = Unit(1.0000000000000001e+21, Dimensions(length=-3, mass=1), name='picograms_per_cubic_picometer', ascii_symbol='pg pm^-3', symbol='pgpm⁻³')
+femtograms_per_cubic_picometer = Unit(1.0000000000000001e+18, Dimensions(length=-3, mass=1), name='femtograms_per_cubic_picometer', ascii_symbol='fg pm^-3', symbol='fgpm⁻³')
+attograms_per_cubic_picometer = Unit(1000000000000000.1, Dimensions(length=-3, mass=1), name='attograms_per_cubic_picometer', ascii_symbol='ag pm^-3', symbol='agpm⁻³')
+atomic_mass_units_per_cubic_picometer = Unit(1661000000.0000002, Dimensions(length=-3, mass=1), name='atomic_mass_units_per_cubic_picometer', ascii_symbol='au pm^-3', symbol='Nonepm⁻³')
+grams_per_cubic_femtometer = Unit(9.999999999999997e+41, Dimensions(length=-3, mass=1), name='grams_per_cubic_femtometer', ascii_symbol='g fm^-3', symbol='Nonefm⁻³')
+exagrams_per_cubic_femtometer = Unit(9.999999999999998e+59, Dimensions(length=-3, mass=1), name='exagrams_per_cubic_femtometer', ascii_symbol='Eg fm^-3', symbol='Egfm⁻³')
+petagrams_per_cubic_femtometer = Unit(9.999999999999997e+56, Dimensions(length=-3, mass=1), name='petagrams_per_cubic_femtometer', ascii_symbol='Pg fm^-3', symbol='Pgfm⁻³')
+teragrams_per_cubic_femtometer = Unit(9.999999999999997e+53, Dimensions(length=-3, mass=1), name='teragrams_per_cubic_femtometer', ascii_symbol='Tg fm^-3', symbol='Tgfm⁻³')
+gigagrams_per_cubic_femtometer = Unit(9.999999999999997e+50, Dimensions(length=-3, mass=1), name='gigagrams_per_cubic_femtometer', ascii_symbol='Gg fm^-3', symbol='Ggfm⁻³')
+megagrams_per_cubic_femtometer = Unit(9.999999999999997e+47, Dimensions(length=-3, mass=1), name='megagrams_per_cubic_femtometer', ascii_symbol='Mg fm^-3', symbol='Mgfm⁻³')
+kilograms_per_cubic_femtometer = Unit(9.999999999999998e+44, Dimensions(length=-3, mass=1), name='kilograms_per_cubic_femtometer', ascii_symbol='kg fm^-3', symbol='kgfm⁻³')
+milligrams_per_cubic_femtometer = Unit(9.999999999999996e+38, Dimensions(length=-3, mass=1), name='milligrams_per_cubic_femtometer', ascii_symbol='mg fm^-3', symbol='mgfm⁻³')
+micrograms_per_cubic_femtometer = Unit(9.999999999999997e+35, Dimensions(length=-3, mass=1), name='micrograms_per_cubic_femtometer', ascii_symbol='ug fm^-3', symbol='µgfm⁻³')
+nanograms_per_cubic_femtometer = Unit(1e+33, Dimensions(length=-3, mass=1), name='nanograms_per_cubic_femtometer', ascii_symbol='ng fm^-3', symbol='ngfm⁻³')
+picograms_per_cubic_femtometer = Unit(9.999999999999997e+29, Dimensions(length=-3, mass=1), name='picograms_per_cubic_femtometer', ascii_symbol='pg fm^-3', symbol='pgfm⁻³')
+femtograms_per_cubic_femtometer = Unit(9.999999999999997e+26, Dimensions(length=-3, mass=1), name='femtograms_per_cubic_femtometer', ascii_symbol='fg fm^-3', symbol='fgfm⁻³')
+attograms_per_cubic_femtometer = Unit(9.999999999999998e+23, Dimensions(length=-3, mass=1), name='attograms_per_cubic_femtometer', ascii_symbol='ag fm^-3', symbol='agfm⁻³')
+atomic_mass_units_per_cubic_femtometer = Unit(1.6609999999999997e+18, Dimensions(length=-3, mass=1), name='atomic_mass_units_per_cubic_femtometer', ascii_symbol='au fm^-3', symbol='Nonefm⁻³')
+grams_per_cubic_attometer = Unit(9.999999999999998e+50, Dimensions(length=-3, mass=1), name='grams_per_cubic_attometer', ascii_symbol='g am^-3', symbol='Noneam⁻³')
+exagrams_per_cubic_attometer = Unit(9.999999999999999e+68, Dimensions(length=-3, mass=1), name='exagrams_per_cubic_attometer', ascii_symbol='Eg am^-3', symbol='Egam⁻³')
+petagrams_per_cubic_attometer = Unit(9.999999999999998e+65, Dimensions(length=-3, mass=1), name='petagrams_per_cubic_attometer', ascii_symbol='Pg am^-3', symbol='Pgam⁻³')
+teragrams_per_cubic_attometer = Unit(9.999999999999999e+62, Dimensions(length=-3, mass=1), name='teragrams_per_cubic_attometer', ascii_symbol='Tg am^-3', symbol='Tgam⁻³')
+gigagrams_per_cubic_attometer = Unit(9.999999999999998e+59, Dimensions(length=-3, mass=1), name='gigagrams_per_cubic_attometer', ascii_symbol='Gg am^-3', symbol='Ggam⁻³')
+megagrams_per_cubic_attometer = Unit(9.999999999999999e+56, Dimensions(length=-3, mass=1), name='megagrams_per_cubic_attometer', ascii_symbol='Mg am^-3', symbol='Mgam⁻³')
+kilograms_per_cubic_attometer = Unit(9.999999999999999e+53, Dimensions(length=-3, mass=1), name='kilograms_per_cubic_attometer', ascii_symbol='kg am^-3', symbol='kgam⁻³')
+milligrams_per_cubic_attometer = Unit(9.999999999999997e+47, Dimensions(length=-3, mass=1), name='milligrams_per_cubic_attometer', ascii_symbol='mg am^-3', symbol='mgam⁻³')
+micrograms_per_cubic_attometer = Unit(1e+45, Dimensions(length=-3, mass=1), name='micrograms_per_cubic_attometer', ascii_symbol='ug am^-3', symbol='µgam⁻³')
+nanograms_per_cubic_attometer = Unit(1e+42, Dimensions(length=-3, mass=1), name='nanograms_per_cubic_attometer', ascii_symbol='ng am^-3', symbol='ngam⁻³')
+picograms_per_cubic_attometer = Unit(1e+39, Dimensions(length=-3, mass=1), name='picograms_per_cubic_attometer', ascii_symbol='pg am^-3', symbol='pgam⁻³')
+femtograms_per_cubic_attometer = Unit(9.999999999999999e+35, Dimensions(length=-3, mass=1), name='femtograms_per_cubic_attometer', ascii_symbol='fg am^-3', symbol='fgam⁻³')
+attograms_per_cubic_attometer = Unit(1e+33, Dimensions(length=-3, mass=1), name='attograms_per_cubic_attometer', ascii_symbol='ag am^-3', symbol='agam⁻³')
+atomic_mass_units_per_cubic_attometer = Unit(1.661e+27, Dimensions(length=-3, mass=1), name='atomic_mass_units_per_cubic_attometer', ascii_symbol='au am^-3', symbol='Noneam⁻³')
+grams_per_cubic_decimeter = Unit(0.9999999999999998, Dimensions(length=-3, mass=1), name='grams_per_cubic_decimeter', ascii_symbol='g dm^-3', symbol='Nonedm⁻³')
+exagrams_per_cubic_decimeter = Unit(9.999999999999997e+17, Dimensions(length=-3, mass=1), name='exagrams_per_cubic_decimeter', ascii_symbol='Eg dm^-3', symbol='Egdm⁻³')
+petagrams_per_cubic_decimeter = Unit(999999999999999.8, Dimensions(length=-3, mass=1), name='petagrams_per_cubic_decimeter', ascii_symbol='Pg dm^-3', symbol='Pgdm⁻³')
+teragrams_per_cubic_decimeter = Unit(999999999999.9998, Dimensions(length=-3, mass=1), name='teragrams_per_cubic_decimeter', ascii_symbol='Tg dm^-3', symbol='Tgdm⁻³')
+gigagrams_per_cubic_decimeter = Unit(999999999.9999998, Dimensions(length=-3, mass=1), name='gigagrams_per_cubic_decimeter', ascii_symbol='Gg dm^-3', symbol='Ggdm⁻³')
+megagrams_per_cubic_decimeter = Unit(999999.9999999998, Dimensions(length=-3, mass=1), name='megagrams_per_cubic_decimeter', ascii_symbol='Mg dm^-3', symbol='Mgdm⁻³')
+kilograms_per_cubic_decimeter = Unit(999.9999999999998, Dimensions(length=-3, mass=1), name='kilograms_per_cubic_decimeter', ascii_symbol='kg dm^-3', symbol='kgdm⁻³')
+milligrams_per_cubic_decimeter = Unit(0.0009999999999999998, Dimensions(length=-3, mass=1), name='milligrams_per_cubic_decimeter', ascii_symbol='mg dm^-3', symbol='mgdm⁻³')
+micrograms_per_cubic_decimeter = Unit(9.999999999999997e-07, Dimensions(length=-3, mass=1), name='micrograms_per_cubic_decimeter', ascii_symbol='ug dm^-3', symbol='µgdm⁻³')
+nanograms_per_cubic_decimeter = Unit(9.999999999999999e-10, Dimensions(length=-3, mass=1), name='nanograms_per_cubic_decimeter', ascii_symbol='ng dm^-3', symbol='ngdm⁻³')
+picograms_per_cubic_decimeter = Unit(9.999999999999998e-13, Dimensions(length=-3, mass=1), name='picograms_per_cubic_decimeter', ascii_symbol='pg dm^-3', symbol='pgdm⁻³')
+femtograms_per_cubic_decimeter = Unit(9.999999999999999e-16, Dimensions(length=-3, mass=1), name='femtograms_per_cubic_decimeter', ascii_symbol='fg dm^-3', symbol='fgdm⁻³')
+attograms_per_cubic_decimeter = Unit(9.999999999999999e-19, Dimensions(length=-3, mass=1), name='attograms_per_cubic_decimeter', ascii_symbol='ag dm^-3', symbol='agdm⁻³')
+atomic_mass_units_per_cubic_decimeter = Unit(1.661e-24, Dimensions(length=-3, mass=1), name='atomic_mass_units_per_cubic_decimeter', ascii_symbol='au dm^-3', symbol='Nonedm⁻³')
+grams_per_cubic_centimeter = Unit(999.9999999999999, Dimensions(length=-3, mass=1), name='grams_per_cubic_centimeter', ascii_symbol='g cm^-3', symbol='Nonecm⁻³')
+exagrams_per_cubic_centimeter = Unit(9.999999999999999e+20, Dimensions(length=-3, mass=1), name='exagrams_per_cubic_centimeter', ascii_symbol='Eg cm^-3', symbol='Egcm⁻³')
+petagrams_per_cubic_centimeter = Unit(9.999999999999999e+17, Dimensions(length=-3, mass=1), name='petagrams_per_cubic_centimeter', ascii_symbol='Pg cm^-3', symbol='Pgcm⁻³')
+teragrams_per_cubic_centimeter = Unit(999999999999999.9, Dimensions(length=-3, mass=1), name='teragrams_per_cubic_centimeter', ascii_symbol='Tg cm^-3', symbol='Tgcm⁻³')
+gigagrams_per_cubic_centimeter = Unit(999999999999.9999, Dimensions(length=-3, mass=1), name='gigagrams_per_cubic_centimeter', ascii_symbol='Gg cm^-3', symbol='Ggcm⁻³')
+megagrams_per_cubic_centimeter = Unit(999999999.9999999, Dimensions(length=-3, mass=1), name='megagrams_per_cubic_centimeter', ascii_symbol='Mg cm^-3', symbol='Mgcm⁻³')
+kilograms_per_cubic_centimeter = Unit(999999.9999999999, Dimensions(length=-3, mass=1), name='kilograms_per_cubic_centimeter', ascii_symbol='kg cm^-3', symbol='kgcm⁻³')
+milligrams_per_cubic_centimeter = Unit(0.9999999999999998, Dimensions(length=-3, mass=1), name='milligrams_per_cubic_centimeter', ascii_symbol='mg cm^-3', symbol='mgcm⁻³')
+micrograms_per_cubic_centimeter = Unit(0.0009999999999999998, Dimensions(length=-3, mass=1), name='micrograms_per_cubic_centimeter', ascii_symbol='ug cm^-3', symbol='µgcm⁻³')
+nanograms_per_cubic_centimeter = Unit(1e-06, Dimensions(length=-3, mass=1), name='nanograms_per_cubic_centimeter', ascii_symbol='ng cm^-3', symbol='ngcm⁻³')
+picograms_per_cubic_centimeter = Unit(9.999999999999999e-10, Dimensions(length=-3, mass=1), name='picograms_per_cubic_centimeter', ascii_symbol='pg cm^-3', symbol='pgcm⁻³')
+femtograms_per_cubic_centimeter = Unit(1e-12, Dimensions(length=-3, mass=1), name='femtograms_per_cubic_centimeter', ascii_symbol='fg cm^-3', symbol='fgcm⁻³')
+attograms_per_cubic_centimeter = Unit(9.999999999999999e-16, Dimensions(length=-3, mass=1), name='attograms_per_cubic_centimeter', ascii_symbol='ag cm^-3', symbol='agcm⁻³')
+atomic_mass_units_per_cubic_centimeter = Unit(1.6609999999999998e-21, Dimensions(length=-3, mass=1), name='atomic_mass_units_per_cubic_centimeter', ascii_symbol='au cm^-3', symbol='Nonecm⁻³')
+grams_per_cubic_angstrom = Unit(9.999999999999999e+26, Dimensions(length=-3, mass=1), name='grams_per_cubic_angstrom', ascii_symbol='g Ang^-3', symbol='NoneÅ⁻³')
+exagrams_per_cubic_angstrom = Unit(1e+45, Dimensions(length=-3, mass=1), name='exagrams_per_cubic_angstrom', ascii_symbol='Eg Ang^-3', symbol='EgÅ⁻³')
+petagrams_per_cubic_angstrom = Unit(9.999999999999999e+41, Dimensions(length=-3, mass=1), name='petagrams_per_cubic_angstrom', ascii_symbol='Pg Ang^-3', symbol='PgÅ⁻³')
+teragrams_per_cubic_angstrom = Unit(1e+39, Dimensions(length=-3, mass=1), name='teragrams_per_cubic_angstrom', ascii_symbol='Tg Ang^-3', symbol='TgÅ⁻³')
+gigagrams_per_cubic_angstrom = Unit(9.999999999999999e+35, Dimensions(length=-3, mass=1), name='gigagrams_per_cubic_angstrom', ascii_symbol='Gg Ang^-3', symbol='GgÅ⁻³')
+megagrams_per_cubic_angstrom = Unit(1e+33, Dimensions(length=-3, mass=1), name='megagrams_per_cubic_angstrom', ascii_symbol='Mg Ang^-3', symbol='MgÅ⁻³')
+kilograms_per_cubic_angstrom = Unit(9.999999999999999e+29, Dimensions(length=-3, mass=1), name='kilograms_per_cubic_angstrom', ascii_symbol='kg Ang^-3', symbol='kgÅ⁻³')
+milligrams_per_cubic_angstrom = Unit(9.999999999999998e+23, Dimensions(length=-3, mass=1), name='milligrams_per_cubic_angstrom', ascii_symbol='mg Ang^-3', symbol='mgÅ⁻³')
+micrograms_per_cubic_angstrom = Unit(1e+21, Dimensions(length=-3, mass=1), name='micrograms_per_cubic_angstrom', ascii_symbol='ug Ang^-3', symbol='µgÅ⁻³')
+nanograms_per_cubic_angstrom = Unit(1.0000000000000001e+18, Dimensions(length=-3, mass=1), name='nanograms_per_cubic_angstrom', ascii_symbol='ng Ang^-3', symbol='ngÅ⁻³')
+picograms_per_cubic_angstrom = Unit(1000000000000000.0, Dimensions(length=-3, mass=1), name='picograms_per_cubic_angstrom', ascii_symbol='pg Ang^-3', symbol='pgÅ⁻³')
+femtograms_per_cubic_angstrom = Unit(1000000000000.0, Dimensions(length=-3, mass=1), name='femtograms_per_cubic_angstrom', ascii_symbol='fg Ang^-3', symbol='fgÅ⁻³')
+attograms_per_cubic_angstrom = Unit(1000000000.0, Dimensions(length=-3, mass=1), name='attograms_per_cubic_angstrom', ascii_symbol='ag Ang^-3', symbol='agÅ⁻³')
+atomic_mass_units_per_cubic_angstrom = Unit(1661.0, Dimensions(length=-3, mass=1), name='atomic_mass_units_per_cubic_angstrom', ascii_symbol='au Ang^-3', symbol='NoneÅ⁻³')
+moles_per_cubic_meter = Unit(6.022e+23, Dimensions(length=-3, moles_hint=1), name='moles_per_cubic_meter', ascii_symbol='mol m^-3', symbol='NoneNone⁻³')
+millimoles_per_cubic_meter = Unit(6.022e+20, Dimensions(length=-3, moles_hint=1), name='millimoles_per_cubic_meter', ascii_symbol='mmol m^-3', symbol='mmolNone⁻³')
+micromoles_per_cubic_meter = Unit(6.022e+17, Dimensions(length=-3, moles_hint=1), name='micromoles_per_cubic_meter', ascii_symbol='umol m^-3', symbol='µmolNone⁻³')
+nanomoles_per_cubic_meter = Unit(602200000000000.1, Dimensions(length=-3, moles_hint=1), name='nanomoles_per_cubic_meter', ascii_symbol='nmol m^-3', symbol='nmolNone⁻³')
+picomoles_per_cubic_meter = Unit(602200000000.0, Dimensions(length=-3, moles_hint=1), name='picomoles_per_cubic_meter', ascii_symbol='pmol m^-3', symbol='pmolNone⁻³')
+femtomoles_per_cubic_meter = Unit(602200000.0000001, Dimensions(length=-3, moles_hint=1), name='femtomoles_per_cubic_meter', ascii_symbol='fmol m^-3', symbol='fmolNone⁻³')
+attomoles_per_cubic_meter = Unit(602200.0000000001, Dimensions(length=-3, moles_hint=1), name='attomoles_per_cubic_meter', ascii_symbol='amol m^-3', symbol='amolNone⁻³')
+moles_per_cubic_exameter = Unit(6.022e-31, Dimensions(length=-3, moles_hint=1), name='moles_per_cubic_exameter', ascii_symbol='mol Em^-3', symbol='NoneEm⁻³')
+millimoles_per_cubic_exameter = Unit(6.021999999999999e-34, Dimensions(length=-3, moles_hint=1), name='millimoles_per_cubic_exameter', ascii_symbol='mmol Em^-3', symbol='mmolEm⁻³')
+micromoles_per_cubic_exameter = Unit(6.022e-37, Dimensions(length=-3, moles_hint=1), name='micromoles_per_cubic_exameter', ascii_symbol='umol Em^-3', symbol='µmolEm⁻³')
+nanomoles_per_cubic_exameter = Unit(6.022000000000001e-40, Dimensions(length=-3, moles_hint=1), name='nanomoles_per_cubic_exameter', ascii_symbol='nmol Em^-3', symbol='nmolEm⁻³')
+picomoles_per_cubic_exameter = Unit(6.022e-43, Dimensions(length=-3, moles_hint=1), name='picomoles_per_cubic_exameter', ascii_symbol='pmol Em^-3', symbol='pmolEm⁻³')
+femtomoles_per_cubic_exameter = Unit(6.022e-46, Dimensions(length=-3, moles_hint=1), name='femtomoles_per_cubic_exameter', ascii_symbol='fmol Em^-3', symbol='fmolEm⁻³')
+attomoles_per_cubic_exameter = Unit(6.0220000000000006e-49, Dimensions(length=-3, moles_hint=1), name='attomoles_per_cubic_exameter', ascii_symbol='amol Em^-3', symbol='amolEm⁻³')
+moles_per_cubic_petameter = Unit(6.022e-22, Dimensions(length=-3, moles_hint=1), name='moles_per_cubic_petameter', ascii_symbol='mol Pm^-3', symbol='NonePm⁻³')
+millimoles_per_cubic_petameter = Unit(6.022e-25, Dimensions(length=-3, moles_hint=1), name='millimoles_per_cubic_petameter', ascii_symbol='mmol Pm^-3', symbol='mmolPm⁻³')
+micromoles_per_cubic_petameter = Unit(6.022e-28, Dimensions(length=-3, moles_hint=1), name='micromoles_per_cubic_petameter', ascii_symbol='umol Pm^-3', symbol='µmolPm⁻³')
+nanomoles_per_cubic_petameter = Unit(6.0220000000000015e-31, Dimensions(length=-3, moles_hint=1), name='nanomoles_per_cubic_petameter', ascii_symbol='nmol Pm^-3', symbol='nmolPm⁻³')
+picomoles_per_cubic_petameter = Unit(6.022e-34, Dimensions(length=-3, moles_hint=1), name='picomoles_per_cubic_petameter', ascii_symbol='pmol Pm^-3', symbol='pmolPm⁻³')
+femtomoles_per_cubic_petameter = Unit(6.022000000000001e-37, Dimensions(length=-3, moles_hint=1), name='femtomoles_per_cubic_petameter', ascii_symbol='fmol Pm^-3', symbol='fmolPm⁻³')
+attomoles_per_cubic_petameter = Unit(6.0220000000000015e-40, Dimensions(length=-3, moles_hint=1), name='attomoles_per_cubic_petameter', ascii_symbol='amol Pm^-3', symbol='amolPm⁻³')
+moles_per_cubic_terameter = Unit(6.022e-13, Dimensions(length=-3, moles_hint=1), name='moles_per_cubic_terameter', ascii_symbol='mol Tm^-3', symbol='NoneTm⁻³')
+millimoles_per_cubic_terameter = Unit(6.022e-16, Dimensions(length=-3, moles_hint=1), name='millimoles_per_cubic_terameter', ascii_symbol='mmol Tm^-3', symbol='mmolTm⁻³')
+micromoles_per_cubic_terameter = Unit(6.022e-19, Dimensions(length=-3, moles_hint=1), name='micromoles_per_cubic_terameter', ascii_symbol='umol Tm^-3', symbol='µmolTm⁻³')
+nanomoles_per_cubic_terameter = Unit(6.022000000000001e-22, Dimensions(length=-3, moles_hint=1), name='nanomoles_per_cubic_terameter', ascii_symbol='nmol Tm^-3', symbol='nmolTm⁻³')
+picomoles_per_cubic_terameter = Unit(6.0219999999999995e-25, Dimensions(length=-3, moles_hint=1), name='picomoles_per_cubic_terameter', ascii_symbol='pmol Tm^-3', symbol='pmolTm⁻³')
+femtomoles_per_cubic_terameter = Unit(6.022000000000001e-28, Dimensions(length=-3, moles_hint=1), name='femtomoles_per_cubic_terameter', ascii_symbol='fmol Tm^-3', symbol='fmolTm⁻³')
+attomoles_per_cubic_terameter = Unit(6.022000000000001e-31, Dimensions(length=-3, moles_hint=1), name='attomoles_per_cubic_terameter', ascii_symbol='amol Tm^-3', symbol='amolTm⁻³')
+moles_per_cubic_gigameter = Unit(0.0006022, Dimensions(length=-3, moles_hint=1), name='moles_per_cubic_gigameter', ascii_symbol='mol Gm^-3', symbol='NoneGm⁻³')
+millimoles_per_cubic_gigameter = Unit(6.022e-07, Dimensions(length=-3, moles_hint=1), name='millimoles_per_cubic_gigameter', ascii_symbol='mmol Gm^-3', symbol='mmolGm⁻³')
+micromoles_per_cubic_gigameter = Unit(6.021999999999999e-10, Dimensions(length=-3, moles_hint=1), name='micromoles_per_cubic_gigameter', ascii_symbol='umol Gm^-3', symbol='µmolGm⁻³')
+nanomoles_per_cubic_gigameter = Unit(6.022000000000001e-13, Dimensions(length=-3, moles_hint=1), name='nanomoles_per_cubic_gigameter', ascii_symbol='nmol Gm^-3', symbol='nmolGm⁻³')
+picomoles_per_cubic_gigameter = Unit(6.022e-16, Dimensions(length=-3, moles_hint=1), name='picomoles_per_cubic_gigameter', ascii_symbol='pmol Gm^-3', symbol='pmolGm⁻³')
+femtomoles_per_cubic_gigameter = Unit(6.022000000000002e-19, Dimensions(length=-3, moles_hint=1), name='femtomoles_per_cubic_gigameter', ascii_symbol='fmol Gm^-3', symbol='fmolGm⁻³')
+attomoles_per_cubic_gigameter = Unit(6.022000000000001e-22, Dimensions(length=-3, moles_hint=1), name='attomoles_per_cubic_gigameter', ascii_symbol='amol Gm^-3', symbol='amolGm⁻³')
+moles_per_cubic_megameter = Unit(602200.0, Dimensions(length=-3, moles_hint=1), name='moles_per_cubic_megameter', ascii_symbol='mol Mm^-3', symbol='NoneMm⁻³')
+millimoles_per_cubic_megameter = Unit(602.2, Dimensions(length=-3, moles_hint=1), name='millimoles_per_cubic_megameter', ascii_symbol='mmol Mm^-3', symbol='mmolMm⁻³')
+micromoles_per_cubic_megameter = Unit(0.6022, Dimensions(length=-3, moles_hint=1), name='micromoles_per_cubic_megameter', ascii_symbol='umol Mm^-3', symbol='µmolMm⁻³')
+nanomoles_per_cubic_megameter = Unit(0.0006022000000000001, Dimensions(length=-3, moles_hint=1), name='nanomoles_per_cubic_megameter', ascii_symbol='nmol Mm^-3', symbol='nmolMm⁻³')
+picomoles_per_cubic_megameter = Unit(6.022e-07, Dimensions(length=-3, moles_hint=1), name='picomoles_per_cubic_megameter', ascii_symbol='pmol Mm^-3', symbol='pmolMm⁻³')
+femtomoles_per_cubic_megameter = Unit(6.022000000000002e-10, Dimensions(length=-3, moles_hint=1), name='femtomoles_per_cubic_megameter', ascii_symbol='fmol Mm^-3', symbol='fmolMm⁻³')
+attomoles_per_cubic_megameter = Unit(6.022000000000001e-13, Dimensions(length=-3, moles_hint=1), name='attomoles_per_cubic_megameter', ascii_symbol='amol Mm^-3', symbol='amolMm⁻³')
+moles_per_cubic_kilometer = Unit(602200000000000.0, Dimensions(length=-3, moles_hint=1), name='moles_per_cubic_kilometer', ascii_symbol='mol km^-3', symbol='Nonekm⁻³')
+millimoles_per_cubic_kilometer = Unit(602200000000.0, Dimensions(length=-3, moles_hint=1), name='millimoles_per_cubic_kilometer', ascii_symbol='mmol km^-3', symbol='mmolkm⁻³')
+micromoles_per_cubic_kilometer = Unit(602200000.0, Dimensions(length=-3, moles_hint=1), name='micromoles_per_cubic_kilometer', ascii_symbol='umol km^-3', symbol='µmolkm⁻³')
+nanomoles_per_cubic_kilometer = Unit(602200.0000000001, Dimensions(length=-3, moles_hint=1), name='nanomoles_per_cubic_kilometer', ascii_symbol='nmol km^-3', symbol='nmolkm⁻³')
+picomoles_per_cubic_kilometer = Unit(602.2, Dimensions(length=-3, moles_hint=1), name='picomoles_per_cubic_kilometer', ascii_symbol='pmol km^-3', symbol='pmolkm⁻³')
+femtomoles_per_cubic_kilometer = Unit(0.6022000000000001, Dimensions(length=-3, moles_hint=1), name='femtomoles_per_cubic_kilometer', ascii_symbol='fmol km^-3', symbol='fmolkm⁻³')
+attomoles_per_cubic_kilometer = Unit(0.0006022000000000001, Dimensions(length=-3, moles_hint=1), name='attomoles_per_cubic_kilometer', ascii_symbol='amol km^-3', symbol='amolkm⁻³')
+moles_per_cubic_millimeter = Unit(6.022e+32, Dimensions(length=-3, moles_hint=1), name='moles_per_cubic_millimeter', ascii_symbol='mol mm^-3', symbol='Nonemm⁻³')
+millimoles_per_cubic_millimeter = Unit(6.0219999999999996e+29, Dimensions(length=-3, moles_hint=1), name='millimoles_per_cubic_millimeter', ascii_symbol='mmol mm^-3', symbol='mmolmm⁻³')
+micromoles_per_cubic_millimeter = Unit(6.022e+26, Dimensions(length=-3, moles_hint=1), name='micromoles_per_cubic_millimeter', ascii_symbol='umol mm^-3', symbol='µmolmm⁻³')
+nanomoles_per_cubic_millimeter = Unit(6.022000000000001e+23, Dimensions(length=-3, moles_hint=1), name='nanomoles_per_cubic_millimeter', ascii_symbol='nmol mm^-3', symbol='nmolmm⁻³')
+picomoles_per_cubic_millimeter = Unit(6.022e+20, Dimensions(length=-3, moles_hint=1), name='picomoles_per_cubic_millimeter', ascii_symbol='pmol mm^-3', symbol='pmolmm⁻³')
+femtomoles_per_cubic_millimeter = Unit(6.022000000000001e+17, Dimensions(length=-3, moles_hint=1), name='femtomoles_per_cubic_millimeter', ascii_symbol='fmol mm^-3', symbol='fmolmm⁻³')
+attomoles_per_cubic_millimeter = Unit(602200000000000.1, Dimensions(length=-3, moles_hint=1), name='attomoles_per_cubic_millimeter', ascii_symbol='amol mm^-3', symbol='amolmm⁻³')
+moles_per_cubic_micrometer = Unit(6.022000000000001e+41, Dimensions(length=-3, moles_hint=1), name='moles_per_cubic_micrometer', ascii_symbol='mol um^-3', symbol='Noneµm⁻³')
+millimoles_per_cubic_micrometer = Unit(6.0220000000000006e+38, Dimensions(length=-3, moles_hint=1), name='millimoles_per_cubic_micrometer', ascii_symbol='mmol um^-3', symbol='mmolµm⁻³')
+micromoles_per_cubic_micrometer = Unit(6.022000000000001e+35, Dimensions(length=-3, moles_hint=1), name='micromoles_per_cubic_micrometer', ascii_symbol='umol um^-3', symbol='µmolµm⁻³')
+nanomoles_per_cubic_micrometer = Unit(6.022000000000002e+32, Dimensions(length=-3, moles_hint=1), name='nanomoles_per_cubic_micrometer', ascii_symbol='nmol um^-3', symbol='nmolµm⁻³')
+picomoles_per_cubic_micrometer = Unit(6.022000000000001e+29, Dimensions(length=-3, moles_hint=1), name='picomoles_per_cubic_micrometer', ascii_symbol='pmol um^-3', symbol='pmolµm⁻³')
+femtomoles_per_cubic_micrometer = Unit(6.022000000000002e+26, Dimensions(length=-3, moles_hint=1), name='femtomoles_per_cubic_micrometer', ascii_symbol='fmol um^-3', symbol='fmolµm⁻³')
+attomoles_per_cubic_micrometer = Unit(6.0220000000000016e+23, Dimensions(length=-3, moles_hint=1), name='attomoles_per_cubic_micrometer', ascii_symbol='amol um^-3', symbol='amolµm⁻³')
+moles_per_cubic_nanometer = Unit(6.021999999999999e+50, Dimensions(length=-3, moles_hint=1), name='moles_per_cubic_nanometer', ascii_symbol='mol nm^-3', symbol='Nonenm⁻³')
+millimoles_per_cubic_nanometer = Unit(6.0219999999999984e+47, Dimensions(length=-3, moles_hint=1), name='millimoles_per_cubic_nanometer', ascii_symbol='mmol nm^-3', symbol='mmolnm⁻³')
+micromoles_per_cubic_nanometer = Unit(6.0219999999999985e+44, Dimensions(length=-3, moles_hint=1), name='micromoles_per_cubic_nanometer', ascii_symbol='umol nm^-3', symbol='µmolnm⁻³')
+nanomoles_per_cubic_nanometer = Unit(6.022e+41, Dimensions(length=-3, moles_hint=1), name='nanomoles_per_cubic_nanometer', ascii_symbol='nmol nm^-3', symbol='nmolnm⁻³')
+picomoles_per_cubic_nanometer = Unit(6.021999999999999e+38, Dimensions(length=-3, moles_hint=1), name='picomoles_per_cubic_nanometer', ascii_symbol='pmol nm^-3', symbol='pmolnm⁻³')
+femtomoles_per_cubic_nanometer = Unit(6.0219999999999995e+35, Dimensions(length=-3, moles_hint=1), name='femtomoles_per_cubic_nanometer', ascii_symbol='fmol nm^-3', symbol='fmolnm⁻³')
+attomoles_per_cubic_nanometer = Unit(6.022e+32, Dimensions(length=-3, moles_hint=1), name='attomoles_per_cubic_nanometer', ascii_symbol='amol nm^-3', symbol='amolnm⁻³')
+moles_per_cubic_picometer = Unit(6.022e+59, Dimensions(length=-3, moles_hint=1), name='moles_per_cubic_picometer', ascii_symbol='mol pm^-3', symbol='Nonepm⁻³')
+millimoles_per_cubic_picometer = Unit(6.0220000000000005e+56, Dimensions(length=-3, moles_hint=1), name='millimoles_per_cubic_picometer', ascii_symbol='mmol pm^-3', symbol='mmolpm⁻³')
+micromoles_per_cubic_picometer = Unit(6.0220000000000005e+53, Dimensions(length=-3, moles_hint=1), name='micromoles_per_cubic_picometer', ascii_symbol='umol pm^-3', symbol='µmolpm⁻³')
+nanomoles_per_cubic_picometer = Unit(6.022000000000002e+50, Dimensions(length=-3, moles_hint=1), name='nanomoles_per_cubic_picometer', ascii_symbol='nmol pm^-3', symbol='nmolpm⁻³')
+picomoles_per_cubic_picometer = Unit(6.022e+47, Dimensions(length=-3, moles_hint=1), name='picomoles_per_cubic_picometer', ascii_symbol='pmol pm^-3', symbol='pmolpm⁻³')
+femtomoles_per_cubic_picometer = Unit(6.022000000000002e+44, Dimensions(length=-3, moles_hint=1), name='femtomoles_per_cubic_picometer', ascii_symbol='fmol pm^-3', symbol='fmolpm⁻³')
+attomoles_per_cubic_picometer = Unit(6.022000000000002e+41, Dimensions(length=-3, moles_hint=1), name='attomoles_per_cubic_picometer', ascii_symbol='amol pm^-3', symbol='amolpm⁻³')
+moles_per_cubic_femtometer = Unit(6.021999999999999e+68, Dimensions(length=-3, moles_hint=1), name='moles_per_cubic_femtometer', ascii_symbol='mol fm^-3', symbol='Nonefm⁻³')
+millimoles_per_cubic_femtometer = Unit(6.021999999999998e+65, Dimensions(length=-3, moles_hint=1), name='millimoles_per_cubic_femtometer', ascii_symbol='mmol fm^-3', symbol='mmolfm⁻³')
+micromoles_per_cubic_femtometer = Unit(6.021999999999998e+62, Dimensions(length=-3, moles_hint=1), name='micromoles_per_cubic_femtometer', ascii_symbol='umol fm^-3', symbol='µmolfm⁻³')
+nanomoles_per_cubic_femtometer = Unit(6.021999999999999e+59, Dimensions(length=-3, moles_hint=1), name='nanomoles_per_cubic_femtometer', ascii_symbol='nmol fm^-3', symbol='nmolfm⁻³')
+picomoles_per_cubic_femtometer = Unit(6.021999999999998e+56, Dimensions(length=-3, moles_hint=1), name='picomoles_per_cubic_femtometer', ascii_symbol='pmol fm^-3', symbol='pmolfm⁻³')
+femtomoles_per_cubic_femtometer = Unit(6.022e+53, Dimensions(length=-3, moles_hint=1), name='femtomoles_per_cubic_femtometer', ascii_symbol='fmol fm^-3', symbol='fmolfm⁻³')
+attomoles_per_cubic_femtometer = Unit(6.021999999999999e+50, Dimensions(length=-3, moles_hint=1), name='attomoles_per_cubic_femtometer', ascii_symbol='amol fm^-3', symbol='amolfm⁻³')
+moles_per_cubic_attometer = Unit(6.021999999999999e+77, Dimensions(length=-3, moles_hint=1), name='moles_per_cubic_attometer', ascii_symbol='mol am^-3', symbol='Noneam⁻³')
+millimoles_per_cubic_attometer = Unit(6.021999999999999e+74, Dimensions(length=-3, moles_hint=1), name='millimoles_per_cubic_attometer', ascii_symbol='mmol am^-3', symbol='mmolam⁻³')
+micromoles_per_cubic_attometer = Unit(6.021999999999999e+71, Dimensions(length=-3, moles_hint=1), name='micromoles_per_cubic_attometer', ascii_symbol='umol am^-3', symbol='µmolam⁻³')
+nanomoles_per_cubic_attometer = Unit(6.022000000000001e+68, Dimensions(length=-3, moles_hint=1), name='nanomoles_per_cubic_attometer', ascii_symbol='nmol am^-3', symbol='nmolam⁻³')
+picomoles_per_cubic_attometer = Unit(6.021999999999999e+65, Dimensions(length=-3, moles_hint=1), name='picomoles_per_cubic_attometer', ascii_symbol='pmol am^-3', symbol='pmolam⁻³')
+femtomoles_per_cubic_attometer = Unit(6.022e+62, Dimensions(length=-3, moles_hint=1), name='femtomoles_per_cubic_attometer', ascii_symbol='fmol am^-3', symbol='fmolam⁻³')
+attomoles_per_cubic_attometer = Unit(6.022e+59, Dimensions(length=-3, moles_hint=1), name='attomoles_per_cubic_attometer', ascii_symbol='amol am^-3', symbol='amolam⁻³')
+moles_per_cubic_decimeter = Unit(6.0219999999999985e+26, Dimensions(length=-3, moles_hint=1), name='moles_per_cubic_decimeter', ascii_symbol='mol dm^-3', symbol='Nonedm⁻³')
+millimoles_per_cubic_decimeter = Unit(6.021999999999998e+23, Dimensions(length=-3, moles_hint=1), name='millimoles_per_cubic_decimeter', ascii_symbol='mmol dm^-3', symbol='mmoldm⁻³')
+micromoles_per_cubic_decimeter = Unit(6.021999999999999e+20, Dimensions(length=-3, moles_hint=1), name='micromoles_per_cubic_decimeter', ascii_symbol='umol dm^-3', symbol='µmoldm⁻³')
+nanomoles_per_cubic_decimeter = Unit(6.022e+17, Dimensions(length=-3, moles_hint=1), name='nanomoles_per_cubic_decimeter', ascii_symbol='nmol dm^-3', symbol='nmoldm⁻³')
+picomoles_per_cubic_decimeter = Unit(602199999999999.9, Dimensions(length=-3, moles_hint=1), name='picomoles_per_cubic_decimeter', ascii_symbol='pmol dm^-3', symbol='pmoldm⁻³')
+femtomoles_per_cubic_decimeter = Unit(602200000000.0, Dimensions(length=-3, moles_hint=1), name='femtomoles_per_cubic_decimeter', ascii_symbol='fmol dm^-3', symbol='fmoldm⁻³')
+attomoles_per_cubic_decimeter = Unit(602200000.0, Dimensions(length=-3, moles_hint=1), name='attomoles_per_cubic_decimeter', ascii_symbol='amol dm^-3', symbol='amoldm⁻³')
+moles_per_cubic_centimeter = Unit(6.0219999999999996e+29, Dimensions(length=-3, moles_hint=1), name='moles_per_cubic_centimeter', ascii_symbol='mol cm^-3', symbol='Nonecm⁻³')
+millimoles_per_cubic_centimeter = Unit(6.021999999999999e+26, Dimensions(length=-3, moles_hint=1), name='millimoles_per_cubic_centimeter', ascii_symbol='mmol cm^-3', symbol='mmolcm⁻³')
+micromoles_per_cubic_centimeter = Unit(6.021999999999999e+23, Dimensions(length=-3, moles_hint=1), name='micromoles_per_cubic_centimeter', ascii_symbol='umol cm^-3', symbol='µmolcm⁻³')
+nanomoles_per_cubic_centimeter = Unit(6.022e+20, Dimensions(length=-3, moles_hint=1), name='nanomoles_per_cubic_centimeter', ascii_symbol='nmol cm^-3', symbol='nmolcm⁻³')
+picomoles_per_cubic_centimeter = Unit(6.021999999999999e+17, Dimensions(length=-3, moles_hint=1), name='picomoles_per_cubic_centimeter', ascii_symbol='pmol cm^-3', symbol='pmolcm⁻³')
+femtomoles_per_cubic_centimeter = Unit(602200000000000.0, Dimensions(length=-3, moles_hint=1), name='femtomoles_per_cubic_centimeter', ascii_symbol='fmol cm^-3', symbol='fmolcm⁻³')
+attomoles_per_cubic_centimeter = Unit(602200000000.0, Dimensions(length=-3, moles_hint=1), name='attomoles_per_cubic_centimeter', ascii_symbol='amol cm^-3', symbol='amolcm⁻³')
+moles_per_cubic_angstrom = Unit(6.022e+53, Dimensions(length=-3, moles_hint=1), name='moles_per_cubic_angstrom', ascii_symbol='mol Ang^-3', symbol='NoneÅ⁻³')
+millimoles_per_cubic_angstrom = Unit(6.021999999999999e+50, Dimensions(length=-3, moles_hint=1), name='millimoles_per_cubic_angstrom', ascii_symbol='mmol Ang^-3', symbol='mmolÅ⁻³')
+micromoles_per_cubic_angstrom = Unit(6.021999999999999e+47, Dimensions(length=-3, moles_hint=1), name='micromoles_per_cubic_angstrom', ascii_symbol='umol Ang^-3', symbol='µmolÅ⁻³')
+nanomoles_per_cubic_angstrom = Unit(6.022000000000001e+44, Dimensions(length=-3, moles_hint=1), name='nanomoles_per_cubic_angstrom', ascii_symbol='nmol Ang^-3', symbol='nmolÅ⁻³')
+picomoles_per_cubic_angstrom = Unit(6.0219999999999994e+41, Dimensions(length=-3, moles_hint=1), name='picomoles_per_cubic_angstrom', ascii_symbol='pmol Ang^-3', symbol='pmolÅ⁻³')
+femtomoles_per_cubic_angstrom = Unit(6.0220000000000006e+38, Dimensions(length=-3, moles_hint=1), name='femtomoles_per_cubic_angstrom', ascii_symbol='fmol Ang^-3', symbol='fmolÅ⁻³')
+attomoles_per_cubic_angstrom = Unit(6.022000000000001e+35, Dimensions(length=-3, moles_hint=1), name='attomoles_per_cubic_angstrom', ascii_symbol='amol Ang^-3', symbol='amolÅ⁻³')
 
 #
 # Lookup table from symbols to units
@@ -1006,6 +1313,8 @@ symbol_lookup = {
         "pm": picometers,
         "fm": femtometers,
         "am": attometers,
+        "dm": decimeters,
+        "cm": centimeters,
         "s": seconds,
         "ms": milliseconds,
         "us": microseconds,
@@ -1260,11 +1569,37 @@ symbol_lookup = {
         "rad": radians,
         "sr": stradians,
         "none": none,
+        "l": litres,
+        "eV": electronvolts,
+        "EeV": exaelectronvolts,
+        "PeV": petaelectronvolts,
+        "TeV": teraelectronvolts,
+        "GeV": gigaelectronvolts,
+        "MeV": megaelectronvolts,
+        "keV": kiloelectronvolts,
+        "meV": millielectronvolts,
+        "ueV": microelectronvolts,
+        "µeV": microelectronvolts,
+        "neV": nanoelectronvolts,
+        "peV": picoelectronvolts,
+        "feV": femtoelectronvolts,
+        "aeV": attoelectronvolts,
+        "au": atomic_mass_units,
+        "mol": moles,
+        "mmol": millimoles,
+        "umol": micromoles,
+        "µmol": micromoles,
+        "nmol": nanomoles,
+        "pmol": picomoles,
+        "fmol": femtomoles,
+        "amol": attomoles,
         "yr": years,
         "year": years,
         "day": days,
         "hr": hours,
         "hour": hours,
+        "a.u.": atomic_mass_units,
+        "amu": atomic_mass_units,
 }
 
 
@@ -1289,6 +1624,8 @@ length = UnitGroup(
     picometers,
     femtometers,
     attometers,
+    decimeters,
+    centimeters,
     angstroms,
 ])
 
@@ -1308,12 +1645,15 @@ area = UnitGroup(
     square_picometers,
     square_femtometers,
     square_attometers,
+    square_decimeters,
+    square_centimeters,
     square_angstroms,
 ])
 
 volume = UnitGroup(
   name = 'volume', 
   units = [
+    litres,
     cubic_meters,
     cubic_exameters,
     cubic_petameters,
@@ -1327,6 +1667,8 @@ volume = UnitGroup(
     cubic_picometers,
     cubic_femtometers,
     cubic_attometers,
+    cubic_decimeters,
+    cubic_centimeters,
     cubic_angstroms,
 ])
 
@@ -1346,6 +1688,8 @@ inverse_length = UnitGroup(
     per_picometer,
     per_femtometer,
     per_attometer,
+    per_decimeter,
+    per_centimeter,
     per_angstrom,
 ])
 
@@ -1365,6 +1709,8 @@ inverse_area = UnitGroup(
     per_square_picometer,
     per_square_femtometer,
     per_square_attometer,
+    per_square_decimeter,
+    per_square_centimeter,
     per_square_angstrom,
 ])
 
@@ -1384,6 +1730,8 @@ inverse_volume = UnitGroup(
     per_cubic_picometer,
     per_cubic_femtometer,
     per_cubic_attometer,
+    per_cubic_decimeter,
+    per_cubic_centimeter,
     per_cubic_angstrom,
 ])
 
@@ -1567,6 +1915,28 @@ speed = UnitGroup(
     attometers_per_hour,
     attometers_per_day,
     attometers_per_year,
+    decimeters_per_second,
+    decimeters_per_millisecond,
+    decimeters_per_microsecond,
+    decimeters_per_nanosecond,
+    decimeters_per_picosecond,
+    decimeters_per_femtosecond,
+    decimeters_per_attosecond,
+    decimeters_per_minute,
+    decimeters_per_hour,
+    decimeters_per_day,
+    decimeters_per_year,
+    centimeters_per_second,
+    centimeters_per_millisecond,
+    centimeters_per_microsecond,
+    centimeters_per_nanosecond,
+    centimeters_per_picosecond,
+    centimeters_per_femtosecond,
+    centimeters_per_attosecond,
+    centimeters_per_minute,
+    centimeters_per_hour,
+    centimeters_per_day,
+    centimeters_per_year,
     angstroms_per_second,
     angstroms_per_millisecond,
     angstroms_per_microsecond,
@@ -1726,6 +2096,28 @@ acceleration = UnitGroup(
     attometers_per_square_hour,
     attometers_per_square_day,
     attometers_per_square_year,
+    decimeters_per_square_second,
+    decimeters_per_square_millisecond,
+    decimeters_per_square_microsecond,
+    decimeters_per_square_nanosecond,
+    decimeters_per_square_picosecond,
+    decimeters_per_square_femtosecond,
+    decimeters_per_square_attosecond,
+    decimeters_per_square_minute,
+    decimeters_per_square_hour,
+    decimeters_per_square_day,
+    decimeters_per_square_year,
+    centimeters_per_square_second,
+    centimeters_per_square_millisecond,
+    centimeters_per_square_microsecond,
+    centimeters_per_square_nanosecond,
+    centimeters_per_square_picosecond,
+    centimeters_per_square_femtosecond,
+    centimeters_per_square_attosecond,
+    centimeters_per_square_minute,
+    centimeters_per_square_hour,
+    centimeters_per_square_day,
+    centimeters_per_square_year,
     angstroms_per_square_second,
     angstroms_per_square_millisecond,
     angstroms_per_square_microsecond,
@@ -1742,6 +2134,230 @@ acceleration = UnitGroup(
 density = UnitGroup(
   name = 'density', 
   units = [
+    grams_per_cubic_meter,
+    exagrams_per_cubic_meter,
+    petagrams_per_cubic_meter,
+    teragrams_per_cubic_meter,
+    gigagrams_per_cubic_meter,
+    megagrams_per_cubic_meter,
+    kilograms_per_cubic_meter,
+    milligrams_per_cubic_meter,
+    micrograms_per_cubic_meter,
+    nanograms_per_cubic_meter,
+    picograms_per_cubic_meter,
+    femtograms_per_cubic_meter,
+    attograms_per_cubic_meter,
+    atomic_mass_units_per_cubic_meter,
+    grams_per_cubic_exameter,
+    exagrams_per_cubic_exameter,
+    petagrams_per_cubic_exameter,
+    teragrams_per_cubic_exameter,
+    gigagrams_per_cubic_exameter,
+    megagrams_per_cubic_exameter,
+    kilograms_per_cubic_exameter,
+    milligrams_per_cubic_exameter,
+    micrograms_per_cubic_exameter,
+    nanograms_per_cubic_exameter,
+    picograms_per_cubic_exameter,
+    femtograms_per_cubic_exameter,
+    attograms_per_cubic_exameter,
+    atomic_mass_units_per_cubic_exameter,
+    grams_per_cubic_petameter,
+    exagrams_per_cubic_petameter,
+    petagrams_per_cubic_petameter,
+    teragrams_per_cubic_petameter,
+    gigagrams_per_cubic_petameter,
+    megagrams_per_cubic_petameter,
+    kilograms_per_cubic_petameter,
+    milligrams_per_cubic_petameter,
+    micrograms_per_cubic_petameter,
+    nanograms_per_cubic_petameter,
+    picograms_per_cubic_petameter,
+    femtograms_per_cubic_petameter,
+    attograms_per_cubic_petameter,
+    atomic_mass_units_per_cubic_petameter,
+    grams_per_cubic_terameter,
+    exagrams_per_cubic_terameter,
+    petagrams_per_cubic_terameter,
+    teragrams_per_cubic_terameter,
+    gigagrams_per_cubic_terameter,
+    megagrams_per_cubic_terameter,
+    kilograms_per_cubic_terameter,
+    milligrams_per_cubic_terameter,
+    micrograms_per_cubic_terameter,
+    nanograms_per_cubic_terameter,
+    picograms_per_cubic_terameter,
+    femtograms_per_cubic_terameter,
+    attograms_per_cubic_terameter,
+    atomic_mass_units_per_cubic_terameter,
+    grams_per_cubic_gigameter,
+    exagrams_per_cubic_gigameter,
+    petagrams_per_cubic_gigameter,
+    teragrams_per_cubic_gigameter,
+    gigagrams_per_cubic_gigameter,
+    megagrams_per_cubic_gigameter,
+    kilograms_per_cubic_gigameter,
+    milligrams_per_cubic_gigameter,
+    micrograms_per_cubic_gigameter,
+    nanograms_per_cubic_gigameter,
+    picograms_per_cubic_gigameter,
+    femtograms_per_cubic_gigameter,
+    attograms_per_cubic_gigameter,
+    atomic_mass_units_per_cubic_gigameter,
+    grams_per_cubic_megameter,
+    exagrams_per_cubic_megameter,
+    petagrams_per_cubic_megameter,
+    teragrams_per_cubic_megameter,
+    gigagrams_per_cubic_megameter,
+    megagrams_per_cubic_megameter,
+    kilograms_per_cubic_megameter,
+    milligrams_per_cubic_megameter,
+    micrograms_per_cubic_megameter,
+    nanograms_per_cubic_megameter,
+    picograms_per_cubic_megameter,
+    femtograms_per_cubic_megameter,
+    attograms_per_cubic_megameter,
+    atomic_mass_units_per_cubic_megameter,
+    grams_per_cubic_kilometer,
+    exagrams_per_cubic_kilometer,
+    petagrams_per_cubic_kilometer,
+    teragrams_per_cubic_kilometer,
+    gigagrams_per_cubic_kilometer,
+    megagrams_per_cubic_kilometer,
+    kilograms_per_cubic_kilometer,
+    milligrams_per_cubic_kilometer,
+    micrograms_per_cubic_kilometer,
+    nanograms_per_cubic_kilometer,
+    picograms_per_cubic_kilometer,
+    femtograms_per_cubic_kilometer,
+    attograms_per_cubic_kilometer,
+    atomic_mass_units_per_cubic_kilometer,
+    grams_per_cubic_millimeter,
+    exagrams_per_cubic_millimeter,
+    petagrams_per_cubic_millimeter,
+    teragrams_per_cubic_millimeter,
+    gigagrams_per_cubic_millimeter,
+    megagrams_per_cubic_millimeter,
+    kilograms_per_cubic_millimeter,
+    milligrams_per_cubic_millimeter,
+    micrograms_per_cubic_millimeter,
+    nanograms_per_cubic_millimeter,
+    picograms_per_cubic_millimeter,
+    femtograms_per_cubic_millimeter,
+    attograms_per_cubic_millimeter,
+    atomic_mass_units_per_cubic_millimeter,
+    grams_per_cubic_micrometer,
+    exagrams_per_cubic_micrometer,
+    petagrams_per_cubic_micrometer,
+    teragrams_per_cubic_micrometer,
+    gigagrams_per_cubic_micrometer,
+    megagrams_per_cubic_micrometer,
+    kilograms_per_cubic_micrometer,
+    milligrams_per_cubic_micrometer,
+    micrograms_per_cubic_micrometer,
+    nanograms_per_cubic_micrometer,
+    picograms_per_cubic_micrometer,
+    femtograms_per_cubic_micrometer,
+    attograms_per_cubic_micrometer,
+    atomic_mass_units_per_cubic_micrometer,
+    grams_per_cubic_nanometer,
+    exagrams_per_cubic_nanometer,
+    petagrams_per_cubic_nanometer,
+    teragrams_per_cubic_nanometer,
+    gigagrams_per_cubic_nanometer,
+    megagrams_per_cubic_nanometer,
+    kilograms_per_cubic_nanometer,
+    milligrams_per_cubic_nanometer,
+    micrograms_per_cubic_nanometer,
+    nanograms_per_cubic_nanometer,
+    picograms_per_cubic_nanometer,
+    femtograms_per_cubic_nanometer,
+    attograms_per_cubic_nanometer,
+    atomic_mass_units_per_cubic_nanometer,
+    grams_per_cubic_picometer,
+    exagrams_per_cubic_picometer,
+    petagrams_per_cubic_picometer,
+    teragrams_per_cubic_picometer,
+    gigagrams_per_cubic_picometer,
+    megagrams_per_cubic_picometer,
+    kilograms_per_cubic_picometer,
+    milligrams_per_cubic_picometer,
+    micrograms_per_cubic_picometer,
+    nanograms_per_cubic_picometer,
+    picograms_per_cubic_picometer,
+    femtograms_per_cubic_picometer,
+    attograms_per_cubic_picometer,
+    atomic_mass_units_per_cubic_picometer,
+    grams_per_cubic_femtometer,
+    exagrams_per_cubic_femtometer,
+    petagrams_per_cubic_femtometer,
+    teragrams_per_cubic_femtometer,
+    gigagrams_per_cubic_femtometer,
+    megagrams_per_cubic_femtometer,
+    kilograms_per_cubic_femtometer,
+    milligrams_per_cubic_femtometer,
+    micrograms_per_cubic_femtometer,
+    nanograms_per_cubic_femtometer,
+    picograms_per_cubic_femtometer,
+    femtograms_per_cubic_femtometer,
+    attograms_per_cubic_femtometer,
+    atomic_mass_units_per_cubic_femtometer,
+    grams_per_cubic_attometer,
+    exagrams_per_cubic_attometer,
+    petagrams_per_cubic_attometer,
+    teragrams_per_cubic_attometer,
+    gigagrams_per_cubic_attometer,
+    megagrams_per_cubic_attometer,
+    kilograms_per_cubic_attometer,
+    milligrams_per_cubic_attometer,
+    micrograms_per_cubic_attometer,
+    nanograms_per_cubic_attometer,
+    picograms_per_cubic_attometer,
+    femtograms_per_cubic_attometer,
+    attograms_per_cubic_attometer,
+    atomic_mass_units_per_cubic_attometer,
+    grams_per_cubic_decimeter,
+    exagrams_per_cubic_decimeter,
+    petagrams_per_cubic_decimeter,
+    teragrams_per_cubic_decimeter,
+    gigagrams_per_cubic_decimeter,
+    megagrams_per_cubic_decimeter,
+    kilograms_per_cubic_decimeter,
+    milligrams_per_cubic_decimeter,
+    micrograms_per_cubic_decimeter,
+    nanograms_per_cubic_decimeter,
+    picograms_per_cubic_decimeter,
+    femtograms_per_cubic_decimeter,
+    attograms_per_cubic_decimeter,
+    atomic_mass_units_per_cubic_decimeter,
+    grams_per_cubic_centimeter,
+    exagrams_per_cubic_centimeter,
+    petagrams_per_cubic_centimeter,
+    teragrams_per_cubic_centimeter,
+    gigagrams_per_cubic_centimeter,
+    megagrams_per_cubic_centimeter,
+    kilograms_per_cubic_centimeter,
+    milligrams_per_cubic_centimeter,
+    micrograms_per_cubic_centimeter,
+    nanograms_per_cubic_centimeter,
+    picograms_per_cubic_centimeter,
+    femtograms_per_cubic_centimeter,
+    attograms_per_cubic_centimeter,
+    atomic_mass_units_per_cubic_centimeter,
+    grams_per_cubic_angstrom,
+    exagrams_per_cubic_angstrom,
+    petagrams_per_cubic_angstrom,
+    teragrams_per_cubic_angstrom,
+    gigagrams_per_cubic_angstrom,
+    megagrams_per_cubic_angstrom,
+    kilograms_per_cubic_angstrom,
+    milligrams_per_cubic_angstrom,
+    micrograms_per_cubic_angstrom,
+    nanograms_per_cubic_angstrom,
+    picograms_per_cubic_angstrom,
+    femtograms_per_cubic_angstrom,
+    attograms_per_cubic_angstrom,
+    atomic_mass_units_per_cubic_angstrom,
 ])
 
 force = UnitGroup(
@@ -1796,6 +2412,19 @@ energy = UnitGroup(
     picojoules,
     femtojoules,
     attojoules,
+    electronvolts,
+    exaelectronvolts,
+    petaelectronvolts,
+    teraelectronvolts,
+    gigaelectronvolts,
+    megaelectronvolts,
+    kiloelectronvolts,
+    millielectronvolts,
+    microelectronvolts,
+    nanoelectronvolts,
+    picoelectronvolts,
+    femtoelectronvolts,
+    attoelectronvolts,
 ])
 
 power = UnitGroup(
@@ -1982,8 +2611,147 @@ temperature = UnitGroup(
 dimensionless = UnitGroup(
   name = 'dimensionless', 
   units = [
+    none,
+])
+
+angle = UnitGroup(
+  name = 'angle', 
+  units = [
     degrees,
     radians,
+])
+
+solid_angle = UnitGroup(
+  name = 'solid_angle', 
+  units = [
     stradians,
-    none,
+])
+
+amount = UnitGroup(
+  name = 'amount', 
+  units = [
+    moles,
+    millimoles,
+    micromoles,
+    nanomoles,
+    picomoles,
+    femtomoles,
+    attomoles,
+])
+
+concentration = UnitGroup(
+  name = 'concentration', 
+  units = [
+    moles_per_cubic_meter,
+    millimoles_per_cubic_meter,
+    micromoles_per_cubic_meter,
+    nanomoles_per_cubic_meter,
+    picomoles_per_cubic_meter,
+    femtomoles_per_cubic_meter,
+    attomoles_per_cubic_meter,
+    moles_per_cubic_exameter,
+    millimoles_per_cubic_exameter,
+    micromoles_per_cubic_exameter,
+    nanomoles_per_cubic_exameter,
+    picomoles_per_cubic_exameter,
+    femtomoles_per_cubic_exameter,
+    attomoles_per_cubic_exameter,
+    moles_per_cubic_petameter,
+    millimoles_per_cubic_petameter,
+    micromoles_per_cubic_petameter,
+    nanomoles_per_cubic_petameter,
+    picomoles_per_cubic_petameter,
+    femtomoles_per_cubic_petameter,
+    attomoles_per_cubic_petameter,
+    moles_per_cubic_terameter,
+    millimoles_per_cubic_terameter,
+    micromoles_per_cubic_terameter,
+    nanomoles_per_cubic_terameter,
+    picomoles_per_cubic_terameter,
+    femtomoles_per_cubic_terameter,
+    attomoles_per_cubic_terameter,
+    moles_per_cubic_gigameter,
+    millimoles_per_cubic_gigameter,
+    micromoles_per_cubic_gigameter,
+    nanomoles_per_cubic_gigameter,
+    picomoles_per_cubic_gigameter,
+    femtomoles_per_cubic_gigameter,
+    attomoles_per_cubic_gigameter,
+    moles_per_cubic_megameter,
+    millimoles_per_cubic_megameter,
+    micromoles_per_cubic_megameter,
+    nanomoles_per_cubic_megameter,
+    picomoles_per_cubic_megameter,
+    femtomoles_per_cubic_megameter,
+    attomoles_per_cubic_megameter,
+    moles_per_cubic_kilometer,
+    millimoles_per_cubic_kilometer,
+    micromoles_per_cubic_kilometer,
+    nanomoles_per_cubic_kilometer,
+    picomoles_per_cubic_kilometer,
+    femtomoles_per_cubic_kilometer,
+    attomoles_per_cubic_kilometer,
+    moles_per_cubic_millimeter,
+    millimoles_per_cubic_millimeter,
+    micromoles_per_cubic_millimeter,
+    nanomoles_per_cubic_millimeter,
+    picomoles_per_cubic_millimeter,
+    femtomoles_per_cubic_millimeter,
+    attomoles_per_cubic_millimeter,
+    moles_per_cubic_micrometer,
+    millimoles_per_cubic_micrometer,
+    micromoles_per_cubic_micrometer,
+    nanomoles_per_cubic_micrometer,
+    picomoles_per_cubic_micrometer,
+    femtomoles_per_cubic_micrometer,
+    attomoles_per_cubic_micrometer,
+    moles_per_cubic_nanometer,
+    millimoles_per_cubic_nanometer,
+    micromoles_per_cubic_nanometer,
+    nanomoles_per_cubic_nanometer,
+    picomoles_per_cubic_nanometer,
+    femtomoles_per_cubic_nanometer,
+    attomoles_per_cubic_nanometer,
+    moles_per_cubic_picometer,
+    millimoles_per_cubic_picometer,
+    micromoles_per_cubic_picometer,
+    nanomoles_per_cubic_picometer,
+    picomoles_per_cubic_picometer,
+    femtomoles_per_cubic_picometer,
+    attomoles_per_cubic_picometer,
+    moles_per_cubic_femtometer,
+    millimoles_per_cubic_femtometer,
+    micromoles_per_cubic_femtometer,
+    nanomoles_per_cubic_femtometer,
+    picomoles_per_cubic_femtometer,
+    femtomoles_per_cubic_femtometer,
+    attomoles_per_cubic_femtometer,
+    moles_per_cubic_attometer,
+    millimoles_per_cubic_attometer,
+    micromoles_per_cubic_attometer,
+    nanomoles_per_cubic_attometer,
+    picomoles_per_cubic_attometer,
+    femtomoles_per_cubic_attometer,
+    attomoles_per_cubic_attometer,
+    moles_per_cubic_decimeter,
+    millimoles_per_cubic_decimeter,
+    micromoles_per_cubic_decimeter,
+    nanomoles_per_cubic_decimeter,
+    picomoles_per_cubic_decimeter,
+    femtomoles_per_cubic_decimeter,
+    attomoles_per_cubic_decimeter,
+    moles_per_cubic_centimeter,
+    millimoles_per_cubic_centimeter,
+    micromoles_per_cubic_centimeter,
+    nanomoles_per_cubic_centimeter,
+    picomoles_per_cubic_centimeter,
+    femtomoles_per_cubic_centimeter,
+    attomoles_per_cubic_centimeter,
+    moles_per_cubic_angstrom,
+    millimoles_per_cubic_angstrom,
+    micromoles_per_cubic_angstrom,
+    nanomoles_per_cubic_angstrom,
+    picomoles_per_cubic_angstrom,
+    femtomoles_per_cubic_angstrom,
+    attomoles_per_cubic_angstrom,
 ])
