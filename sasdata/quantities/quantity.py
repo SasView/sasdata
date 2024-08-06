@@ -1,15 +1,17 @@
-import hashlib
-import json
-from typing import Any, Self, TypeVar, Union
+from typing import Self
 
-import h5py
 import numpy as np
 from numpy._typing import ArrayLike
 
 from sasdata.quantities import units
 from sasdata.quantities.numerical_encoding import numerical_decode, numerical_encode
-from sasdata.quantities.unit_parser import parse_unit
-from sasdata.quantities.units import NamedUnit, Unit
+from sasdata.quantities.units import Unit, NamedUnit
+
+import hashlib
+
+from typing import Any, TypeVar, Union
+
+import json
 
 T = TypeVar("T")
 
@@ -215,7 +217,7 @@ class Operation:
 
     @staticmethod
     def _deserialise(parameters: dict) -> "Operation":
-        raise NotImplementedError("Deserialise not implemented for this class")
+        raise NotImplementedError(f"Deserialise not implemented for this class")
 
     def serialise(self) -> str:
         return json.dumps(self._serialise_json())
@@ -300,6 +302,9 @@ class Constant(ConstantBase):
     serialisation_name = "constant"
     def __init__(self, value):
         self.value = value
+
+    def summary(self, indent_amount: int = 0, indent: str="  "):
+        return repr(self.value)
 
     def evaluate(self, variables: dict[int, T]) -> T:
         return self.value
@@ -1113,18 +1118,6 @@ class Quantity[QuantityType]:
 
         self.history = QuantityHistory.variable(self)
 
-    # TODO: Adding this method as a temporary measure but we need a single
-    # method that does this.
-    def with_standard_error(self, standard_error: "Quantity"):
-        if standard_error.units.equivalent(self.units):
-            return Quantity(
-                value=self.value,
-                units=self.units,
-                standard_error=standard_error.in_units_of(self.units),)
-        else:
-            raise UnitError(f"Standard error units ({standard_error.units}) "
-                            f"are not compatible with value units ({self.units})")
-
     @property
     def has_variance(self):
         return self._variance is not None
@@ -1181,20 +1174,6 @@ class Quantity[QuantityType]:
             return self.in_units_of_with_standard_error(self.units.si_equivalent())
         else:
             return self.in_si(), None
-
-    def explicitly_formatted(self, unit_string: str) -> str:
-        """Returns quantity as a string with specific unit formatting
-
-        Performs any necessary unit conversions, but maintains the exact unit
-        formatting provided by the user.  This can be useful if you have a
-        power expressed in horsepower and you want it expressed as "745.7 N m/s" and not as "745.7 W". """
-        unit = parse_unit(unit_string)
-        quantity = self.in_units_of(unit)
-        return f"{quantity} {unit_string}"
-
-    def __eq__(self: Self, other: Self) -> bool | np.ndarray:
-        return self.value == other.in_units_of(self.units)
-
 
     def __mul__(self: Self, other: ArrayLike | Self ) -> Self:
         if isinstance(other, Quantity):
@@ -1349,7 +1328,6 @@ class Quantity[QuantityType]:
 
     @staticmethod
     def _array_repr_format(arr: np.ndarray):
-
         """ Format the array """
         order = len(arr.shape)
         reshaped = arr.reshape(-1)
@@ -1398,12 +1376,6 @@ class Quantity[QuantityType]:
     @property
     def string_repr(self):
         return str(self.hash_value)
-
-    def as_h5(self, group: h5py.Group, name: str):
-        """Add this data onto a group as a dataset under the given name"""
-        boxed = self.value if type(self.value) is np.ndarray else [self.value]
-        data = group.create_dataset(name, data=boxed)
-        data.attrs["units"] = self.units.ascii_symbol
 
 
 class NamedQuantity[QuantityType](Quantity[QuantityType]):
