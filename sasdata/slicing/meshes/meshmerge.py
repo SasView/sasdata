@@ -1,10 +1,9 @@
-import time
-
 import numpy as np
 
-from sasdata.slicing.meshes.delaunay_mesh import delaunay_mesh
 from sasdata.slicing.meshes.mesh import Mesh
+from sasdata.slicing.meshes.delaunay_mesh import delaunay_mesh
 
+import time
 
 def meshmerge(mesh_a: Mesh, mesh_b: Mesh) -> tuple[Mesh, np.ndarray, np.ndarray]:
     """ Take two lists of polygons and find their intersections
@@ -68,24 +67,13 @@ def meshmerge(mesh_a: Mesh, mesh_b: Mesh) -> tuple[Mesh, np.ndarray, np.ndarray]
 
     non_singular = np.linalg.det(deltas) != 0
 
-    st = np.linalg.solve(
-        deltas[non_singular],
-        # Reshape is required because solve accepts matrices of shape
-        # (M) or (..., M, K) for the second parameter, but ours shape
-        # is (..., M).  We add an extra dimension to force our matrix
-        # into the shape (..., M, 1), which meets the expectations.
-        #
-        #
-        # Due to the reshaping work mentioned above, the final result
-        # has an extra element of length 1.  We then index this extra
-        # dimension to get back to the result we wanted.
-        np.expand_dims(start_point_diff[non_singular], axis=2))[:, :, 0]
+    st = np.linalg.solve(deltas[non_singular], start_point_diff[non_singular])
 
     # Find the points where s and t are in (0, 1)
 
     intersection_inds = np.logical_and(
-        np.logical_and(0 < st[:, 0], st[:, 0] < 1), # noqa SIM300
-        np.logical_and(0 < st[:, 1], st[:, 1] < 1)) # noqa SIM300
+        np.logical_and(0 < st[:, 0], st[:, 0] < 1),
+        np.logical_and(0 < st[:, 1], st[:, 1] < 1))
 
     start_points_for_intersections = p1[non_singular][intersection_inds, :]
     deltas_for_intersections = delta1[non_singular][intersection_inds, :]
