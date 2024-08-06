@@ -1,31 +1,17 @@
-import re
-from fractions import Fraction
-from typing import Self
+from dataclasses import dataclass
+from typing import Sequence, Self, TypeVar
 
 import numpy as np
 
-_ascii_version = "0123456789-"
-_unicode_version = "⁰¹²³⁴⁵⁶⁷⁸⁹⁻"
+from sasdata.quantities.unicode_superscript import int_as_unicode_superscript
 
-def int_as_unicode_superscript(number: int):
-    string = str(number)
-
-    for old, new in zip(_ascii_version, _unicode_version):
-        string = string.replace(old, new)
-
-    return string
-
-class DimensionError(Exception):
-    pass
 
 class Dimensions:
     """
 
-    Note that some SI Base units are not useful from the perspecive of the sasview project, and make things
-    behave badly. In particular: moles and angular measures are dimensionless, and candelas are really a weighted
-    measure of power.
+    Note that some SI Base units are
 
-    We do however track angle and amount, because its really useful for formatting units
+    For example, moles and angular measures are dimensionless from this perspective, and candelas are
 
     """
     def __init__(self,
@@ -33,22 +19,13 @@ class Dimensions:
                  time: int = 0,
                  mass: int = 0,
                  current: int = 0,
-                 temperature: int = 0,
-                 moles_hint: int = 0,
-                 angle_hint: int = 0):
+                 temperature: int = 0):
 
         self.length = length
         self.time = time
         self.mass = mass
         self.current = current
         self.temperature = temperature
-        self.moles_hint = moles_hint
-        self.angle_hint = angle_hint
-
-    @property
-    def is_dimensionless(self):
-        """ Is this dimension dimensionless (ignores moles_hint and angle_hint) """
-        return self.length == 0 and self.time == 0 and self.mass == 0 and self.current == 0 and self.temperature == 0
 
     def __mul__(self: Self, other: Self):
 
@@ -60,9 +37,7 @@ class Dimensions:
             self.time + other.time,
             self.mass + other.mass,
             self.current + other.current,
-            self.temperature + other.temperature,
-            self.moles_hint + other.moles_hint,
-            self.angle_hint + other.angle_hint)
+            self.temperature + other.temperature)
 
     def __truediv__(self: Self, other: Self):
 
@@ -74,60 +49,27 @@ class Dimensions:
             self.time - other.time,
             self.mass - other.mass,
             self.current - other.current,
-            self.temperature - other.temperature,
-            self.moles_hint - other.moles_hint,
-            self.angle_hint - other.angle_hint)
+            self.temperature - other.temperature)
 
-    def __pow__(self, power: int | float):
+    def __pow__(self, power: int):
 
-        if not isinstance(power, (int, float)):
+        if not isinstance(power, int):
             return NotImplemented
 
-        frac = Fraction(power).limit_denominator(500) # Probably way bigger than needed, 10 would probably be fine
-        denominator = frac.denominator
-        numerator = frac.numerator
-
-        # Throw errors if dimension is not a multiple of the denominator
-
-        if self.length % denominator != 0:
-            raise DimensionError(f"Cannot apply power of {frac} to unit with length dimensionality {self.length}")
-
-        if self.time % denominator != 0:
-            raise DimensionError(f"Cannot apply power of {frac} to unit with time dimensionality {self.time}")
-
-        if self.mass % denominator != 0:
-            raise DimensionError(f"Cannot apply power of {frac} to unit with mass dimensionality {self.mass}")
-
-        if self.current % denominator != 0:
-            raise DimensionError(f"Cannot apply power of {frac} to unit with current dimensionality {self.current}")
-
-        if self.temperature % denominator != 0:
-            raise DimensionError(f"Cannot apply power of {frac} to unit with temperature dimensionality {self.temperature}")
-
-        if self.moles_hint % denominator != 0:
-            raise DimensionError(f"Cannot apply power of {frac} to unit with moles hint dimensionality of {self.moles_hint}")
-
-        if self.angle_hint % denominator != 0:
-            raise DimensionError(f"Cannot apply power of {frac} to unit with angle hint dimensionality of {self.angle_hint}")
-
         return Dimensions(
-            (self.length * numerator) // denominator,
-            (self.time * numerator) // denominator,
-            (self.mass * numerator) // denominator,
-            (self.current * numerator) // denominator,
-            (self.temperature * numerator) // denominator,
-            (self.moles_hint * numerator) // denominator,
-            (self.angle_hint * numerator) // denominator)
+            self.length * power,
+            self.time * power,
+            self.mass * power,
+            self.current * power,
+            self.temperature * power)
 
-    def __eq__(self: Self, other: object) -> bool:
+    def __eq__(self: Self, other: Self):
         if isinstance(other, Dimensions):
-            return (self.length == other.length
-                    and self.time == other.time
-                    and self.mass == other.mass
-                    and self.current == other.current
-                    and self.temperature == other.temperature
-                    and self.moles_hint == other.moles_hint
-                    and self.angle_hint == other.angle_hint)
+            return (self.length == other.length and
+                    self.time == other.time and
+                    self.mass == other.mass and
+                    self.current == other.current and
+                    self.temperature == other.temperature)
 
         return NotImplemented
 
@@ -150,90 +92,57 @@ class Dimensions:
         if self.temperature < 0:
             two_powers += 16
 
-        if self.moles_hint < 0:
-            two_powers += 32
-
-        if self.angle_hint < 0:
-            two_powers += 64
-
         return 2**two_powers * 3**abs(self.length) * 5**abs(self.time) * \
-            7**abs(self.mass) * 11**abs(self.current) * 13**abs(self.temperature) * \
-            17**abs(self.moles_hint) * 19**abs(self.angle_hint)
+            7**abs(self.mass) * 11**abs(self.current) * 13**abs(self.temperature)
 
     def __repr__(self):
-        tokens = []
+        s = ""
         for name, size in [
-            ("length", self.length),
-            ("time", self.time),
-            ("mass", self.mass),
-            ("current", self.current),
-            ("temperature", self.temperature),
-            ("amount", self.moles_hint),
-            ("angle", self.angle_hint)]:
+            ("L", self.length),
+            ("T", self.time),
+            ("M", self.mass),
+            ("C", self.current),
+            ("K", self.temperature)]:
 
             if size == 0:
                 pass
             elif size == 1:
-                tokens.append(f"{name}")
+                s += f"{name}"
             else:
-                tokens.append(f"{name}{int_as_unicode_superscript(size)}")
+                s += f"{name}{int_as_unicode_superscript(size)}"
 
-        return ' '.join(tokens)
-
-    def si_repr(self):
-        tokens = []
-        for name, size in [
-            ("kg", self.mass),
-            ("m", self.length),
-            ("s", self.time),
-            ("A", self.current),
-            ("K", self.temperature),
-            ("mol", self.moles_hint)]:
-
-            if size == 0:
-                pass
-            elif size == 1:
-                tokens.append(f"{name}")
-            else:
-                tokens.append(f"{name}{int_as_unicode_superscript(size)}")
-
-        match self.angle_hint:
-            case 0:
-                pass
-            case 2:
-                tokens.append("sr")
-            case -2:
-                tokens.append("sr" + int_as_unicode_superscript(-1))
-            case _:
-                tokens.append("rad" + int_as_unicode_superscript(self.angle_hint))
-
-        return ''.join(tokens)
-
+        return s
 
 class Unit:
     def __init__(self,
                  si_scaling_factor: float,
-                 dimensions: Dimensions):
+                 dimensions: Dimensions,
+                 name: str | None = None,
+                 ascii_symbol: str | None = None,
+                 symbol: str | None = None):
 
         self.scale = si_scaling_factor
         self.dimensions = dimensions
+        self.name = name
+        self.ascii_symbol = ascii_symbol
+        self.symbol = symbol
 
-    def __mul__(self: Self, other: "Unit"):
-        if isinstance(other, Unit):
-            return Unit(self.scale * other.scale, self.dimensions * other.dimensions)
-        elif isinstance(other, (int, float)):
-            return Unit(other * self.scale, self.dimensions)
-        return NotImplemented
+    def _components(self, tokens: Sequence["UnitToken"]):
+        pass
 
-    def __truediv__(self: Self, other: "Unit"):
-        if isinstance(other, Unit):
-            return Unit(self.scale / other.scale, self.dimensions / other.dimensions)
-        elif isinstance(other, (int, float)):
-            return Unit(self.scale / other, self.dimensions)
-        else:
+    def __mul__(self: Self, other: Self):
+        if not isinstance(other, Unit):
             return NotImplemented
 
-    def __rtruediv__(self: Self, other: "Unit"):
+        return Unit(self.scale * other.scale, self.dimensions * other.dimensions)
+
+    def __truediv__(self: Self, other: Self):
+        if not isinstance(other, Unit):
+            return NotImplemented
+
+        return Unit(self.scale / other.scale, self.dimensions / other.dimensions)
+
+    def __rtruediv__(self: Self, other: Self):
         if isinstance(other, Unit):
             return Unit(other.scale / self.scale, other.dimensions / self.dimensions)
         elif isinstance(other, (int, float)):
@@ -241,276 +150,19 @@ class Unit:
         else:
             return NotImplemented
 
-    def __pow__(self, power: int | float):
-        if not isinstance(power, int | float):
+    def __pow__(self, power: int):
+        if not isinstance(power, int):
             return NotImplemented
 
         return Unit(self.scale**power, self.dimensions**power)
 
-
-    def equivalent(self: Self, other: "Unit"):
+    def equivalent(self: Self, other: Self):
         return self.dimensions == other.dimensions
 
-    def __eq__(self: Self, other: object) -> bool:
-        if isinstance(other, Unit):
-            return self.equivalent(other) and np.abs(np.log(self.scale/other.scale)) < 1e-5
-        return False
-
-    def si_equivalent(self):
-        """ Get the SI unit corresponding to this unit"""
-        return Unit(1, self.dimensions)
-
-    def __repr__(self):
-        if self.scale == 1:
-            # We're in SI
-            return self.dimensions.si_repr()
-
-        else:
-            return f"Unit[{self.scale}, {self.dimensions}]"
-
-
-class NamedUnit(Unit):
-    """ Units, but they have a name, and a symbol
-
-    :si_scaling_factor: Number of these units per SI equivalent
-    :param dimensions: Dimensions object representing the dimensionality of these units
-    :param name: Name of unit - string without unicode
-    :param ascii_symbol: Symbol for unit without unicode
-    :param symbol: Unicode symbol
-    """
-    def __init__(self,
-                 si_scaling_factor: float,
-                 dimensions: Dimensions,
-                 name: str | None = None,
-                 ascii_symbol: str | None = None,
-                 latex_symbol: str | None = None,
-                 symbol: str | None = None):
-
-        super().__init__(si_scaling_factor, dimensions)
-        self.name = name
-        self.ascii_symbol = ascii_symbol
-        self.symbol = symbol
-        self.latex_symbol = latex_symbol if latex_symbol is not None else ascii_symbol
-
-    def __repr__(self):
-        return self.name
-
-    def __eq__(self, other):
-        """Match other units exactly or match strings against ANY of our names"""
-        match other:
-            case str():
-                return self.name == other or self.name == f"{other}s" or self.ascii_symbol == other or self.symbol == other
-            case NamedUnit():
-                return self.name == other.name \
-                    and self.ascii_symbol == other.ascii_symbol and self.symbol == other.symbol
-            case Unit():
-                return self.equivalent(other) and np.abs(np.log(self.scale/other.scale)) < 1e-5
-            case _:
-                return False
-
-
-    def startswith(self, prefix: str) -> bool:
-        """Check if any representation of the unit begins with the prefix string"""
-        prefix = prefix.lower()
-        return (self.name is not None and self.name.lower().startswith(prefix)) \
-                or (self.ascii_symbol is not None and self.ascii_symbol.lower().startswith(prefix)) \
-                or (self.symbol is not None and self.symbol.lower().startswith(prefix))
-
-
-class UnknownUnit(NamedUnit):
-    """A unit for an unknown quantity
-
-    While this library attempts to handle all known SI units, it is
-    likely that users will want to express quantities of arbitrary
-    units (for example, calculating donuts per person for a meeting).
-    The arbitrary unit allows for these unforseeable quantities."""
-
-    def __init__(self,
-                 numerator: str | list[str] | dict[str, int | float],
-                 denominator: None | list[str] | dict[str, int | float] = None):
-        if numerator is None:
-            return TypeError
-        self._numerator = UnknownUnit._parse_arg(numerator)
-        self._denominator = UnknownUnit._parse_arg(denominator)
-        self._unit = NamedUnit(1, Dimensions(), "")  # Unitless
-
-        super().__init__(si_scaling_factor=1, dimensions=self._unit.dimensions, symbol=self._name())
-
-    @staticmethod
-    def _parse_arg(arg: str | list[str] | dict[str, int | float] | None) -> dict[str, int | float]:
-        """Parse the different possibilities for constructor arguments
-
-        Both the numerator and the denominator could be a string, a
-        list of strings, or a dict.  Parse any of these values into a
-        dictionary of names and powers.
-
-        """
-        match arg:
-            case None:
-                return {}
-            case str():
-                return {UnknownUnit._valid_name(arg): 1}
-            case list():
-                result: dict[str, int | float] = {}
-                for key in arg:
-                    if key in result:
-                        result[key] += 1
-                    else:
-                        UnknownUnit._valid_name(key)
-                        result[key] = 1
-                return result
-            case dict():
-                for key in arg:
-                    UnknownUnit._valid_name(key)
-                return arg
-            case _:
-                raise TypeError
-
-    @staticmethod
-    def _valid_name(name: str) -> str:
-        """Confirms that the name of a unit is appropriate
-
-        This mostly confirms that the unit does not contain math
-        operators that would act on other units, like / or ^
-        """
-
-        if re.search(r"[*/^\s]", name):
-            raise RuntimeError(f'Unit name "{name}" contains invalid characters (*, /, ^, or whitespace)')
-
-        return name
-
-    def _name(self):
-        num = []
-        for key, value in self._numerator.items():
-            if value == 1:
-                num.append(key)
-            else:
-                num.append(f"{key}^{value}")
-        den = []
-        for key, value in self._denominator.items():
-            den.append(f"{key}^{-value}")
-        num.sort()
-        den.sort()
-        return " ".join(num + den)
-
-    def __eq__(self, other):
-        match other:
-            case UnknownUnit():
-                return self._numerator == other._numerator and self._denominator == other._denominator and self._unit == other._unit
-            case Unit():
-                return not self._numerator and not self._denominator and self._unit == other
-            case _:
-                return False
-
-
-    def __mul__(self: Self, other: "Unit"):
-        match other:
-            case UnknownUnit():
-                num = dict(self._numerator)
-                for key in other._numerator:
-                    if key in num:
-                        num[key] += other._numerator[key]
-                    else:
-                        num[key] = other._numerator[key]
-                den = dict(self._denominator)
-                for key in other._denominator:
-                    if key in den:
-                        den[key] += other._denominator[key]
-                    else:
-                        den[key] = other._denominator[key]
-                result = UnknownUnit(num, den)
-                result._unit *= other._unit
-                return result._reduce()
-            case NamedUnit() | Unit() | int() | float():
-                result = UnknownUnit(self._numerator, self._denominator)
-                result._unit *= other
-                return result
-            case _:
-                return NotImplemented
-
-    def __rmul__(self: Self, other):
-        return self * other
-
-    def __truediv__(self: Self, other: "Unit") -> "UnknownUnit":
-        match other:
-            case UnknownUnit():
-                num = dict(self._numerator)
-                for key in other._denominator:
-                    if key in num:
-                        num[key] += other._denominator[key]
-                    else:
-                        num[key] = other._denominator[key]
-                den = dict(self._denominator)
-                for key in other._numerator:
-                    if key in den:
-                        den[key] += other._numerator[key]
-                    else:
-                        den[key] = other._numerator[key]
-                result = UnknownUnit(num, den)
-                result._unit /= other._unit
-                return result._reduce()
-            case NamedUnit() | Unit() | int() | float():
-                result = UnknownUnit(self._numerator, self._denominator)
-                result._unit /= other
-                return result
-            case _:
-                return NotImplemented
-
-    def __rtruediv__(self: Self, other: "Unit") -> "UnknownUnit":
-        return (self/other) ** -1
-
-    def __pow__(self, power: int | float) -> "UnknownUnit":
-        match power:
-            case int() | float():
-                num = {key: value * power for key, value in self._numerator.items()}
-                den = {key: value * power for key, value in self._denominator.items()}
-                if power < 0:
-                    num, den = den, num
-                    num = {k: -v for k,v in num.items()}
-                    den = {k: -v for k,v in den.items()}
-
-                result = UnknownUnit(num, den)
-                result._unit = self._unit ** power
-                return result
-            case _:
-                return NotImplemented
-
-    def equivalent(self: Self, other: "Unit"):
-        match other:
-            case UnknownUnit():
-                return self._unit.equivalent(other._unit) and sorted(self._numerator) == sorted(other._numerator) and sorted(self._denominator) == sorted(other._denominator)
-            case _:
-                return False
-
-    def _reduce(self):
-        """Remove redundant units"""
-        for k in self._denominator:
-            if k in self._numerator:
-                common = min(self._numerator[k], self._denominator[k])
-                self._numerator[k] -= common
-                self._denominator[k] -= common
-        dead_nums = [k for k in self._numerator if self._numerator[k] == 0]
-        for k in dead_nums:
-            del self._numerator[k]
-        dead_dens = [k for k in self._denominator if self._denominator[k] == 0]
-        for k in dead_dens:
-            del self._denominator[k]
-        return self
-
-    def __str__(self):
-        result = self._name()
-        if type(self._unit) is NamedUnit and self._unit.name.strip():
-            result += f" {self._unit.name.strip()}"
-        if type(self._unit) is Unit and str(self._unit).strip():
-            result += f" {str(self._unit).strip()}"
-        return result
-
-    def __repr__(self):
-        return str(self)
-
+    def __eq__(self: Self, other: Self):
+        return self.equivalent(other) and np.abs(np.log(self.scale/other.scale)) < 1e-5
 
 class UnitGroup:
-    """ A group of units that all have the same dimensionality """
-    def __init__(self, name: str, units: list[NamedUnit]):
+    def __init__(self, name: str, units: list[Unit]):
         self.name = name
         self.units = sorted(units, key=lambda unit: unit.scale)
