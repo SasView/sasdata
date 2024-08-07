@@ -54,7 +54,7 @@ derived_si_units = [
     ("H", None, "henry", "henry", 1, 2, -2, 1, -2, 0, 0, 0, all_magnitudes),
 ]
 
-non_si_units = [
+non_si_units: list[tuple[str, str | None, str, str, float, int, int, int, int, int, int, int, list]] = [
     ("Ang", "Å", "angstrom", "angstroms", 1e-10, 1, 0, 0, 0, 0, 0, 0, []),
     ("min", None, "minute", "minutes", 60, 0, 1, 0, 0, 0, 0, 0, []),
     ("h", None, "hour", "hours", 360, 0, 1, 0, 0, 0, 0, 0, []),
@@ -69,7 +69,14 @@ non_si_units = [
     ("au", None, "atomic mass unit", "atomic mass units", 1.660538921e-27, 0, 0, 1, 0, 0, 0, 0, []),
     ("mol", None, "mole", "moles", 6.02214076e23, 0, 0, 0, 0, 0, 1, 0, smaller_magnitudes),
     ("kgForce", None, "kg force", "kg force",  9.80665, 1, -2, 1, 0, 0, 0, 0, []),
-    ("C", None, "degree Celsius", "degrees Celsius", 1, 0, 0, 0, 0, 1, 0, 0, [])
+    ("C", None, "degree Celsius", "degrees Celsius", 1, 0, 0, 0, 0, 1, 0, 0, []),
+    ("miles", None, "mile", "miles", 1760*3*0.3048, 1, 0, 0, 0, 0, 0, 0, []),
+    ("yrd", None, "yard", "yards", 3*0.3048, 1, 0, 0, 0, 0, 0, 0, []),
+    ("ft", None, "foot", "feet", 0.3048, 1, 0, 0, 0, 0, 0, 0, []),
+    ("in", None, "inch", "inches", 0.0254, 1, 0, 0, 0, 0, 0, 0, []),
+    ("lb", None, "pound", "pounds", 0.45359237, 0, 0, 1, 0, 0, 0, 0, []),
+    ("oz", None, "ounce", "ounces", 0.45359237/16, 0, 0, 1, 0, 0, 0, 0, []),
+    ("psi", None, "pound force per square inch", "pound force per square inch", 6.894757e3, -1, -2, 1, 0, 0, 0, 0, []),
 ]
 
 aliases = {
@@ -113,13 +120,20 @@ with open("units.py", 'w', encoding=encoding) as fid:
     unit_types_temp = defaultdict(list) # Keep track of unit types
     unit_types = defaultdict(list)
 
-    for symbol, special_symbol, singular, plural, scale, length, time, mass, current, temperature, moles_hint, angle_hint, magnitudes in all_units:
+    for unit_def in all_units:
+
+        try:
+            symbol, special_symbol, singular, plural, scale, length, time, \
+                mass, current, temperature, moles_hint, angle_hint, magnitudes = unit_def
+        except Exception as e:
+            print(unit_def)
+            raise e
 
         formatted_plural = format_name(plural)
         formatted_singular = format_name(singular)
 
         dimensions = Dimensions(length, time, mass, current, temperature, moles_hint, angle_hint)
-        fid.write(f"{formatted_plural} = Unit({scale}, Dimensions({length}, {time}, {mass}, {current}, {temperature}, {moles_hint}, {angle_hint}),"
+        fid.write(f"{formatted_plural} = NamedUnit({scale}, Dimensions({length}, {time}, {mass}, {current}, {temperature}, {moles_hint}, {angle_hint}),"
                       f"name='{formatted_plural}',"
                       f"ascii_symbol='{symbol}',"
                       f"symbol='{symbol if special_symbol is None else special_symbol}')\n")
@@ -149,7 +163,7 @@ with open("units.py", 'w', encoding=encoding) as fid:
 
             # Units
             dimensions = Dimensions(length, time, mass, current, temperature, moles_hint, angle_hint)
-            fid.write(f"{combined_name_plural} = Unit({combined_scale}, "
+            fid.write(f"{combined_name_plural} = NamedUnit({combined_scale}, "
                       f"Dimensions({length}, {time}, {mass}, {current}, {temperature}),"
                       f"name='{combined_name_plural}',"
                       f"ascii_symbol='{combined_symbol}',"
@@ -186,7 +200,7 @@ with open("units.py", 'w', encoding=encoding) as fid:
             unit_name = prefix + name
             unit_special_symbol = (symbol if special_symbol is None else special_symbol) + unicode_suffix
             unit_symbol = symbol + f"^{power}"
-            fid.write(f"{unit_name} = Unit({scale**power}, Dimensions(length={power}), "
+            fid.write(f"{unit_name} = NamedUnit({scale**power}, Dimensions(length={power}), "
                       f"name='{unit_name}', "
                       f"ascii_symbol='{unit_symbol}', "
                       f"symbol='{unit_special_symbol}')\n")
@@ -203,13 +217,13 @@ with open("units.py", 'w', encoding=encoding) as fid:
             accel_dimensions = Dimensions(length=1, time=-2)
 
             fid.write(f"{speed_name} "
-                      f"= Unit({length_scale / time_scale}, "
+                      f"= NamedUnit({length_scale / time_scale}, "
                       f"Dimensions(length=1, time=-1), "
                       f"name='{speed_name}', "
                       f"ascii_symbol='{length_symbol}/{time_symbol}', "
                       f"symbol='{length_special_symbol}{time_special_symbol}⁻¹')\n")
 
-            fid.write(f"{accel_name} = Unit({length_scale / time_scale}, "
+            fid.write(f"{accel_name} = NamedUnit({length_scale / time_scale}, "
                       f"Dimensions(length=1, time=-2), "
                       f"name='{accel_name}', "
                       f"ascii_symbol='{length_symbol}/{time_symbol}^2', "
@@ -227,7 +241,7 @@ with open("units.py", 'w', encoding=encoding) as fid:
             dimensions = Dimensions(length=-3, mass=1)
 
             fid.write(f"{name} "
-                      f"= Unit({mass_scale / length_scale**3}, "
+                      f"= NamedUnit({mass_scale / length_scale**3}, "
                       f"Dimensions(length=-3, mass=1), "
                       f"name='{name}', "
                       f"ascii_symbol='{mass_symbol} {length_symbol}^-3', "
@@ -244,7 +258,7 @@ with open("units.py", 'w', encoding=encoding) as fid:
             dimensions = Dimensions(length=-3, moles_hint=1)
 
             fid.write(f"{name} "
-                      f"= Unit({amount_scale / length_scale**3}, "
+                      f"= NamedUnit({amount_scale / length_scale**3}, "
                       f"Dimensions(length=-3, moles_hint=1), "
                       f"name='{name}', "
                       f"ascii_symbol='{amount_symbol} {length_symbol}^-3', "
