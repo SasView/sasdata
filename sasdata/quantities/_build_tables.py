@@ -52,7 +52,6 @@ derived_si_units = [
     ("Wb", None, "weber", "webers", 1, 2, -2, 1, -1, 0, 0, 0, all_magnitudes),
     ("T", None, "tesla", "tesla", 1, 0, -2, 1, -1, 0, 0, 0, all_magnitudes),
     ("H", None, "henry", "henry", 1, 2, -2, 1, -2, 0, 0, 0, all_magnitudes),
-    ("C", None, "degree Celsius", "degrees Celsius", 1, 0, 0, 0, 0, 1, 0, 0, [])
 ]
 
 non_si_units = [
@@ -69,7 +68,8 @@ non_si_units = [
     ("eV", None, "electronvolt", "electronvolts", 1.602176634e-19, 2, -2, 1, 0, 0, 0, 0, all_magnitudes),
     ("au", None, "atomic mass unit", "atomic mass units", 1.660538921e-27, 0, 0, 1, 0, 0, 0, 0, []),
     ("mol", None, "mole", "moles", 6.02214076e23, 0, 0, 0, 0, 0, 1, 0, smaller_magnitudes),
-    ("kgForce", None, "kg force", "kg force",  9.80665, 1, -2, 1, 0, 0, 0, 0, [])
+    ("kgForce", None, "kg force", "kg force",  9.80665, 1, -2, 1, 0, 0, 0, 0, []),
+    ("C", None, "degree Celsius", "degrees Celsius", 1, 0, 0, 0, 0, 1, 0, 0, [])
 ]
 
 aliases = {
@@ -347,3 +347,12 @@ with open("accessors.py", 'w', encoding=encoding) as fid:
                       f"\n")
 
         fid.write("\n")
+
+with open("si.py", 'w') as fid:
+
+    fid.write('"""'+(warning_text%"_build_tables.py")+'"""\n\n')
+    si_unit_names = [values[3] for values in base_si_units + derived_si_units if values[3] != "grams"] + ["kilograms"]
+
+    for name in si_unit_names:
+
+        fid.write(f"from sasdata.quantities.units import {name}\n")
