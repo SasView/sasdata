@@ -80,6 +80,10 @@ non_si_units: list[tuple[str, str | None, str, str, float, int, int, int, int, i
     ("psi", None, "pound force per square inch", "pounds force per square inch", 4.448222/(0.0254**2), -1, -2, 1, 0, 0, 0, 0, []),
 ]
 
+# TODO:
+# Add Hartree? Rydberg? Bohrs?
+# Add CGS
+
 aliases = {
     "y": ["yr", "year"],
     "d": ["day"],
@@ -283,7 +287,8 @@ with open("units.py", 'w', encoding=encoding) as fid:
     fid.write("\n#\n# Lookup table from symbols to units\n#\n\n")
     fid.write("symbol_lookup = {\n")
     for k in symbol_lookup:
-        fid.write(f'        "{k}": {symbol_lookup[k]},\n')
+        if k != "none":
+            fid.write(f'        "{k}": {symbol_lookup[k]},\n')
     fid.write("}\n\n")
 
     #
