@@ -96,24 +96,3 @@ from sasdata.quantities.units import webers
 from sasdata.quantities.units import tesla
 from sasdata.quantities.units import henry
 from sasdata.quantities.units import kilograms
-
-all_si = [
-    meters,
-    seconds,
-    amperes,
-    kelvin,
-    hertz,
-    newtons,
-    pascals,
-    joules,
-    watts,
-    coulombs,
-    volts,
-    ohms,
-    farads,
-    siemens,
-    webers,
-    tesla,
-    henry,
-    kilograms,
-]
