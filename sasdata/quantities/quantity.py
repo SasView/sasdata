@@ -55,13 +55,14 @@ class Quantity[QuantityType]:
     def __add__(self: Self, other: Self | ArrayLike) -> Self:
         if isinstance(other, Quantity):
             if self.units.equivalent(other.units):
-                return Quantity
-
-        elif self.units.dimensions.is_dimensionless:
-            return Quantity(other/self.units.scale, self.units)
+                return Quantity(self.value + (other.value * other.scale)/self.scale, self.units)
+            else:
+                raise UnitError(f"Units do not have the same dimensionality: {self.units} vs {other.units}")
 
         else:
-            raise UnitError(f"Cannot combine type {type(other)} with quantity")
+            raise UnitError(f"Cannot perform addition/subtraction non-quantity {type(other)} with quantity")
+
+    # Don't need __radd__ because only quantity/quantity operations should be allowed
 
     def __neg__(self):
         return Quantity(-self.value, self.units)
