@@ -353,4 +353,7 @@ with open("accessors.py", 'w', encoding=encoding) as fid:
 
     for name in si_unit_names:
 
-        fid.write(f"from sasdata.quantities.units import {name}\n")
+        fid.write(f"from sasdata.quantities.units import {name}\n")    fid.write("\nall_si = [\n")
+    for name in si_unit_names:
+        fid.write(f"    {name},\n")
+    fid.write("]\n")
