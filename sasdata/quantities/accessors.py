@@ -3830,6 +3830,10 @@ class ForceAccessor[T](Accessor[T]):
     def kg_force(self) -> T:
         return self.quantity.in_units_of(units.kg_force)
 
+    @property
+    def pounds_force(self) -> T:
+        return self.quantity.in_units_of(units.pounds_force)
+
 
 
 class PressureAccessor[T](Accessor[T]):
@@ -3888,8 +3892,8 @@ class PressureAccessor[T](Accessor[T]):
         return self.quantity.in_units_of(units.attopascals)
 
     @property
-    def pound_force_per_square_inch(self) -> T:
-        return self.quantity.in_units_of(units.pound_force_per_square_inch)
+    def pounds_force_per_square_inch(self) -> T:
+        return self.quantity.in_units_of(units.pounds_force_per_square_inch)
 
 
 
