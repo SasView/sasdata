@@ -620,7 +620,7 @@ inches = NamedUnit(0.0254, Dimensions(1, 0, 0, 0, 0, 0, 0),name='inches',ascii_s
 pounds = NamedUnit(0.45359237, Dimensions(0, 0, 1, 0, 0, 0, 0),name='pounds',ascii_symbol='lb',symbol='lb')
 pounds_force = NamedUnit(4.448222, Dimensions(1, -2, 1, 0, 0, 0, 0),name='pounds_force',ascii_symbol='lbf',symbol='lbf')
 ounces = NamedUnit(0.028349523125, Dimensions(0, 0, 1, 0, 0, 0, 0),name='ounces',ascii_symbol='oz',symbol='oz')
-pounds_force_per_square_inch = NamedUnit(6894.757, Dimensions(-1, -2, 1, 0, 0, 0, 0),name='pounds_force_per_square_inch',ascii_symbol='psi',symbol='psi')
+pounds_force_per_square_inch = NamedUnit(6894.757889515779, Dimensions(-1, -2, 1, 0, 0, 0, 0),name='pounds_force_per_square_inch',ascii_symbol='psi',symbol='psi')
 square_meters = NamedUnit(1, Dimensions(length=2), name='square_meters', ascii_symbol='m^2', symbol='m²')
 cubic_meters = NamedUnit(1, Dimensions(length=3), name='cubic_meters', ascii_symbol='m^3', symbol='m³')
 per_meter = NamedUnit(1.0, Dimensions(length=-1), name='per_meter', ascii_symbol='m^-1', symbol='m⁻¹')
@@ -1896,7 +1896,6 @@ symbol_lookup = {
         "deg": degrees,
         "rad": radians,
         "sr": stradians,
-        "none": none,
         "l": litres,
         "eV": electronvolts,
         "EeV": exaelectronvolts,
