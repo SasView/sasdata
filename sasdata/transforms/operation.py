@@ -1,5 +1,5 @@
 import numpy as np
-from sasdata.quantities.quantities import Quantity
+from sasdata.quantities.quantity import Quantity
 
 class Operation:
     """ Sketch of what model post-processing classes might look like """
