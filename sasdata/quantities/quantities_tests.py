@@ -62,17 +62,18 @@ def test_mixed_quantity_add_sub(unit_1, unit_2):
         with pytest.raises(UnitError):
             Quantity(1, unit_1) + Quantity(1, unit_2)
 
-def assert_unit_ratio(u1: units.Unit, u2: units.Unit, value: float):
+def assert_unit_ratio(u1: units.Unit, u2: units.Unit, value: float, abs=1e-9):
     """ Helper function for testing units that are multiples of each other """
 
     assert u1.equivalent(u2), "Units should be compatible for this test"
-    assert (Quantity(1, u1) / Quantity(1, u2)).in_units_of(units.none) == pytest.approx(value, abs=1e-9)
+    assert (Quantity(1, u1) / Quantity(1, u2)).in_units_of(units.none) == pytest.approx(value, abs=abs)
 
 
 def test_american_units():
     assert_unit_ratio(units.feet, units.inches, 12)
     assert_unit_ratio(units.yards, units.inches, 36)
     assert_unit_ratio(units.miles, units.inches, 63360)
+    assert_unit_ratio(units.pounds_force_per_square_inch, units.pounds_force / (units.inches**2), 1, abs=1e-5)
 
 
 @pytest.mark.parametrize("unit_1", si.all_si)
