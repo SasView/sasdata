@@ -75,8 +75,9 @@ non_si_units: list[tuple[str, str | None, str, str, float, int, int, int, int, i
     ("ft", None, "foot", "feet", 0.3048, 1, 0, 0, 0, 0, 0, 0, []),
     ("in", None, "inch", "inches", 0.0254, 1, 0, 0, 0, 0, 0, 0, []),
     ("lb", None, "pound", "pounds", 0.45359237, 0, 0, 1, 0, 0, 0, 0, []),
+    ("lbf", None, "pound force", "pounds force", 4.448222, 1, -2, 1, 0, 0, 0, 0, []),
     ("oz", None, "ounce", "ounces", 0.45359237/16, 0, 0, 1, 0, 0, 0, 0, []),
-    ("psi", None, "pound force per square inch", "pound force per square inch", 6.894757e3, -1, -2, 1, 0, 0, 0, 0, []),
+    ("psi", None, "pound force per square inch", "pounds force per square inch", 4.448222/(0.0254**2), -1, -2, 1, 0, 0, 0, 0, []),
 ]
 
 aliases = {

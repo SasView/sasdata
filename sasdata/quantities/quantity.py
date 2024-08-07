@@ -55,7 +55,7 @@ class Quantity[QuantityType]:
     def __add__(self: Self, other: Self | ArrayLike) -> Self:
         if isinstance(other, Quantity):
             if self.units.equivalent(other.units):
-                return Quantity(self.value + (other.value * other.scale)/self.scale, self.units)
+                return Quantity(self.value + (other.value * other.units.scale)/self.units.scale, self.units)
             else:
                 raise UnitError(f"Units do not have the same dimensionality: {self.units} vs {other.units}")
 
