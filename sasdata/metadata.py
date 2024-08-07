@@ -2,7 +2,7 @@ from typing import TypeVar
 
 from numpy._typing import ArrayLike
 
-from sasdata.quantities.quantities import Unit, Quantity
+from sasdata.quantities.quantity import Unit, Quantity
 
 
 class RawMetaData:
