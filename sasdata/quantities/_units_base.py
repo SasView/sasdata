@@ -143,33 +143,27 @@ class Dimensions:
 class Unit:
     def __init__(self,
                  si_scaling_factor: float,
-                 dimensions: Dimensions,
-                 name: str | None = None,
-                 ascii_symbol: str | None = None,
-                 symbol: str | None = None):
+                 dimensions: Dimensions):
 
         self.scale = si_scaling_factor
         self.dimensions = dimensions
-        self.name = name
-        self.ascii_symbol = ascii_symbol
-        self.symbol = symbol
 
     def _components(self, tokens: Sequence["UnitToken"]):
         pass
 
-    def __mul__(self: Self, other: Self):
+    def __mul__(self: Self, other: "Unit"):
         if not isinstance(other, Unit):
             return NotImplemented
 
         return Unit(self.scale * other.scale, self.dimensions * other.dimensions)
 
-    def __truediv__(self: Self, other: Self):
+    def __truediv__(self: Self, other: "Unit"):
         if not isinstance(other, Unit):
             return NotImplemented
 
         return Unit(self.scale / other.scale, self.dimensions / other.dimensions)
 
-    def __rtruediv__(self: Self, other: Self):
+    def __rtruediv__(self: Self, other: "Unit"):
         if isinstance(other, Unit):
             return Unit(other.scale / self.scale, other.dimensions / self.dimensions)
         elif isinstance(other, (int, float)):
@@ -183,10 +177,10 @@ class Unit:
 
         return Unit(self.scale**power, self.dimensions**power)
 
-    def equivalent(self: Self, other: Self):
+    def equivalent(self: Self, other: "Unit"):
         return self.dimensions == other.dimensions
 
-    def __eq__(self: Self, other: Self):
+    def __eq__(self: Self, other: "Unit"):
         return self.equivalent(other) and np.abs(np.log(self.scale/other.scale)) < 1e-5
 
     def si_equivalent(self):
@@ -197,10 +191,25 @@ class Unit:
         for processor in format_process:
             pass
 
+    def __repr__(self):
+        return f"Unit[{self.scale}, {self.dimensions}]"
 
-class NamedUnit:
-    # TODO: Add named unit class
-    pass
+class NamedUnit(Unit):
+    """ Units, but they have a name, and a symbol"""
+    def __init__(self,
+                 si_scaling_factor: float,
+                 dimensions: Dimensions,
+                 name: str | None = None,
+                 ascii_symbol: str | None = None,
+                 symbol: str | None = None):
+
+        super().__init__(si_scaling_factor, dimensions)
+        self.name = name
+        self.ascii_symbol = ascii_symbol
+        self.symbol = symbol
+
+    def __repr__(self):
+        return self.name
 
 #
 # Parsing plan:
