@@ -2994,6 +2994,10 @@ class ForceAccessor[T](Accessor[T]):
     def attonewtons(self) -> T:
         return self.quantity.in_units_of(units.attonewtons)
 
+    @property
+    def kg_force(self) -> T:
+        return self.quantity.in_units_of(units.kg_force)
+
 
 
 class PressureAccessor[T](Accessor[T]):
