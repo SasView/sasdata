@@ -32,6 +32,11 @@ class Dimensions:
         self.moles_hint = moles_hint
         self.angle_hint = angle_hint
 
+    @property
+    def is_dimensionless(self):
+        """ Is this dimension dimensionless (ignores moles_hint and angle_hint) """
+        return self.length == 0 and self.time == 0 and self.mass == 0 and self.current == 0 and self.temperature == 0
+
     def __mul__(self: Self, other: Self):
 
         if not isinstance(other, Dimensions):
@@ -195,6 +200,7 @@ class Unit:
 
 class NamedUnit:
     # TODO: Add named unit class
+    pass
 
 #
 # Parsing plan:
