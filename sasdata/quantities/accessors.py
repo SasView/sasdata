@@ -163,6 +163,22 @@ class LengthAccessor[T](Accessor[T]):
     def angstroms(self) -> T:
         return self.quantity.in_units_of(units.angstroms)
 
+    @property
+    def miles(self) -> T:
+        return self.quantity.in_units_of(units.miles)
+
+    @property
+    def yards(self) -> T:
+        return self.quantity.in_units_of(units.yards)
+
+    @property
+    def feet(self) -> T:
+        return self.quantity.in_units_of(units.feet)
+
+    @property
+    def inches(self) -> T:
+        return self.quantity.in_units_of(units.inches)
+
 
 
 class AreaAccessor[T](Accessor[T]):
@@ -231,6 +247,22 @@ class AreaAccessor[T](Accessor[T]):
     @property
     def square_angstroms(self) -> T:
         return self.quantity.in_units_of(units.square_angstroms)
+
+    @property
+    def square_miles(self) -> T:
+        return self.quantity.in_units_of(units.square_miles)
+
+    @property
+    def square_yards(self) -> T:
+        return self.quantity.in_units_of(units.square_yards)
+
+    @property
+    def square_feet(self) -> T:
+        return self.quantity.in_units_of(units.square_feet)
+
+    @property
+    def square_inches(self) -> T:
+        return self.quantity.in_units_of(units.square_inches)
 
 
 
@@ -305,6 +337,22 @@ class VolumeAccessor[T](Accessor[T]):
     def cubic_angstroms(self) -> T:
         return self.quantity.in_units_of(units.cubic_angstroms)
 
+    @property
+    def cubic_miles(self) -> T:
+        return self.quantity.in_units_of(units.cubic_miles)
+
+    @property
+    def cubic_yards(self) -> T:
+        return self.quantity.in_units_of(units.cubic_yards)
+
+    @property
+    def cubic_feet(self) -> T:
+        return self.quantity.in_units_of(units.cubic_feet)
+
+    @property
+    def cubic_inches(self) -> T:
+        return self.quantity.in_units_of(units.cubic_inches)
+
 
 
 class InverselengthAccessor[T](Accessor[T]):
@@ -373,6 +421,22 @@ class InverselengthAccessor[T](Accessor[T]):
     @property
     def per_angstrom(self) -> T:
         return self.quantity.in_units_of(units.per_angstrom)
+
+    @property
+    def per_mile(self) -> T:
+        return self.quantity.in_units_of(units.per_mile)
+
+    @property
+    def per_yard(self) -> T:
+        return self.quantity.in_units_of(units.per_yard)
+
+    @property
+    def per_foot(self) -> T:
+        return self.quantity.in_units_of(units.per_foot)
+
+    @property
+    def per_inch(self) -> T:
+        return self.quantity.in_units_of(units.per_inch)
 
 
 
@@ -443,6 +507,22 @@ class InverseareaAccessor[T](Accessor[T]):
     def per_square_angstrom(self) -> T:
         return self.quantity.in_units_of(units.per_square_angstrom)
 
+    @property
+    def per_square_mile(self) -> T:
+        return self.quantity.in_units_of(units.per_square_mile)
+
+    @property
+    def per_square_yard(self) -> T:
+        return self.quantity.in_units_of(units.per_square_yard)
+
+    @property
+    def per_square_foot(self) -> T:
+        return self.quantity.in_units_of(units.per_square_foot)
+
+    @property
+    def per_square_inch(self) -> T:
+        return self.quantity.in_units_of(units.per_square_inch)
+
 
 
 class InversevolumeAccessor[T](Accessor[T]):
@@ -511,6 +591,22 @@ class InversevolumeAccessor[T](Accessor[T]):
     @property
     def per_cubic_angstrom(self) -> T:
         return self.quantity.in_units_of(units.per_cubic_angstrom)
+
+    @property
+    def per_cubic_mile(self) -> T:
+        return self.quantity.in_units_of(units.per_cubic_mile)
+
+    @property
+    def per_cubic_yard(self) -> T:
+        return self.quantity.in_units_of(units.per_cubic_yard)
+
+    @property
+    def per_cubic_foot(self) -> T:
+        return self.quantity.in_units_of(units.per_cubic_foot)
+
+    @property
+    def per_cubic_inch(self) -> T:
+        return self.quantity.in_units_of(units.per_cubic_inch)
 
 
 
@@ -1327,6 +1423,182 @@ class SpeedAccessor[T](Accessor[T]):
     def angstroms_per_year(self) -> T:
         return self.quantity.in_units_of(units.angstroms_per_year)
 
+    @property
+    def miles_per_second(self) -> T:
+        return self.quantity.in_units_of(units.miles_per_second)
+
+    @property
+    def miles_per_millisecond(self) -> T:
+        return self.quantity.in_units_of(units.miles_per_millisecond)
+
+    @property
+    def miles_per_microsecond(self) -> T:
+        return self.quantity.in_units_of(units.miles_per_microsecond)
+
+    @property
+    def miles_per_nanosecond(self) -> T:
+        return self.quantity.in_units_of(units.miles_per_nanosecond)
+
+    @property
+    def miles_per_picosecond(self) -> T:
+        return self.quantity.in_units_of(units.miles_per_picosecond)
+
+    @property
+    def miles_per_femtosecond(self) -> T:
+        return self.quantity.in_units_of(units.miles_per_femtosecond)
+
+    @property
+    def miles_per_attosecond(self) -> T:
+        return self.quantity.in_units_of(units.miles_per_attosecond)
+
+    @property
+    def miles_per_minute(self) -> T:
+        return self.quantity.in_units_of(units.miles_per_minute)
+
+    @property
+    def miles_per_hour(self) -> T:
+        return self.quantity.in_units_of(units.miles_per_hour)
+
+    @property
+    def miles_per_day(self) -> T:
+        return self.quantity.in_units_of(units.miles_per_day)
+
+    @property
+    def miles_per_year(self) -> T:
+        return self.quantity.in_units_of(units.miles_per_year)
+
+    @property
+    def yards_per_second(self) -> T:
+        return self.quantity.in_units_of(units.yards_per_second)
+
+    @property
+    def yards_per_millisecond(self) -> T:
+        return self.quantity.in_units_of(units.yards_per_millisecond)
+
+    @property
+    def yards_per_microsecond(self) -> T:
+        return self.quantity.in_units_of(units.yards_per_microsecond)
+
+    @property
+    def yards_per_nanosecond(self) -> T:
+        return self.quantity.in_units_of(units.yards_per_nanosecond)
+
+    @property
+    def yards_per_picosecond(self) -> T:
+        return self.quantity.in_units_of(units.yards_per_picosecond)
+
+    @property
+    def yards_per_femtosecond(self) -> T:
+        return self.quantity.in_units_of(units.yards_per_femtosecond)
+
+    @property
+    def yards_per_attosecond(self) -> T:
+        return self.quantity.in_units_of(units.yards_per_attosecond)
+
+    @property
+    def yards_per_minute(self) -> T:
+        return self.quantity.in_units_of(units.yards_per_minute)
+
+    @property
+    def yards_per_hour(self) -> T:
+        return self.quantity.in_units_of(units.yards_per_hour)
+
+    @property
+    def yards_per_day(self) -> T:
+        return self.quantity.in_units_of(units.yards_per_day)
+
+    @property
+    def yards_per_year(self) -> T:
+        return self.quantity.in_units_of(units.yards_per_year)
+
+    @property
+    def feet_per_second(self) -> T:
+        return self.quantity.in_units_of(units.feet_per_second)
+
+    @property
+    def feet_per_millisecond(self) -> T:
+        return self.quantity.in_units_of(units.feet_per_millisecond)
+
+    @property
+    def feet_per_microsecond(self) -> T:
+        return self.quantity.in_units_of(units.feet_per_microsecond)
+
+    @property
+    def feet_per_nanosecond(self) -> T:
+        return self.quantity.in_units_of(units.feet_per_nanosecond)
+
+    @property
+    def feet_per_picosecond(self) -> T:
+        return self.quantity.in_units_of(units.feet_per_picosecond)
+
+    @property
+    def feet_per_femtosecond(self) -> T:
+        return self.quantity.in_units_of(units.feet_per_femtosecond)
+
+    @property
+    def feet_per_attosecond(self) -> T:
+        return self.quantity.in_units_of(units.feet_per_attosecond)
+
+    @property
+    def feet_per_minute(self) -> T:
+        return self.quantity.in_units_of(units.feet_per_minute)
+
+    @property
+    def feet_per_hour(self) -> T:
+        return self.quantity.in_units_of(units.feet_per_hour)
+
+    @property
+    def feet_per_day(self) -> T:
+        return self.quantity.in_units_of(units.feet_per_day)
+
+    @property
+    def feet_per_year(self) -> T:
+        return self.quantity.in_units_of(units.feet_per_year)
+
+    @property
+    def inches_per_second(self) -> T:
+        return self.quantity.in_units_of(units.inches_per_second)
+
+    @property
+    def inches_per_millisecond(self) -> T:
+        return self.quantity.in_units_of(units.inches_per_millisecond)
+
+    @property
+    def inches_per_microsecond(self) -> T:
+        return self.quantity.in_units_of(units.inches_per_microsecond)
+
+    @property
+    def inches_per_nanosecond(self) -> T:
+        return self.quantity.in_units_of(units.inches_per_nanosecond)
+
+    @property
+    def inches_per_picosecond(self) -> T:
+        return self.quantity.in_units_of(units.inches_per_picosecond)
+
+    @property
+    def inches_per_femtosecond(self) -> T:
+        return self.quantity.in_units_of(units.inches_per_femtosecond)
+
+    @property
+    def inches_per_attosecond(self) -> T:
+        return self.quantity.in_units_of(units.inches_per_attosecond)
+
+    @property
+    def inches_per_minute(self) -> T:
+        return self.quantity.in_units_of(units.inches_per_minute)
+
+    @property
+    def inches_per_hour(self) -> T:
+        return self.quantity.in_units_of(units.inches_per_hour)
+
+    @property
+    def inches_per_day(self) -> T:
+        return self.quantity.in_units_of(units.inches_per_day)
+
+    @property
+    def inches_per_year(self) -> T:
+        return self.quantity.in_units_of(units.inches_per_year)
+
 
 
 class AccelerationAccessor[T](Accessor[T]):
@@ -2036,6 +2308,182 @@ class AccelerationAccessor[T](Accessor[T]):
     def angstroms_per_square_year(self) -> T:
         return self.quantity.in_units_of(units.angstroms_per_square_year)
 
+    @property
+    def miles_per_square_second(self) -> T:
+        return self.quantity.in_units_of(units.miles_per_square_second)
+
+    @property
+    def miles_per_square_millisecond(self) -> T:
+        return self.quantity.in_units_of(units.miles_per_square_millisecond)
+
+    @property
+    def miles_per_square_microsecond(self) -> T:
+        return self.quantity.in_units_of(units.miles_per_square_microsecond)
+
+    @property
+    def miles_per_square_nanosecond(self) -> T:
+        return self.quantity.in_units_of(units.miles_per_square_nanosecond)
+
+    @property
+    def miles_per_square_picosecond(self) -> T:
+        return self.quantity.in_units_of(units.miles_per_square_picosecond)
+
+    @property
+    def miles_per_square_femtosecond(self) -> T:
+        return self.quantity.in_units_of(units.miles_per_square_femtosecond)
+
+    @property
+    def miles_per_square_attosecond(self) -> T:
+        return self.quantity.in_units_of(units.miles_per_square_attosecond)
+
+    @property
+    def miles_per_square_minute(self) -> T:
+        return self.quantity.in_units_of(units.miles_per_square_minute)
+
+    @property
+    def miles_per_square_hour(self) -> T:
+        return self.quantity.in_units_of(units.miles_per_square_hour)
+
+    @property
+    def miles_per_square_day(self) -> T:
+        return self.quantity.in_units_of(units.miles_per_square_day)
+
+    @property
+    def miles_per_square_year(self) -> T:
+        return self.quantity.in_units_of(units.miles_per_square_year)
+
+    @property
+    def yards_per_square_second(self) -> T:
+        return self.quantity.in_units_of(units.yards_per_square_second)
+
+    @property
+    def yards_per_square_millisecond(self) -> T:
+        return self.quantity.in_units_of(units.yards_per_square_millisecond)
+
+    @property
+    def yards_per_square_microsecond(self) -> T:
+        return self.quantity.in_units_of(units.yards_per_square_microsecond)
+
+    @property
+    def yards_per_square_nanosecond(self) -> T:
+        return self.quantity.in_units_of(units.yards_per_square_nanosecond)
+
+    @property
+    def yards_per_square_picosecond(self) -> T:
+        return self.quantity.in_units_of(units.yards_per_square_picosecond)
+
+    @property
+    def yards_per_square_femtosecond(self) -> T:
+        return self.quantity.in_units_of(units.yards_per_square_femtosecond)
+
+    @property
+    def yards_per_square_attosecond(self) -> T:
+        return self.quantity.in_units_of(units.yards_per_square_attosecond)
+
+    @property
+    def yards_per_square_minute(self) -> T:
+        return self.quantity.in_units_of(units.yards_per_square_minute)
+
+    @property
+    def yards_per_square_hour(self) -> T:
+        return self.quantity.in_units_of(units.yards_per_square_hour)
+
+    @property
+    def yards_per_square_day(self) -> T:
+        return self.quantity.in_units_of(units.yards_per_square_day)
+
+    @property
+    def yards_per_square_year(self) -> T:
+        return self.quantity.in_units_of(units.yards_per_square_year)
+
+    @property
+    def feet_per_square_second(self) -> T:
+        return self.quantity.in_units_of(units.feet_per_square_second)
+
+    @property
+    def feet_per_square_millisecond(self) -> T:
+        return self.quantity.in_units_of(units.feet_per_square_millisecond)
+
+    @property
+    def feet_per_square_microsecond(self) -> T:
+        return self.quantity.in_units_of(units.feet_per_square_microsecond)
+
+    @property
+    def feet_per_square_nanosecond(self) -> T:
+        return self.quantity.in_units_of(units.feet_per_square_nanosecond)
+
+    @property
+    def feet_per_square_picosecond(self) -> T:
+        return self.quantity.in_units_of(units.feet_per_square_picosecond)
+
+    @property
+    def feet_per_square_femtosecond(self) -> T:
+        return self.quantity.in_units_of(units.feet_per_square_femtosecond)
+
+    @property
+    def feet_per_square_attosecond(self) -> T:
+        return self.quantity.in_units_of(units.feet_per_square_attosecond)
+
+    @property
+    def feet_per_square_minute(self) -> T:
+        return self.quantity.in_units_of(units.feet_per_square_minute)
+
+    @property
+    def feet_per_square_hour(self) -> T:
+        return self.quantity.in_units_of(units.feet_per_square_hour)
+
+    @property
+    def feet_per_square_day(self) -> T:
+        return self.quantity.in_units_of(units.feet_per_square_day)
+
+    @property
+    def feet_per_square_year(self) -> T:
+        return self.quantity.in_units_of(units.feet_per_square_year)
+
+    @property
+    def inches_per_square_second(self) -> T:
+        return self.quantity.in_units_of(units.inches_per_square_second)
+
+    @property
+    def inches_per_square_millisecond(self) -> T:
+        return self.quantity.in_units_of(units.inches_per_square_millisecond)
+
+    @property
+    def inches_per_square_microsecond(self) -> T:
+        return self.quantity.in_units_of(units.inches_per_square_microsecond)
+
+    @property
+    def inches_per_square_nanosecond(self) -> T:
+        return self.quantity.in_units_of(units.inches_per_square_nanosecond)
+
+    @property
+    def inches_per_square_picosecond(self) -> T:
+        return self.quantity.in_units_of(units.inches_per_square_picosecond)
+
+    @property
+    def inches_per_square_femtosecond(self) -> T:
+        return self.quantity.in_units_of(units.inches_per_square_femtosecond)
+
+    @property
+    def inches_per_square_attosecond(self) -> T:
+        return self.quantity.in_units_of(units.inches_per_square_attosecond)
+
+    @property
+    def inches_per_square_minute(self) -> T:
+        return self.quantity.in_units_of(units.inches_per_square_minute)
+
+    @property
+    def inches_per_square_hour(self) -> T:
+        return self.quantity.in_units_of(units.inches_per_square_hour)
+
+    @property
+    def inches_per_square_day(self) -> T:
+        return self.quantity.in_units_of(units.inches_per_square_day)
+
+    @property
+    def inches_per_square_year(self) -> T:
+        return self.quantity.in_units_of(units.inches_per_square_year)
+
 
 
 class DensityAccessor[T](Accessor[T]):
@@ -2098,6 +2546,14 @@ class DensityAccessor[T](Accessor[T]):
         return self.quantity.in_units_of(units.atomic_mass_units_per_cubic_meter)
 
     @property
+    def pounds_per_cubic_meter(self) -> T:
+        return self.quantity.in_units_of(units.pounds_per_cubic_meter)
+
+    @property
+    def ounces_per_cubic_meter(self) -> T:
+        return self.quantity.in_units_of(units.ounces_per_cubic_meter)
+
+    @property
     def grams_per_cubic_exameter(self) -> T:
         return self.quantity.in_units_of(units.grams_per_cubic_exameter)
 
@@ -2152,6 +2608,14 @@ class DensityAccessor[T](Accessor[T]):
     @property
     def atomic_mass_units_per_cubic_exameter(self) -> T:
         return self.quantity.in_units_of(units.atomic_mass_units_per_cubic_exameter)
+
+    @property
+    def pounds_per_cubic_exameter(self) -> T:
+        return self.quantity.in_units_of(units.pounds_per_cubic_exameter)
+
+    @property
+    def ounces_per_cubic_exameter(self) -> T:
+        return self.quantity.in_units_of(units.ounces_per_cubic_exameter)
 
     @property
     def grams_per_cubic_petameter(self) -> T:
@@ -2210,6 +2674,14 @@ class DensityAccessor[T](Accessor[T]):
         return self.quantity.in_units_of(units.atomic_mass_units_per_cubic_petameter)
 
     @property
+    def pounds_per_cubic_petameter(self) -> T:
+        return self.quantity.in_units_of(units.pounds_per_cubic_petameter)
+
+    @property
+    def ounces_per_cubic_petameter(self) -> T:
+        return self.quantity.in_units_of(units.ounces_per_cubic_petameter)
+
+    @property
     def grams_per_cubic_terameter(self) -> T:
         return self.quantity.in_units_of(units.grams_per_cubic_terameter)
 
@@ -2264,6 +2736,14 @@ class DensityAccessor[T](Accessor[T]):
     @property
     def atomic_mass_units_per_cubic_terameter(self) -> T:
         return self.quantity.in_units_of(units.atomic_mass_units_per_cubic_terameter)
+
+    @property
+    def pounds_per_cubic_terameter(self) -> T:
+        return self.quantity.in_units_of(units.pounds_per_cubic_terameter)
+
+    @property
+    def ounces_per_cubic_terameter(self) -> T:
+        return self.quantity.in_units_of(units.ounces_per_cubic_terameter)
 
     @property
     def grams_per_cubic_gigameter(self) -> T:
@@ -2322,6 +2802,14 @@ class DensityAccessor[T](Accessor[T]):
         return self.quantity.in_units_of(units.atomic_mass_units_per_cubic_gigameter)
 
     @property
+    def pounds_per_cubic_gigameter(self) -> T:
+        return self.quantity.in_units_of(units.pounds_per_cubic_gigameter)
+
+    @property
+    def ounces_per_cubic_gigameter(self) -> T:
+        return self.quantity.in_units_of(units.ounces_per_cubic_gigameter)
+
+    @property
     def grams_per_cubic_megameter(self) -> T:
         return self.quantity.in_units_of(units.grams_per_cubic_megameter)
 
@@ -2376,6 +2864,14 @@ class DensityAccessor[T](Accessor[T]):
     @property
     def atomic_mass_units_per_cubic_megameter(self) -> T:
         return self.quantity.in_units_of(units.atomic_mass_units_per_cubic_megameter)
+
+    @property
+    def pounds_per_cubic_megameter(self) -> T:
+        return self.quantity.in_units_of(units.pounds_per_cubic_megameter)
+
+    @property
+    def ounces_per_cubic_megameter(self) -> T:
+        return self.quantity.in_units_of(units.ounces_per_cubic_megameter)
 
     @property
     def grams_per_cubic_kilometer(self) -> T:
@@ -2434,6 +2930,14 @@ class DensityAccessor[T](Accessor[T]):
         return self.quantity.in_units_of(units.atomic_mass_units_per_cubic_kilometer)
 
     @property
+    def pounds_per_cubic_kilometer(self) -> T:
+        return self.quantity.in_units_of(units.pounds_per_cubic_kilometer)
+
+    @property
+    def ounces_per_cubic_kilometer(self) -> T:
+        return self.quantity.in_units_of(units.ounces_per_cubic_kilometer)
+
+    @property
     def grams_per_cubic_millimeter(self) -> T:
         return self.quantity.in_units_of(units.grams_per_cubic_millimeter)
 
@@ -2488,6 +2992,14 @@ class DensityAccessor[T](Accessor[T]):
     @property
     def atomic_mass_units_per_cubic_millimeter(self) -> T:
         return self.quantity.in_units_of(units.atomic_mass_units_per_cubic_millimeter)
+
+    @property
+    def pounds_per_cubic_millimeter(self) -> T:
+        return self.quantity.in_units_of(units.pounds_per_cubic_millimeter)
+
+    @property
+    def ounces_per_cubic_millimeter(self) -> T:
+        return self.quantity.in_units_of(units.ounces_per_cubic_millimeter)
 
     @property
     def grams_per_cubic_micrometer(self) -> T:
@@ -2546,6 +3058,14 @@ class DensityAccessor[T](Accessor[T]):
         return self.quantity.in_units_of(units.atomic_mass_units_per_cubic_micrometer)
 
     @property
+    def pounds_per_cubic_micrometer(self) -> T:
+        return self.quantity.in_units_of(units.pounds_per_cubic_micrometer)
+
+    @property
+    def ounces_per_cubic_micrometer(self) -> T:
+        return self.quantity.in_units_of(units.ounces_per_cubic_micrometer)
+
+    @property
     def grams_per_cubic_nanometer(self) -> T:
         return self.quantity.in_units_of(units.grams_per_cubic_nanometer)
 
@@ -2600,6 +3120,14 @@ class DensityAccessor[T](Accessor[T]):
     @property
     def atomic_mass_units_per_cubic_nanometer(self) -> T:
         return self.quantity.in_units_of(units.atomic_mass_units_per_cubic_nanometer)
+
+    @property
+    def pounds_per_cubic_nanometer(self) -> T:
+        return self.quantity.in_units_of(units.pounds_per_cubic_nanometer)
+
+    @property
+    def ounces_per_cubic_nanometer(self) -> T:
+        return self.quantity.in_units_of(units.ounces_per_cubic_nanometer)
 
     @property
     def grams_per_cubic_picometer(self) -> T:
@@ -2658,6 +3186,14 @@ class DensityAccessor[T](Accessor[T]):
         return self.quantity.in_units_of(units.atomic_mass_units_per_cubic_picometer)
 
     @property
+    def pounds_per_cubic_picometer(self) -> T:
+        return self.quantity.in_units_of(units.pounds_per_cubic_picometer)
+
+    @property
+    def ounces_per_cubic_picometer(self) -> T:
+        return self.quantity.in_units_of(units.ounces_per_cubic_picometer)
+
+    @property
     def grams_per_cubic_femtometer(self) -> T:
         return self.quantity.in_units_of(units.grams_per_cubic_femtometer)
 
@@ -2712,6 +3248,14 @@ class DensityAccessor[T](Accessor[T]):
     @property
     def atomic_mass_units_per_cubic_femtometer(self) -> T:
         return self.quantity.in_units_of(units.atomic_mass_units_per_cubic_femtometer)
+
+    @property
+    def pounds_per_cubic_femtometer(self) -> T:
+        return self.quantity.in_units_of(units.pounds_per_cubic_femtometer)
+
+    @property
+    def ounces_per_cubic_femtometer(self) -> T:
+        return self.quantity.in_units_of(units.ounces_per_cubic_femtometer)
 
     @property
     def grams_per_cubic_attometer(self) -> T:
@@ -2770,6 +3314,14 @@ class DensityAccessor[T](Accessor[T]):
         return self.quantity.in_units_of(units.atomic_mass_units_per_cubic_attometer)
 
     @property
+    def pounds_per_cubic_attometer(self) -> T:
+        return self.quantity.in_units_of(units.pounds_per_cubic_attometer)
+
+    @property
+    def ounces_per_cubic_attometer(self) -> T:
+        return self.quantity.in_units_of(units.ounces_per_cubic_attometer)
+
+    @property
     def grams_per_cubic_decimeter(self) -> T:
         return self.quantity.in_units_of(units.grams_per_cubic_decimeter)
 
@@ -2824,6 +3376,14 @@ class DensityAccessor[T](Accessor[T]):
     @property
     def atomic_mass_units_per_cubic_decimeter(self) -> T:
         return self.quantity.in_units_of(units.atomic_mass_units_per_cubic_decimeter)
+
+    @property
+    def pounds_per_cubic_decimeter(self) -> T:
+        return self.quantity.in_units_of(units.pounds_per_cubic_decimeter)
+
+    @property
+    def ounces_per_cubic_decimeter(self) -> T:
+        return self.quantity.in_units_of(units.ounces_per_cubic_decimeter)
 
     @property
     def grams_per_cubic_centimeter(self) -> T:
@@ -2882,6 +3442,14 @@ class DensityAccessor[T](Accessor[T]):
         return self.quantity.in_units_of(units.atomic_mass_units_per_cubic_centimeter)
 
     @property
+    def pounds_per_cubic_centimeter(self) -> T:
+        return self.quantity.in_units_of(units.pounds_per_cubic_centimeter)
+
+    @property
+    def ounces_per_cubic_centimeter(self) -> T:
+        return self.quantity.in_units_of(units.ounces_per_cubic_centimeter)
+
+    @property
     def grams_per_cubic_angstrom(self) -> T:
         return self.quantity.in_units_of(units.grams_per_cubic_angstrom)
 
@@ -2936,6 +3504,270 @@ class DensityAccessor[T](Accessor[T]):
     @property
     def atomic_mass_units_per_cubic_angstrom(self) -> T:
         return self.quantity.in_units_of(units.atomic_mass_units_per_cubic_angstrom)
+
+    @property
+    def pounds_per_cubic_angstrom(self) -> T:
+        return self.quantity.in_units_of(units.pounds_per_cubic_angstrom)
+
+    @property
+    def ounces_per_cubic_angstrom(self) -> T:
+        return self.quantity.in_units_of(units.ounces_per_cubic_angstrom)
+
+    @property
+    def grams_per_cubic_mile(self) -> T:
+        return self.quantity.in_units_of(units.grams_per_cubic_mile)
+
+    @property
+    def exagrams_per_cubic_mile(self) -> T:
+        return self.quantity.in_units_of(units.exagrams_per_cubic_mile)
+
+    @property
+    def petagrams_per_cubic_mile(self) -> T:
+        return self.quantity.in_units_of(units.petagrams_per_cubic_mile)
+
+    @property
+    def teragrams_per_cubic_mile(self) -> T:
+        return self.quantity.in_units_of(units.teragrams_per_cubic_mile)
+
+    @property
+    def gigagrams_per_cubic_mile(self) -> T:
+        return self.quantity.in_units_of(units.gigagrams_per_cubic_mile)
+
+    @property
+    def megagrams_per_cubic_mile(self) -> T:
+        return self.quantity.in_units_of(units.megagrams_per_cubic_mile)
+
+    @property
+    def kilograms_per_cubic_mile(self) -> T:
+        return self.quantity.in_units_of(units.kilograms_per_cubic_mile)
+
+    @property
+    def milligrams_per_cubic_mile(self) -> T:
+        return self.quantity.in_units_of(units.milligrams_per_cubic_mile)
+
+    @property
+    def micrograms_per_cubic_mile(self) -> T:
+        return self.quantity.in_units_of(units.micrograms_per_cubic_mile)
+
+    @property
+    def nanograms_per_cubic_mile(self) -> T:
+        return self.quantity.in_units_of(units.nanograms_per_cubic_mile)
+
+    @property
+    def picograms_per_cubic_mile(self) -> T:
+        return self.quantity.in_units_of(units.picograms_per_cubic_mile)
+
+    @property
+    def femtograms_per_cubic_mile(self) -> T:
+        return self.quantity.in_units_of(units.femtograms_per_cubic_mile)
+
+    @property
+    def attograms_per_cubic_mile(self) -> T:
+        return self.quantity.in_units_of(units.attograms_per_cubic_mile)
+
+    @property
+    def atomic_mass_units_per_cubic_mile(self) -> T:
+        return self.quantity.in_units_of(units.atomic_mass_units_per_cubic_mile)
+
+    @property
+    def pounds_per_cubic_mile(self) -> T:
+        return self.quantity.in_units_of(units.pounds_per_cubic_mile)
+
+    @property
+    def ounces_per_cubic_mile(self) -> T:
+        return self.quantity.in_units_of(units.ounces_per_cubic_mile)
+
+    @property
+    def grams_per_cubic_yard(self) -> T:
+        return self.quantity.in_units_of(units.grams_per_cubic_yard)
+
+    @property
+    def exagrams_per_cubic_yard(self) -> T:
+        return self.quantity.in_units_of(units.exagrams_per_cubic_yard)
+
+    @property
+    def petagrams_per_cubic_yard(self) -> T:
+        return self.quantity.in_units_of(units.petagrams_per_cubic_yard)
+
+    @property
+    def teragrams_per_cubic_yard(self) -> T:
+        return self.quantity.in_units_of(units.teragrams_per_cubic_yard)
+
+    @property
+    def gigagrams_per_cubic_yard(self) -> T:
+        return self.quantity.in_units_of(units.gigagrams_per_cubic_yard)
+
+    @property
+    def megagrams_per_cubic_yard(self) -> T:
+        return self.quantity.in_units_of(units.megagrams_per_cubic_yard)
+
+    @property
+    def kilograms_per_cubic_yard(self) -> T:
+        return self.quantity.in_units_of(units.kilograms_per_cubic_yard)
+
+    @property
+    def milligrams_per_cubic_yard(self) -> T:
+        return self.quantity.in_units_of(units.milligrams_per_cubic_yard)
+
+    @property
+    def micrograms_per_cubic_yard(self) -> T:
+        return self.quantity.in_units_of(units.micrograms_per_cubic_yard)
+
+    @property
+    def nanograms_per_cubic_yard(self) -> T:
+        return self.quantity.in_units_of(units.nanograms_per_cubic_yard)
+
+    @property
+    def picograms_per_cubic_yard(self) -> T:
+        return self.quantity.in_units_of(units.picograms_per_cubic_yard)
+
+    @property
+    def femtograms_per_cubic_yard(self) -> T:
+        return self.quantity.in_units_of(units.femtograms_per_cubic_yard)
+
+    @property
+    def attograms_per_cubic_yard(self) -> T:
+        return self.quantity.in_units_of(units.attograms_per_cubic_yard)
+
+    @property
+    def atomic_mass_units_per_cubic_yard(self) -> T:
+        return self.quantity.in_units_of(units.atomic_mass_units_per_cubic_yard)
+
+    @property
+    def pounds_per_cubic_yard(self) -> T:
+        return self.quantity.in_units_of(units.pounds_per_cubic_yard)
+
+    @property
+    def ounces_per_cubic_yard(self) -> T:
+        return self.quantity.in_units_of(units.ounces_per_cubic_yard)
+
+    @property
+    def grams_per_cubic_foot(self) -> T:
+        return self.quantity.in_units_of(units.grams_per_cubic_foot)
+
+    @property
+    def exagrams_per_cubic_foot(self) -> T:
+        return self.quantity.in_units_of(units.exagrams_per_cubic_foot)
+
+    @property
+    def petagrams_per_cubic_foot(self) -> T:
+        return self.quantity.in_units_of(units.petagrams_per_cubic_foot)
+
+    @property
+    def teragrams_per_cubic_foot(self) -> T:
+        return self.quantity.in_units_of(units.teragrams_per_cubic_foot)
+
+    @property
+    def gigagrams_per_cubic_foot(self) -> T:
+        return self.quantity.in_units_of(units.gigagrams_per_cubic_foot)
+
+    @property
+    def megagrams_per_cubic_foot(self) -> T:
+        return self.quantity.in_units_of(units.megagrams_per_cubic_foot)
+
+    @property
+    def kilograms_per_cubic_foot(self) -> T:
+        return self.quantity.in_units_of(units.kilograms_per_cubic_foot)
+
+    @property
+    def milligrams_per_cubic_foot(self) -> T:
+        return self.quantity.in_units_of(units.milligrams_per_cubic_foot)
+
+    @property
+    def micrograms_per_cubic_foot(self) -> T:
+        return self.quantity.in_units_of(units.micrograms_per_cubic_foot)
+
+    @property
+    def nanograms_per_cubic_foot(self) -> T:
+        return self.quantity.in_units_of(units.nanograms_per_cubic_foot)
+
+    @property
+    def picograms_per_cubic_foot(self) -> T:
+        return self.quantity.in_units_of(units.picograms_per_cubic_foot)
+
+    @property
+    def femtograms_per_cubic_foot(self) -> T:
+        return self.quantity.in_units_of(units.femtograms_per_cubic_foot)
+
+    @property
+    def attograms_per_cubic_foot(self) -> T:
+        return self.quantity.in_units_of(units.attograms_per_cubic_foot)
+
+    @property
+    def atomic_mass_units_per_cubic_foot(self) -> T:
+        return self.quantity.in_units_of(units.atomic_mass_units_per_cubic_foot)
+
+    @property
+    def pounds_per_cubic_foot(self) -> T:
+        return self.quantity.in_units_of(units.pounds_per_cubic_foot)
+
+    @property
+    def ounces_per_cubic_foot(self) -> T:
+        return self.quantity.in_units_of(units.ounces_per_cubic_foot)
+
+    @property
+    def grams_per_cubic_inch(self) -> T:
+        return self.quantity.in_units_of(units.grams_per_cubic_inch)
+
+    @property
+    def exagrams_per_cubic_inch(self) -> T:
+        return self.quantity.in_units_of(units.exagrams_per_cubic_inch)
+
+    @property
+    def petagrams_per_cubic_inch(self) -> T:
+        return self.quantity.in_units_of(units.petagrams_per_cubic_inch)
+
+    @property
+    def teragrams_per_cubic_inch(self) -> T:
+        return self.quantity.in_units_of(units.teragrams_per_cubic_inch)
+
+    @property
+    def gigagrams_per_cubic_inch(self) -> T:
+        return self.quantity.in_units_of(units.gigagrams_per_cubic_inch)
+
+    @property
+    def megagrams_per_cubic_inch(self) -> T:
+        return self.quantity.in_units_of(units.megagrams_per_cubic_inch)
+
+    @property
+    def kilograms_per_cubic_inch(self) -> T:
+        return self.quantity.in_units_of(units.kilograms_per_cubic_inch)
+
+    @property
+    def milligrams_per_cubic_inch(self) -> T:
+        return self.quantity.in_units_of(units.milligrams_per_cubic_inch)
+
+    @property
+    def micrograms_per_cubic_inch(self) -> T:
+        return self.quantity.in_units_of(units.micrograms_per_cubic_inch)
+
+    @property
+    def nanograms_per_cubic_inch(self) -> T:
+        return self.quantity.in_units_of(units.nanograms_per_cubic_inch)
+
+    @property
+    def picograms_per_cubic_inch(self) -> T:
+        return self.quantity.in_units_of(units.picograms_per_cubic_inch)
+
+    @property
+    def femtograms_per_cubic_inch(self) -> T:
+        return self.quantity.in_units_of(units.femtograms_per_cubic_inch)
+
+    @property
+    def attograms_per_cubic_inch(self) -> T:
+        return self.quantity.in_units_of(units.attograms_per_cubic_inch)
+
+    @property
+    def atomic_mass_units_per_cubic_inch(self) -> T:
+        return self.quantity.in_units_of(units.atomic_mass_units_per_cubic_inch)
+
+    @property
+    def pounds_per_cubic_inch(self) -> T:
+        return self.quantity.in_units_of(units.pounds_per_cubic_inch)
+
+    @property
+    def ounces_per_cubic_inch(self) -> T:
+        return self.quantity.in_units_of(units.ounces_per_cubic_inch)
 
 
 
@@ -3054,6 +3886,10 @@ class PressureAccessor[T](Accessor[T]):
     @property
     def attopascals(self) -> T:
         return self.quantity.in_units_of(units.attopascals)
+
+    @property
+    def pound_force_per_square_inch(self) -> T:
+        return self.quantity.in_units_of(units.pound_force_per_square_inch)
 
 
 
@@ -4254,5 +5090,117 @@ class ConcentrationAccessor[T](Accessor[T]):
     @property
     def attomoles_per_cubic_angstrom(self) -> T:
         return self.quantity.in_units_of(units.attomoles_per_cubic_angstrom)
+
+    @property
+    def moles_per_cubic_mile(self) -> T:
+        return self.quantity.in_units_of(units.moles_per_cubic_mile)
+
+    @property
+    def millimoles_per_cubic_mile(self) -> T:
+        return self.quantity.in_units_of(units.millimoles_per_cubic_mile)
+
+    @property
+    def micromoles_per_cubic_mile(self) -> T:
+        return self.quantity.in_units_of(units.micromoles_per_cubic_mile)
+
+    @property
+    def nanomoles_per_cubic_mile(self) -> T:
+        return self.quantity.in_units_of(units.nanomoles_per_cubic_mile)
+
+    @property
+    def picomoles_per_cubic_mile(self) -> T:
+        return self.quantity.in_units_of(units.picomoles_per_cubic_mile)
+
+    @property
+    def femtomoles_per_cubic_mile(self) -> T:
+        return self.quantity.in_units_of(units.femtomoles_per_cubic_mile)
+
+    @property
+    def attomoles_per_cubic_mile(self) -> T:
+        return self.quantity.in_units_of(units.attomoles_per_cubic_mile)
+
+    @property
+    def moles_per_cubic_yard(self) -> T:
+        return self.quantity.in_units_of(units.moles_per_cubic_yard)
+
+    @property
+    def millimoles_per_cubic_yard(self) -> T:
+        return self.quantity.in_units_of(units.millimoles_per_cubic_yard)
+
+    @property
+    def micromoles_per_cubic_yard(self) -> T:
+        return self.quantity.in_units_of(units.micromoles_per_cubic_yard)
+
+    @property
+    def nanomoles_per_cubic_yard(self) -> T:
+        return self.quantity.in_units_of(units.nanomoles_per_cubic_yard)
+
+    @property
+    def picomoles_per_cubic_yard(self) -> T:
+        return self.quantity.in_units_of(units.picomoles_per_cubic_yard)
+
+    @property
+    def femtomoles_per_cubic_yard(self) -> T:
+        return self.quantity.in_units_of(units.femtomoles_per_cubic_yard)
+
+    @property
+    def attomoles_per_cubic_yard(self) -> T:
+        return self.quantity.in_units_of(units.attomoles_per_cubic_yard)
+
+    @property
+    def moles_per_cubic_foot(self) -> T:
+        return self.quantity.in_units_of(units.moles_per_cubic_foot)
+
+    @property
+    def millimoles_per_cubic_foot(self) -> T:
+        return self.quantity.in_units_of(units.millimoles_per_cubic_foot)
+
+    @property
+    def micromoles_per_cubic_foot(self) -> T:
+        return self.quantity.in_units_of(units.micromoles_per_cubic_foot)
+
+    @property
+    def nanomoles_per_cubic_foot(self) -> T:
+        return self.quantity.in_units_of(units.nanomoles_per_cubic_foot)
+
+    @property
+    def picomoles_per_cubic_foot(self) -> T:
+        return self.quantity.in_units_of(units.picomoles_per_cubic_foot)
+
+    @property
+    def femtomoles_per_cubic_foot(self) -> T:
+        return self.quantity.in_units_of(units.femtomoles_per_cubic_foot)
+
+    @property
+    def attomoles_per_cubic_foot(self) -> T:
+        return self.quantity.in_units_of(units.attomoles_per_cubic_foot)
+
+    @property
+    def moles_per_cubic_inch(self) -> T:
+        return self.quantity.in_units_of(units.moles_per_cubic_inch)
+
+    @property
+    def millimoles_per_cubic_inch(self) -> T:
+        return self.quantity.in_units_of(units.millimoles_per_cubic_inch)
+
+    @property
+    def micromoles_per_cubic_inch(self) -> T:
+        return self.quantity.in_units_of(units.micromoles_per_cubic_inch)
+
+    @property
+    def nanomoles_per_cubic_inch(self) -> T:
+        return self.quantity.in_units_of(units.nanomoles_per_cubic_inch)
+
+    @property
+    def picomoles_per_cubic_inch(self) -> T:
+        return self.quantity.in_units_of(units.picomoles_per_cubic_inch)
+
+    @property
+    def femtomoles_per_cubic_inch(self) -> T:
+        return self.quantity.in_units_of(units.femtomoles_per_cubic_inch)
+
+    @property
+    def attomoles_per_cubic_inch(self) -> T:
+        return self.quantity.in_units_of(units.attomoles_per_cubic_inch)
 
 
