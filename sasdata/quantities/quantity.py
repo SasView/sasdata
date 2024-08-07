@@ -19,7 +19,7 @@ class Quantity[QuantityType]:
 
     def in_units_of(self, units: Unit) -> QuantityType:
         if self.units.equivalent(units):
-            return (units.scale / self.units.scale) * self.value
+            return (self.units.scale / units.scale) * self.value
         else:
             raise UnitError(f"Target units ({units}) not compatible with existing units ({self.units}).")
 
@@ -72,3 +72,5 @@ class Quantity[QuantityType]:
     def __rsub__(self: Self, other: Self | ArrayLike) -> Self:
         return (-self) + other
 
+    def __pow__(self: Self, other: int):
+        return Quantity(self.value**other, self.units**other)
