@@ -35,7 +35,7 @@ base_si_units = [
     ("m", None, "meter", "meters", 1, 1, 0, 0, 0, 0, 0, 0, all_magnitudes + unusual_magnitudes),
     ("s", None, "second", "seconds", 1, 0, 1, 0, 0, 0, 0, 0, smaller_magnitudes),
     ("g", None, "gram", "grams", 1e-3, 0, 0, 1, 0, 0, 0, 0, all_magnitudes),
-    ("A", None, "ampere", "amperes", 1, 0, 0, 0, 1, 0, 0, 0, all_magnitudes),
+    ("A", None, "amp", "amps", 1, 0, 0, 0, 1, 0, 0, 0, all_magnitudes),
     ("K", None, "kelvin", "kelvin", 1, 0, 0, 0, 0, 1, 0, 0, all_magnitudes) ]
 
 derived_si_units = [
@@ -52,9 +52,10 @@ derived_si_units = [
     ("Wb", None, "weber", "webers", 1, 2, -2, 1, -1, 0, 0, 0, all_magnitudes),
     ("T", None, "tesla", "tesla", 1, 0, -2, 1, -1, 0, 0, 0, all_magnitudes),
     ("H", None, "henry", "henry", 1, 2, -2, 1, -2, 0, 0, 0, all_magnitudes),
+    ("C", None, "degree Celsius", "degrees Celsius", 1, 0, 0, 0, 0, 1, 0, 0, [])
 ]
 
-non_si_dimensioned_units: list[tuple[str, str | None, str, str, float, int, int, int, int, int, int, int, list]] = [
+non_si_units = [
     ("Ang", "Å", "angstrom", "angstroms", 1e-10, 1, 0, 0, 0, 0, 0, 0, []),
     ("min", None, "minute", "minutes", 60, 0, 1, 0, 0, 0, 0, 0, []),
     ("h", None, "hour", "hours", 360, 0, 1, 0, 0, 0, 0, 0, []),
@@ -63,52 +64,20 @@ non_si_dimensioned_units: list[tuple[str, str | None, str, str, float, int, int,
     ("deg", None, "degree", "degrees", 180/np.pi, 0, 0, 0, 0, 0, 0, 1, []),
     ("rad", None, "radian", "radians", 1, 0, 0, 0, 0, 0, 0, 1, []),
     ("sr", None, "stradian", "stradians", 1, 0, 0, 0, 0, 0, 0, 2, []),
+    ("none", None, "none", "none", 1, 0, 0, 0, 0, 0, 0, 0, []),
     ("l", None, "litre", "litres", 1e-3, 3, 0, 0, 0, 0, 0, 0, []),
     ("eV", None, "electronvolt", "electronvolts", 1.602176634e-19, 2, -2, 1, 0, 0, 0, 0, all_magnitudes),
     ("au", None, "atomic mass unit", "atomic mass units", 1.660538921e-27, 0, 0, 1, 0, 0, 0, 0, []),
-    ("mol", None, "mole", "moles", 6.02214076e23, 0, 0, 0, 0, 0, 1, 0, smaller_magnitudes),
-    ("kgForce", None, "kg force", "kg force",  9.80665, 1, -2, 1, 0, 0, 0, 0, []),
-    ("C", None, "degree Celsius", "degrees Celsius", 1, 0, 0, 0, 0, 1, 0, 0, []),
-    ("miles", None, "mile", "miles", 1760*3*0.3048, 1, 0, 0, 0, 0, 0, 0, []),
-    ("yrd", None, "yard", "yards", 3*0.3048, 1, 0, 0, 0, 0, 0, 0, []),
-    ("ft", None, "foot", "feet", 0.3048, 1, 0, 0, 0, 0, 0, 0, []),
-    ("in", None, "inch", "inches", 0.0254, 1, 0, 0, 0, 0, 0, 0, []),
-    ("lb", None, "pound", "pounds", 0.45359237, 0, 0, 1, 0, 0, 0, 0, []),
-    ("lbf", None, "pound force", "pounds force", 4.448222, 1, -2, 1, 0, 0, 0, 0, []),
-    ("oz", None, "ounce", "ounces", 0.45359237/16, 0, 0, 1, 0, 0, 0, 0, []),
-    ("psi", None, "pound force per square inch", "pounds force per square inch", 4.448222/(0.0254**2), -1, -2, 1, 0, 0, 0, 0, []),
+    ("mol", None, "mole", "moles", 6.02214076e23, 0, 0, 0, 0, 0, 1, 0, smaller_magnitudes)
 ]
 
-non_si_dimensionless_units: list[tuple[str, str | None, str, str, float, int, int, int, int, int, int, int, list]] = [
-    ("none", None, "none", "none", 1, 0, 0, 0, 0, 0, 0, 0, []),
-    ("percent", "%", "percent", "percent", 0.01, 0, 0, 0, 0, 0, 0, 0, [])
-]
-
-non_si_units = non_si_dimensioned_units + non_si_dimensionless_units
-
-# TODO:
-# Add Hartree? Rydberg? Bohrs?
-# Add CGS
-
-# Two stages of aliases, to make sure units don't get lost
-
-aliases_1 = {
-    "A": ["Amps", "amps"],
-    "C": ["Coulombs", "coulombs"]
-}
-
-aliases_2 = {
+aliases = {
     "y": ["yr", "year"],
     "d": ["day"],
     "h": ["hr", "hour"],
     "Ang": ["A", "Å"],
-    "au": ["amu"],
-    "percent": ["%"],
-    "deg": ["degr", "Deg", "degrees", "Degrees"],
-    "none": ["Counts", "counts", "cnts", "Cnts", "a.u.", "fraction", "Fraction"],
-    "K": ["C"] # Ugh, cansas
+    "au": ["a.u.", "amu"]
 }
-
 
 
 all_units = base_si_units + derived_si_units + non_si_units
@@ -143,20 +112,13 @@ with open("units.py", 'w', encoding=encoding) as fid:
     unit_types_temp = defaultdict(list) # Keep track of unit types
     unit_types = defaultdict(list)
 
-    for unit_def in all_units:
-
-        try:
-            symbol, special_symbol, singular, plural, scale, length, time, \
-                mass, current, temperature, moles_hint, angle_hint, magnitudes = unit_def
-        except Exception as e:
-            print(unit_def)
-            raise e
+    for symbol, special_symbol, singular, plural, scale, length, time, mass, current, temperature, moles_hint, angle_hint, magnitudes in all_units:
 
         formatted_plural = format_name(plural)
         formatted_singular = format_name(singular)
 
         dimensions = Dimensions(length, time, mass, current, temperature, moles_hint, angle_hint)
-        fid.write(f"{formatted_plural} = NamedUnit({scale}, Dimensions({length}, {time}, {mass}, {current}, {temperature}, {moles_hint}, {angle_hint}),"
+        fid.write(f"{formatted_plural} = Unit({scale}, Dimensions({length}, {time}, {mass}, {current}, {temperature}, {moles_hint}, {angle_hint}),"
                       f"name='{formatted_plural}',"
                       f"ascii_symbol='{symbol}',"
                       f"symbol='{symbol if special_symbol is None else special_symbol}')\n")
@@ -186,8 +148,8 @@ with open("units.py", 'w', encoding=encoding) as fid:
 
             # Units
             dimensions = Dimensions(length, time, mass, current, temperature, moles_hint, angle_hint)
-            fid.write(f"{combined_name_plural} = NamedUnit({combined_scale}, "
-                      f"Dimensions({length}, {time}, {mass}, {current}, {temperature}, {moles_hint}, {angle_hint}),"
+            fid.write(f"{combined_name_plural} = Unit({combined_scale}, "
+                      f"Dimensions({length}, {time}, {mass}, {current}, {temperature}),"
                       f"name='{combined_name_plural}',"
                       f"ascii_symbol='{combined_symbol}',"
                       f"symbol='{combined_special_symbol}')\n")
@@ -223,7 +185,7 @@ with open("units.py", 'w', encoding=encoding) as fid:
             unit_name = prefix + name
             unit_special_symbol = (symbol if special_symbol is None else special_symbol) + unicode_suffix
             unit_symbol = symbol + f"^{power}"
-            fid.write(f"{unit_name} = NamedUnit({scale**power}, Dimensions(length={power}), "
+            fid.write(f"{unit_name} = Unit({scale**power}, Dimensions(length={power}), "
                       f"name='{unit_name}', "
                       f"ascii_symbol='{unit_symbol}', "
                       f"symbol='{unit_special_symbol}')\n")
@@ -239,21 +201,18 @@ with open("units.py", 'w', encoding=encoding) as fid:
             speed_dimensions = Dimensions(length=1, time=-1)
             accel_dimensions = Dimensions(length=1, time=-2)
 
-            length_special = length_special_symbol if length_special_symbol is not None else length_symbol
-            time_special = time_special_symbol if time_special_symbol is not None else time_symbol
-
             fid.write(f"{speed_name} "
-                      f"= NamedUnit({length_scale / time_scale}, "
+                      f"= Unit({length_scale / time_scale}, "
                       f"Dimensions(length=1, time=-1), "
                       f"name='{speed_name}', "
                       f"ascii_symbol='{length_symbol}/{time_symbol}', "
-                      f"symbol='{length_special}{time_special}⁻¹')\n")
+                      f"symbol='{length_special_symbol}{time_special_symbol}⁻¹')\n")
 
-            fid.write(f"{accel_name} = NamedUnit({length_scale / time_scale**2}, "
+            fid.write(f"{accel_name} = Unit({length_scale / time_scale}, "
                       f"Dimensions(length=1, time=-2), "
                       f"name='{accel_name}', "
                       f"ascii_symbol='{length_symbol}/{time_symbol}^2', "
-                      f"symbol='{length_special}{time_special}⁻²')\n")
+                      f"symbol='{length_special_symbol}{time_special_symbol}⁻²')\n")
 
             unit_types[hash(speed_dimensions)].append(speed_name)
             unit_types[hash(accel_dimensions)].append(accel_name)
@@ -266,15 +225,12 @@ with open("units.py", 'w', encoding=encoding) as fid:
 
             dimensions = Dimensions(length=-3, mass=1)
 
-            mass_special = mass_symbol if mass_special_symbol is None else mass_special_symbol
-            length_special = length_symbol if length_special_symbol is None else length_special_symbol
-
             fid.write(f"{name} "
-                      f"= NamedUnit({mass_scale / length_scale**3}, "
+                      f"= Unit({mass_scale / length_scale**3}, "
                       f"Dimensions(length=-3, mass=1), "
                       f"name='{name}', "
                       f"ascii_symbol='{mass_symbol} {length_symbol}^-3', "
-                      f"symbol='{mass_special}{length_special}⁻³')\n")
+                      f"symbol='{mass_special_symbol}{length_special_symbol}⁻³')\n")
 
             unit_types[hash(dimensions)].append(name)
 
@@ -286,30 +242,24 @@ with open("units.py", 'w', encoding=encoding) as fid:
 
             dimensions = Dimensions(length=-3, moles_hint=1)
 
-            length_special = length_symbol if length_special_symbol is None else length_special_symbol
-            amount_special = amount_symbol if amount_special_symbol is None else amount_special_symbol
-
             fid.write(f"{name} "
-                      f"= NamedUnit({amount_scale / length_scale**3}, "
+                      f"= Unit({amount_scale / length_scale**3}, "
                       f"Dimensions(length=-3, moles_hint=1), "
                       f"name='{name}', "
                       f"ascii_symbol='{amount_symbol} {length_symbol}^-3', "
-                      f"symbol='{amount_special}{length_special}⁻³')\n")
+                      f"symbol='{amount_special_symbol}{length_special_symbol}⁻³')\n")
 
             unit_types[hash(dimensions)].append(name)
 
-    # TODO: Torque, Momentum, Entropy
 
     #
     # Add aliases to symbol lookup table
     #
 
-    # Apply the alias transforms sequentially
-    for aliases in [aliases_1, aliases_2]:
-        for base_name in aliases:
-            alias_list = aliases[base_name]
-            for alias in alias_list:
-                symbol_lookup[alias] = symbol_lookup[base_name]
+    for base_name in aliases:
+        alias_list = aliases[base_name]
+        for alias in alias_list:
+            symbol_lookup[alias] = symbol_lookup[base_name]
 
     #
     # Write out the symbol lookup table
@@ -317,8 +267,7 @@ with open("units.py", 'w', encoding=encoding) as fid:
     fid.write("\n#\n# Lookup table from symbols to units\n#\n\n")
     fid.write("symbol_lookup = {\n")
     for k in symbol_lookup:
-        if k != "none":
-            fid.write(f'        "{k}": {symbol_lookup[k]},\n')
+        fid.write(f'        "{k}": {symbol_lookup[k]},\n')
     fid.write("}\n\n")
 
     #
@@ -354,7 +303,7 @@ with open("units.py", 'w', encoding=encoding) as fid:
         ("angle", Dimensions(angle_hint=1)),
         ("solid_angle", Dimensions(angle_hint=2)),
         ("amount", Dimensions(moles_hint=1)),
-        ("concentration", Dimensions(length=-3, moles_hint=1)),
+        ("concentration", Dimensions(length=-3, moles_hint=1))
     ]
 
     fid.write("\n#\n# Units by type\n#\n\n")
@@ -372,20 +321,6 @@ with open("units.py", 'w', encoding=encoding) as fid:
 
         fid.write("])\n")
 
-
-    # List of dimensions
-    fid.write("\n\n")
-    fid.write("unit_group_names = [\n")
-    for dimension_name, _ in dimension_names:
-        fid.write(f"    '{dimension_name}',\n")
-    fid.write("]\n\n")
-
-    fid.write("unit_groups = {\n")
-    for dimension_name, _ in dimension_names:
-        fid.write(f"    '{dimension_name}': {dimension_name},\n")
-    fid.write("}\n\n")
-
-
 with open("accessors.py", 'w', encoding=encoding) as fid:
 
 
@@ -400,28 +335,15 @@ with open("accessors.py", 'w', encoding=encoding) as fid:
         accessor_name = dimension_name.capitalize().replace("_", "") + "Accessor"
 
         fid.write(f"\n"
-                  f"class {accessor_name}[T](QuantityAccessor[T]):\n"
+                  f"class {accessor_name}[T](Accessor[T]):\n"
                   f"    dimension_name = '{dimension_name}'\n"
                   f"\n")
 
         for unit_name in unit_types[hash(dimensions)]:
             fid.write(f"    @property\n"
                       f"    def {unit_name}(self) -> T:\n"
-                      f"        quantity = self.quantity\n"
-                      f"        if quantity is None:\n"
-                      f"            return None\n"
-                      f"        else:\n"
-                      f"            return quantity.in_units_of(units.{unit_name})\n"
+                      f"        return self.quantity.in_units_of(units.{unit_name})\n"
                       f"\n")
 
-        fid.write("\n")with open("si.py", 'w') as fid:
+        fid.write("\n")
 
-    fid.write('"""'+(warning_text%"_build_tables.py")+'"""\n\n')
-    si_unit_names = [values[3] for values in base_si_units + derived_si_units if values[3] != "grams"] + ["kilograms"]
-
-    for name in si_unit_names:
-
-        fid.write(f"from sasdata.quantities.units import {name}\n")    fid.write("\nall_si = [\n")
-    for name in si_unit_names:
-        fid.write(f"    {name},\n")
-    fid.write("]\n")
