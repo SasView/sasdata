@@ -376,19 +376,19 @@ nanograms = Unit(1.0000000000000002e-12, Dimensions(0, 0, 1, 0, 0),name='nanogra
 picograms = Unit(1e-15, Dimensions(0, 0, 1, 0, 0),name='picograms',ascii_symbol='pg',symbol='pg')
 femtograms = Unit(1e-18, Dimensions(0, 0, 1, 0, 0),name='femtograms',ascii_symbol='fg',symbol='fg')
 attograms = Unit(1.0000000000000001e-21, Dimensions(0, 0, 1, 0, 0),name='attograms',ascii_symbol='ag',symbol='ag')
-amps = Unit(1, Dimensions(0, 0, 0, 1, 0, 0, 0),name='amps',ascii_symbol='A',symbol='A')
-exaamps = Unit(1e+18, Dimensions(0, 0, 0, 1, 0),name='exaamps',ascii_symbol='EA',symbol='EA')
-petaamps = Unit(1000000000000000.0, Dimensions(0, 0, 0, 1, 0),name='petaamps',ascii_symbol='PA',symbol='PA')
-teraamps = Unit(1000000000000.0, Dimensions(0, 0, 0, 1, 0),name='teraamps',ascii_symbol='TA',symbol='TA')
-gigaamps = Unit(1000000000.0, Dimensions(0, 0, 0, 1, 0),name='gigaamps',ascii_symbol='GA',symbol='GA')
-megaamps = Unit(1000000.0, Dimensions(0, 0, 0, 1, 0),name='megaamps',ascii_symbol='MA',symbol='MA')
-kiloamps = Unit(1000.0, Dimensions(0, 0, 0, 1, 0),name='kiloamps',ascii_symbol='kA',symbol='kA')
-milliamps = Unit(0.001, Dimensions(0, 0, 0, 1, 0),name='milliamps',ascii_symbol='mA',symbol='mA')
-microamps = Unit(1e-06, Dimensions(0, 0, 0, 1, 0),name='microamps',ascii_symbol='uA',symbol='µA')
-nanoamps = Unit(1e-09, Dimensions(0, 0, 0, 1, 0),name='nanoamps',ascii_symbol='nA',symbol='nA')
-picoamps = Unit(1e-12, Dimensions(0, 0, 0, 1, 0),name='picoamps',ascii_symbol='pA',symbol='pA')
-femtoamps = Unit(1e-15, Dimensions(0, 0, 0, 1, 0),name='femtoamps',ascii_symbol='fA',symbol='fA')
-attoamps = Unit(1e-18, Dimensions(0, 0, 0, 1, 0),name='attoamps',ascii_symbol='aA',symbol='aA')
+amperes = Unit(1, Dimensions(0, 0, 0, 1, 0, 0, 0),name='amperes',ascii_symbol='A',symbol='A')
+exaamperes = Unit(1e+18, Dimensions(0, 0, 0, 1, 0),name='exaamperes',ascii_symbol='EA',symbol='EA')
+petaamperes = Unit(1000000000000000.0, Dimensions(0, 0, 0, 1, 0),name='petaamperes',ascii_symbol='PA',symbol='PA')
+teraamperes = Unit(1000000000000.0, Dimensions(0, 0, 0, 1, 0),name='teraamperes',ascii_symbol='TA',symbol='TA')
+gigaamperes = Unit(1000000000.0, Dimensions(0, 0, 0, 1, 0),name='gigaamperes',ascii_symbol='GA',symbol='GA')
+megaamperes = Unit(1000000.0, Dimensions(0, 0, 0, 1, 0),name='megaamperes',ascii_symbol='MA',symbol='MA')
+kiloamperes = Unit(1000.0, Dimensions(0, 0, 0, 1, 0),name='kiloamperes',ascii_symbol='kA',symbol='kA')
+milliamperes = Unit(0.001, Dimensions(0, 0, 0, 1, 0),name='milliamperes',ascii_symbol='mA',symbol='mA')
+microamperes = Unit(1e-06, Dimensions(0, 0, 0, 1, 0),name='microamperes',ascii_symbol='uA',symbol='µA')
+nanoamperes = Unit(1e-09, Dimensions(0, 0, 0, 1, 0),name='nanoamperes',ascii_symbol='nA',symbol='nA')
+picoamperes = Unit(1e-12, Dimensions(0, 0, 0, 1, 0),name='picoamperes',ascii_symbol='pA',symbol='pA')
+femtoamperes = Unit(1e-15, Dimensions(0, 0, 0, 1, 0),name='femtoamperes',ascii_symbol='fA',symbol='fA')
+attoamperes = Unit(1e-18, Dimensions(0, 0, 0, 1, 0),name='attoamperes',ascii_symbol='aA',symbol='aA')
 kelvin = Unit(1, Dimensions(0, 0, 0, 0, 1, 0, 0),name='kelvin',ascii_symbol='K',symbol='K')
 exakelvin = Unit(1e+18, Dimensions(0, 0, 0, 0, 1),name='exakelvin',ascii_symbol='EK',symbol='EK')
 petakelvin = Unit(1000000000000000.0, Dimensions(0, 0, 0, 0, 1),name='petakelvin',ascii_symbol='PK',symbol='PK')
@@ -603,6 +603,7 @@ nanomoles = Unit(602214076000000.0, Dimensions(0, 0, 0, 0, 0),name='nanomoles',a
 picomoles = Unit(602214076000.0, Dimensions(0, 0, 0, 0, 0),name='picomoles',ascii_symbol='pmol',symbol='pmol')
 femtomoles = Unit(602214076.0, Dimensions(0, 0, 0, 0, 0),name='femtomoles',ascii_symbol='fmol',symbol='fmol')
 attomoles = Unit(602214.076, Dimensions(0, 0, 0, 0, 0),name='attomoles',ascii_symbol='amol',symbol='amol')
+kg_force = Unit(9.80665, Dimensions(1, -2, 1, 0, 0, 0, 0),name='kg_force',ascii_symbol='kgForce',symbol='kgForce')
 square_meters = Unit(1, Dimensions(length=2), name='square_meters', ascii_symbol='m^2', symbol='m²')
 cubic_meters = Unit(1, Dimensions(length=3), name='cubic_meters', ascii_symbol='m^3', symbol='m³')
 per_meter = Unit(1.0, Dimensions(length=-1), name='per_meter', ascii_symbol='m^-1', symbol='m⁻¹')
@@ -1416,19 +1417,19 @@ symbol_lookup = {
         "fg": femtograms,
         "ag": attograms,
         "A": angstroms,
-        "EA": exaamps,
-        "PA": petaamps,
-        "TA": teraamps,
-        "GA": gigaamps,
-        "MA": megaamps,
-        "kA": kiloamps,
-        "mA": milliamps,
-        "uA": microamps,
-        "µA": microamps,
-        "nA": nanoamps,
-        "pA": picoamps,
-        "fA": femtoamps,
-        "aA": attoamps,
+        "EA": exaamperes,
+        "PA": petaamperes,
+        "TA": teraamperes,
+        "GA": gigaamperes,
+        "MA": megaamperes,
+        "kA": kiloamperes,
+        "mA": milliamperes,
+        "uA": microamperes,
+        "µA": microamperes,
+        "nA": nanoamperes,
+        "pA": picoamperes,
+        "fA": femtoamperes,
+        "aA": attoamperes,
         "K": kelvin,
         "EK": exakelvin,
         "PK": petakelvin,
@@ -1671,6 +1672,7 @@ symbol_lookup = {
         "pmol": picomoles,
         "fmol": femtomoles,
         "amol": attomoles,
+        "kgForce": kg_force,
         "yr": years,
         "year": years,
         "day": days,
@@ -2454,6 +2456,7 @@ force = UnitGroup(
     piconewtons,
     femtonewtons,
     attonewtons,
+    kg_force,
 ])
 
 pressure = UnitGroup(

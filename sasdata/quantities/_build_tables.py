@@ -35,7 +35,7 @@ base_si_units = [
     ("m", None, "meter", "meters", 1, 1, 0, 0, 0, 0, 0, 0, all_magnitudes + unusual_magnitudes),
     ("s", None, "second", "seconds", 1, 0, 1, 0, 0, 0, 0, 0, smaller_magnitudes),
     ("g", None, "gram", "grams", 1e-3, 0, 0, 1, 0, 0, 0, 0, all_magnitudes),
-    ("A", None, "amp", "amps", 1, 0, 0, 0, 1, 0, 0, 0, all_magnitudes),
+    ("A", None, "ampere", "amperes", 1, 0, 0, 0, 1, 0, 0, 0, all_magnitudes),
     ("K", None, "kelvin", "kelvin", 1, 0, 0, 0, 0, 1, 0, 0, all_magnitudes) ]
 
 derived_si_units = [
@@ -68,7 +68,8 @@ non_si_units = [
     ("l", None, "litre", "litres", 1e-3, 3, 0, 0, 0, 0, 0, 0, []),
     ("eV", None, "electronvolt", "electronvolts", 1.602176634e-19, 2, -2, 1, 0, 0, 0, 0, all_magnitudes),
     ("au", None, "atomic mass unit", "atomic mass units", 1.660538921e-27, 0, 0, 1, 0, 0, 0, 0, []),
-    ("mol", None, "mole", "moles", 6.02214076e23, 0, 0, 0, 0, 0, 1, 0, smaller_magnitudes)
+    ("mol", None, "mole", "moles", 6.02214076e23, 0, 0, 0, 0, 0, 1, 0, smaller_magnitudes),
+    ("kgForce", None, "kg force", "kg force",  9.80665, 1, -2, 1, 0, 0, 0, 0, [])
 ]
 
 aliases = {
