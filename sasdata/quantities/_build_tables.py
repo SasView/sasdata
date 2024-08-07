@@ -356,3 +356,8 @@ with open("si.py", 'w') as fid:
     for name in si_unit_names:
 
         fid.write(f"from sasdata.quantities.units import {name}\n")
+
+    fid.write("\nall_si = [\n")
+    for name in si_unit_names:
+        fid.write(f"    {name},\n")
+    fid.write("]\n")
