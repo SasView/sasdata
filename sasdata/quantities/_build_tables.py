@@ -343,6 +343,8 @@ with open("units.py", 'w', encoding=encoding) as fid:
 
         fid.write("])\n")
 
+
+
 with open("accessors.py", 'w', encoding=encoding) as fid:
 
 
@@ -357,14 +359,18 @@ with open("accessors.py", 'w', encoding=encoding) as fid:
         accessor_name = dimension_name.capitalize().replace("_", "") + "Accessor"
 
         fid.write(f"\n"
-                  f"class {accessor_name}[T](Accessor[T]):\n"
+                  f"class {accessor_name}[T](QuantityAccessor[T]):\n"
                   f"    dimension_name = '{dimension_name}'\n"
                   f"    \n")
 
         for unit_name in unit_types[hash(dimensions)]:
             fid.write(f"    @property\n"
                       f"    def {unit_name}(self) -> T:\n"
-                      f"        return self.quantity.in_units_of(units.{unit_name})\n"
+                      f"        quantity = self.quantity\n"
+                      f"        if quantity is None:\n"
+                      f"            return None\n"
+                      f"        else:\n"
+                      f"            return quantity.in_units_of(units.{unit_name})\n"
                       f"\n")
 
         fid.write("\n")
