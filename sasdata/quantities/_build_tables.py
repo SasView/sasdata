@@ -271,6 +271,7 @@ with open("units.py", 'w', encoding=encoding) as fid:
 
             unit_types[hash(dimensions)].append(name)
 
+    # TODO: Torque, Momentum, Entropy
 
     #
     # Add aliases to symbol lookup table
