@@ -279,7 +279,14 @@ class Unit:
         return f"Unit[{self.scale}, {self.dimensions}]"
 
 class NamedUnit(Unit):
-    """ Units, but they have a name, and a symbol"""
+    """ Units, but they have a name, and a symbol
+
+    :si_scaling_factor: Number of these units per SI equivalent
+    :param dimensions: Dimensions object representing the dimensionality of these units
+    :param name: Name of unit - string without unicode
+    :param ascii_symbol: Symbol for unit without unicode
+    :param symbol: Unicode symbol
+    """
     def __init__(self,
                  si_scaling_factor: float,
                  dimensions: Dimensions,
