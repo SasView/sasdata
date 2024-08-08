@@ -84,5127 +84,10126 @@ from sasdata.quantities.quantity import Quantity
 import sasdata.quantities.units as units
 
 
-T = TypeVar("T")
+DataType = TypeVar("DataType")
+OutputType = TypeVar("OutputType")
 
-class Accessor[T]:
+class Accessor[DataType, OutputType]:
     """ Base class """
-    def __init__(self, value_target: str, unit_target: str):
-        self._value_target = value_target
-        self._unit_target = unit_target
+    def __init__(self, target_object, value_target: str):
+        self.target_object = target_object
+        self.value_target = value_target
 
     @property
-    def quantity(self) -> Quantity[T]:
+    def value(self) -> OutputType | None:
+        pass
+
+class StringAccessor(Accessor[str, str]):
+    """ String based fields """
+    @property
+    def value(self) -> str | None:
+        pass
+
+class QuantityAccessor[DataType](Accessor[DataType, Quantity[DataType]]):
+    """ Base class for accessors that work with quantities that have units """
+    def __init__(self, target_object, value_target: str, unit_target: str, default_unit=None):
+        super().__init__(target_object, value_target)
+        self._unit_target = unit_target
+        self.default_unit = default_unit
+
+    def _lookup_unit(self) -> units.Unit | None:
+        # TODO: Implement
+        return None
+
+    def data_unit(self):
+        unit = self._lookup_unit
+        if unit is None:
+            return self.default_unit
+        else:
+            return unit
+
+
+    @property
+    def quantity(self) -> Quantity[DataType]:
         raise NotImplementedError("Not implemented yet")
 
-class LengthAccessor[T](Accessor[T]):
+
+class LengthAccessor[T](QuantityAccessor[T]):
     dimension_name = 'length'
     
     @property
     def meters(self) -> T:
-        return self.quantity.in_units_of(units.meters)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.meters)
 
     @property
     def exameters(self) -> T:
-        return self.quantity.in_units_of(units.exameters)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exameters)
 
     @property
     def petameters(self) -> T:
-        return self.quantity.in_units_of(units.petameters)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petameters)
 
     @property
     def terameters(self) -> T:
-        return self.quantity.in_units_of(units.terameters)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.terameters)
 
     @property
     def gigameters(self) -> T:
-        return self.quantity.in_units_of(units.gigameters)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigameters)
 
     @property
     def megameters(self) -> T:
-        return self.quantity.in_units_of(units.megameters)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megameters)
 
     @property
     def kilometers(self) -> T:
-        return self.quantity.in_units_of(units.kilometers)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilometers)
 
     @property
     def millimeters(self) -> T:
-        return self.quantity.in_units_of(units.millimeters)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millimeters)
 
     @property
     def micrometers(self) -> T:
-        return self.quantity.in_units_of(units.micrometers)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micrometers)
 
     @property
     def nanometers(self) -> T:
-        return self.quantity.in_units_of(units.nanometers)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanometers)
 
     @property
     def picometers(self) -> T:
-        return self.quantity.in_units_of(units.picometers)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picometers)
 
     @property
     def femtometers(self) -> T:
-        return self.quantity.in_units_of(units.femtometers)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtometers)
 
     @property
     def attometers(self) -> T:
-        return self.quantity.in_units_of(units.attometers)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attometers)
 
     @property
     def decimeters(self) -> T:
-        return self.quantity.in_units_of(units.decimeters)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.decimeters)
 
     @property
     def centimeters(self) -> T:
-        return self.quantity.in_units_of(units.centimeters)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.centimeters)
 
     @property
     def angstroms(self) -> T:
-        return self.quantity.in_units_of(units.angstroms)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.angstroms)
 
     @property
     def miles(self) -> T:
-        return self.quantity.in_units_of(units.miles)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.miles)
 
     @property
     def yards(self) -> T:
-        return self.quantity.in_units_of(units.yards)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.yards)
 
     @property
     def feet(self) -> T:
-        return self.quantity.in_units_of(units.feet)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.feet)
 
     @property
     def inches(self) -> T:
-        return self.quantity.in_units_of(units.inches)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.inches)
 
 
 
-class AreaAccessor[T](Accessor[T]):
+class AreaAccessor[T](QuantityAccessor[T]):
     dimension_name = 'area'
     
     @property
     def square_meters(self) -> T:
-        return self.quantity.in_units_of(units.square_meters)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.square_meters)
 
     @property
     def square_exameters(self) -> T:
-        return self.quantity.in_units_of(units.square_exameters)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.square_exameters)
 
     @property
     def square_petameters(self) -> T:
-        return self.quantity.in_units_of(units.square_petameters)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.square_petameters)
 
     @property
     def square_terameters(self) -> T:
-        return self.quantity.in_units_of(units.square_terameters)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.square_terameters)
 
     @property
     def square_gigameters(self) -> T:
-        return self.quantity.in_units_of(units.square_gigameters)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.square_gigameters)
 
     @property
     def square_megameters(self) -> T:
-        return self.quantity.in_units_of(units.square_megameters)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.square_megameters)
 
     @property
     def square_kilometers(self) -> T:
-        return self.quantity.in_units_of(units.square_kilometers)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.square_kilometers)
 
     @property
     def square_millimeters(self) -> T:
-        return self.quantity.in_units_of(units.square_millimeters)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.square_millimeters)
 
     @property
     def square_micrometers(self) -> T:
-        return self.quantity.in_units_of(units.square_micrometers)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.square_micrometers)
 
     @property
     def square_nanometers(self) -> T:
-        return self.quantity.in_units_of(units.square_nanometers)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.square_nanometers)
 
     @property
     def square_picometers(self) -> T:
-        return self.quantity.in_units_of(units.square_picometers)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.square_picometers)
 
     @property
     def square_femtometers(self) -> T:
-        return self.quantity.in_units_of(units.square_femtometers)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.square_femtometers)
 
     @property
     def square_attometers(self) -> T:
-        return self.quantity.in_units_of(units.square_attometers)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.square_attometers)
 
     @property
     def square_decimeters(self) -> T:
-        return self.quantity.in_units_of(units.square_decimeters)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.square_decimeters)
 
     @property
     def square_centimeters(self) -> T:
-        return self.quantity.in_units_of(units.square_centimeters)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.square_centimeters)
 
     @property
     def square_angstroms(self) -> T:
-        return self.quantity.in_units_of(units.square_angstroms)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.square_angstroms)
 
     @property
     def square_miles(self) -> T:
-        return self.quantity.in_units_of(units.square_miles)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.square_miles)
 
     @property
     def square_yards(self) -> T:
-        return self.quantity.in_units_of(units.square_yards)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.square_yards)
 
     @property
     def square_feet(self) -> T:
-        return self.quantity.in_units_of(units.square_feet)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.square_feet)
 
     @property
     def square_inches(self) -> T:
-        return self.quantity.in_units_of(units.square_inches)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.square_inches)
 
 
 
-class VolumeAccessor[T](Accessor[T]):
+class VolumeAccessor[T](QuantityAccessor[T]):
     dimension_name = 'volume'
     
     @property
     def litres(self) -> T:
-        return self.quantity.in_units_of(units.litres)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.litres)
 
     @property
     def cubic_meters(self) -> T:
-        return self.quantity.in_units_of(units.cubic_meters)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.cubic_meters)
 
     @property
     def cubic_exameters(self) -> T:
-        return self.quantity.in_units_of(units.cubic_exameters)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.cubic_exameters)
 
     @property
     def cubic_petameters(self) -> T:
-        return self.quantity.in_units_of(units.cubic_petameters)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.cubic_petameters)
 
     @property
     def cubic_terameters(self) -> T:
-        return self.quantity.in_units_of(units.cubic_terameters)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.cubic_terameters)
 
     @property
     def cubic_gigameters(self) -> T:
-        return self.quantity.in_units_of(units.cubic_gigameters)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.cubic_gigameters)
 
     @property
     def cubic_megameters(self) -> T:
-        return self.quantity.in_units_of(units.cubic_megameters)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.cubic_megameters)
 
     @property
     def cubic_kilometers(self) -> T:
-        return self.quantity.in_units_of(units.cubic_kilometers)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.cubic_kilometers)
 
     @property
     def cubic_millimeters(self) -> T:
-        return self.quantity.in_units_of(units.cubic_millimeters)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.cubic_millimeters)
 
     @property
     def cubic_micrometers(self) -> T:
-        return self.quantity.in_units_of(units.cubic_micrometers)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.cubic_micrometers)
 
     @property
     def cubic_nanometers(self) -> T:
-        return self.quantity.in_units_of(units.cubic_nanometers)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.cubic_nanometers)
 
     @property
     def cubic_picometers(self) -> T:
-        return self.quantity.in_units_of(units.cubic_picometers)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.cubic_picometers)
 
     @property
     def cubic_femtometers(self) -> T:
-        return self.quantity.in_units_of(units.cubic_femtometers)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.cubic_femtometers)
 
     @property
     def cubic_attometers(self) -> T:
-        return self.quantity.in_units_of(units.cubic_attometers)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.cubic_attometers)
 
     @property
     def cubic_decimeters(self) -> T:
-        return self.quantity.in_units_of(units.cubic_decimeters)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.cubic_decimeters)
 
     @property
     def cubic_centimeters(self) -> T:
-        return self.quantity.in_units_of(units.cubic_centimeters)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.cubic_centimeters)
 
     @property
     def cubic_angstroms(self) -> T:
-        return self.quantity.in_units_of(units.cubic_angstroms)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.cubic_angstroms)
 
     @property
     def cubic_miles(self) -> T:
-        return self.quantity.in_units_of(units.cubic_miles)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.cubic_miles)
 
     @property
     def cubic_yards(self) -> T:
-        return self.quantity.in_units_of(units.cubic_yards)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.cubic_yards)
 
     @property
     def cubic_feet(self) -> T:
-        return self.quantity.in_units_of(units.cubic_feet)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.cubic_feet)
 
     @property
     def cubic_inches(self) -> T:
-        return self.quantity.in_units_of(units.cubic_inches)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.cubic_inches)
 
 
 
-class InverselengthAccessor[T](Accessor[T]):
+class InverselengthAccessor[T](QuantityAccessor[T]):
     dimension_name = 'inverse_length'
     
     @property
     def per_meter(self) -> T:
-        return self.quantity.in_units_of(units.per_meter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_meter)
 
     @property
     def per_exameter(self) -> T:
-        return self.quantity.in_units_of(units.per_exameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_exameter)
 
     @property
     def per_petameter(self) -> T:
-        return self.quantity.in_units_of(units.per_petameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_petameter)
 
     @property
     def per_terameter(self) -> T:
-        return self.quantity.in_units_of(units.per_terameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_terameter)
 
     @property
     def per_gigameter(self) -> T:
-        return self.quantity.in_units_of(units.per_gigameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_gigameter)
 
     @property
     def per_megameter(self) -> T:
-        return self.quantity.in_units_of(units.per_megameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_megameter)
 
     @property
     def per_kilometer(self) -> T:
-        return self.quantity.in_units_of(units.per_kilometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_kilometer)
 
     @property
     def per_millimeter(self) -> T:
-        return self.quantity.in_units_of(units.per_millimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_millimeter)
 
     @property
     def per_micrometer(self) -> T:
-        return self.quantity.in_units_of(units.per_micrometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_micrometer)
 
     @property
     def per_nanometer(self) -> T:
-        return self.quantity.in_units_of(units.per_nanometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_nanometer)
 
     @property
     def per_picometer(self) -> T:
-        return self.quantity.in_units_of(units.per_picometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_picometer)
 
     @property
     def per_femtometer(self) -> T:
-        return self.quantity.in_units_of(units.per_femtometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_femtometer)
 
     @property
     def per_attometer(self) -> T:
-        return self.quantity.in_units_of(units.per_attometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_attometer)
 
     @property
     def per_decimeter(self) -> T:
-        return self.quantity.in_units_of(units.per_decimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_decimeter)
 
     @property
     def per_centimeter(self) -> T:
-        return self.quantity.in_units_of(units.per_centimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_centimeter)
 
     @property
     def per_angstrom(self) -> T:
-        return self.quantity.in_units_of(units.per_angstrom)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_angstrom)
 
     @property
     def per_mile(self) -> T:
-        return self.quantity.in_units_of(units.per_mile)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_mile)
 
     @property
     def per_yard(self) -> T:
-        return self.quantity.in_units_of(units.per_yard)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_yard)
 
     @property
     def per_foot(self) -> T:
-        return self.quantity.in_units_of(units.per_foot)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_foot)
 
     @property
     def per_inch(self) -> T:
-        return self.quantity.in_units_of(units.per_inch)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_inch)
 
 
 
-class InverseareaAccessor[T](Accessor[T]):
+class InverseareaAccessor[T](QuantityAccessor[T]):
     dimension_name = 'inverse_area'
     
     @property
     def per_square_meter(self) -> T:
-        return self.quantity.in_units_of(units.per_square_meter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_square_meter)
 
     @property
     def per_square_exameter(self) -> T:
-        return self.quantity.in_units_of(units.per_square_exameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_square_exameter)
 
     @property
     def per_square_petameter(self) -> T:
-        return self.quantity.in_units_of(units.per_square_petameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_square_petameter)
 
     @property
     def per_square_terameter(self) -> T:
-        return self.quantity.in_units_of(units.per_square_terameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_square_terameter)
 
     @property
     def per_square_gigameter(self) -> T:
-        return self.quantity.in_units_of(units.per_square_gigameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_square_gigameter)
 
     @property
     def per_square_megameter(self) -> T:
-        return self.quantity.in_units_of(units.per_square_megameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_square_megameter)
 
     @property
     def per_square_kilometer(self) -> T:
-        return self.quantity.in_units_of(units.per_square_kilometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_square_kilometer)
 
     @property
     def per_square_millimeter(self) -> T:
-        return self.quantity.in_units_of(units.per_square_millimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_square_millimeter)
 
     @property
     def per_square_micrometer(self) -> T:
-        return self.quantity.in_units_of(units.per_square_micrometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_square_micrometer)
 
     @property
     def per_square_nanometer(self) -> T:
-        return self.quantity.in_units_of(units.per_square_nanometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_square_nanometer)
 
     @property
     def per_square_picometer(self) -> T:
-        return self.quantity.in_units_of(units.per_square_picometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_square_picometer)
 
     @property
     def per_square_femtometer(self) -> T:
-        return self.quantity.in_units_of(units.per_square_femtometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_square_femtometer)
 
     @property
     def per_square_attometer(self) -> T:
-        return self.quantity.in_units_of(units.per_square_attometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_square_attometer)
 
     @property
     def per_square_decimeter(self) -> T:
-        return self.quantity.in_units_of(units.per_square_decimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_square_decimeter)
 
     @property
     def per_square_centimeter(self) -> T:
-        return self.quantity.in_units_of(units.per_square_centimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_square_centimeter)
 
     @property
     def per_square_angstrom(self) -> T:
-        return self.quantity.in_units_of(units.per_square_angstrom)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_square_angstrom)
 
     @property
     def per_square_mile(self) -> T:
-        return self.quantity.in_units_of(units.per_square_mile)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_square_mile)
 
     @property
     def per_square_yard(self) -> T:
-        return self.quantity.in_units_of(units.per_square_yard)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_square_yard)
 
     @property
     def per_square_foot(self) -> T:
-        return self.quantity.in_units_of(units.per_square_foot)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_square_foot)
 
     @property
     def per_square_inch(self) -> T:
-        return self.quantity.in_units_of(units.per_square_inch)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_square_inch)
 
 
 
-class InversevolumeAccessor[T](Accessor[T]):
+class InversevolumeAccessor[T](QuantityAccessor[T]):
     dimension_name = 'inverse_volume'
     
     @property
     def per_cubic_meter(self) -> T:
-        return self.quantity.in_units_of(units.per_cubic_meter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_cubic_meter)
 
     @property
     def per_cubic_exameter(self) -> T:
-        return self.quantity.in_units_of(units.per_cubic_exameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_cubic_exameter)
 
     @property
     def per_cubic_petameter(self) -> T:
-        return self.quantity.in_units_of(units.per_cubic_petameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_cubic_petameter)
 
     @property
     def per_cubic_terameter(self) -> T:
-        return self.quantity.in_units_of(units.per_cubic_terameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_cubic_terameter)
 
     @property
     def per_cubic_gigameter(self) -> T:
-        return self.quantity.in_units_of(units.per_cubic_gigameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_cubic_gigameter)
 
     @property
     def per_cubic_megameter(self) -> T:
-        return self.quantity.in_units_of(units.per_cubic_megameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_cubic_megameter)
 
     @property
     def per_cubic_kilometer(self) -> T:
-        return self.quantity.in_units_of(units.per_cubic_kilometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_cubic_kilometer)
 
     @property
     def per_cubic_millimeter(self) -> T:
-        return self.quantity.in_units_of(units.per_cubic_millimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_cubic_millimeter)
 
     @property
     def per_cubic_micrometer(self) -> T:
-        return self.quantity.in_units_of(units.per_cubic_micrometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_cubic_micrometer)
 
     @property
     def per_cubic_nanometer(self) -> T:
-        return self.quantity.in_units_of(units.per_cubic_nanometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_cubic_nanometer)
 
     @property
     def per_cubic_picometer(self) -> T:
-        return self.quantity.in_units_of(units.per_cubic_picometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_cubic_picometer)
 
     @property
     def per_cubic_femtometer(self) -> T:
-        return self.quantity.in_units_of(units.per_cubic_femtometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_cubic_femtometer)
 
     @property
     def per_cubic_attometer(self) -> T:
-        return self.quantity.in_units_of(units.per_cubic_attometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_cubic_attometer)
 
     @property
     def per_cubic_decimeter(self) -> T:
-        return self.quantity.in_units_of(units.per_cubic_decimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_cubic_decimeter)
 
     @property
     def per_cubic_centimeter(self) -> T:
-        return self.quantity.in_units_of(units.per_cubic_centimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_cubic_centimeter)
 
     @property
     def per_cubic_angstrom(self) -> T:
-        return self.quantity.in_units_of(units.per_cubic_angstrom)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_cubic_angstrom)
 
     @property
     def per_cubic_mile(self) -> T:
-        return self.quantity.in_units_of(units.per_cubic_mile)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_cubic_mile)
 
     @property
     def per_cubic_yard(self) -> T:
-        return self.quantity.in_units_of(units.per_cubic_yard)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_cubic_yard)
 
     @property
     def per_cubic_foot(self) -> T:
-        return self.quantity.in_units_of(units.per_cubic_foot)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_cubic_foot)
 
     @property
     def per_cubic_inch(self) -> T:
-        return self.quantity.in_units_of(units.per_cubic_inch)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_cubic_inch)
 
 
 
-class TimeAccessor[T](Accessor[T]):
+class TimeAccessor[T](QuantityAccessor[T]):
     dimension_name = 'time'
     
     @property
     def seconds(self) -> T:
-        return self.quantity.in_units_of(units.seconds)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.seconds)
 
     @property
     def milliseconds(self) -> T:
-        return self.quantity.in_units_of(units.milliseconds)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.milliseconds)
 
     @property
     def microseconds(self) -> T:
-        return self.quantity.in_units_of(units.microseconds)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.microseconds)
 
     @property
     def nanoseconds(self) -> T:
-        return self.quantity.in_units_of(units.nanoseconds)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanoseconds)
 
     @property
     def picoseconds(self) -> T:
-        return self.quantity.in_units_of(units.picoseconds)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picoseconds)
 
     @property
     def femtoseconds(self) -> T:
-        return self.quantity.in_units_of(units.femtoseconds)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtoseconds)
 
     @property
     def attoseconds(self) -> T:
-        return self.quantity.in_units_of(units.attoseconds)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attoseconds)
 
     @property
     def minutes(self) -> T:
-        return self.quantity.in_units_of(units.minutes)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.minutes)
 
     @property
     def hours(self) -> T:
-        return self.quantity.in_units_of(units.hours)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.hours)
 
     @property
     def days(self) -> T:
-        return self.quantity.in_units_of(units.days)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.days)
 
     @property
     def years(self) -> T:
-        return self.quantity.in_units_of(units.years)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.years)
 
 
 
-class RateAccessor[T](Accessor[T]):
+class RateAccessor[T](QuantityAccessor[T]):
     dimension_name = 'rate'
     
     @property
     def hertz(self) -> T:
-        return self.quantity.in_units_of(units.hertz)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.hertz)
 
     @property
     def exahertz(self) -> T:
-        return self.quantity.in_units_of(units.exahertz)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exahertz)
 
     @property
     def petahertz(self) -> T:
-        return self.quantity.in_units_of(units.petahertz)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petahertz)
 
     @property
     def terahertz(self) -> T:
-        return self.quantity.in_units_of(units.terahertz)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.terahertz)
 
     @property
     def gigahertz(self) -> T:
-        return self.quantity.in_units_of(units.gigahertz)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigahertz)
 
     @property
     def megahertz(self) -> T:
-        return self.quantity.in_units_of(units.megahertz)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megahertz)
 
     @property
     def kilohertz(self) -> T:
-        return self.quantity.in_units_of(units.kilohertz)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilohertz)
 
     @property
     def millihertz(self) -> T:
-        return self.quantity.in_units_of(units.millihertz)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millihertz)
 
     @property
     def microhertz(self) -> T:
-        return self.quantity.in_units_of(units.microhertz)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.microhertz)
 
     @property
     def nanohertz(self) -> T:
-        return self.quantity.in_units_of(units.nanohertz)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanohertz)
 
     @property
     def picohertz(self) -> T:
-        return self.quantity.in_units_of(units.picohertz)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picohertz)
 
     @property
     def femtohertz(self) -> T:
-        return self.quantity.in_units_of(units.femtohertz)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtohertz)
 
     @property
     def attohertz(self) -> T:
-        return self.quantity.in_units_of(units.attohertz)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attohertz)
 
 
 
-class SpeedAccessor[T](Accessor[T]):
+class SpeedAccessor[T](QuantityAccessor[T]):
     dimension_name = 'speed'
     
     @property
     def meters_per_second(self) -> T:
-        return self.quantity.in_units_of(units.meters_per_second)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.meters_per_second)
 
     @property
     def meters_per_millisecond(self) -> T:
-        return self.quantity.in_units_of(units.meters_per_millisecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.meters_per_millisecond)
 
     @property
     def meters_per_microsecond(self) -> T:
-        return self.quantity.in_units_of(units.meters_per_microsecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.meters_per_microsecond)
 
     @property
     def meters_per_nanosecond(self) -> T:
-        return self.quantity.in_units_of(units.meters_per_nanosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.meters_per_nanosecond)
 
     @property
     def meters_per_picosecond(self) -> T:
-        return self.quantity.in_units_of(units.meters_per_picosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.meters_per_picosecond)
 
     @property
     def meters_per_femtosecond(self) -> T:
-        return self.quantity.in_units_of(units.meters_per_femtosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.meters_per_femtosecond)
 
     @property
     def meters_per_attosecond(self) -> T:
-        return self.quantity.in_units_of(units.meters_per_attosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.meters_per_attosecond)
 
     @property
     def meters_per_minute(self) -> T:
-        return self.quantity.in_units_of(units.meters_per_minute)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.meters_per_minute)
 
     @property
     def meters_per_hour(self) -> T:
-        return self.quantity.in_units_of(units.meters_per_hour)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.meters_per_hour)
 
     @property
     def meters_per_day(self) -> T:
-        return self.quantity.in_units_of(units.meters_per_day)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.meters_per_day)
 
     @property
     def meters_per_year(self) -> T:
-        return self.quantity.in_units_of(units.meters_per_year)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.meters_per_year)
 
     @property
     def exameters_per_second(self) -> T:
-        return self.quantity.in_units_of(units.exameters_per_second)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exameters_per_second)
 
     @property
     def exameters_per_millisecond(self) -> T:
-        return self.quantity.in_units_of(units.exameters_per_millisecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exameters_per_millisecond)
 
     @property
     def exameters_per_microsecond(self) -> T:
-        return self.quantity.in_units_of(units.exameters_per_microsecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exameters_per_microsecond)
 
     @property
     def exameters_per_nanosecond(self) -> T:
-        return self.quantity.in_units_of(units.exameters_per_nanosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exameters_per_nanosecond)
 
     @property
     def exameters_per_picosecond(self) -> T:
-        return self.quantity.in_units_of(units.exameters_per_picosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exameters_per_picosecond)
 
     @property
     def exameters_per_femtosecond(self) -> T:
-        return self.quantity.in_units_of(units.exameters_per_femtosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exameters_per_femtosecond)
 
     @property
     def exameters_per_attosecond(self) -> T:
-        return self.quantity.in_units_of(units.exameters_per_attosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exameters_per_attosecond)
 
     @property
     def exameters_per_minute(self) -> T:
-        return self.quantity.in_units_of(units.exameters_per_minute)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exameters_per_minute)
 
     @property
     def exameters_per_hour(self) -> T:
-        return self.quantity.in_units_of(units.exameters_per_hour)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exameters_per_hour)
 
     @property
     def exameters_per_day(self) -> T:
-        return self.quantity.in_units_of(units.exameters_per_day)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exameters_per_day)
 
     @property
     def exameters_per_year(self) -> T:
-        return self.quantity.in_units_of(units.exameters_per_year)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exameters_per_year)
 
     @property
     def petameters_per_second(self) -> T:
-        return self.quantity.in_units_of(units.petameters_per_second)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petameters_per_second)
 
     @property
     def petameters_per_millisecond(self) -> T:
-        return self.quantity.in_units_of(units.petameters_per_millisecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petameters_per_millisecond)
 
     @property
     def petameters_per_microsecond(self) -> T:
-        return self.quantity.in_units_of(units.petameters_per_microsecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petameters_per_microsecond)
 
     @property
     def petameters_per_nanosecond(self) -> T:
-        return self.quantity.in_units_of(units.petameters_per_nanosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petameters_per_nanosecond)
 
     @property
     def petameters_per_picosecond(self) -> T:
-        return self.quantity.in_units_of(units.petameters_per_picosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petameters_per_picosecond)
 
     @property
     def petameters_per_femtosecond(self) -> T:
-        return self.quantity.in_units_of(units.petameters_per_femtosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petameters_per_femtosecond)
 
     @property
     def petameters_per_attosecond(self) -> T:
-        return self.quantity.in_units_of(units.petameters_per_attosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petameters_per_attosecond)
 
     @property
     def petameters_per_minute(self) -> T:
-        return self.quantity.in_units_of(units.petameters_per_minute)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petameters_per_minute)
 
     @property
     def petameters_per_hour(self) -> T:
-        return self.quantity.in_units_of(units.petameters_per_hour)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petameters_per_hour)
 
     @property
     def petameters_per_day(self) -> T:
-        return self.quantity.in_units_of(units.petameters_per_day)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petameters_per_day)
 
     @property
     def petameters_per_year(self) -> T:
-        return self.quantity.in_units_of(units.petameters_per_year)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petameters_per_year)
 
     @property
     def terameters_per_second(self) -> T:
-        return self.quantity.in_units_of(units.terameters_per_second)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.terameters_per_second)
 
     @property
     def terameters_per_millisecond(self) -> T:
-        return self.quantity.in_units_of(units.terameters_per_millisecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.terameters_per_millisecond)
 
     @property
     def terameters_per_microsecond(self) -> T:
-        return self.quantity.in_units_of(units.terameters_per_microsecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.terameters_per_microsecond)
 
     @property
     def terameters_per_nanosecond(self) -> T:
-        return self.quantity.in_units_of(units.terameters_per_nanosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.terameters_per_nanosecond)
 
     @property
     def terameters_per_picosecond(self) -> T:
-        return self.quantity.in_units_of(units.terameters_per_picosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.terameters_per_picosecond)
 
     @property
     def terameters_per_femtosecond(self) -> T:
-        return self.quantity.in_units_of(units.terameters_per_femtosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.terameters_per_femtosecond)
 
     @property
     def terameters_per_attosecond(self) -> T:
-        return self.quantity.in_units_of(units.terameters_per_attosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.terameters_per_attosecond)
 
     @property
     def terameters_per_minute(self) -> T:
-        return self.quantity.in_units_of(units.terameters_per_minute)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.terameters_per_minute)
 
     @property
     def terameters_per_hour(self) -> T:
-        return self.quantity.in_units_of(units.terameters_per_hour)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.terameters_per_hour)
 
     @property
     def terameters_per_day(self) -> T:
-        return self.quantity.in_units_of(units.terameters_per_day)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.terameters_per_day)
 
     @property
     def terameters_per_year(self) -> T:
-        return self.quantity.in_units_of(units.terameters_per_year)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.terameters_per_year)
 
     @property
     def gigameters_per_second(self) -> T:
-        return self.quantity.in_units_of(units.gigameters_per_second)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigameters_per_second)
 
     @property
     def gigameters_per_millisecond(self) -> T:
-        return self.quantity.in_units_of(units.gigameters_per_millisecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigameters_per_millisecond)
 
     @property
     def gigameters_per_microsecond(self) -> T:
-        return self.quantity.in_units_of(units.gigameters_per_microsecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigameters_per_microsecond)
 
     @property
     def gigameters_per_nanosecond(self) -> T:
-        return self.quantity.in_units_of(units.gigameters_per_nanosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigameters_per_nanosecond)
 
     @property
     def gigameters_per_picosecond(self) -> T:
-        return self.quantity.in_units_of(units.gigameters_per_picosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigameters_per_picosecond)
 
     @property
     def gigameters_per_femtosecond(self) -> T:
-        return self.quantity.in_units_of(units.gigameters_per_femtosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigameters_per_femtosecond)
 
     @property
     def gigameters_per_attosecond(self) -> T:
-        return self.quantity.in_units_of(units.gigameters_per_attosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigameters_per_attosecond)
 
     @property
     def gigameters_per_minute(self) -> T:
-        return self.quantity.in_units_of(units.gigameters_per_minute)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigameters_per_minute)
 
     @property
     def gigameters_per_hour(self) -> T:
-        return self.quantity.in_units_of(units.gigameters_per_hour)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigameters_per_hour)
 
     @property
     def gigameters_per_day(self) -> T:
-        return self.quantity.in_units_of(units.gigameters_per_day)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigameters_per_day)
 
     @property
     def gigameters_per_year(self) -> T:
-        return self.quantity.in_units_of(units.gigameters_per_year)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigameters_per_year)
 
     @property
     def megameters_per_second(self) -> T:
-        return self.quantity.in_units_of(units.megameters_per_second)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megameters_per_second)
 
     @property
     def megameters_per_millisecond(self) -> T:
-        return self.quantity.in_units_of(units.megameters_per_millisecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megameters_per_millisecond)
 
     @property
     def megameters_per_microsecond(self) -> T:
-        return self.quantity.in_units_of(units.megameters_per_microsecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megameters_per_microsecond)
 
     @property
     def megameters_per_nanosecond(self) -> T:
-        return self.quantity.in_units_of(units.megameters_per_nanosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megameters_per_nanosecond)
 
     @property
     def megameters_per_picosecond(self) -> T:
-        return self.quantity.in_units_of(units.megameters_per_picosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megameters_per_picosecond)
 
     @property
     def megameters_per_femtosecond(self) -> T:
-        return self.quantity.in_units_of(units.megameters_per_femtosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megameters_per_femtosecond)
 
     @property
     def megameters_per_attosecond(self) -> T:
-        return self.quantity.in_units_of(units.megameters_per_attosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megameters_per_attosecond)
 
     @property
     def megameters_per_minute(self) -> T:
-        return self.quantity.in_units_of(units.megameters_per_minute)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megameters_per_minute)
 
     @property
     def megameters_per_hour(self) -> T:
-        return self.quantity.in_units_of(units.megameters_per_hour)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megameters_per_hour)
 
     @property
     def megameters_per_day(self) -> T:
-        return self.quantity.in_units_of(units.megameters_per_day)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megameters_per_day)
 
     @property
     def megameters_per_year(self) -> T:
-        return self.quantity.in_units_of(units.megameters_per_year)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megameters_per_year)
 
     @property
     def kilometers_per_second(self) -> T:
-        return self.quantity.in_units_of(units.kilometers_per_second)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilometers_per_second)
 
     @property
     def kilometers_per_millisecond(self) -> T:
-        return self.quantity.in_units_of(units.kilometers_per_millisecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilometers_per_millisecond)
 
     @property
     def kilometers_per_microsecond(self) -> T:
-        return self.quantity.in_units_of(units.kilometers_per_microsecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilometers_per_microsecond)
 
     @property
     def kilometers_per_nanosecond(self) -> T:
-        return self.quantity.in_units_of(units.kilometers_per_nanosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilometers_per_nanosecond)
 
     @property
     def kilometers_per_picosecond(self) -> T:
-        return self.quantity.in_units_of(units.kilometers_per_picosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilometers_per_picosecond)
 
     @property
     def kilometers_per_femtosecond(self) -> T:
-        return self.quantity.in_units_of(units.kilometers_per_femtosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilometers_per_femtosecond)
 
     @property
     def kilometers_per_attosecond(self) -> T:
-        return self.quantity.in_units_of(units.kilometers_per_attosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilometers_per_attosecond)
 
     @property
     def kilometers_per_minute(self) -> T:
-        return self.quantity.in_units_of(units.kilometers_per_minute)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilometers_per_minute)
 
     @property
     def kilometers_per_hour(self) -> T:
-        return self.quantity.in_units_of(units.kilometers_per_hour)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilometers_per_hour)
 
     @property
     def kilometers_per_day(self) -> T:
-        return self.quantity.in_units_of(units.kilometers_per_day)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilometers_per_day)
 
     @property
     def kilometers_per_year(self) -> T:
-        return self.quantity.in_units_of(units.kilometers_per_year)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilometers_per_year)
 
     @property
     def millimeters_per_second(self) -> T:
-        return self.quantity.in_units_of(units.millimeters_per_second)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millimeters_per_second)
 
     @property
     def millimeters_per_millisecond(self) -> T:
-        return self.quantity.in_units_of(units.millimeters_per_millisecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millimeters_per_millisecond)
 
     @property
     def millimeters_per_microsecond(self) -> T:
-        return self.quantity.in_units_of(units.millimeters_per_microsecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millimeters_per_microsecond)
 
     @property
     def millimeters_per_nanosecond(self) -> T:
-        return self.quantity.in_units_of(units.millimeters_per_nanosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millimeters_per_nanosecond)
 
     @property
     def millimeters_per_picosecond(self) -> T:
-        return self.quantity.in_units_of(units.millimeters_per_picosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millimeters_per_picosecond)
 
     @property
     def millimeters_per_femtosecond(self) -> T:
-        return self.quantity.in_units_of(units.millimeters_per_femtosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millimeters_per_femtosecond)
 
     @property
     def millimeters_per_attosecond(self) -> T:
-        return self.quantity.in_units_of(units.millimeters_per_attosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millimeters_per_attosecond)
 
     @property
     def millimeters_per_minute(self) -> T:
-        return self.quantity.in_units_of(units.millimeters_per_minute)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millimeters_per_minute)
 
     @property
     def millimeters_per_hour(self) -> T:
-        return self.quantity.in_units_of(units.millimeters_per_hour)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millimeters_per_hour)
 
     @property
     def millimeters_per_day(self) -> T:
-        return self.quantity.in_units_of(units.millimeters_per_day)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millimeters_per_day)
 
     @property
     def millimeters_per_year(self) -> T:
-        return self.quantity.in_units_of(units.millimeters_per_year)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millimeters_per_year)
 
     @property
     def micrometers_per_second(self) -> T:
-        return self.quantity.in_units_of(units.micrometers_per_second)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micrometers_per_second)
 
     @property
     def micrometers_per_millisecond(self) -> T:
-        return self.quantity.in_units_of(units.micrometers_per_millisecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micrometers_per_millisecond)
 
     @property
     def micrometers_per_microsecond(self) -> T:
-        return self.quantity.in_units_of(units.micrometers_per_microsecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micrometers_per_microsecond)
 
     @property
     def micrometers_per_nanosecond(self) -> T:
-        return self.quantity.in_units_of(units.micrometers_per_nanosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micrometers_per_nanosecond)
 
     @property
     def micrometers_per_picosecond(self) -> T:
-        return self.quantity.in_units_of(units.micrometers_per_picosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micrometers_per_picosecond)
 
     @property
     def micrometers_per_femtosecond(self) -> T:
-        return self.quantity.in_units_of(units.micrometers_per_femtosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micrometers_per_femtosecond)
 
     @property
     def micrometers_per_attosecond(self) -> T:
-        return self.quantity.in_units_of(units.micrometers_per_attosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micrometers_per_attosecond)
 
     @property
     def micrometers_per_minute(self) -> T:
-        return self.quantity.in_units_of(units.micrometers_per_minute)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micrometers_per_minute)
 
     @property
     def micrometers_per_hour(self) -> T:
-        return self.quantity.in_units_of(units.micrometers_per_hour)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micrometers_per_hour)
 
     @property
     def micrometers_per_day(self) -> T:
-        return self.quantity.in_units_of(units.micrometers_per_day)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micrometers_per_day)
 
     @property
     def micrometers_per_year(self) -> T:
-        return self.quantity.in_units_of(units.micrometers_per_year)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micrometers_per_year)
 
     @property
     def nanometers_per_second(self) -> T:
-        return self.quantity.in_units_of(units.nanometers_per_second)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanometers_per_second)
 
     @property
     def nanometers_per_millisecond(self) -> T:
-        return self.quantity.in_units_of(units.nanometers_per_millisecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanometers_per_millisecond)
 
     @property
     def nanometers_per_microsecond(self) -> T:
-        return self.quantity.in_units_of(units.nanometers_per_microsecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanometers_per_microsecond)
 
     @property
     def nanometers_per_nanosecond(self) -> T:
-        return self.quantity.in_units_of(units.nanometers_per_nanosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanometers_per_nanosecond)
 
     @property
     def nanometers_per_picosecond(self) -> T:
-        return self.quantity.in_units_of(units.nanometers_per_picosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanometers_per_picosecond)
 
     @property
     def nanometers_per_femtosecond(self) -> T:
-        return self.quantity.in_units_of(units.nanometers_per_femtosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanometers_per_femtosecond)
 
     @property
     def nanometers_per_attosecond(self) -> T:
-        return self.quantity.in_units_of(units.nanometers_per_attosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanometers_per_attosecond)
 
     @property
     def nanometers_per_minute(self) -> T:
-        return self.quantity.in_units_of(units.nanometers_per_minute)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanometers_per_minute)
 
     @property
     def nanometers_per_hour(self) -> T:
-        return self.quantity.in_units_of(units.nanometers_per_hour)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanometers_per_hour)
 
     @property
     def nanometers_per_day(self) -> T:
-        return self.quantity.in_units_of(units.nanometers_per_day)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanometers_per_day)
 
     @property
     def nanometers_per_year(self) -> T:
-        return self.quantity.in_units_of(units.nanometers_per_year)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanometers_per_year)
 
     @property
     def picometers_per_second(self) -> T:
-        return self.quantity.in_units_of(units.picometers_per_second)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picometers_per_second)
 
     @property
     def picometers_per_millisecond(self) -> T:
-        return self.quantity.in_units_of(units.picometers_per_millisecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picometers_per_millisecond)
 
     @property
     def picometers_per_microsecond(self) -> T:
-        return self.quantity.in_units_of(units.picometers_per_microsecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picometers_per_microsecond)
 
     @property
     def picometers_per_nanosecond(self) -> T:
-        return self.quantity.in_units_of(units.picometers_per_nanosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picometers_per_nanosecond)
 
     @property
     def picometers_per_picosecond(self) -> T:
-        return self.quantity.in_units_of(units.picometers_per_picosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picometers_per_picosecond)
 
     @property
     def picometers_per_femtosecond(self) -> T:
-        return self.quantity.in_units_of(units.picometers_per_femtosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picometers_per_femtosecond)
 
     @property
     def picometers_per_attosecond(self) -> T:
-        return self.quantity.in_units_of(units.picometers_per_attosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picometers_per_attosecond)
 
     @property
     def picometers_per_minute(self) -> T:
-        return self.quantity.in_units_of(units.picometers_per_minute)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picometers_per_minute)
 
     @property
     def picometers_per_hour(self) -> T:
-        return self.quantity.in_units_of(units.picometers_per_hour)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picometers_per_hour)
 
     @property
     def picometers_per_day(self) -> T:
-        return self.quantity.in_units_of(units.picometers_per_day)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picometers_per_day)
 
     @property
     def picometers_per_year(self) -> T:
-        return self.quantity.in_units_of(units.picometers_per_year)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picometers_per_year)
 
     @property
     def femtometers_per_second(self) -> T:
-        return self.quantity.in_units_of(units.femtometers_per_second)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtometers_per_second)
 
     @property
     def femtometers_per_millisecond(self) -> T:
-        return self.quantity.in_units_of(units.femtometers_per_millisecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtometers_per_millisecond)
 
     @property
     def femtometers_per_microsecond(self) -> T:
-        return self.quantity.in_units_of(units.femtometers_per_microsecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtometers_per_microsecond)
 
     @property
     def femtometers_per_nanosecond(self) -> T:
-        return self.quantity.in_units_of(units.femtometers_per_nanosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtometers_per_nanosecond)
 
     @property
     def femtometers_per_picosecond(self) -> T:
-        return self.quantity.in_units_of(units.femtometers_per_picosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtometers_per_picosecond)
 
     @property
     def femtometers_per_femtosecond(self) -> T:
-        return self.quantity.in_units_of(units.femtometers_per_femtosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtometers_per_femtosecond)
 
     @property
     def femtometers_per_attosecond(self) -> T:
-        return self.quantity.in_units_of(units.femtometers_per_attosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtometers_per_attosecond)
 
     @property
     def femtometers_per_minute(self) -> T:
-        return self.quantity.in_units_of(units.femtometers_per_minute)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtometers_per_minute)
 
     @property
     def femtometers_per_hour(self) -> T:
-        return self.quantity.in_units_of(units.femtometers_per_hour)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtometers_per_hour)
 
     @property
     def femtometers_per_day(self) -> T:
-        return self.quantity.in_units_of(units.femtometers_per_day)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtometers_per_day)
 
     @property
     def femtometers_per_year(self) -> T:
-        return self.quantity.in_units_of(units.femtometers_per_year)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtometers_per_year)
 
     @property
     def attometers_per_second(self) -> T:
-        return self.quantity.in_units_of(units.attometers_per_second)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attometers_per_second)
 
     @property
     def attometers_per_millisecond(self) -> T:
-        return self.quantity.in_units_of(units.attometers_per_millisecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attometers_per_millisecond)
 
     @property
     def attometers_per_microsecond(self) -> T:
-        return self.quantity.in_units_of(units.attometers_per_microsecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attometers_per_microsecond)
 
     @property
     def attometers_per_nanosecond(self) -> T:
-        return self.quantity.in_units_of(units.attometers_per_nanosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attometers_per_nanosecond)
 
     @property
     def attometers_per_picosecond(self) -> T:
-        return self.quantity.in_units_of(units.attometers_per_picosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attometers_per_picosecond)
 
     @property
     def attometers_per_femtosecond(self) -> T:
-        return self.quantity.in_units_of(units.attometers_per_femtosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attometers_per_femtosecond)
 
     @property
     def attometers_per_attosecond(self) -> T:
-        return self.quantity.in_units_of(units.attometers_per_attosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attometers_per_attosecond)
 
     @property
     def attometers_per_minute(self) -> T:
-        return self.quantity.in_units_of(units.attometers_per_minute)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attometers_per_minute)
 
     @property
     def attometers_per_hour(self) -> T:
-        return self.quantity.in_units_of(units.attometers_per_hour)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attometers_per_hour)
 
     @property
     def attometers_per_day(self) -> T:
-        return self.quantity.in_units_of(units.attometers_per_day)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attometers_per_day)
 
     @property
     def attometers_per_year(self) -> T:
-        return self.quantity.in_units_of(units.attometers_per_year)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attometers_per_year)
 
     @property
     def decimeters_per_second(self) -> T:
-        return self.quantity.in_units_of(units.decimeters_per_second)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.decimeters_per_second)
 
     @property
     def decimeters_per_millisecond(self) -> T:
-        return self.quantity.in_units_of(units.decimeters_per_millisecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.decimeters_per_millisecond)
 
     @property
     def decimeters_per_microsecond(self) -> T:
-        return self.quantity.in_units_of(units.decimeters_per_microsecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.decimeters_per_microsecond)
 
     @property
     def decimeters_per_nanosecond(self) -> T:
-        return self.quantity.in_units_of(units.decimeters_per_nanosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.decimeters_per_nanosecond)
 
     @property
     def decimeters_per_picosecond(self) -> T:
-        return self.quantity.in_units_of(units.decimeters_per_picosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.decimeters_per_picosecond)
 
     @property
     def decimeters_per_femtosecond(self) -> T:
-        return self.quantity.in_units_of(units.decimeters_per_femtosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.decimeters_per_femtosecond)
 
     @property
     def decimeters_per_attosecond(self) -> T:
-        return self.quantity.in_units_of(units.decimeters_per_attosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.decimeters_per_attosecond)
 
     @property
     def decimeters_per_minute(self) -> T:
-        return self.quantity.in_units_of(units.decimeters_per_minute)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.decimeters_per_minute)
 
     @property
     def decimeters_per_hour(self) -> T:
-        return self.quantity.in_units_of(units.decimeters_per_hour)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.decimeters_per_hour)
 
     @property
     def decimeters_per_day(self) -> T:
-        return self.quantity.in_units_of(units.decimeters_per_day)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.decimeters_per_day)
 
     @property
     def decimeters_per_year(self) -> T:
-        return self.quantity.in_units_of(units.decimeters_per_year)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.decimeters_per_year)
 
     @property
     def centimeters_per_second(self) -> T:
-        return self.quantity.in_units_of(units.centimeters_per_second)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.centimeters_per_second)
 
     @property
     def centimeters_per_millisecond(self) -> T:
-        return self.quantity.in_units_of(units.centimeters_per_millisecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.centimeters_per_millisecond)
 
     @property
     def centimeters_per_microsecond(self) -> T:
-        return self.quantity.in_units_of(units.centimeters_per_microsecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.centimeters_per_microsecond)
 
     @property
     def centimeters_per_nanosecond(self) -> T:
-        return self.quantity.in_units_of(units.centimeters_per_nanosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.centimeters_per_nanosecond)
 
     @property
     def centimeters_per_picosecond(self) -> T:
-        return self.quantity.in_units_of(units.centimeters_per_picosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.centimeters_per_picosecond)
 
     @property
     def centimeters_per_femtosecond(self) -> T:
-        return self.quantity.in_units_of(units.centimeters_per_femtosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.centimeters_per_femtosecond)
 
     @property
     def centimeters_per_attosecond(self) -> T:
-        return self.quantity.in_units_of(units.centimeters_per_attosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.centimeters_per_attosecond)
 
     @property
     def centimeters_per_minute(self) -> T:
-        return self.quantity.in_units_of(units.centimeters_per_minute)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.centimeters_per_minute)
 
     @property
     def centimeters_per_hour(self) -> T:
-        return self.quantity.in_units_of(units.centimeters_per_hour)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.centimeters_per_hour)
 
     @property
     def centimeters_per_day(self) -> T:
-        return self.quantity.in_units_of(units.centimeters_per_day)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.centimeters_per_day)
 
     @property
     def centimeters_per_year(self) -> T:
-        return self.quantity.in_units_of(units.centimeters_per_year)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.centimeters_per_year)
 
     @property
     def angstroms_per_second(self) -> T:
-        return self.quantity.in_units_of(units.angstroms_per_second)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.angstroms_per_second)
 
     @property
     def angstroms_per_millisecond(self) -> T:
-        return self.quantity.in_units_of(units.angstroms_per_millisecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.angstroms_per_millisecond)
 
     @property
     def angstroms_per_microsecond(self) -> T:
-        return self.quantity.in_units_of(units.angstroms_per_microsecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.angstroms_per_microsecond)
 
     @property
     def angstroms_per_nanosecond(self) -> T:
-        return self.quantity.in_units_of(units.angstroms_per_nanosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.angstroms_per_nanosecond)
 
     @property
     def angstroms_per_picosecond(self) -> T:
-        return self.quantity.in_units_of(units.angstroms_per_picosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.angstroms_per_picosecond)
 
     @property
     def angstroms_per_femtosecond(self) -> T:
-        return self.quantity.in_units_of(units.angstroms_per_femtosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.angstroms_per_femtosecond)
 
     @property
     def angstroms_per_attosecond(self) -> T:
-        return self.quantity.in_units_of(units.angstroms_per_attosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.angstroms_per_attosecond)
 
     @property
     def angstroms_per_minute(self) -> T:
-        return self.quantity.in_units_of(units.angstroms_per_minute)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.angstroms_per_minute)
 
     @property
     def angstroms_per_hour(self) -> T:
-        return self.quantity.in_units_of(units.angstroms_per_hour)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.angstroms_per_hour)
 
     @property
     def angstroms_per_day(self) -> T:
-        return self.quantity.in_units_of(units.angstroms_per_day)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.angstroms_per_day)
 
     @property
     def angstroms_per_year(self) -> T:
-        return self.quantity.in_units_of(units.angstroms_per_year)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.angstroms_per_year)
 
     @property
     def miles_per_second(self) -> T:
-        return self.quantity.in_units_of(units.miles_per_second)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.miles_per_second)
 
     @property
     def miles_per_millisecond(self) -> T:
-        return self.quantity.in_units_of(units.miles_per_millisecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.miles_per_millisecond)
 
     @property
     def miles_per_microsecond(self) -> T:
-        return self.quantity.in_units_of(units.miles_per_microsecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.miles_per_microsecond)
 
     @property
     def miles_per_nanosecond(self) -> T:
-        return self.quantity.in_units_of(units.miles_per_nanosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.miles_per_nanosecond)
 
     @property
     def miles_per_picosecond(self) -> T:
-        return self.quantity.in_units_of(units.miles_per_picosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.miles_per_picosecond)
 
     @property
     def miles_per_femtosecond(self) -> T:
-        return self.quantity.in_units_of(units.miles_per_femtosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.miles_per_femtosecond)
 
     @property
     def miles_per_attosecond(self) -> T:
-        return self.quantity.in_units_of(units.miles_per_attosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.miles_per_attosecond)
 
     @property
     def miles_per_minute(self) -> T:
-        return self.quantity.in_units_of(units.miles_per_minute)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.miles_per_minute)
 
     @property
     def miles_per_hour(self) -> T:
-        return self.quantity.in_units_of(units.miles_per_hour)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.miles_per_hour)
 
     @property
     def miles_per_day(self) -> T:
-        return self.quantity.in_units_of(units.miles_per_day)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.miles_per_day)
 
     @property
     def miles_per_year(self) -> T:
-        return self.quantity.in_units_of(units.miles_per_year)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.miles_per_year)
 
     @property
     def yards_per_second(self) -> T:
-        return self.quantity.in_units_of(units.yards_per_second)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.yards_per_second)
 
     @property
     def yards_per_millisecond(self) -> T:
-        return self.quantity.in_units_of(units.yards_per_millisecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.yards_per_millisecond)
 
     @property
     def yards_per_microsecond(self) -> T:
-        return self.quantity.in_units_of(units.yards_per_microsecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.yards_per_microsecond)
 
     @property
     def yards_per_nanosecond(self) -> T:
-        return self.quantity.in_units_of(units.yards_per_nanosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.yards_per_nanosecond)
 
     @property
     def yards_per_picosecond(self) -> T:
-        return self.quantity.in_units_of(units.yards_per_picosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.yards_per_picosecond)
 
     @property
     def yards_per_femtosecond(self) -> T:
-        return self.quantity.in_units_of(units.yards_per_femtosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.yards_per_femtosecond)
 
     @property
     def yards_per_attosecond(self) -> T:
-        return self.quantity.in_units_of(units.yards_per_attosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.yards_per_attosecond)
 
     @property
     def yards_per_minute(self) -> T:
-        return self.quantity.in_units_of(units.yards_per_minute)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.yards_per_minute)
 
     @property
     def yards_per_hour(self) -> T:
-        return self.quantity.in_units_of(units.yards_per_hour)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.yards_per_hour)
 
     @property
     def yards_per_day(self) -> T:
-        return self.quantity.in_units_of(units.yards_per_day)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.yards_per_day)
 
     @property
     def yards_per_year(self) -> T:
-        return self.quantity.in_units_of(units.yards_per_year)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.yards_per_year)
 
     @property
     def feet_per_second(self) -> T:
-        return self.quantity.in_units_of(units.feet_per_second)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.feet_per_second)
 
     @property
     def feet_per_millisecond(self) -> T:
-        return self.quantity.in_units_of(units.feet_per_millisecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.feet_per_millisecond)
 
     @property
     def feet_per_microsecond(self) -> T:
-        return self.quantity.in_units_of(units.feet_per_microsecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.feet_per_microsecond)
 
     @property
     def feet_per_nanosecond(self) -> T:
-        return self.quantity.in_units_of(units.feet_per_nanosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.feet_per_nanosecond)
 
     @property
     def feet_per_picosecond(self) -> T:
-        return self.quantity.in_units_of(units.feet_per_picosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.feet_per_picosecond)
 
     @property
     def feet_per_femtosecond(self) -> T:
-        return self.quantity.in_units_of(units.feet_per_femtosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.feet_per_femtosecond)
 
     @property
     def feet_per_attosecond(self) -> T:
-        return self.quantity.in_units_of(units.feet_per_attosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.feet_per_attosecond)
 
     @property
     def feet_per_minute(self) -> T:
-        return self.quantity.in_units_of(units.feet_per_minute)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.feet_per_minute)
 
     @property
     def feet_per_hour(self) -> T:
-        return self.quantity.in_units_of(units.feet_per_hour)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.feet_per_hour)
 
     @property
     def feet_per_day(self) -> T:
-        return self.quantity.in_units_of(units.feet_per_day)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.feet_per_day)
 
     @property
     def feet_per_year(self) -> T:
-        return self.quantity.in_units_of(units.feet_per_year)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.feet_per_year)
 
     @property
     def inches_per_second(self) -> T:
-        return self.quantity.in_units_of(units.inches_per_second)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.inches_per_second)
 
     @property
     def inches_per_millisecond(self) -> T:
-        return self.quantity.in_units_of(units.inches_per_millisecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.inches_per_millisecond)
 
     @property
     def inches_per_microsecond(self) -> T:
-        return self.quantity.in_units_of(units.inches_per_microsecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.inches_per_microsecond)
 
     @property
     def inches_per_nanosecond(self) -> T:
-        return self.quantity.in_units_of(units.inches_per_nanosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.inches_per_nanosecond)
 
     @property
     def inches_per_picosecond(self) -> T:
-        return self.quantity.in_units_of(units.inches_per_picosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.inches_per_picosecond)
 
     @property
     def inches_per_femtosecond(self) -> T:
-        return self.quantity.in_units_of(units.inches_per_femtosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.inches_per_femtosecond)
 
     @property
     def inches_per_attosecond(self) -> T:
-        return self.quantity.in_units_of(units.inches_per_attosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.inches_per_attosecond)
 
     @property
     def inches_per_minute(self) -> T:
-        return self.quantity.in_units_of(units.inches_per_minute)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.inches_per_minute)
 
     @property
     def inches_per_hour(self) -> T:
-        return self.quantity.in_units_of(units.inches_per_hour)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.inches_per_hour)
 
     @property
     def inches_per_day(self) -> T:
-        return self.quantity.in_units_of(units.inches_per_day)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.inches_per_day)
 
     @property
     def inches_per_year(self) -> T:
-        return self.quantity.in_units_of(units.inches_per_year)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.inches_per_year)
 
 
 
-class AccelerationAccessor[T](Accessor[T]):
+class AccelerationAccessor[T](QuantityAccessor[T]):
     dimension_name = 'acceleration'
     
     @property
     def meters_per_square_second(self) -> T:
-        return self.quantity.in_units_of(units.meters_per_square_second)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.meters_per_square_second)
 
     @property
     def meters_per_square_millisecond(self) -> T:
-        return self.quantity.in_units_of(units.meters_per_square_millisecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.meters_per_square_millisecond)
 
     @property
     def meters_per_square_microsecond(self) -> T:
-        return self.quantity.in_units_of(units.meters_per_square_microsecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.meters_per_square_microsecond)
 
     @property
     def meters_per_square_nanosecond(self) -> T:
-        return self.quantity.in_units_of(units.meters_per_square_nanosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.meters_per_square_nanosecond)
 
     @property
     def meters_per_square_picosecond(self) -> T:
-        return self.quantity.in_units_of(units.meters_per_square_picosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.meters_per_square_picosecond)
 
     @property
     def meters_per_square_femtosecond(self) -> T:
-        return self.quantity.in_units_of(units.meters_per_square_femtosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.meters_per_square_femtosecond)
 
     @property
     def meters_per_square_attosecond(self) -> T:
-        return self.quantity.in_units_of(units.meters_per_square_attosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.meters_per_square_attosecond)
 
     @property
     def meters_per_square_minute(self) -> T:
-        return self.quantity.in_units_of(units.meters_per_square_minute)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.meters_per_square_minute)
 
     @property
     def meters_per_square_hour(self) -> T:
-        return self.quantity.in_units_of(units.meters_per_square_hour)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.meters_per_square_hour)
 
     @property
     def meters_per_square_day(self) -> T:
-        return self.quantity.in_units_of(units.meters_per_square_day)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.meters_per_square_day)
 
     @property
     def meters_per_square_year(self) -> T:
-        return self.quantity.in_units_of(units.meters_per_square_year)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.meters_per_square_year)
 
     @property
     def exameters_per_square_second(self) -> T:
-        return self.quantity.in_units_of(units.exameters_per_square_second)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exameters_per_square_second)
 
     @property
     def exameters_per_square_millisecond(self) -> T:
-        return self.quantity.in_units_of(units.exameters_per_square_millisecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exameters_per_square_millisecond)
 
     @property
     def exameters_per_square_microsecond(self) -> T:
-        return self.quantity.in_units_of(units.exameters_per_square_microsecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exameters_per_square_microsecond)
 
     @property
     def exameters_per_square_nanosecond(self) -> T:
-        return self.quantity.in_units_of(units.exameters_per_square_nanosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exameters_per_square_nanosecond)
 
     @property
     def exameters_per_square_picosecond(self) -> T:
-        return self.quantity.in_units_of(units.exameters_per_square_picosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exameters_per_square_picosecond)
 
     @property
     def exameters_per_square_femtosecond(self) -> T:
-        return self.quantity.in_units_of(units.exameters_per_square_femtosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exameters_per_square_femtosecond)
 
     @property
     def exameters_per_square_attosecond(self) -> T:
-        return self.quantity.in_units_of(units.exameters_per_square_attosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exameters_per_square_attosecond)
 
     @property
     def exameters_per_square_minute(self) -> T:
-        return self.quantity.in_units_of(units.exameters_per_square_minute)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exameters_per_square_minute)
 
     @property
     def exameters_per_square_hour(self) -> T:
-        return self.quantity.in_units_of(units.exameters_per_square_hour)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exameters_per_square_hour)
 
     @property
     def exameters_per_square_day(self) -> T:
-        return self.quantity.in_units_of(units.exameters_per_square_day)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exameters_per_square_day)
 
     @property
     def exameters_per_square_year(self) -> T:
-        return self.quantity.in_units_of(units.exameters_per_square_year)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exameters_per_square_year)
 
     @property
     def petameters_per_square_second(self) -> T:
-        return self.quantity.in_units_of(units.petameters_per_square_second)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petameters_per_square_second)
 
     @property
     def petameters_per_square_millisecond(self) -> T:
-        return self.quantity.in_units_of(units.petameters_per_square_millisecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petameters_per_square_millisecond)
 
     @property
     def petameters_per_square_microsecond(self) -> T:
-        return self.quantity.in_units_of(units.petameters_per_square_microsecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petameters_per_square_microsecond)
 
     @property
     def petameters_per_square_nanosecond(self) -> T:
-        return self.quantity.in_units_of(units.petameters_per_square_nanosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petameters_per_square_nanosecond)
 
     @property
     def petameters_per_square_picosecond(self) -> T:
-        return self.quantity.in_units_of(units.petameters_per_square_picosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petameters_per_square_picosecond)
 
     @property
     def petameters_per_square_femtosecond(self) -> T:
-        return self.quantity.in_units_of(units.petameters_per_square_femtosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petameters_per_square_femtosecond)
 
     @property
     def petameters_per_square_attosecond(self) -> T:
-        return self.quantity.in_units_of(units.petameters_per_square_attosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petameters_per_square_attosecond)
 
     @property
     def petameters_per_square_minute(self) -> T:
-        return self.quantity.in_units_of(units.petameters_per_square_minute)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petameters_per_square_minute)
 
     @property
     def petameters_per_square_hour(self) -> T:
-        return self.quantity.in_units_of(units.petameters_per_square_hour)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petameters_per_square_hour)
 
     @property
     def petameters_per_square_day(self) -> T:
-        return self.quantity.in_units_of(units.petameters_per_square_day)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petameters_per_square_day)
 
     @property
     def petameters_per_square_year(self) -> T:
-        return self.quantity.in_units_of(units.petameters_per_square_year)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petameters_per_square_year)
 
     @property
     def terameters_per_square_second(self) -> T:
-        return self.quantity.in_units_of(units.terameters_per_square_second)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.terameters_per_square_second)
 
     @property
     def terameters_per_square_millisecond(self) -> T:
-        return self.quantity.in_units_of(units.terameters_per_square_millisecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.terameters_per_square_millisecond)
 
     @property
     def terameters_per_square_microsecond(self) -> T:
-        return self.quantity.in_units_of(units.terameters_per_square_microsecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.terameters_per_square_microsecond)
 
     @property
     def terameters_per_square_nanosecond(self) -> T:
-        return self.quantity.in_units_of(units.terameters_per_square_nanosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.terameters_per_square_nanosecond)
 
     @property
     def terameters_per_square_picosecond(self) -> T:
-        return self.quantity.in_units_of(units.terameters_per_square_picosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.terameters_per_square_picosecond)
 
     @property
     def terameters_per_square_femtosecond(self) -> T:
-        return self.quantity.in_units_of(units.terameters_per_square_femtosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.terameters_per_square_femtosecond)
 
     @property
     def terameters_per_square_attosecond(self) -> T:
-        return self.quantity.in_units_of(units.terameters_per_square_attosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.terameters_per_square_attosecond)
 
     @property
     def terameters_per_square_minute(self) -> T:
-        return self.quantity.in_units_of(units.terameters_per_square_minute)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.terameters_per_square_minute)
 
     @property
     def terameters_per_square_hour(self) -> T:
-        return self.quantity.in_units_of(units.terameters_per_square_hour)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.terameters_per_square_hour)
 
     @property
     def terameters_per_square_day(self) -> T:
-        return self.quantity.in_units_of(units.terameters_per_square_day)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.terameters_per_square_day)
 
     @property
     def terameters_per_square_year(self) -> T:
-        return self.quantity.in_units_of(units.terameters_per_square_year)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.terameters_per_square_year)
 
     @property
     def gigameters_per_square_second(self) -> T:
-        return self.quantity.in_units_of(units.gigameters_per_square_second)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigameters_per_square_second)
 
     @property
     def gigameters_per_square_millisecond(self) -> T:
-        return self.quantity.in_units_of(units.gigameters_per_square_millisecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigameters_per_square_millisecond)
 
     @property
     def gigameters_per_square_microsecond(self) -> T:
-        return self.quantity.in_units_of(units.gigameters_per_square_microsecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigameters_per_square_microsecond)
 
     @property
     def gigameters_per_square_nanosecond(self) -> T:
-        return self.quantity.in_units_of(units.gigameters_per_square_nanosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigameters_per_square_nanosecond)
 
     @property
     def gigameters_per_square_picosecond(self) -> T:
-        return self.quantity.in_units_of(units.gigameters_per_square_picosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigameters_per_square_picosecond)
 
     @property
     def gigameters_per_square_femtosecond(self) -> T:
-        return self.quantity.in_units_of(units.gigameters_per_square_femtosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigameters_per_square_femtosecond)
 
     @property
     def gigameters_per_square_attosecond(self) -> T:
-        return self.quantity.in_units_of(units.gigameters_per_square_attosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigameters_per_square_attosecond)
 
     @property
     def gigameters_per_square_minute(self) -> T:
-        return self.quantity.in_units_of(units.gigameters_per_square_minute)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigameters_per_square_minute)
 
     @property
     def gigameters_per_square_hour(self) -> T:
-        return self.quantity.in_units_of(units.gigameters_per_square_hour)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigameters_per_square_hour)
 
     @property
     def gigameters_per_square_day(self) -> T:
-        return self.quantity.in_units_of(units.gigameters_per_square_day)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigameters_per_square_day)
 
     @property
     def gigameters_per_square_year(self) -> T:
-        return self.quantity.in_units_of(units.gigameters_per_square_year)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigameters_per_square_year)
 
     @property
     def megameters_per_square_second(self) -> T:
-        return self.quantity.in_units_of(units.megameters_per_square_second)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megameters_per_square_second)
 
     @property
     def megameters_per_square_millisecond(self) -> T:
-        return self.quantity.in_units_of(units.megameters_per_square_millisecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megameters_per_square_millisecond)
 
     @property
     def megameters_per_square_microsecond(self) -> T:
-        return self.quantity.in_units_of(units.megameters_per_square_microsecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megameters_per_square_microsecond)
 
     @property
     def megameters_per_square_nanosecond(self) -> T:
-        return self.quantity.in_units_of(units.megameters_per_square_nanosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megameters_per_square_nanosecond)
 
     @property
     def megameters_per_square_picosecond(self) -> T:
-        return self.quantity.in_units_of(units.megameters_per_square_picosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megameters_per_square_picosecond)
 
     @property
     def megameters_per_square_femtosecond(self) -> T:
-        return self.quantity.in_units_of(units.megameters_per_square_femtosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megameters_per_square_femtosecond)
 
     @property
     def megameters_per_square_attosecond(self) -> T:
-        return self.quantity.in_units_of(units.megameters_per_square_attosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megameters_per_square_attosecond)
 
     @property
     def megameters_per_square_minute(self) -> T:
-        return self.quantity.in_units_of(units.megameters_per_square_minute)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megameters_per_square_minute)
 
     @property
     def megameters_per_square_hour(self) -> T:
-        return self.quantity.in_units_of(units.megameters_per_square_hour)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megameters_per_square_hour)
 
     @property
     def megameters_per_square_day(self) -> T:
-        return self.quantity.in_units_of(units.megameters_per_square_day)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megameters_per_square_day)
 
     @property
     def megameters_per_square_year(self) -> T:
-        return self.quantity.in_units_of(units.megameters_per_square_year)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megameters_per_square_year)
 
     @property
     def kilometers_per_square_second(self) -> T:
-        return self.quantity.in_units_of(units.kilometers_per_square_second)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilometers_per_square_second)
 
     @property
     def kilometers_per_square_millisecond(self) -> T:
-        return self.quantity.in_units_of(units.kilometers_per_square_millisecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilometers_per_square_millisecond)
 
     @property
     def kilometers_per_square_microsecond(self) -> T:
-        return self.quantity.in_units_of(units.kilometers_per_square_microsecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilometers_per_square_microsecond)
 
     @property
     def kilometers_per_square_nanosecond(self) -> T:
-        return self.quantity.in_units_of(units.kilometers_per_square_nanosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilometers_per_square_nanosecond)
 
     @property
     def kilometers_per_square_picosecond(self) -> T:
-        return self.quantity.in_units_of(units.kilometers_per_square_picosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilometers_per_square_picosecond)
 
     @property
     def kilometers_per_square_femtosecond(self) -> T:
-        return self.quantity.in_units_of(units.kilometers_per_square_femtosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilometers_per_square_femtosecond)
 
     @property
     def kilometers_per_square_attosecond(self) -> T:
-        return self.quantity.in_units_of(units.kilometers_per_square_attosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilometers_per_square_attosecond)
 
     @property
     def kilometers_per_square_minute(self) -> T:
-        return self.quantity.in_units_of(units.kilometers_per_square_minute)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilometers_per_square_minute)
 
     @property
     def kilometers_per_square_hour(self) -> T:
-        return self.quantity.in_units_of(units.kilometers_per_square_hour)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilometers_per_square_hour)
 
     @property
     def kilometers_per_square_day(self) -> T:
-        return self.quantity.in_units_of(units.kilometers_per_square_day)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilometers_per_square_day)
 
     @property
     def kilometers_per_square_year(self) -> T:
-        return self.quantity.in_units_of(units.kilometers_per_square_year)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilometers_per_square_year)
 
     @property
     def millimeters_per_square_second(self) -> T:
-        return self.quantity.in_units_of(units.millimeters_per_square_second)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millimeters_per_square_second)
 
     @property
     def millimeters_per_square_millisecond(self) -> T:
-        return self.quantity.in_units_of(units.millimeters_per_square_millisecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millimeters_per_square_millisecond)
 
     @property
     def millimeters_per_square_microsecond(self) -> T:
-        return self.quantity.in_units_of(units.millimeters_per_square_microsecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millimeters_per_square_microsecond)
 
     @property
     def millimeters_per_square_nanosecond(self) -> T:
-        return self.quantity.in_units_of(units.millimeters_per_square_nanosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millimeters_per_square_nanosecond)
 
     @property
     def millimeters_per_square_picosecond(self) -> T:
-        return self.quantity.in_units_of(units.millimeters_per_square_picosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millimeters_per_square_picosecond)
 
     @property
     def millimeters_per_square_femtosecond(self) -> T:
-        return self.quantity.in_units_of(units.millimeters_per_square_femtosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millimeters_per_square_femtosecond)
 
     @property
     def millimeters_per_square_attosecond(self) -> T:
-        return self.quantity.in_units_of(units.millimeters_per_square_attosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millimeters_per_square_attosecond)
 
     @property
     def millimeters_per_square_minute(self) -> T:
-        return self.quantity.in_units_of(units.millimeters_per_square_minute)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millimeters_per_square_minute)
 
     @property
     def millimeters_per_square_hour(self) -> T:
-        return self.quantity.in_units_of(units.millimeters_per_square_hour)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millimeters_per_square_hour)
 
     @property
     def millimeters_per_square_day(self) -> T:
-        return self.quantity.in_units_of(units.millimeters_per_square_day)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millimeters_per_square_day)
 
     @property
     def millimeters_per_square_year(self) -> T:
-        return self.quantity.in_units_of(units.millimeters_per_square_year)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millimeters_per_square_year)
 
     @property
     def micrometers_per_square_second(self) -> T:
-        return self.quantity.in_units_of(units.micrometers_per_square_second)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micrometers_per_square_second)
 
     @property
     def micrometers_per_square_millisecond(self) -> T:
-        return self.quantity.in_units_of(units.micrometers_per_square_millisecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micrometers_per_square_millisecond)
 
     @property
     def micrometers_per_square_microsecond(self) -> T:
-        return self.quantity.in_units_of(units.micrometers_per_square_microsecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micrometers_per_square_microsecond)
 
     @property
     def micrometers_per_square_nanosecond(self) -> T:
-        return self.quantity.in_units_of(units.micrometers_per_square_nanosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micrometers_per_square_nanosecond)
 
     @property
     def micrometers_per_square_picosecond(self) -> T:
-        return self.quantity.in_units_of(units.micrometers_per_square_picosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micrometers_per_square_picosecond)
 
     @property
     def micrometers_per_square_femtosecond(self) -> T:
-        return self.quantity.in_units_of(units.micrometers_per_square_femtosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micrometers_per_square_femtosecond)
 
     @property
     def micrometers_per_square_attosecond(self) -> T:
-        return self.quantity.in_units_of(units.micrometers_per_square_attosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micrometers_per_square_attosecond)
 
     @property
     def micrometers_per_square_minute(self) -> T:
-        return self.quantity.in_units_of(units.micrometers_per_square_minute)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micrometers_per_square_minute)
 
     @property
     def micrometers_per_square_hour(self) -> T:
-        return self.quantity.in_units_of(units.micrometers_per_square_hour)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micrometers_per_square_hour)
 
     @property
     def micrometers_per_square_day(self) -> T:
-        return self.quantity.in_units_of(units.micrometers_per_square_day)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micrometers_per_square_day)
 
     @property
     def micrometers_per_square_year(self) -> T:
-        return self.quantity.in_units_of(units.micrometers_per_square_year)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micrometers_per_square_year)
 
     @property
     def nanometers_per_square_second(self) -> T:
-        return self.quantity.in_units_of(units.nanometers_per_square_second)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanometers_per_square_second)
 
     @property
     def nanometers_per_square_millisecond(self) -> T:
-        return self.quantity.in_units_of(units.nanometers_per_square_millisecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanometers_per_square_millisecond)
 
     @property
     def nanometers_per_square_microsecond(self) -> T:
-        return self.quantity.in_units_of(units.nanometers_per_square_microsecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanometers_per_square_microsecond)
 
     @property
     def nanometers_per_square_nanosecond(self) -> T:
-        return self.quantity.in_units_of(units.nanometers_per_square_nanosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanometers_per_square_nanosecond)
 
     @property
     def nanometers_per_square_picosecond(self) -> T:
-        return self.quantity.in_units_of(units.nanometers_per_square_picosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanometers_per_square_picosecond)
 
     @property
     def nanometers_per_square_femtosecond(self) -> T:
-        return self.quantity.in_units_of(units.nanometers_per_square_femtosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanometers_per_square_femtosecond)
 
     @property
     def nanometers_per_square_attosecond(self) -> T:
-        return self.quantity.in_units_of(units.nanometers_per_square_attosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanometers_per_square_attosecond)
 
     @property
     def nanometers_per_square_minute(self) -> T:
-        return self.quantity.in_units_of(units.nanometers_per_square_minute)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanometers_per_square_minute)
 
     @property
     def nanometers_per_square_hour(self) -> T:
-        return self.quantity.in_units_of(units.nanometers_per_square_hour)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanometers_per_square_hour)
 
     @property
     def nanometers_per_square_day(self) -> T:
-        return self.quantity.in_units_of(units.nanometers_per_square_day)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanometers_per_square_day)
 
     @property
     def nanometers_per_square_year(self) -> T:
-        return self.quantity.in_units_of(units.nanometers_per_square_year)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanometers_per_square_year)
 
     @property
     def picometers_per_square_second(self) -> T:
-        return self.quantity.in_units_of(units.picometers_per_square_second)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picometers_per_square_second)
 
     @property
     def picometers_per_square_millisecond(self) -> T:
-        return self.quantity.in_units_of(units.picometers_per_square_millisecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picometers_per_square_millisecond)
 
     @property
     def picometers_per_square_microsecond(self) -> T:
-        return self.quantity.in_units_of(units.picometers_per_square_microsecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picometers_per_square_microsecond)
 
     @property
     def picometers_per_square_nanosecond(self) -> T:
-        return self.quantity.in_units_of(units.picometers_per_square_nanosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picometers_per_square_nanosecond)
 
     @property
     def picometers_per_square_picosecond(self) -> T:
-        return self.quantity.in_units_of(units.picometers_per_square_picosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picometers_per_square_picosecond)
 
     @property
     def picometers_per_square_femtosecond(self) -> T:
-        return self.quantity.in_units_of(units.picometers_per_square_femtosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picometers_per_square_femtosecond)
 
     @property
     def picometers_per_square_attosecond(self) -> T:
-        return self.quantity.in_units_of(units.picometers_per_square_attosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picometers_per_square_attosecond)
 
     @property
     def picometers_per_square_minute(self) -> T:
-        return self.quantity.in_units_of(units.picometers_per_square_minute)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picometers_per_square_minute)
 
     @property
     def picometers_per_square_hour(self) -> T:
-        return self.quantity.in_units_of(units.picometers_per_square_hour)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picometers_per_square_hour)
 
     @property
     def picometers_per_square_day(self) -> T:
-        return self.quantity.in_units_of(units.picometers_per_square_day)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picometers_per_square_day)
 
     @property
     def picometers_per_square_year(self) -> T:
-        return self.quantity.in_units_of(units.picometers_per_square_year)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picometers_per_square_year)
 
     @property
     def femtometers_per_square_second(self) -> T:
-        return self.quantity.in_units_of(units.femtometers_per_square_second)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtometers_per_square_second)
 
     @property
     def femtometers_per_square_millisecond(self) -> T:
-        return self.quantity.in_units_of(units.femtometers_per_square_millisecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtometers_per_square_millisecond)
 
     @property
     def femtometers_per_square_microsecond(self) -> T:
-        return self.quantity.in_units_of(units.femtometers_per_square_microsecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtometers_per_square_microsecond)
 
     @property
     def femtometers_per_square_nanosecond(self) -> T:
-        return self.quantity.in_units_of(units.femtometers_per_square_nanosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtometers_per_square_nanosecond)
 
     @property
     def femtometers_per_square_picosecond(self) -> T:
-        return self.quantity.in_units_of(units.femtometers_per_square_picosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtometers_per_square_picosecond)
 
     @property
     def femtometers_per_square_femtosecond(self) -> T:
-        return self.quantity.in_units_of(units.femtometers_per_square_femtosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtometers_per_square_femtosecond)
 
     @property
     def femtometers_per_square_attosecond(self) -> T:
-        return self.quantity.in_units_of(units.femtometers_per_square_attosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtometers_per_square_attosecond)
 
     @property
     def femtometers_per_square_minute(self) -> T:
-        return self.quantity.in_units_of(units.femtometers_per_square_minute)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtometers_per_square_minute)
 
     @property
     def femtometers_per_square_hour(self) -> T:
-        return self.quantity.in_units_of(units.femtometers_per_square_hour)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtometers_per_square_hour)
 
     @property
     def femtometers_per_square_day(self) -> T:
-        return self.quantity.in_units_of(units.femtometers_per_square_day)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtometers_per_square_day)
 
     @property
     def femtometers_per_square_year(self) -> T:
-        return self.quantity.in_units_of(units.femtometers_per_square_year)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtometers_per_square_year)
 
     @property
     def attometers_per_square_second(self) -> T:
-        return self.quantity.in_units_of(units.attometers_per_square_second)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attometers_per_square_second)
 
     @property
     def attometers_per_square_millisecond(self) -> T:
-        return self.quantity.in_units_of(units.attometers_per_square_millisecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attometers_per_square_millisecond)
 
     @property
     def attometers_per_square_microsecond(self) -> T:
-        return self.quantity.in_units_of(units.attometers_per_square_microsecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attometers_per_square_microsecond)
 
     @property
     def attometers_per_square_nanosecond(self) -> T:
-        return self.quantity.in_units_of(units.attometers_per_square_nanosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attometers_per_square_nanosecond)
 
     @property
     def attometers_per_square_picosecond(self) -> T:
-        return self.quantity.in_units_of(units.attometers_per_square_picosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attometers_per_square_picosecond)
 
     @property
     def attometers_per_square_femtosecond(self) -> T:
-        return self.quantity.in_units_of(units.attometers_per_square_femtosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attometers_per_square_femtosecond)
 
     @property
     def attometers_per_square_attosecond(self) -> T:
-        return self.quantity.in_units_of(units.attometers_per_square_attosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attometers_per_square_attosecond)
 
     @property
     def attometers_per_square_minute(self) -> T:
-        return self.quantity.in_units_of(units.attometers_per_square_minute)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attometers_per_square_minute)
 
     @property
     def attometers_per_square_hour(self) -> T:
-        return self.quantity.in_units_of(units.attometers_per_square_hour)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attometers_per_square_hour)
 
     @property
     def attometers_per_square_day(self) -> T:
-        return self.quantity.in_units_of(units.attometers_per_square_day)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attometers_per_square_day)
 
     @property
     def attometers_per_square_year(self) -> T:
-        return self.quantity.in_units_of(units.attometers_per_square_year)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attometers_per_square_year)
 
     @property
     def decimeters_per_square_second(self) -> T:
-        return self.quantity.in_units_of(units.decimeters_per_square_second)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.decimeters_per_square_second)
 
     @property
     def decimeters_per_square_millisecond(self) -> T:
-        return self.quantity.in_units_of(units.decimeters_per_square_millisecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.decimeters_per_square_millisecond)
 
     @property
     def decimeters_per_square_microsecond(self) -> T:
-        return self.quantity.in_units_of(units.decimeters_per_square_microsecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.decimeters_per_square_microsecond)
 
     @property
     def decimeters_per_square_nanosecond(self) -> T:
-        return self.quantity.in_units_of(units.decimeters_per_square_nanosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.decimeters_per_square_nanosecond)
 
     @property
     def decimeters_per_square_picosecond(self) -> T:
-        return self.quantity.in_units_of(units.decimeters_per_square_picosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.decimeters_per_square_picosecond)
 
     @property
     def decimeters_per_square_femtosecond(self) -> T:
-        return self.quantity.in_units_of(units.decimeters_per_square_femtosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.decimeters_per_square_femtosecond)
 
     @property
     def decimeters_per_square_attosecond(self) -> T:
-        return self.quantity.in_units_of(units.decimeters_per_square_attosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.decimeters_per_square_attosecond)
 
     @property
     def decimeters_per_square_minute(self) -> T:
-        return self.quantity.in_units_of(units.decimeters_per_square_minute)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.decimeters_per_square_minute)
 
     @property
     def decimeters_per_square_hour(self) -> T:
-        return self.quantity.in_units_of(units.decimeters_per_square_hour)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.decimeters_per_square_hour)
 
     @property
     def decimeters_per_square_day(self) -> T:
-        return self.quantity.in_units_of(units.decimeters_per_square_day)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.decimeters_per_square_day)
 
     @property
     def decimeters_per_square_year(self) -> T:
-        return self.quantity.in_units_of(units.decimeters_per_square_year)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.decimeters_per_square_year)
 
     @property
     def centimeters_per_square_second(self) -> T:
-        return self.quantity.in_units_of(units.centimeters_per_square_second)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.centimeters_per_square_second)
 
     @property
     def centimeters_per_square_millisecond(self) -> T:
-        return self.quantity.in_units_of(units.centimeters_per_square_millisecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.centimeters_per_square_millisecond)
 
     @property
     def centimeters_per_square_microsecond(self) -> T:
-        return self.quantity.in_units_of(units.centimeters_per_square_microsecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.centimeters_per_square_microsecond)
 
     @property
     def centimeters_per_square_nanosecond(self) -> T:
-        return self.quantity.in_units_of(units.centimeters_per_square_nanosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.centimeters_per_square_nanosecond)
 
     @property
     def centimeters_per_square_picosecond(self) -> T:
-        return self.quantity.in_units_of(units.centimeters_per_square_picosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.centimeters_per_square_picosecond)
 
     @property
     def centimeters_per_square_femtosecond(self) -> T:
-        return self.quantity.in_units_of(units.centimeters_per_square_femtosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.centimeters_per_square_femtosecond)
 
     @property
     def centimeters_per_square_attosecond(self) -> T:
-        return self.quantity.in_units_of(units.centimeters_per_square_attosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.centimeters_per_square_attosecond)
 
     @property
     def centimeters_per_square_minute(self) -> T:
-        return self.quantity.in_units_of(units.centimeters_per_square_minute)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.centimeters_per_square_minute)
 
     @property
     def centimeters_per_square_hour(self) -> T:
-        return self.quantity.in_units_of(units.centimeters_per_square_hour)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.centimeters_per_square_hour)
 
     @property
     def centimeters_per_square_day(self) -> T:
-        return self.quantity.in_units_of(units.centimeters_per_square_day)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.centimeters_per_square_day)
 
     @property
     def centimeters_per_square_year(self) -> T:
-        return self.quantity.in_units_of(units.centimeters_per_square_year)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.centimeters_per_square_year)
 
     @property
     def angstroms_per_square_second(self) -> T:
-        return self.quantity.in_units_of(units.angstroms_per_square_second)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.angstroms_per_square_second)
 
     @property
     def angstroms_per_square_millisecond(self) -> T:
-        return self.quantity.in_units_of(units.angstroms_per_square_millisecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.angstroms_per_square_millisecond)
 
     @property
     def angstroms_per_square_microsecond(self) -> T:
-        return self.quantity.in_units_of(units.angstroms_per_square_microsecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.angstroms_per_square_microsecond)
 
     @property
     def angstroms_per_square_nanosecond(self) -> T:
-        return self.quantity.in_units_of(units.angstroms_per_square_nanosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.angstroms_per_square_nanosecond)
 
     @property
     def angstroms_per_square_picosecond(self) -> T:
-        return self.quantity.in_units_of(units.angstroms_per_square_picosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.angstroms_per_square_picosecond)
 
     @property
     def angstroms_per_square_femtosecond(self) -> T:
-        return self.quantity.in_units_of(units.angstroms_per_square_femtosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.angstroms_per_square_femtosecond)
 
     @property
     def angstroms_per_square_attosecond(self) -> T:
-        return self.quantity.in_units_of(units.angstroms_per_square_attosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.angstroms_per_square_attosecond)
 
     @property
     def angstroms_per_square_minute(self) -> T:
-        return self.quantity.in_units_of(units.angstroms_per_square_minute)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.angstroms_per_square_minute)
 
     @property
     def angstroms_per_square_hour(self) -> T:
-        return self.quantity.in_units_of(units.angstroms_per_square_hour)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.angstroms_per_square_hour)
 
     @property
     def angstroms_per_square_day(self) -> T:
-        return self.quantity.in_units_of(units.angstroms_per_square_day)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.angstroms_per_square_day)
 
     @property
     def angstroms_per_square_year(self) -> T:
-        return self.quantity.in_units_of(units.angstroms_per_square_year)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.angstroms_per_square_year)
 
     @property
     def miles_per_square_second(self) -> T:
-        return self.quantity.in_units_of(units.miles_per_square_second)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.miles_per_square_second)
 
     @property
     def miles_per_square_millisecond(self) -> T:
-        return self.quantity.in_units_of(units.miles_per_square_millisecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.miles_per_square_millisecond)
 
     @property
     def miles_per_square_microsecond(self) -> T:
-        return self.quantity.in_units_of(units.miles_per_square_microsecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.miles_per_square_microsecond)
 
     @property
     def miles_per_square_nanosecond(self) -> T:
-        return self.quantity.in_units_of(units.miles_per_square_nanosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.miles_per_square_nanosecond)
 
     @property
     def miles_per_square_picosecond(self) -> T:
-        return self.quantity.in_units_of(units.miles_per_square_picosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.miles_per_square_picosecond)
 
     @property
     def miles_per_square_femtosecond(self) -> T:
-        return self.quantity.in_units_of(units.miles_per_square_femtosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.miles_per_square_femtosecond)
 
     @property
     def miles_per_square_attosecond(self) -> T:
-        return self.quantity.in_units_of(units.miles_per_square_attosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.miles_per_square_attosecond)
 
     @property
     def miles_per_square_minute(self) -> T:
-        return self.quantity.in_units_of(units.miles_per_square_minute)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.miles_per_square_minute)
 
     @property
     def miles_per_square_hour(self) -> T:
-        return self.quantity.in_units_of(units.miles_per_square_hour)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.miles_per_square_hour)
 
     @property
     def miles_per_square_day(self) -> T:
-        return self.quantity.in_units_of(units.miles_per_square_day)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.miles_per_square_day)
 
     @property
     def miles_per_square_year(self) -> T:
-        return self.quantity.in_units_of(units.miles_per_square_year)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.miles_per_square_year)
 
     @property
     def yards_per_square_second(self) -> T:
-        return self.quantity.in_units_of(units.yards_per_square_second)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.yards_per_square_second)
 
     @property
     def yards_per_square_millisecond(self) -> T:
-        return self.quantity.in_units_of(units.yards_per_square_millisecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.yards_per_square_millisecond)
 
     @property
     def yards_per_square_microsecond(self) -> T:
-        return self.quantity.in_units_of(units.yards_per_square_microsecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.yards_per_square_microsecond)
 
     @property
     def yards_per_square_nanosecond(self) -> T:
-        return self.quantity.in_units_of(units.yards_per_square_nanosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.yards_per_square_nanosecond)
 
     @property
     def yards_per_square_picosecond(self) -> T:
-        return self.quantity.in_units_of(units.yards_per_square_picosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.yards_per_square_picosecond)
 
     @property
     def yards_per_square_femtosecond(self) -> T:
-        return self.quantity.in_units_of(units.yards_per_square_femtosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.yards_per_square_femtosecond)
 
     @property
     def yards_per_square_attosecond(self) -> T:
-        return self.quantity.in_units_of(units.yards_per_square_attosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.yards_per_square_attosecond)
 
     @property
     def yards_per_square_minute(self) -> T:
-        return self.quantity.in_units_of(units.yards_per_square_minute)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.yards_per_square_minute)
 
     @property
     def yards_per_square_hour(self) -> T:
-        return self.quantity.in_units_of(units.yards_per_square_hour)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.yards_per_square_hour)
 
     @property
     def yards_per_square_day(self) -> T:
-        return self.quantity.in_units_of(units.yards_per_square_day)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.yards_per_square_day)
 
     @property
     def yards_per_square_year(self) -> T:
-        return self.quantity.in_units_of(units.yards_per_square_year)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.yards_per_square_year)
 
     @property
     def feet_per_square_second(self) -> T:
-        return self.quantity.in_units_of(units.feet_per_square_second)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.feet_per_square_second)
 
     @property
     def feet_per_square_millisecond(self) -> T:
-        return self.quantity.in_units_of(units.feet_per_square_millisecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.feet_per_square_millisecond)
 
     @property
     def feet_per_square_microsecond(self) -> T:
-        return self.quantity.in_units_of(units.feet_per_square_microsecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.feet_per_square_microsecond)
 
     @property
     def feet_per_square_nanosecond(self) -> T:
-        return self.quantity.in_units_of(units.feet_per_square_nanosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.feet_per_square_nanosecond)
 
     @property
     def feet_per_square_picosecond(self) -> T:
-        return self.quantity.in_units_of(units.feet_per_square_picosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.feet_per_square_picosecond)
 
     @property
     def feet_per_square_femtosecond(self) -> T:
-        return self.quantity.in_units_of(units.feet_per_square_femtosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.feet_per_square_femtosecond)
 
     @property
     def feet_per_square_attosecond(self) -> T:
-        return self.quantity.in_units_of(units.feet_per_square_attosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.feet_per_square_attosecond)
 
     @property
     def feet_per_square_minute(self) -> T:
-        return self.quantity.in_units_of(units.feet_per_square_minute)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.feet_per_square_minute)
 
     @property
     def feet_per_square_hour(self) -> T:
-        return self.quantity.in_units_of(units.feet_per_square_hour)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.feet_per_square_hour)
 
     @property
     def feet_per_square_day(self) -> T:
-        return self.quantity.in_units_of(units.feet_per_square_day)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.feet_per_square_day)
 
     @property
     def feet_per_square_year(self) -> T:
-        return self.quantity.in_units_of(units.feet_per_square_year)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.feet_per_square_year)
 
     @property
     def inches_per_square_second(self) -> T:
-        return self.quantity.in_units_of(units.inches_per_square_second)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.inches_per_square_second)
 
     @property
     def inches_per_square_millisecond(self) -> T:
-        return self.quantity.in_units_of(units.inches_per_square_millisecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.inches_per_square_millisecond)
 
     @property
     def inches_per_square_microsecond(self) -> T:
-        return self.quantity.in_units_of(units.inches_per_square_microsecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.inches_per_square_microsecond)
 
     @property
     def inches_per_square_nanosecond(self) -> T:
-        return self.quantity.in_units_of(units.inches_per_square_nanosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.inches_per_square_nanosecond)
 
     @property
     def inches_per_square_picosecond(self) -> T:
-        return self.quantity.in_units_of(units.inches_per_square_picosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.inches_per_square_picosecond)
 
     @property
     def inches_per_square_femtosecond(self) -> T:
-        return self.quantity.in_units_of(units.inches_per_square_femtosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.inches_per_square_femtosecond)
 
     @property
     def inches_per_square_attosecond(self) -> T:
-        return self.quantity.in_units_of(units.inches_per_square_attosecond)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.inches_per_square_attosecond)
 
     @property
     def inches_per_square_minute(self) -> T:
-        return self.quantity.in_units_of(units.inches_per_square_minute)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.inches_per_square_minute)
 
     @property
     def inches_per_square_hour(self) -> T:
-        return self.quantity.in_units_of(units.inches_per_square_hour)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.inches_per_square_hour)
 
     @property
     def inches_per_square_day(self) -> T:
-        return self.quantity.in_units_of(units.inches_per_square_day)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.inches_per_square_day)
 
     @property
     def inches_per_square_year(self) -> T:
-        return self.quantity.in_units_of(units.inches_per_square_year)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.inches_per_square_year)
 
 
 
-class DensityAccessor[T](Accessor[T]):
+class DensityAccessor[T](QuantityAccessor[T]):
     dimension_name = 'density'
     
     @property
     def grams_per_cubic_meter(self) -> T:
-        return self.quantity.in_units_of(units.grams_per_cubic_meter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.grams_per_cubic_meter)
 
     @property
     def exagrams_per_cubic_meter(self) -> T:
-        return self.quantity.in_units_of(units.exagrams_per_cubic_meter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exagrams_per_cubic_meter)
 
     @property
     def petagrams_per_cubic_meter(self) -> T:
-        return self.quantity.in_units_of(units.petagrams_per_cubic_meter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petagrams_per_cubic_meter)
 
     @property
     def teragrams_per_cubic_meter(self) -> T:
-        return self.quantity.in_units_of(units.teragrams_per_cubic_meter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.teragrams_per_cubic_meter)
 
     @property
     def gigagrams_per_cubic_meter(self) -> T:
-        return self.quantity.in_units_of(units.gigagrams_per_cubic_meter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigagrams_per_cubic_meter)
 
     @property
     def megagrams_per_cubic_meter(self) -> T:
-        return self.quantity.in_units_of(units.megagrams_per_cubic_meter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megagrams_per_cubic_meter)
 
     @property
     def kilograms_per_cubic_meter(self) -> T:
-        return self.quantity.in_units_of(units.kilograms_per_cubic_meter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilograms_per_cubic_meter)
 
     @property
     def milligrams_per_cubic_meter(self) -> T:
-        return self.quantity.in_units_of(units.milligrams_per_cubic_meter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.milligrams_per_cubic_meter)
 
     @property
     def micrograms_per_cubic_meter(self) -> T:
-        return self.quantity.in_units_of(units.micrograms_per_cubic_meter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micrograms_per_cubic_meter)
 
     @property
     def nanograms_per_cubic_meter(self) -> T:
-        return self.quantity.in_units_of(units.nanograms_per_cubic_meter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanograms_per_cubic_meter)
 
     @property
     def picograms_per_cubic_meter(self) -> T:
-        return self.quantity.in_units_of(units.picograms_per_cubic_meter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picograms_per_cubic_meter)
 
     @property
     def femtograms_per_cubic_meter(self) -> T:
-        return self.quantity.in_units_of(units.femtograms_per_cubic_meter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtograms_per_cubic_meter)
 
     @property
     def attograms_per_cubic_meter(self) -> T:
-        return self.quantity.in_units_of(units.attograms_per_cubic_meter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attograms_per_cubic_meter)
 
     @property
     def atomic_mass_units_per_cubic_meter(self) -> T:
-        return self.quantity.in_units_of(units.atomic_mass_units_per_cubic_meter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.atomic_mass_units_per_cubic_meter)
 
     @property
     def pounds_per_cubic_meter(self) -> T:
-        return self.quantity.in_units_of(units.pounds_per_cubic_meter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.pounds_per_cubic_meter)
 
     @property
     def ounces_per_cubic_meter(self) -> T:
-        return self.quantity.in_units_of(units.ounces_per_cubic_meter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.ounces_per_cubic_meter)
 
     @property
     def grams_per_cubic_exameter(self) -> T:
-        return self.quantity.in_units_of(units.grams_per_cubic_exameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.grams_per_cubic_exameter)
 
     @property
     def exagrams_per_cubic_exameter(self) -> T:
-        return self.quantity.in_units_of(units.exagrams_per_cubic_exameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exagrams_per_cubic_exameter)
 
     @property
     def petagrams_per_cubic_exameter(self) -> T:
-        return self.quantity.in_units_of(units.petagrams_per_cubic_exameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petagrams_per_cubic_exameter)
 
     @property
     def teragrams_per_cubic_exameter(self) -> T:
-        return self.quantity.in_units_of(units.teragrams_per_cubic_exameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.teragrams_per_cubic_exameter)
 
     @property
     def gigagrams_per_cubic_exameter(self) -> T:
-        return self.quantity.in_units_of(units.gigagrams_per_cubic_exameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigagrams_per_cubic_exameter)
 
     @property
     def megagrams_per_cubic_exameter(self) -> T:
-        return self.quantity.in_units_of(units.megagrams_per_cubic_exameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megagrams_per_cubic_exameter)
 
     @property
     def kilograms_per_cubic_exameter(self) -> T:
-        return self.quantity.in_units_of(units.kilograms_per_cubic_exameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilograms_per_cubic_exameter)
 
     @property
     def milligrams_per_cubic_exameter(self) -> T:
-        return self.quantity.in_units_of(units.milligrams_per_cubic_exameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.milligrams_per_cubic_exameter)
 
     @property
     def micrograms_per_cubic_exameter(self) -> T:
-        return self.quantity.in_units_of(units.micrograms_per_cubic_exameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micrograms_per_cubic_exameter)
 
     @property
     def nanograms_per_cubic_exameter(self) -> T:
-        return self.quantity.in_units_of(units.nanograms_per_cubic_exameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanograms_per_cubic_exameter)
 
     @property
     def picograms_per_cubic_exameter(self) -> T:
-        return self.quantity.in_units_of(units.picograms_per_cubic_exameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picograms_per_cubic_exameter)
 
     @property
     def femtograms_per_cubic_exameter(self) -> T:
-        return self.quantity.in_units_of(units.femtograms_per_cubic_exameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtograms_per_cubic_exameter)
 
     @property
     def attograms_per_cubic_exameter(self) -> T:
-        return self.quantity.in_units_of(units.attograms_per_cubic_exameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attograms_per_cubic_exameter)
 
     @property
     def atomic_mass_units_per_cubic_exameter(self) -> T:
-        return self.quantity.in_units_of(units.atomic_mass_units_per_cubic_exameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.atomic_mass_units_per_cubic_exameter)
 
     @property
     def pounds_per_cubic_exameter(self) -> T:
-        return self.quantity.in_units_of(units.pounds_per_cubic_exameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.pounds_per_cubic_exameter)
 
     @property
     def ounces_per_cubic_exameter(self) -> T:
-        return self.quantity.in_units_of(units.ounces_per_cubic_exameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.ounces_per_cubic_exameter)
 
     @property
     def grams_per_cubic_petameter(self) -> T:
-        return self.quantity.in_units_of(units.grams_per_cubic_petameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.grams_per_cubic_petameter)
 
     @property
     def exagrams_per_cubic_petameter(self) -> T:
-        return self.quantity.in_units_of(units.exagrams_per_cubic_petameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exagrams_per_cubic_petameter)
 
     @property
     def petagrams_per_cubic_petameter(self) -> T:
-        return self.quantity.in_units_of(units.petagrams_per_cubic_petameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petagrams_per_cubic_petameter)
 
     @property
     def teragrams_per_cubic_petameter(self) -> T:
-        return self.quantity.in_units_of(units.teragrams_per_cubic_petameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.teragrams_per_cubic_petameter)
 
     @property
     def gigagrams_per_cubic_petameter(self) -> T:
-        return self.quantity.in_units_of(units.gigagrams_per_cubic_petameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigagrams_per_cubic_petameter)
 
     @property
     def megagrams_per_cubic_petameter(self) -> T:
-        return self.quantity.in_units_of(units.megagrams_per_cubic_petameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megagrams_per_cubic_petameter)
 
     @property
     def kilograms_per_cubic_petameter(self) -> T:
-        return self.quantity.in_units_of(units.kilograms_per_cubic_petameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilograms_per_cubic_petameter)
 
     @property
     def milligrams_per_cubic_petameter(self) -> T:
-        return self.quantity.in_units_of(units.milligrams_per_cubic_petameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.milligrams_per_cubic_petameter)
 
     @property
     def micrograms_per_cubic_petameter(self) -> T:
-        return self.quantity.in_units_of(units.micrograms_per_cubic_petameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micrograms_per_cubic_petameter)
 
     @property
     def nanograms_per_cubic_petameter(self) -> T:
-        return self.quantity.in_units_of(units.nanograms_per_cubic_petameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanograms_per_cubic_petameter)
 
     @property
     def picograms_per_cubic_petameter(self) -> T:
-        return self.quantity.in_units_of(units.picograms_per_cubic_petameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picograms_per_cubic_petameter)
 
     @property
     def femtograms_per_cubic_petameter(self) -> T:
-        return self.quantity.in_units_of(units.femtograms_per_cubic_petameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtograms_per_cubic_petameter)
 
     @property
     def attograms_per_cubic_petameter(self) -> T:
-        return self.quantity.in_units_of(units.attograms_per_cubic_petameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attograms_per_cubic_petameter)
 
     @property
     def atomic_mass_units_per_cubic_petameter(self) -> T:
-        return self.quantity.in_units_of(units.atomic_mass_units_per_cubic_petameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.atomic_mass_units_per_cubic_petameter)
 
     @property
     def pounds_per_cubic_petameter(self) -> T:
-        return self.quantity.in_units_of(units.pounds_per_cubic_petameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.pounds_per_cubic_petameter)
 
     @property
     def ounces_per_cubic_petameter(self) -> T:
-        return self.quantity.in_units_of(units.ounces_per_cubic_petameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.ounces_per_cubic_petameter)
 
     @property
     def grams_per_cubic_terameter(self) -> T:
-        return self.quantity.in_units_of(units.grams_per_cubic_terameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.grams_per_cubic_terameter)
 
     @property
     def exagrams_per_cubic_terameter(self) -> T:
-        return self.quantity.in_units_of(units.exagrams_per_cubic_terameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exagrams_per_cubic_terameter)
 
     @property
     def petagrams_per_cubic_terameter(self) -> T:
-        return self.quantity.in_units_of(units.petagrams_per_cubic_terameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petagrams_per_cubic_terameter)
 
     @property
     def teragrams_per_cubic_terameter(self) -> T:
-        return self.quantity.in_units_of(units.teragrams_per_cubic_terameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.teragrams_per_cubic_terameter)
 
     @property
     def gigagrams_per_cubic_terameter(self) -> T:
-        return self.quantity.in_units_of(units.gigagrams_per_cubic_terameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigagrams_per_cubic_terameter)
 
     @property
     def megagrams_per_cubic_terameter(self) -> T:
-        return self.quantity.in_units_of(units.megagrams_per_cubic_terameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megagrams_per_cubic_terameter)
 
     @property
     def kilograms_per_cubic_terameter(self) -> T:
-        return self.quantity.in_units_of(units.kilograms_per_cubic_terameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilograms_per_cubic_terameter)
 
     @property
     def milligrams_per_cubic_terameter(self) -> T:
-        return self.quantity.in_units_of(units.milligrams_per_cubic_terameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.milligrams_per_cubic_terameter)
 
     @property
     def micrograms_per_cubic_terameter(self) -> T:
-        return self.quantity.in_units_of(units.micrograms_per_cubic_terameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micrograms_per_cubic_terameter)
 
     @property
     def nanograms_per_cubic_terameter(self) -> T:
-        return self.quantity.in_units_of(units.nanograms_per_cubic_terameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanograms_per_cubic_terameter)
 
     @property
     def picograms_per_cubic_terameter(self) -> T:
-        return self.quantity.in_units_of(units.picograms_per_cubic_terameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picograms_per_cubic_terameter)
 
     @property
     def femtograms_per_cubic_terameter(self) -> T:
-        return self.quantity.in_units_of(units.femtograms_per_cubic_terameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtograms_per_cubic_terameter)
 
     @property
     def attograms_per_cubic_terameter(self) -> T:
-        return self.quantity.in_units_of(units.attograms_per_cubic_terameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attograms_per_cubic_terameter)
 
     @property
     def atomic_mass_units_per_cubic_terameter(self) -> T:
-        return self.quantity.in_units_of(units.atomic_mass_units_per_cubic_terameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.atomic_mass_units_per_cubic_terameter)
 
     @property
     def pounds_per_cubic_terameter(self) -> T:
-        return self.quantity.in_units_of(units.pounds_per_cubic_terameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.pounds_per_cubic_terameter)
 
     @property
     def ounces_per_cubic_terameter(self) -> T:
-        return self.quantity.in_units_of(units.ounces_per_cubic_terameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.ounces_per_cubic_terameter)
 
     @property
     def grams_per_cubic_gigameter(self) -> T:
-        return self.quantity.in_units_of(units.grams_per_cubic_gigameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.grams_per_cubic_gigameter)
 
     @property
     def exagrams_per_cubic_gigameter(self) -> T:
-        return self.quantity.in_units_of(units.exagrams_per_cubic_gigameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exagrams_per_cubic_gigameter)
 
     @property
     def petagrams_per_cubic_gigameter(self) -> T:
-        return self.quantity.in_units_of(units.petagrams_per_cubic_gigameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petagrams_per_cubic_gigameter)
 
     @property
     def teragrams_per_cubic_gigameter(self) -> T:
-        return self.quantity.in_units_of(units.teragrams_per_cubic_gigameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.teragrams_per_cubic_gigameter)
 
     @property
     def gigagrams_per_cubic_gigameter(self) -> T:
-        return self.quantity.in_units_of(units.gigagrams_per_cubic_gigameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigagrams_per_cubic_gigameter)
 
     @property
     def megagrams_per_cubic_gigameter(self) -> T:
-        return self.quantity.in_units_of(units.megagrams_per_cubic_gigameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megagrams_per_cubic_gigameter)
 
     @property
     def kilograms_per_cubic_gigameter(self) -> T:
-        return self.quantity.in_units_of(units.kilograms_per_cubic_gigameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilograms_per_cubic_gigameter)
 
     @property
     def milligrams_per_cubic_gigameter(self) -> T:
-        return self.quantity.in_units_of(units.milligrams_per_cubic_gigameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.milligrams_per_cubic_gigameter)
 
     @property
     def micrograms_per_cubic_gigameter(self) -> T:
-        return self.quantity.in_units_of(units.micrograms_per_cubic_gigameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micrograms_per_cubic_gigameter)
 
     @property
     def nanograms_per_cubic_gigameter(self) -> T:
-        return self.quantity.in_units_of(units.nanograms_per_cubic_gigameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanograms_per_cubic_gigameter)
 
     @property
     def picograms_per_cubic_gigameter(self) -> T:
-        return self.quantity.in_units_of(units.picograms_per_cubic_gigameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picograms_per_cubic_gigameter)
 
     @property
     def femtograms_per_cubic_gigameter(self) -> T:
-        return self.quantity.in_units_of(units.femtograms_per_cubic_gigameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtograms_per_cubic_gigameter)
 
     @property
     def attograms_per_cubic_gigameter(self) -> T:
-        return self.quantity.in_units_of(units.attograms_per_cubic_gigameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attograms_per_cubic_gigameter)
 
     @property
     def atomic_mass_units_per_cubic_gigameter(self) -> T:
-        return self.quantity.in_units_of(units.atomic_mass_units_per_cubic_gigameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.atomic_mass_units_per_cubic_gigameter)
 
     @property
     def pounds_per_cubic_gigameter(self) -> T:
-        return self.quantity.in_units_of(units.pounds_per_cubic_gigameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.pounds_per_cubic_gigameter)
 
     @property
     def ounces_per_cubic_gigameter(self) -> T:
-        return self.quantity.in_units_of(units.ounces_per_cubic_gigameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.ounces_per_cubic_gigameter)
 
     @property
     def grams_per_cubic_megameter(self) -> T:
-        return self.quantity.in_units_of(units.grams_per_cubic_megameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.grams_per_cubic_megameter)
 
     @property
     def exagrams_per_cubic_megameter(self) -> T:
-        return self.quantity.in_units_of(units.exagrams_per_cubic_megameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exagrams_per_cubic_megameter)
 
     @property
     def petagrams_per_cubic_megameter(self) -> T:
-        return self.quantity.in_units_of(units.petagrams_per_cubic_megameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petagrams_per_cubic_megameter)
 
     @property
     def teragrams_per_cubic_megameter(self) -> T:
-        return self.quantity.in_units_of(units.teragrams_per_cubic_megameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.teragrams_per_cubic_megameter)
 
     @property
     def gigagrams_per_cubic_megameter(self) -> T:
-        return self.quantity.in_units_of(units.gigagrams_per_cubic_megameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigagrams_per_cubic_megameter)
 
     @property
     def megagrams_per_cubic_megameter(self) -> T:
-        return self.quantity.in_units_of(units.megagrams_per_cubic_megameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megagrams_per_cubic_megameter)
 
     @property
     def kilograms_per_cubic_megameter(self) -> T:
-        return self.quantity.in_units_of(units.kilograms_per_cubic_megameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilograms_per_cubic_megameter)
 
     @property
     def milligrams_per_cubic_megameter(self) -> T:
-        return self.quantity.in_units_of(units.milligrams_per_cubic_megameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.milligrams_per_cubic_megameter)
 
     @property
     def micrograms_per_cubic_megameter(self) -> T:
-        return self.quantity.in_units_of(units.micrograms_per_cubic_megameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micrograms_per_cubic_megameter)
 
     @property
     def nanograms_per_cubic_megameter(self) -> T:
-        return self.quantity.in_units_of(units.nanograms_per_cubic_megameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanograms_per_cubic_megameter)
 
     @property
     def picograms_per_cubic_megameter(self) -> T:
-        return self.quantity.in_units_of(units.picograms_per_cubic_megameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picograms_per_cubic_megameter)
 
     @property
     def femtograms_per_cubic_megameter(self) -> T:
-        return self.quantity.in_units_of(units.femtograms_per_cubic_megameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtograms_per_cubic_megameter)
 
     @property
     def attograms_per_cubic_megameter(self) -> T:
-        return self.quantity.in_units_of(units.attograms_per_cubic_megameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attograms_per_cubic_megameter)
 
     @property
     def atomic_mass_units_per_cubic_megameter(self) -> T:
-        return self.quantity.in_units_of(units.atomic_mass_units_per_cubic_megameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.atomic_mass_units_per_cubic_megameter)
 
     @property
     def pounds_per_cubic_megameter(self) -> T:
-        return self.quantity.in_units_of(units.pounds_per_cubic_megameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.pounds_per_cubic_megameter)
 
     @property
     def ounces_per_cubic_megameter(self) -> T:
-        return self.quantity.in_units_of(units.ounces_per_cubic_megameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.ounces_per_cubic_megameter)
 
     @property
     def grams_per_cubic_kilometer(self) -> T:
-        return self.quantity.in_units_of(units.grams_per_cubic_kilometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.grams_per_cubic_kilometer)
 
     @property
     def exagrams_per_cubic_kilometer(self) -> T:
-        return self.quantity.in_units_of(units.exagrams_per_cubic_kilometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exagrams_per_cubic_kilometer)
 
     @property
     def petagrams_per_cubic_kilometer(self) -> T:
-        return self.quantity.in_units_of(units.petagrams_per_cubic_kilometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petagrams_per_cubic_kilometer)
 
     @property
     def teragrams_per_cubic_kilometer(self) -> T:
-        return self.quantity.in_units_of(units.teragrams_per_cubic_kilometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.teragrams_per_cubic_kilometer)
 
     @property
     def gigagrams_per_cubic_kilometer(self) -> T:
-        return self.quantity.in_units_of(units.gigagrams_per_cubic_kilometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigagrams_per_cubic_kilometer)
 
     @property
     def megagrams_per_cubic_kilometer(self) -> T:
-        return self.quantity.in_units_of(units.megagrams_per_cubic_kilometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megagrams_per_cubic_kilometer)
 
     @property
     def kilograms_per_cubic_kilometer(self) -> T:
-        return self.quantity.in_units_of(units.kilograms_per_cubic_kilometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilograms_per_cubic_kilometer)
 
     @property
     def milligrams_per_cubic_kilometer(self) -> T:
-        return self.quantity.in_units_of(units.milligrams_per_cubic_kilometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.milligrams_per_cubic_kilometer)
 
     @property
     def micrograms_per_cubic_kilometer(self) -> T:
-        return self.quantity.in_units_of(units.micrograms_per_cubic_kilometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micrograms_per_cubic_kilometer)
 
     @property
     def nanograms_per_cubic_kilometer(self) -> T:
-        return self.quantity.in_units_of(units.nanograms_per_cubic_kilometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanograms_per_cubic_kilometer)
 
     @property
     def picograms_per_cubic_kilometer(self) -> T:
-        return self.quantity.in_units_of(units.picograms_per_cubic_kilometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picograms_per_cubic_kilometer)
 
     @property
     def femtograms_per_cubic_kilometer(self) -> T:
-        return self.quantity.in_units_of(units.femtograms_per_cubic_kilometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtograms_per_cubic_kilometer)
 
     @property
     def attograms_per_cubic_kilometer(self) -> T:
-        return self.quantity.in_units_of(units.attograms_per_cubic_kilometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attograms_per_cubic_kilometer)
 
     @property
     def atomic_mass_units_per_cubic_kilometer(self) -> T:
-        return self.quantity.in_units_of(units.atomic_mass_units_per_cubic_kilometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.atomic_mass_units_per_cubic_kilometer)
 
     @property
     def pounds_per_cubic_kilometer(self) -> T:
-        return self.quantity.in_units_of(units.pounds_per_cubic_kilometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.pounds_per_cubic_kilometer)
 
     @property
     def ounces_per_cubic_kilometer(self) -> T:
-        return self.quantity.in_units_of(units.ounces_per_cubic_kilometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.ounces_per_cubic_kilometer)
 
     @property
     def grams_per_cubic_millimeter(self) -> T:
-        return self.quantity.in_units_of(units.grams_per_cubic_millimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.grams_per_cubic_millimeter)
 
     @property
     def exagrams_per_cubic_millimeter(self) -> T:
-        return self.quantity.in_units_of(units.exagrams_per_cubic_millimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exagrams_per_cubic_millimeter)
 
     @property
     def petagrams_per_cubic_millimeter(self) -> T:
-        return self.quantity.in_units_of(units.petagrams_per_cubic_millimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petagrams_per_cubic_millimeter)
 
     @property
     def teragrams_per_cubic_millimeter(self) -> T:
-        return self.quantity.in_units_of(units.teragrams_per_cubic_millimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.teragrams_per_cubic_millimeter)
 
     @property
     def gigagrams_per_cubic_millimeter(self) -> T:
-        return self.quantity.in_units_of(units.gigagrams_per_cubic_millimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigagrams_per_cubic_millimeter)
 
     @property
     def megagrams_per_cubic_millimeter(self) -> T:
-        return self.quantity.in_units_of(units.megagrams_per_cubic_millimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megagrams_per_cubic_millimeter)
 
     @property
     def kilograms_per_cubic_millimeter(self) -> T:
-        return self.quantity.in_units_of(units.kilograms_per_cubic_millimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilograms_per_cubic_millimeter)
 
     @property
     def milligrams_per_cubic_millimeter(self) -> T:
-        return self.quantity.in_units_of(units.milligrams_per_cubic_millimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.milligrams_per_cubic_millimeter)
 
     @property
     def micrograms_per_cubic_millimeter(self) -> T:
-        return self.quantity.in_units_of(units.micrograms_per_cubic_millimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micrograms_per_cubic_millimeter)
 
     @property
     def nanograms_per_cubic_millimeter(self) -> T:
-        return self.quantity.in_units_of(units.nanograms_per_cubic_millimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanograms_per_cubic_millimeter)
 
     @property
     def picograms_per_cubic_millimeter(self) -> T:
-        return self.quantity.in_units_of(units.picograms_per_cubic_millimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picograms_per_cubic_millimeter)
 
     @property
     def femtograms_per_cubic_millimeter(self) -> T:
-        return self.quantity.in_units_of(units.femtograms_per_cubic_millimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtograms_per_cubic_millimeter)
 
     @property
     def attograms_per_cubic_millimeter(self) -> T:
-        return self.quantity.in_units_of(units.attograms_per_cubic_millimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attograms_per_cubic_millimeter)
 
     @property
     def atomic_mass_units_per_cubic_millimeter(self) -> T:
-        return self.quantity.in_units_of(units.atomic_mass_units_per_cubic_millimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.atomic_mass_units_per_cubic_millimeter)
 
     @property
     def pounds_per_cubic_millimeter(self) -> T:
-        return self.quantity.in_units_of(units.pounds_per_cubic_millimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.pounds_per_cubic_millimeter)
 
     @property
     def ounces_per_cubic_millimeter(self) -> T:
-        return self.quantity.in_units_of(units.ounces_per_cubic_millimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.ounces_per_cubic_millimeter)
 
     @property
     def grams_per_cubic_micrometer(self) -> T:
-        return self.quantity.in_units_of(units.grams_per_cubic_micrometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.grams_per_cubic_micrometer)
 
     @property
     def exagrams_per_cubic_micrometer(self) -> T:
-        return self.quantity.in_units_of(units.exagrams_per_cubic_micrometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exagrams_per_cubic_micrometer)
 
     @property
     def petagrams_per_cubic_micrometer(self) -> T:
-        return self.quantity.in_units_of(units.petagrams_per_cubic_micrometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petagrams_per_cubic_micrometer)
 
     @property
     def teragrams_per_cubic_micrometer(self) -> T:
-        return self.quantity.in_units_of(units.teragrams_per_cubic_micrometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.teragrams_per_cubic_micrometer)
 
     @property
     def gigagrams_per_cubic_micrometer(self) -> T:
-        return self.quantity.in_units_of(units.gigagrams_per_cubic_micrometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigagrams_per_cubic_micrometer)
 
     @property
     def megagrams_per_cubic_micrometer(self) -> T:
-        return self.quantity.in_units_of(units.megagrams_per_cubic_micrometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megagrams_per_cubic_micrometer)
 
     @property
     def kilograms_per_cubic_micrometer(self) -> T:
-        return self.quantity.in_units_of(units.kilograms_per_cubic_micrometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilograms_per_cubic_micrometer)
 
     @property
     def milligrams_per_cubic_micrometer(self) -> T:
-        return self.quantity.in_units_of(units.milligrams_per_cubic_micrometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.milligrams_per_cubic_micrometer)
 
     @property
     def micrograms_per_cubic_micrometer(self) -> T:
-        return self.quantity.in_units_of(units.micrograms_per_cubic_micrometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micrograms_per_cubic_micrometer)
 
     @property
     def nanograms_per_cubic_micrometer(self) -> T:
-        return self.quantity.in_units_of(units.nanograms_per_cubic_micrometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanograms_per_cubic_micrometer)
 
     @property
     def picograms_per_cubic_micrometer(self) -> T:
-        return self.quantity.in_units_of(units.picograms_per_cubic_micrometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picograms_per_cubic_micrometer)
 
     @property
     def femtograms_per_cubic_micrometer(self) -> T:
-        return self.quantity.in_units_of(units.femtograms_per_cubic_micrometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtograms_per_cubic_micrometer)
 
     @property
     def attograms_per_cubic_micrometer(self) -> T:
-        return self.quantity.in_units_of(units.attograms_per_cubic_micrometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attograms_per_cubic_micrometer)
 
     @property
     def atomic_mass_units_per_cubic_micrometer(self) -> T:
-        return self.quantity.in_units_of(units.atomic_mass_units_per_cubic_micrometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.atomic_mass_units_per_cubic_micrometer)
 
     @property
     def pounds_per_cubic_micrometer(self) -> T:
-        return self.quantity.in_units_of(units.pounds_per_cubic_micrometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.pounds_per_cubic_micrometer)
 
     @property
     def ounces_per_cubic_micrometer(self) -> T:
-        return self.quantity.in_units_of(units.ounces_per_cubic_micrometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.ounces_per_cubic_micrometer)
 
     @property
     def grams_per_cubic_nanometer(self) -> T:
-        return self.quantity.in_units_of(units.grams_per_cubic_nanometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.grams_per_cubic_nanometer)
 
     @property
     def exagrams_per_cubic_nanometer(self) -> T:
-        return self.quantity.in_units_of(units.exagrams_per_cubic_nanometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exagrams_per_cubic_nanometer)
 
     @property
     def petagrams_per_cubic_nanometer(self) -> T:
-        return self.quantity.in_units_of(units.petagrams_per_cubic_nanometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petagrams_per_cubic_nanometer)
 
     @property
     def teragrams_per_cubic_nanometer(self) -> T:
-        return self.quantity.in_units_of(units.teragrams_per_cubic_nanometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.teragrams_per_cubic_nanometer)
 
     @property
     def gigagrams_per_cubic_nanometer(self) -> T:
-        return self.quantity.in_units_of(units.gigagrams_per_cubic_nanometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigagrams_per_cubic_nanometer)
 
     @property
     def megagrams_per_cubic_nanometer(self) -> T:
-        return self.quantity.in_units_of(units.megagrams_per_cubic_nanometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megagrams_per_cubic_nanometer)
 
     @property
     def kilograms_per_cubic_nanometer(self) -> T:
-        return self.quantity.in_units_of(units.kilograms_per_cubic_nanometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilograms_per_cubic_nanometer)
 
     @property
     def milligrams_per_cubic_nanometer(self) -> T:
-        return self.quantity.in_units_of(units.milligrams_per_cubic_nanometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.milligrams_per_cubic_nanometer)
 
     @property
     def micrograms_per_cubic_nanometer(self) -> T:
-        return self.quantity.in_units_of(units.micrograms_per_cubic_nanometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micrograms_per_cubic_nanometer)
 
     @property
     def nanograms_per_cubic_nanometer(self) -> T:
-        return self.quantity.in_units_of(units.nanograms_per_cubic_nanometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanograms_per_cubic_nanometer)
 
     @property
     def picograms_per_cubic_nanometer(self) -> T:
-        return self.quantity.in_units_of(units.picograms_per_cubic_nanometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picograms_per_cubic_nanometer)
 
     @property
     def femtograms_per_cubic_nanometer(self) -> T:
-        return self.quantity.in_units_of(units.femtograms_per_cubic_nanometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtograms_per_cubic_nanometer)
 
     @property
     def attograms_per_cubic_nanometer(self) -> T:
-        return self.quantity.in_units_of(units.attograms_per_cubic_nanometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attograms_per_cubic_nanometer)
 
     @property
     def atomic_mass_units_per_cubic_nanometer(self) -> T:
-        return self.quantity.in_units_of(units.atomic_mass_units_per_cubic_nanometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.atomic_mass_units_per_cubic_nanometer)
 
     @property
     def pounds_per_cubic_nanometer(self) -> T:
-        return self.quantity.in_units_of(units.pounds_per_cubic_nanometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.pounds_per_cubic_nanometer)
 
     @property
     def ounces_per_cubic_nanometer(self) -> T:
-        return self.quantity.in_units_of(units.ounces_per_cubic_nanometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.ounces_per_cubic_nanometer)
 
     @property
     def grams_per_cubic_picometer(self) -> T:
-        return self.quantity.in_units_of(units.grams_per_cubic_picometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.grams_per_cubic_picometer)
 
     @property
     def exagrams_per_cubic_picometer(self) -> T:
-        return self.quantity.in_units_of(units.exagrams_per_cubic_picometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exagrams_per_cubic_picometer)
 
     @property
     def petagrams_per_cubic_picometer(self) -> T:
-        return self.quantity.in_units_of(units.petagrams_per_cubic_picometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petagrams_per_cubic_picometer)
 
     @property
     def teragrams_per_cubic_picometer(self) -> T:
-        return self.quantity.in_units_of(units.teragrams_per_cubic_picometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.teragrams_per_cubic_picometer)
 
     @property
     def gigagrams_per_cubic_picometer(self) -> T:
-        return self.quantity.in_units_of(units.gigagrams_per_cubic_picometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigagrams_per_cubic_picometer)
 
     @property
     def megagrams_per_cubic_picometer(self) -> T:
-        return self.quantity.in_units_of(units.megagrams_per_cubic_picometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megagrams_per_cubic_picometer)
 
     @property
     def kilograms_per_cubic_picometer(self) -> T:
-        return self.quantity.in_units_of(units.kilograms_per_cubic_picometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilograms_per_cubic_picometer)
 
     @property
     def milligrams_per_cubic_picometer(self) -> T:
-        return self.quantity.in_units_of(units.milligrams_per_cubic_picometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.milligrams_per_cubic_picometer)
 
     @property
     def micrograms_per_cubic_picometer(self) -> T:
-        return self.quantity.in_units_of(units.micrograms_per_cubic_picometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micrograms_per_cubic_picometer)
 
     @property
     def nanograms_per_cubic_picometer(self) -> T:
-        return self.quantity.in_units_of(units.nanograms_per_cubic_picometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanograms_per_cubic_picometer)
 
     @property
     def picograms_per_cubic_picometer(self) -> T:
-        return self.quantity.in_units_of(units.picograms_per_cubic_picometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picograms_per_cubic_picometer)
 
     @property
     def femtograms_per_cubic_picometer(self) -> T:
-        return self.quantity.in_units_of(units.femtograms_per_cubic_picometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtograms_per_cubic_picometer)
 
     @property
     def attograms_per_cubic_picometer(self) -> T:
-        return self.quantity.in_units_of(units.attograms_per_cubic_picometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attograms_per_cubic_picometer)
 
     @property
     def atomic_mass_units_per_cubic_picometer(self) -> T:
-        return self.quantity.in_units_of(units.atomic_mass_units_per_cubic_picometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.atomic_mass_units_per_cubic_picometer)
 
     @property
     def pounds_per_cubic_picometer(self) -> T:
-        return self.quantity.in_units_of(units.pounds_per_cubic_picometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.pounds_per_cubic_picometer)
 
     @property
     def ounces_per_cubic_picometer(self) -> T:
-        return self.quantity.in_units_of(units.ounces_per_cubic_picometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.ounces_per_cubic_picometer)
 
     @property
     def grams_per_cubic_femtometer(self) -> T:
-        return self.quantity.in_units_of(units.grams_per_cubic_femtometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.grams_per_cubic_femtometer)
 
     @property
     def exagrams_per_cubic_femtometer(self) -> T:
-        return self.quantity.in_units_of(units.exagrams_per_cubic_femtometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exagrams_per_cubic_femtometer)
 
     @property
     def petagrams_per_cubic_femtometer(self) -> T:
-        return self.quantity.in_units_of(units.petagrams_per_cubic_femtometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petagrams_per_cubic_femtometer)
 
     @property
     def teragrams_per_cubic_femtometer(self) -> T:
-        return self.quantity.in_units_of(units.teragrams_per_cubic_femtometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.teragrams_per_cubic_femtometer)
 
     @property
     def gigagrams_per_cubic_femtometer(self) -> T:
-        return self.quantity.in_units_of(units.gigagrams_per_cubic_femtometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigagrams_per_cubic_femtometer)
 
     @property
     def megagrams_per_cubic_femtometer(self) -> T:
-        return self.quantity.in_units_of(units.megagrams_per_cubic_femtometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megagrams_per_cubic_femtometer)
 
     @property
     def kilograms_per_cubic_femtometer(self) -> T:
-        return self.quantity.in_units_of(units.kilograms_per_cubic_femtometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilograms_per_cubic_femtometer)
 
     @property
     def milligrams_per_cubic_femtometer(self) -> T:
-        return self.quantity.in_units_of(units.milligrams_per_cubic_femtometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.milligrams_per_cubic_femtometer)
 
     @property
     def micrograms_per_cubic_femtometer(self) -> T:
-        return self.quantity.in_units_of(units.micrograms_per_cubic_femtometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micrograms_per_cubic_femtometer)
 
     @property
     def nanograms_per_cubic_femtometer(self) -> T:
-        return self.quantity.in_units_of(units.nanograms_per_cubic_femtometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanograms_per_cubic_femtometer)
 
     @property
     def picograms_per_cubic_femtometer(self) -> T:
-        return self.quantity.in_units_of(units.picograms_per_cubic_femtometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picograms_per_cubic_femtometer)
 
     @property
     def femtograms_per_cubic_femtometer(self) -> T:
-        return self.quantity.in_units_of(units.femtograms_per_cubic_femtometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtograms_per_cubic_femtometer)
 
     @property
     def attograms_per_cubic_femtometer(self) -> T:
-        return self.quantity.in_units_of(units.attograms_per_cubic_femtometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attograms_per_cubic_femtometer)
 
     @property
     def atomic_mass_units_per_cubic_femtometer(self) -> T:
-        return self.quantity.in_units_of(units.atomic_mass_units_per_cubic_femtometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.atomic_mass_units_per_cubic_femtometer)
 
     @property
     def pounds_per_cubic_femtometer(self) -> T:
-        return self.quantity.in_units_of(units.pounds_per_cubic_femtometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.pounds_per_cubic_femtometer)
 
     @property
     def ounces_per_cubic_femtometer(self) -> T:
-        return self.quantity.in_units_of(units.ounces_per_cubic_femtometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.ounces_per_cubic_femtometer)
 
     @property
     def grams_per_cubic_attometer(self) -> T:
-        return self.quantity.in_units_of(units.grams_per_cubic_attometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.grams_per_cubic_attometer)
 
     @property
     def exagrams_per_cubic_attometer(self) -> T:
-        return self.quantity.in_units_of(units.exagrams_per_cubic_attometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exagrams_per_cubic_attometer)
 
     @property
     def petagrams_per_cubic_attometer(self) -> T:
-        return self.quantity.in_units_of(units.petagrams_per_cubic_attometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petagrams_per_cubic_attometer)
 
     @property
     def teragrams_per_cubic_attometer(self) -> T:
-        return self.quantity.in_units_of(units.teragrams_per_cubic_attometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.teragrams_per_cubic_attometer)
 
     @property
     def gigagrams_per_cubic_attometer(self) -> T:
-        return self.quantity.in_units_of(units.gigagrams_per_cubic_attometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigagrams_per_cubic_attometer)
 
     @property
     def megagrams_per_cubic_attometer(self) -> T:
-        return self.quantity.in_units_of(units.megagrams_per_cubic_attometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megagrams_per_cubic_attometer)
 
     @property
     def kilograms_per_cubic_attometer(self) -> T:
-        return self.quantity.in_units_of(units.kilograms_per_cubic_attometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilograms_per_cubic_attometer)
 
     @property
     def milligrams_per_cubic_attometer(self) -> T:
-        return self.quantity.in_units_of(units.milligrams_per_cubic_attometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.milligrams_per_cubic_attometer)
 
     @property
     def micrograms_per_cubic_attometer(self) -> T:
-        return self.quantity.in_units_of(units.micrograms_per_cubic_attometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micrograms_per_cubic_attometer)
 
     @property
     def nanograms_per_cubic_attometer(self) -> T:
-        return self.quantity.in_units_of(units.nanograms_per_cubic_attometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanograms_per_cubic_attometer)
 
     @property
     def picograms_per_cubic_attometer(self) -> T:
-        return self.quantity.in_units_of(units.picograms_per_cubic_attometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picograms_per_cubic_attometer)
 
     @property
     def femtograms_per_cubic_attometer(self) -> T:
-        return self.quantity.in_units_of(units.femtograms_per_cubic_attometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtograms_per_cubic_attometer)
 
     @property
     def attograms_per_cubic_attometer(self) -> T:
-        return self.quantity.in_units_of(units.attograms_per_cubic_attometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attograms_per_cubic_attometer)
 
     @property
     def atomic_mass_units_per_cubic_attometer(self) -> T:
-        return self.quantity.in_units_of(units.atomic_mass_units_per_cubic_attometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.atomic_mass_units_per_cubic_attometer)
 
     @property
     def pounds_per_cubic_attometer(self) -> T:
-        return self.quantity.in_units_of(units.pounds_per_cubic_attometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.pounds_per_cubic_attometer)
 
     @property
     def ounces_per_cubic_attometer(self) -> T:
-        return self.quantity.in_units_of(units.ounces_per_cubic_attometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.ounces_per_cubic_attometer)
 
     @property
     def grams_per_cubic_decimeter(self) -> T:
-        return self.quantity.in_units_of(units.grams_per_cubic_decimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.grams_per_cubic_decimeter)
 
     @property
     def exagrams_per_cubic_decimeter(self) -> T:
-        return self.quantity.in_units_of(units.exagrams_per_cubic_decimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exagrams_per_cubic_decimeter)
 
     @property
     def petagrams_per_cubic_decimeter(self) -> T:
-        return self.quantity.in_units_of(units.petagrams_per_cubic_decimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petagrams_per_cubic_decimeter)
 
     @property
     def teragrams_per_cubic_decimeter(self) -> T:
-        return self.quantity.in_units_of(units.teragrams_per_cubic_decimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.teragrams_per_cubic_decimeter)
 
     @property
     def gigagrams_per_cubic_decimeter(self) -> T:
-        return self.quantity.in_units_of(units.gigagrams_per_cubic_decimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigagrams_per_cubic_decimeter)
 
     @property
     def megagrams_per_cubic_decimeter(self) -> T:
-        return self.quantity.in_units_of(units.megagrams_per_cubic_decimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megagrams_per_cubic_decimeter)
 
     @property
     def kilograms_per_cubic_decimeter(self) -> T:
-        return self.quantity.in_units_of(units.kilograms_per_cubic_decimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilograms_per_cubic_decimeter)
 
     @property
     def milligrams_per_cubic_decimeter(self) -> T:
-        return self.quantity.in_units_of(units.milligrams_per_cubic_decimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.milligrams_per_cubic_decimeter)
 
     @property
     def micrograms_per_cubic_decimeter(self) -> T:
-        return self.quantity.in_units_of(units.micrograms_per_cubic_decimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micrograms_per_cubic_decimeter)
 
     @property
     def nanograms_per_cubic_decimeter(self) -> T:
-        return self.quantity.in_units_of(units.nanograms_per_cubic_decimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanograms_per_cubic_decimeter)
 
     @property
     def picograms_per_cubic_decimeter(self) -> T:
-        return self.quantity.in_units_of(units.picograms_per_cubic_decimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picograms_per_cubic_decimeter)
 
     @property
     def femtograms_per_cubic_decimeter(self) -> T:
-        return self.quantity.in_units_of(units.femtograms_per_cubic_decimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtograms_per_cubic_decimeter)
 
     @property
     def attograms_per_cubic_decimeter(self) -> T:
-        return self.quantity.in_units_of(units.attograms_per_cubic_decimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attograms_per_cubic_decimeter)
 
     @property
     def atomic_mass_units_per_cubic_decimeter(self) -> T:
-        return self.quantity.in_units_of(units.atomic_mass_units_per_cubic_decimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.atomic_mass_units_per_cubic_decimeter)
 
     @property
     def pounds_per_cubic_decimeter(self) -> T:
-        return self.quantity.in_units_of(units.pounds_per_cubic_decimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.pounds_per_cubic_decimeter)
 
     @property
     def ounces_per_cubic_decimeter(self) -> T:
-        return self.quantity.in_units_of(units.ounces_per_cubic_decimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.ounces_per_cubic_decimeter)
 
     @property
     def grams_per_cubic_centimeter(self) -> T:
-        return self.quantity.in_units_of(units.grams_per_cubic_centimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.grams_per_cubic_centimeter)
 
     @property
     def exagrams_per_cubic_centimeter(self) -> T:
-        return self.quantity.in_units_of(units.exagrams_per_cubic_centimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exagrams_per_cubic_centimeter)
 
     @property
     def petagrams_per_cubic_centimeter(self) -> T:
-        return self.quantity.in_units_of(units.petagrams_per_cubic_centimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petagrams_per_cubic_centimeter)
 
     @property
     def teragrams_per_cubic_centimeter(self) -> T:
-        return self.quantity.in_units_of(units.teragrams_per_cubic_centimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.teragrams_per_cubic_centimeter)
 
     @property
     def gigagrams_per_cubic_centimeter(self) -> T:
-        return self.quantity.in_units_of(units.gigagrams_per_cubic_centimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigagrams_per_cubic_centimeter)
 
     @property
     def megagrams_per_cubic_centimeter(self) -> T:
-        return self.quantity.in_units_of(units.megagrams_per_cubic_centimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megagrams_per_cubic_centimeter)
 
     @property
     def kilograms_per_cubic_centimeter(self) -> T:
-        return self.quantity.in_units_of(units.kilograms_per_cubic_centimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilograms_per_cubic_centimeter)
 
     @property
     def milligrams_per_cubic_centimeter(self) -> T:
-        return self.quantity.in_units_of(units.milligrams_per_cubic_centimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.milligrams_per_cubic_centimeter)
 
     @property
     def micrograms_per_cubic_centimeter(self) -> T:
-        return self.quantity.in_units_of(units.micrograms_per_cubic_centimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micrograms_per_cubic_centimeter)
 
     @property
     def nanograms_per_cubic_centimeter(self) -> T:
-        return self.quantity.in_units_of(units.nanograms_per_cubic_centimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanograms_per_cubic_centimeter)
 
     @property
     def picograms_per_cubic_centimeter(self) -> T:
-        return self.quantity.in_units_of(units.picograms_per_cubic_centimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picograms_per_cubic_centimeter)
 
     @property
     def femtograms_per_cubic_centimeter(self) -> T:
-        return self.quantity.in_units_of(units.femtograms_per_cubic_centimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtograms_per_cubic_centimeter)
 
     @property
     def attograms_per_cubic_centimeter(self) -> T:
-        return self.quantity.in_units_of(units.attograms_per_cubic_centimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attograms_per_cubic_centimeter)
 
     @property
     def atomic_mass_units_per_cubic_centimeter(self) -> T:
-        return self.quantity.in_units_of(units.atomic_mass_units_per_cubic_centimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.atomic_mass_units_per_cubic_centimeter)
 
     @property
     def pounds_per_cubic_centimeter(self) -> T:
-        return self.quantity.in_units_of(units.pounds_per_cubic_centimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.pounds_per_cubic_centimeter)
 
     @property
     def ounces_per_cubic_centimeter(self) -> T:
-        return self.quantity.in_units_of(units.ounces_per_cubic_centimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.ounces_per_cubic_centimeter)
 
     @property
     def grams_per_cubic_angstrom(self) -> T:
-        return self.quantity.in_units_of(units.grams_per_cubic_angstrom)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.grams_per_cubic_angstrom)
 
     @property
     def exagrams_per_cubic_angstrom(self) -> T:
-        return self.quantity.in_units_of(units.exagrams_per_cubic_angstrom)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exagrams_per_cubic_angstrom)
 
     @property
     def petagrams_per_cubic_angstrom(self) -> T:
-        return self.quantity.in_units_of(units.petagrams_per_cubic_angstrom)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petagrams_per_cubic_angstrom)
 
     @property
     def teragrams_per_cubic_angstrom(self) -> T:
-        return self.quantity.in_units_of(units.teragrams_per_cubic_angstrom)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.teragrams_per_cubic_angstrom)
 
     @property
     def gigagrams_per_cubic_angstrom(self) -> T:
-        return self.quantity.in_units_of(units.gigagrams_per_cubic_angstrom)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigagrams_per_cubic_angstrom)
 
     @property
     def megagrams_per_cubic_angstrom(self) -> T:
-        return self.quantity.in_units_of(units.megagrams_per_cubic_angstrom)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megagrams_per_cubic_angstrom)
 
     @property
     def kilograms_per_cubic_angstrom(self) -> T:
-        return self.quantity.in_units_of(units.kilograms_per_cubic_angstrom)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilograms_per_cubic_angstrom)
 
     @property
     def milligrams_per_cubic_angstrom(self) -> T:
-        return self.quantity.in_units_of(units.milligrams_per_cubic_angstrom)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.milligrams_per_cubic_angstrom)
 
     @property
     def micrograms_per_cubic_angstrom(self) -> T:
-        return self.quantity.in_units_of(units.micrograms_per_cubic_angstrom)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micrograms_per_cubic_angstrom)
 
     @property
     def nanograms_per_cubic_angstrom(self) -> T:
-        return self.quantity.in_units_of(units.nanograms_per_cubic_angstrom)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanograms_per_cubic_angstrom)
 
     @property
     def picograms_per_cubic_angstrom(self) -> T:
-        return self.quantity.in_units_of(units.picograms_per_cubic_angstrom)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picograms_per_cubic_angstrom)
 
     @property
     def femtograms_per_cubic_angstrom(self) -> T:
-        return self.quantity.in_units_of(units.femtograms_per_cubic_angstrom)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtograms_per_cubic_angstrom)
 
     @property
     def attograms_per_cubic_angstrom(self) -> T:
-        return self.quantity.in_units_of(units.attograms_per_cubic_angstrom)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attograms_per_cubic_angstrom)
 
     @property
     def atomic_mass_units_per_cubic_angstrom(self) -> T:
-        return self.quantity.in_units_of(units.atomic_mass_units_per_cubic_angstrom)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.atomic_mass_units_per_cubic_angstrom)
 
     @property
     def pounds_per_cubic_angstrom(self) -> T:
-        return self.quantity.in_units_of(units.pounds_per_cubic_angstrom)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.pounds_per_cubic_angstrom)
 
     @property
     def ounces_per_cubic_angstrom(self) -> T:
-        return self.quantity.in_units_of(units.ounces_per_cubic_angstrom)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.ounces_per_cubic_angstrom)
 
     @property
     def grams_per_cubic_mile(self) -> T:
-        return self.quantity.in_units_of(units.grams_per_cubic_mile)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.grams_per_cubic_mile)
 
     @property
     def exagrams_per_cubic_mile(self) -> T:
-        return self.quantity.in_units_of(units.exagrams_per_cubic_mile)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exagrams_per_cubic_mile)
 
     @property
     def petagrams_per_cubic_mile(self) -> T:
-        return self.quantity.in_units_of(units.petagrams_per_cubic_mile)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petagrams_per_cubic_mile)
 
     @property
     def teragrams_per_cubic_mile(self) -> T:
-        return self.quantity.in_units_of(units.teragrams_per_cubic_mile)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.teragrams_per_cubic_mile)
 
     @property
     def gigagrams_per_cubic_mile(self) -> T:
-        return self.quantity.in_units_of(units.gigagrams_per_cubic_mile)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigagrams_per_cubic_mile)
 
     @property
     def megagrams_per_cubic_mile(self) -> T:
-        return self.quantity.in_units_of(units.megagrams_per_cubic_mile)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megagrams_per_cubic_mile)
 
     @property
     def kilograms_per_cubic_mile(self) -> T:
-        return self.quantity.in_units_of(units.kilograms_per_cubic_mile)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilograms_per_cubic_mile)
 
     @property
     def milligrams_per_cubic_mile(self) -> T:
-        return self.quantity.in_units_of(units.milligrams_per_cubic_mile)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.milligrams_per_cubic_mile)
 
     @property
     def micrograms_per_cubic_mile(self) -> T:
-        return self.quantity.in_units_of(units.micrograms_per_cubic_mile)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micrograms_per_cubic_mile)
 
     @property
     def nanograms_per_cubic_mile(self) -> T:
-        return self.quantity.in_units_of(units.nanograms_per_cubic_mile)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanograms_per_cubic_mile)
 
     @property
     def picograms_per_cubic_mile(self) -> T:
-        return self.quantity.in_units_of(units.picograms_per_cubic_mile)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picograms_per_cubic_mile)
 
     @property
     def femtograms_per_cubic_mile(self) -> T:
-        return self.quantity.in_units_of(units.femtograms_per_cubic_mile)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtograms_per_cubic_mile)
 
     @property
     def attograms_per_cubic_mile(self) -> T:
-        return self.quantity.in_units_of(units.attograms_per_cubic_mile)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attograms_per_cubic_mile)
 
     @property
     def atomic_mass_units_per_cubic_mile(self) -> T:
-        return self.quantity.in_units_of(units.atomic_mass_units_per_cubic_mile)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.atomic_mass_units_per_cubic_mile)
 
     @property
     def pounds_per_cubic_mile(self) -> T:
-        return self.quantity.in_units_of(units.pounds_per_cubic_mile)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.pounds_per_cubic_mile)
 
     @property
     def ounces_per_cubic_mile(self) -> T:
-        return self.quantity.in_units_of(units.ounces_per_cubic_mile)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.ounces_per_cubic_mile)
 
     @property
     def grams_per_cubic_yard(self) -> T:
-        return self.quantity.in_units_of(units.grams_per_cubic_yard)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.grams_per_cubic_yard)
 
     @property
     def exagrams_per_cubic_yard(self) -> T:
-        return self.quantity.in_units_of(units.exagrams_per_cubic_yard)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exagrams_per_cubic_yard)
 
     @property
     def petagrams_per_cubic_yard(self) -> T:
-        return self.quantity.in_units_of(units.petagrams_per_cubic_yard)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petagrams_per_cubic_yard)
 
     @property
     def teragrams_per_cubic_yard(self) -> T:
-        return self.quantity.in_units_of(units.teragrams_per_cubic_yard)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.teragrams_per_cubic_yard)
 
     @property
     def gigagrams_per_cubic_yard(self) -> T:
-        return self.quantity.in_units_of(units.gigagrams_per_cubic_yard)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigagrams_per_cubic_yard)
 
     @property
     def megagrams_per_cubic_yard(self) -> T:
-        return self.quantity.in_units_of(units.megagrams_per_cubic_yard)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megagrams_per_cubic_yard)
 
     @property
     def kilograms_per_cubic_yard(self) -> T:
-        return self.quantity.in_units_of(units.kilograms_per_cubic_yard)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilograms_per_cubic_yard)
 
     @property
     def milligrams_per_cubic_yard(self) -> T:
-        return self.quantity.in_units_of(units.milligrams_per_cubic_yard)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.milligrams_per_cubic_yard)
 
     @property
     def micrograms_per_cubic_yard(self) -> T:
-        return self.quantity.in_units_of(units.micrograms_per_cubic_yard)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micrograms_per_cubic_yard)
 
     @property
     def nanograms_per_cubic_yard(self) -> T:
-        return self.quantity.in_units_of(units.nanograms_per_cubic_yard)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanograms_per_cubic_yard)
 
     @property
     def picograms_per_cubic_yard(self) -> T:
-        return self.quantity.in_units_of(units.picograms_per_cubic_yard)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picograms_per_cubic_yard)
 
     @property
     def femtograms_per_cubic_yard(self) -> T:
-        return self.quantity.in_units_of(units.femtograms_per_cubic_yard)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtograms_per_cubic_yard)
 
     @property
     def attograms_per_cubic_yard(self) -> T:
-        return self.quantity.in_units_of(units.attograms_per_cubic_yard)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attograms_per_cubic_yard)
 
     @property
     def atomic_mass_units_per_cubic_yard(self) -> T:
-        return self.quantity.in_units_of(units.atomic_mass_units_per_cubic_yard)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.atomic_mass_units_per_cubic_yard)
 
     @property
     def pounds_per_cubic_yard(self) -> T:
-        return self.quantity.in_units_of(units.pounds_per_cubic_yard)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.pounds_per_cubic_yard)
 
     @property
     def ounces_per_cubic_yard(self) -> T:
-        return self.quantity.in_units_of(units.ounces_per_cubic_yard)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.ounces_per_cubic_yard)
 
     @property
     def grams_per_cubic_foot(self) -> T:
-        return self.quantity.in_units_of(units.grams_per_cubic_foot)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.grams_per_cubic_foot)
 
     @property
     def exagrams_per_cubic_foot(self) -> T:
-        return self.quantity.in_units_of(units.exagrams_per_cubic_foot)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exagrams_per_cubic_foot)
 
     @property
     def petagrams_per_cubic_foot(self) -> T:
-        return self.quantity.in_units_of(units.petagrams_per_cubic_foot)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petagrams_per_cubic_foot)
 
     @property
     def teragrams_per_cubic_foot(self) -> T:
-        return self.quantity.in_units_of(units.teragrams_per_cubic_foot)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.teragrams_per_cubic_foot)
 
     @property
     def gigagrams_per_cubic_foot(self) -> T:
-        return self.quantity.in_units_of(units.gigagrams_per_cubic_foot)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigagrams_per_cubic_foot)
 
     @property
     def megagrams_per_cubic_foot(self) -> T:
-        return self.quantity.in_units_of(units.megagrams_per_cubic_foot)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megagrams_per_cubic_foot)
 
     @property
     def kilograms_per_cubic_foot(self) -> T:
-        return self.quantity.in_units_of(units.kilograms_per_cubic_foot)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilograms_per_cubic_foot)
 
     @property
     def milligrams_per_cubic_foot(self) -> T:
-        return self.quantity.in_units_of(units.milligrams_per_cubic_foot)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.milligrams_per_cubic_foot)
 
     @property
     def micrograms_per_cubic_foot(self) -> T:
-        return self.quantity.in_units_of(units.micrograms_per_cubic_foot)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micrograms_per_cubic_foot)
 
     @property
     def nanograms_per_cubic_foot(self) -> T:
-        return self.quantity.in_units_of(units.nanograms_per_cubic_foot)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanograms_per_cubic_foot)
 
     @property
     def picograms_per_cubic_foot(self) -> T:
-        return self.quantity.in_units_of(units.picograms_per_cubic_foot)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picograms_per_cubic_foot)
 
     @property
     def femtograms_per_cubic_foot(self) -> T:
-        return self.quantity.in_units_of(units.femtograms_per_cubic_foot)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtograms_per_cubic_foot)
 
     @property
     def attograms_per_cubic_foot(self) -> T:
-        return self.quantity.in_units_of(units.attograms_per_cubic_foot)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attograms_per_cubic_foot)
 
     @property
     def atomic_mass_units_per_cubic_foot(self) -> T:
-        return self.quantity.in_units_of(units.atomic_mass_units_per_cubic_foot)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.atomic_mass_units_per_cubic_foot)
 
     @property
     def pounds_per_cubic_foot(self) -> T:
-        return self.quantity.in_units_of(units.pounds_per_cubic_foot)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.pounds_per_cubic_foot)
 
     @property
     def ounces_per_cubic_foot(self) -> T:
-        return self.quantity.in_units_of(units.ounces_per_cubic_foot)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.ounces_per_cubic_foot)
 
     @property
     def grams_per_cubic_inch(self) -> T:
-        return self.quantity.in_units_of(units.grams_per_cubic_inch)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.grams_per_cubic_inch)
 
     @property
     def exagrams_per_cubic_inch(self) -> T:
-        return self.quantity.in_units_of(units.exagrams_per_cubic_inch)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exagrams_per_cubic_inch)
 
     @property
     def petagrams_per_cubic_inch(self) -> T:
-        return self.quantity.in_units_of(units.petagrams_per_cubic_inch)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petagrams_per_cubic_inch)
 
     @property
     def teragrams_per_cubic_inch(self) -> T:
-        return self.quantity.in_units_of(units.teragrams_per_cubic_inch)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.teragrams_per_cubic_inch)
 
     @property
     def gigagrams_per_cubic_inch(self) -> T:
-        return self.quantity.in_units_of(units.gigagrams_per_cubic_inch)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigagrams_per_cubic_inch)
 
     @property
     def megagrams_per_cubic_inch(self) -> T:
-        return self.quantity.in_units_of(units.megagrams_per_cubic_inch)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megagrams_per_cubic_inch)
 
     @property
     def kilograms_per_cubic_inch(self) -> T:
-        return self.quantity.in_units_of(units.kilograms_per_cubic_inch)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilograms_per_cubic_inch)
 
     @property
     def milligrams_per_cubic_inch(self) -> T:
-        return self.quantity.in_units_of(units.milligrams_per_cubic_inch)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.milligrams_per_cubic_inch)
 
     @property
     def micrograms_per_cubic_inch(self) -> T:
-        return self.quantity.in_units_of(units.micrograms_per_cubic_inch)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micrograms_per_cubic_inch)
 
     @property
     def nanograms_per_cubic_inch(self) -> T:
-        return self.quantity.in_units_of(units.nanograms_per_cubic_inch)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanograms_per_cubic_inch)
 
     @property
     def picograms_per_cubic_inch(self) -> T:
-        return self.quantity.in_units_of(units.picograms_per_cubic_inch)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picograms_per_cubic_inch)
 
     @property
     def femtograms_per_cubic_inch(self) -> T:
-        return self.quantity.in_units_of(units.femtograms_per_cubic_inch)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtograms_per_cubic_inch)
 
     @property
     def attograms_per_cubic_inch(self) -> T:
-        return self.quantity.in_units_of(units.attograms_per_cubic_inch)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attograms_per_cubic_inch)
 
     @property
     def atomic_mass_units_per_cubic_inch(self) -> T:
-        return self.quantity.in_units_of(units.atomic_mass_units_per_cubic_inch)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.atomic_mass_units_per_cubic_inch)
 
     @property
     def pounds_per_cubic_inch(self) -> T:
-        return self.quantity.in_units_of(units.pounds_per_cubic_inch)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.pounds_per_cubic_inch)
 
     @property
     def ounces_per_cubic_inch(self) -> T:
-        return self.quantity.in_units_of(units.ounces_per_cubic_inch)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.ounces_per_cubic_inch)
 
 
 
-class ForceAccessor[T](Accessor[T]):
+class ForceAccessor[T](QuantityAccessor[T]):
     dimension_name = 'force'
     
     @property
     def newtons(self) -> T:
-        return self.quantity.in_units_of(units.newtons)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.newtons)
 
     @property
     def exanewtons(self) -> T:
-        return self.quantity.in_units_of(units.exanewtons)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exanewtons)
 
     @property
     def petanewtons(self) -> T:
-        return self.quantity.in_units_of(units.petanewtons)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petanewtons)
 
     @property
     def teranewtons(self) -> T:
-        return self.quantity.in_units_of(units.teranewtons)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.teranewtons)
 
     @property
     def giganewtons(self) -> T:
-        return self.quantity.in_units_of(units.giganewtons)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.giganewtons)
 
     @property
     def meganewtons(self) -> T:
-        return self.quantity.in_units_of(units.meganewtons)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.meganewtons)
 
     @property
     def kilonewtons(self) -> T:
-        return self.quantity.in_units_of(units.kilonewtons)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilonewtons)
 
     @property
     def millinewtons(self) -> T:
-        return self.quantity.in_units_of(units.millinewtons)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millinewtons)
 
     @property
     def micronewtons(self) -> T:
-        return self.quantity.in_units_of(units.micronewtons)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micronewtons)
 
     @property
     def nanonewtons(self) -> T:
-        return self.quantity.in_units_of(units.nanonewtons)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanonewtons)
 
     @property
     def piconewtons(self) -> T:
-        return self.quantity.in_units_of(units.piconewtons)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.piconewtons)
 
     @property
     def femtonewtons(self) -> T:
-        return self.quantity.in_units_of(units.femtonewtons)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtonewtons)
 
     @property
     def attonewtons(self) -> T:
-        return self.quantity.in_units_of(units.attonewtons)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attonewtons)
 
     @property
     def kg_force(self) -> T:
-        return self.quantity.in_units_of(units.kg_force)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kg_force)
 
     @property
     def pounds_force(self) -> T:
-        return self.quantity.in_units_of(units.pounds_force)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.pounds_force)
 
 
 
-class PressureAccessor[T](Accessor[T]):
+class PressureAccessor[T](QuantityAccessor[T]):
     dimension_name = 'pressure'
     
     @property
     def pascals(self) -> T:
-        return self.quantity.in_units_of(units.pascals)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.pascals)
 
     @property
     def exapascals(self) -> T:
-        return self.quantity.in_units_of(units.exapascals)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exapascals)
 
     @property
     def petapascals(self) -> T:
-        return self.quantity.in_units_of(units.petapascals)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petapascals)
 
     @property
     def terapascals(self) -> T:
-        return self.quantity.in_units_of(units.terapascals)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.terapascals)
 
     @property
     def gigapascals(self) -> T:
-        return self.quantity.in_units_of(units.gigapascals)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigapascals)
 
     @property
     def megapascals(self) -> T:
-        return self.quantity.in_units_of(units.megapascals)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megapascals)
 
     @property
     def kilopascals(self) -> T:
-        return self.quantity.in_units_of(units.kilopascals)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilopascals)
 
     @property
     def millipascals(self) -> T:
-        return self.quantity.in_units_of(units.millipascals)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millipascals)
 
     @property
     def micropascals(self) -> T:
-        return self.quantity.in_units_of(units.micropascals)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micropascals)
 
     @property
     def nanopascals(self) -> T:
-        return self.quantity.in_units_of(units.nanopascals)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanopascals)
 
     @property
     def picopascals(self) -> T:
-        return self.quantity.in_units_of(units.picopascals)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picopascals)
 
     @property
     def femtopascals(self) -> T:
-        return self.quantity.in_units_of(units.femtopascals)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtopascals)
 
     @property
     def attopascals(self) -> T:
-        return self.quantity.in_units_of(units.attopascals)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attopascals)
 
     @property
     def pounds_force_per_square_inch(self) -> T:
-        return self.quantity.in_units_of(units.pounds_force_per_square_inch)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.pounds_force_per_square_inch)
 
 
 
-class EnergyAccessor[T](Accessor[T]):
+class EnergyAccessor[T](QuantityAccessor[T]):
     dimension_name = 'energy'
     
     @property
     def joules(self) -> T:
-        return self.quantity.in_units_of(units.joules)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.joules)
 
     @property
     def exajoules(self) -> T:
-        return self.quantity.in_units_of(units.exajoules)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exajoules)
 
     @property
     def petajoules(self) -> T:
-        return self.quantity.in_units_of(units.petajoules)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petajoules)
 
     @property
     def terajoules(self) -> T:
-        return self.quantity.in_units_of(units.terajoules)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.terajoules)
 
     @property
     def gigajoules(self) -> T:
-        return self.quantity.in_units_of(units.gigajoules)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigajoules)
 
     @property
     def megajoules(self) -> T:
-        return self.quantity.in_units_of(units.megajoules)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megajoules)
 
     @property
     def kilojoules(self) -> T:
-        return self.quantity.in_units_of(units.kilojoules)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilojoules)
 
     @property
     def millijoules(self) -> T:
-        return self.quantity.in_units_of(units.millijoules)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millijoules)
 
     @property
     def microjoules(self) -> T:
-        return self.quantity.in_units_of(units.microjoules)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.microjoules)
 
     @property
     def nanojoules(self) -> T:
-        return self.quantity.in_units_of(units.nanojoules)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanojoules)
 
     @property
     def picojoules(self) -> T:
-        return self.quantity.in_units_of(units.picojoules)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picojoules)
 
     @property
     def femtojoules(self) -> T:
-        return self.quantity.in_units_of(units.femtojoules)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtojoules)
 
     @property
     def attojoules(self) -> T:
-        return self.quantity.in_units_of(units.attojoules)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attojoules)
 
     @property
     def electronvolts(self) -> T:
-        return self.quantity.in_units_of(units.electronvolts)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.electronvolts)
 
     @property
     def exaelectronvolts(self) -> T:
-        return self.quantity.in_units_of(units.exaelectronvolts)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exaelectronvolts)
 
     @property
     def petaelectronvolts(self) -> T:
-        return self.quantity.in_units_of(units.petaelectronvolts)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petaelectronvolts)
 
     @property
     def teraelectronvolts(self) -> T:
-        return self.quantity.in_units_of(units.teraelectronvolts)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.teraelectronvolts)
 
     @property
     def gigaelectronvolts(self) -> T:
-        return self.quantity.in_units_of(units.gigaelectronvolts)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigaelectronvolts)
 
     @property
     def megaelectronvolts(self) -> T:
-        return self.quantity.in_units_of(units.megaelectronvolts)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megaelectronvolts)
 
     @property
     def kiloelectronvolts(self) -> T:
-        return self.quantity.in_units_of(units.kiloelectronvolts)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kiloelectronvolts)
 
     @property
     def millielectronvolts(self) -> T:
-        return self.quantity.in_units_of(units.millielectronvolts)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millielectronvolts)
 
     @property
     def microelectronvolts(self) -> T:
-        return self.quantity.in_units_of(units.microelectronvolts)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.microelectronvolts)
 
     @property
     def nanoelectronvolts(self) -> T:
-        return self.quantity.in_units_of(units.nanoelectronvolts)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanoelectronvolts)
 
     @property
     def picoelectronvolts(self) -> T:
-        return self.quantity.in_units_of(units.picoelectronvolts)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picoelectronvolts)
 
     @property
     def femtoelectronvolts(self) -> T:
-        return self.quantity.in_units_of(units.femtoelectronvolts)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtoelectronvolts)
 
     @property
     def attoelectronvolts(self) -> T:
-        return self.quantity.in_units_of(units.attoelectronvolts)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attoelectronvolts)
 
 
 
-class PowerAccessor[T](Accessor[T]):
+class PowerAccessor[T](QuantityAccessor[T]):
     dimension_name = 'power'
     
     @property
     def watts(self) -> T:
-        return self.quantity.in_units_of(units.watts)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.watts)
 
     @property
     def exawatts(self) -> T:
-        return self.quantity.in_units_of(units.exawatts)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exawatts)
 
     @property
     def petawatts(self) -> T:
-        return self.quantity.in_units_of(units.petawatts)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petawatts)
 
     @property
     def terawatts(self) -> T:
-        return self.quantity.in_units_of(units.terawatts)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.terawatts)
 
     @property
     def gigawatts(self) -> T:
-        return self.quantity.in_units_of(units.gigawatts)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigawatts)
 
     @property
     def megawatts(self) -> T:
-        return self.quantity.in_units_of(units.megawatts)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megawatts)
 
     @property
     def kilowatts(self) -> T:
-        return self.quantity.in_units_of(units.kilowatts)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilowatts)
 
     @property
     def milliwatts(self) -> T:
-        return self.quantity.in_units_of(units.milliwatts)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.milliwatts)
 
     @property
     def microwatts(self) -> T:
-        return self.quantity.in_units_of(units.microwatts)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.microwatts)
 
     @property
     def nanowatts(self) -> T:
-        return self.quantity.in_units_of(units.nanowatts)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanowatts)
 
     @property
     def picowatts(self) -> T:
-        return self.quantity.in_units_of(units.picowatts)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picowatts)
 
     @property
     def femtowatts(self) -> T:
-        return self.quantity.in_units_of(units.femtowatts)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtowatts)
 
     @property
     def attowatts(self) -> T:
-        return self.quantity.in_units_of(units.attowatts)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attowatts)
 
 
 
-class ChargeAccessor[T](Accessor[T]):
+class ChargeAccessor[T](QuantityAccessor[T]):
     dimension_name = 'charge'
     
     @property
     def coulombs(self) -> T:
-        return self.quantity.in_units_of(units.coulombs)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.coulombs)
 
     @property
     def exacoulombs(self) -> T:
-        return self.quantity.in_units_of(units.exacoulombs)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exacoulombs)
 
     @property
     def petacoulombs(self) -> T:
-        return self.quantity.in_units_of(units.petacoulombs)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petacoulombs)
 
     @property
     def teracoulombs(self) -> T:
-        return self.quantity.in_units_of(units.teracoulombs)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.teracoulombs)
 
     @property
     def gigacoulombs(self) -> T:
-        return self.quantity.in_units_of(units.gigacoulombs)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigacoulombs)
 
     @property
     def megacoulombs(self) -> T:
-        return self.quantity.in_units_of(units.megacoulombs)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megacoulombs)
 
     @property
     def kilocoulombs(self) -> T:
-        return self.quantity.in_units_of(units.kilocoulombs)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilocoulombs)
 
     @property
     def millicoulombs(self) -> T:
-        return self.quantity.in_units_of(units.millicoulombs)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millicoulombs)
 
     @property
     def microcoulombs(self) -> T:
-        return self.quantity.in_units_of(units.microcoulombs)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.microcoulombs)
 
     @property
     def nanocoulombs(self) -> T:
-        return self.quantity.in_units_of(units.nanocoulombs)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanocoulombs)
 
     @property
     def picocoulombs(self) -> T:
-        return self.quantity.in_units_of(units.picocoulombs)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picocoulombs)
 
     @property
     def femtocoulombs(self) -> T:
-        return self.quantity.in_units_of(units.femtocoulombs)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtocoulombs)
 
     @property
     def attocoulombs(self) -> T:
-        return self.quantity.in_units_of(units.attocoulombs)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attocoulombs)
 
 
 
-class PotentialAccessor[T](Accessor[T]):
+class PotentialAccessor[T](QuantityAccessor[T]):
     dimension_name = 'potential'
     
     @property
     def volts(self) -> T:
-        return self.quantity.in_units_of(units.volts)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.volts)
 
     @property
     def exavolts(self) -> T:
-        return self.quantity.in_units_of(units.exavolts)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exavolts)
 
     @property
     def petavolts(self) -> T:
-        return self.quantity.in_units_of(units.petavolts)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petavolts)
 
     @property
     def teravolts(self) -> T:
-        return self.quantity.in_units_of(units.teravolts)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.teravolts)
 
     @property
     def gigavolts(self) -> T:
-        return self.quantity.in_units_of(units.gigavolts)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigavolts)
 
     @property
     def megavolts(self) -> T:
-        return self.quantity.in_units_of(units.megavolts)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megavolts)
 
     @property
     def kilovolts(self) -> T:
-        return self.quantity.in_units_of(units.kilovolts)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilovolts)
 
     @property
     def millivolts(self) -> T:
-        return self.quantity.in_units_of(units.millivolts)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millivolts)
 
     @property
     def microvolts(self) -> T:
-        return self.quantity.in_units_of(units.microvolts)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.microvolts)
 
     @property
     def nanovolts(self) -> T:
-        return self.quantity.in_units_of(units.nanovolts)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanovolts)
 
     @property
     def picovolts(self) -> T:
-        return self.quantity.in_units_of(units.picovolts)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picovolts)
 
     @property
     def femtovolts(self) -> T:
-        return self.quantity.in_units_of(units.femtovolts)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtovolts)
 
     @property
     def attovolts(self) -> T:
-        return self.quantity.in_units_of(units.attovolts)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attovolts)
 
 
 
-class ResistanceAccessor[T](Accessor[T]):
+class ResistanceAccessor[T](QuantityAccessor[T]):
     dimension_name = 'resistance'
     
     @property
     def ohms(self) -> T:
-        return self.quantity.in_units_of(units.ohms)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.ohms)
 
     @property
     def exaohms(self) -> T:
-        return self.quantity.in_units_of(units.exaohms)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exaohms)
 
     @property
     def petaohms(self) -> T:
-        return self.quantity.in_units_of(units.petaohms)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petaohms)
 
     @property
     def teraohms(self) -> T:
-        return self.quantity.in_units_of(units.teraohms)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.teraohms)
 
     @property
     def gigaohms(self) -> T:
-        return self.quantity.in_units_of(units.gigaohms)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigaohms)
 
     @property
     def megaohms(self) -> T:
-        return self.quantity.in_units_of(units.megaohms)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megaohms)
 
     @property
     def kiloohms(self) -> T:
-        return self.quantity.in_units_of(units.kiloohms)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kiloohms)
 
     @property
     def milliohms(self) -> T:
-        return self.quantity.in_units_of(units.milliohms)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.milliohms)
 
     @property
     def microohms(self) -> T:
-        return self.quantity.in_units_of(units.microohms)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.microohms)
 
     @property
     def nanoohms(self) -> T:
-        return self.quantity.in_units_of(units.nanoohms)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanoohms)
 
     @property
     def picoohms(self) -> T:
-        return self.quantity.in_units_of(units.picoohms)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picoohms)
 
     @property
     def femtoohms(self) -> T:
-        return self.quantity.in_units_of(units.femtoohms)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtoohms)
 
     @property
     def attoohms(self) -> T:
-        return self.quantity.in_units_of(units.attoohms)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attoohms)
 
 
 
-class CapacitanceAccessor[T](Accessor[T]):
+class CapacitanceAccessor[T](QuantityAccessor[T]):
     dimension_name = 'capacitance'
     
     @property
     def farads(self) -> T:
-        return self.quantity.in_units_of(units.farads)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.farads)
 
     @property
     def exafarads(self) -> T:
-        return self.quantity.in_units_of(units.exafarads)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exafarads)
 
     @property
     def petafarads(self) -> T:
-        return self.quantity.in_units_of(units.petafarads)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petafarads)
 
     @property
     def terafarads(self) -> T:
-        return self.quantity.in_units_of(units.terafarads)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.terafarads)
 
     @property
     def gigafarads(self) -> T:
-        return self.quantity.in_units_of(units.gigafarads)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigafarads)
 
     @property
     def megafarads(self) -> T:
-        return self.quantity.in_units_of(units.megafarads)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megafarads)
 
     @property
     def kilofarads(self) -> T:
-        return self.quantity.in_units_of(units.kilofarads)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilofarads)
 
     @property
     def millifarads(self) -> T:
-        return self.quantity.in_units_of(units.millifarads)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millifarads)
 
     @property
     def microfarads(self) -> T:
-        return self.quantity.in_units_of(units.microfarads)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.microfarads)
 
     @property
     def nanofarads(self) -> T:
-        return self.quantity.in_units_of(units.nanofarads)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanofarads)
 
     @property
     def picofarads(self) -> T:
-        return self.quantity.in_units_of(units.picofarads)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picofarads)
 
     @property
     def femtofarads(self) -> T:
-        return self.quantity.in_units_of(units.femtofarads)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtofarads)
 
     @property
     def attofarads(self) -> T:
-        return self.quantity.in_units_of(units.attofarads)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attofarads)
 
 
 
-class ConductanceAccessor[T](Accessor[T]):
+class ConductanceAccessor[T](QuantityAccessor[T]):
     dimension_name = 'conductance'
     
     @property
     def siemens(self) -> T:
-        return self.quantity.in_units_of(units.siemens)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.siemens)
 
     @property
     def exasiemens(self) -> T:
-        return self.quantity.in_units_of(units.exasiemens)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exasiemens)
 
     @property
     def petasiemens(self) -> T:
-        return self.quantity.in_units_of(units.petasiemens)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petasiemens)
 
     @property
     def terasiemens(self) -> T:
-        return self.quantity.in_units_of(units.terasiemens)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.terasiemens)
 
     @property
     def gigasiemens(self) -> T:
-        return self.quantity.in_units_of(units.gigasiemens)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigasiemens)
 
     @property
     def megasiemens(self) -> T:
-        return self.quantity.in_units_of(units.megasiemens)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megasiemens)
 
     @property
     def kilosiemens(self) -> T:
-        return self.quantity.in_units_of(units.kilosiemens)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilosiemens)
 
     @property
     def millisiemens(self) -> T:
-        return self.quantity.in_units_of(units.millisiemens)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millisiemens)
 
     @property
     def microsiemens(self) -> T:
-        return self.quantity.in_units_of(units.microsiemens)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.microsiemens)
 
     @property
     def nanosiemens(self) -> T:
-        return self.quantity.in_units_of(units.nanosiemens)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanosiemens)
 
     @property
     def picosiemens(self) -> T:
-        return self.quantity.in_units_of(units.picosiemens)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picosiemens)
 
     @property
     def femtosiemens(self) -> T:
-        return self.quantity.in_units_of(units.femtosiemens)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtosiemens)
 
     @property
     def attosiemens(self) -> T:
-        return self.quantity.in_units_of(units.attosiemens)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attosiemens)
 
 
 
-class MagneticfluxAccessor[T](Accessor[T]):
+class MagneticfluxAccessor[T](QuantityAccessor[T]):
     dimension_name = 'magnetic_flux'
     
     @property
     def webers(self) -> T:
-        return self.quantity.in_units_of(units.webers)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.webers)
 
     @property
     def exawebers(self) -> T:
-        return self.quantity.in_units_of(units.exawebers)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exawebers)
 
     @property
     def petawebers(self) -> T:
-        return self.quantity.in_units_of(units.petawebers)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petawebers)
 
     @property
     def terawebers(self) -> T:
-        return self.quantity.in_units_of(units.terawebers)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.terawebers)
 
     @property
     def gigawebers(self) -> T:
-        return self.quantity.in_units_of(units.gigawebers)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigawebers)
 
     @property
     def megawebers(self) -> T:
-        return self.quantity.in_units_of(units.megawebers)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megawebers)
 
     @property
     def kilowebers(self) -> T:
-        return self.quantity.in_units_of(units.kilowebers)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilowebers)
 
     @property
     def milliwebers(self) -> T:
-        return self.quantity.in_units_of(units.milliwebers)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.milliwebers)
 
     @property
     def microwebers(self) -> T:
-        return self.quantity.in_units_of(units.microwebers)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.microwebers)
 
     @property
     def nanowebers(self) -> T:
-        return self.quantity.in_units_of(units.nanowebers)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanowebers)
 
     @property
     def picowebers(self) -> T:
-        return self.quantity.in_units_of(units.picowebers)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picowebers)
 
     @property
     def femtowebers(self) -> T:
-        return self.quantity.in_units_of(units.femtowebers)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtowebers)
 
     @property
     def attowebers(self) -> T:
-        return self.quantity.in_units_of(units.attowebers)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attowebers)
 
 
 
-class MagneticfluxdensityAccessor[T](Accessor[T]):
+class MagneticfluxdensityAccessor[T](QuantityAccessor[T]):
     dimension_name = 'magnetic_flux_density'
     
     @property
     def tesla(self) -> T:
-        return self.quantity.in_units_of(units.tesla)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.tesla)
 
     @property
     def exatesla(self) -> T:
-        return self.quantity.in_units_of(units.exatesla)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exatesla)
 
     @property
     def petatesla(self) -> T:
-        return self.quantity.in_units_of(units.petatesla)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petatesla)
 
     @property
     def teratesla(self) -> T:
-        return self.quantity.in_units_of(units.teratesla)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.teratesla)
 
     @property
     def gigatesla(self) -> T:
-        return self.quantity.in_units_of(units.gigatesla)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigatesla)
 
     @property
     def megatesla(self) -> T:
-        return self.quantity.in_units_of(units.megatesla)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megatesla)
 
     @property
     def kilotesla(self) -> T:
-        return self.quantity.in_units_of(units.kilotesla)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilotesla)
 
     @property
     def millitesla(self) -> T:
-        return self.quantity.in_units_of(units.millitesla)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millitesla)
 
     @property
     def microtesla(self) -> T:
-        return self.quantity.in_units_of(units.microtesla)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.microtesla)
 
     @property
     def nanotesla(self) -> T:
-        return self.quantity.in_units_of(units.nanotesla)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanotesla)
 
     @property
     def picotesla(self) -> T:
-        return self.quantity.in_units_of(units.picotesla)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picotesla)
 
     @property
     def femtotesla(self) -> T:
-        return self.quantity.in_units_of(units.femtotesla)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtotesla)
 
     @property
     def attotesla(self) -> T:
-        return self.quantity.in_units_of(units.attotesla)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attotesla)
 
 
 
-class InductanceAccessor[T](Accessor[T]):
+class InductanceAccessor[T](QuantityAccessor[T]):
     dimension_name = 'inductance'
     
     @property
     def henry(self) -> T:
-        return self.quantity.in_units_of(units.henry)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.henry)
 
     @property
     def exahenry(self) -> T:
-        return self.quantity.in_units_of(units.exahenry)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exahenry)
 
     @property
     def petahenry(self) -> T:
-        return self.quantity.in_units_of(units.petahenry)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petahenry)
 
     @property
     def terahenry(self) -> T:
-        return self.quantity.in_units_of(units.terahenry)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.terahenry)
 
     @property
     def gigahenry(self) -> T:
-        return self.quantity.in_units_of(units.gigahenry)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigahenry)
 
     @property
     def megahenry(self) -> T:
-        return self.quantity.in_units_of(units.megahenry)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megahenry)
 
     @property
     def kilohenry(self) -> T:
-        return self.quantity.in_units_of(units.kilohenry)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilohenry)
 
     @property
     def millihenry(self) -> T:
-        return self.quantity.in_units_of(units.millihenry)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millihenry)
 
     @property
     def microhenry(self) -> T:
-        return self.quantity.in_units_of(units.microhenry)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.microhenry)
 
     @property
     def nanohenry(self) -> T:
-        return self.quantity.in_units_of(units.nanohenry)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanohenry)
 
     @property
     def picohenry(self) -> T:
-        return self.quantity.in_units_of(units.picohenry)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picohenry)
 
     @property
     def femtohenry(self) -> T:
-        return self.quantity.in_units_of(units.femtohenry)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtohenry)
 
     @property
     def attohenry(self) -> T:
-        return self.quantity.in_units_of(units.attohenry)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attohenry)
 
 
 
-class TemperatureAccessor[T](Accessor[T]):
+class TemperatureAccessor[T](QuantityAccessor[T]):
     dimension_name = 'temperature'
     
     @property
     def kelvin(self) -> T:
-        return self.quantity.in_units_of(units.kelvin)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kelvin)
 
     @property
     def exakelvin(self) -> T:
-        return self.quantity.in_units_of(units.exakelvin)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exakelvin)
 
     @property
     def petakelvin(self) -> T:
-        return self.quantity.in_units_of(units.petakelvin)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petakelvin)
 
     @property
     def terakelvin(self) -> T:
-        return self.quantity.in_units_of(units.terakelvin)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.terakelvin)
 
     @property
     def gigakelvin(self) -> T:
-        return self.quantity.in_units_of(units.gigakelvin)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigakelvin)
 
     @property
     def megakelvin(self) -> T:
-        return self.quantity.in_units_of(units.megakelvin)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megakelvin)
 
     @property
     def kilokelvin(self) -> T:
-        return self.quantity.in_units_of(units.kilokelvin)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilokelvin)
 
     @property
     def millikelvin(self) -> T:
-        return self.quantity.in_units_of(units.millikelvin)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millikelvin)
 
     @property
     def microkelvin(self) -> T:
-        return self.quantity.in_units_of(units.microkelvin)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.microkelvin)
 
     @property
     def nanokelvin(self) -> T:
-        return self.quantity.in_units_of(units.nanokelvin)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanokelvin)
 
     @property
     def picokelvin(self) -> T:
-        return self.quantity.in_units_of(units.picokelvin)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picokelvin)
 
     @property
     def femtokelvin(self) -> T:
-        return self.quantity.in_units_of(units.femtokelvin)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtokelvin)
 
     @property
     def attokelvin(self) -> T:
-        return self.quantity.in_units_of(units.attokelvin)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attokelvin)
 
     @property
     def degrees_celsius(self) -> T:
-        return self.quantity.in_units_of(units.degrees_celsius)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.degrees_celsius)
 
 
 
-class DimensionlessAccessor[T](Accessor[T]):
+class DimensionlessAccessor[T](QuantityAccessor[T]):
     dimension_name = 'dimensionless'
     
     @property
     def none(self) -> T:
-        return self.quantity.in_units_of(units.none)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.none)
 
 
 
-class AngleAccessor[T](Accessor[T]):
+class AngleAccessor[T](QuantityAccessor[T]):
     dimension_name = 'angle'
     
     @property
     def degrees(self) -> T:
-        return self.quantity.in_units_of(units.degrees)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.degrees)
 
     @property
     def radians(self) -> T:
-        return self.quantity.in_units_of(units.radians)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.radians)
 
 
 
-class SolidangleAccessor[T](Accessor[T]):
+class SolidangleAccessor[T](QuantityAccessor[T]):
     dimension_name = 'solid_angle'
     
     @property
     def stradians(self) -> T:
-        return self.quantity.in_units_of(units.stradians)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.stradians)
 
 
 
-class AmountAccessor[T](Accessor[T]):
+class AmountAccessor[T](QuantityAccessor[T]):
     dimension_name = 'amount'
     
     @property
     def moles(self) -> T:
-        return self.quantity.in_units_of(units.moles)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.moles)
 
     @property
     def millimoles(self) -> T:
-        return self.quantity.in_units_of(units.millimoles)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millimoles)
 
     @property
     def micromoles(self) -> T:
-        return self.quantity.in_units_of(units.micromoles)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micromoles)
 
     @property
     def nanomoles(self) -> T:
-        return self.quantity.in_units_of(units.nanomoles)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanomoles)
 
     @property
     def picomoles(self) -> T:
-        return self.quantity.in_units_of(units.picomoles)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picomoles)
 
     @property
     def femtomoles(self) -> T:
-        return self.quantity.in_units_of(units.femtomoles)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtomoles)
 
     @property
     def attomoles(self) -> T:
-        return self.quantity.in_units_of(units.attomoles)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attomoles)
 
 
 
-class ConcentrationAccessor[T](Accessor[T]):
+class ConcentrationAccessor[T](QuantityAccessor[T]):
     dimension_name = 'concentration'
     
     @property
     def moles_per_cubic_meter(self) -> T:
-        return self.quantity.in_units_of(units.moles_per_cubic_meter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.moles_per_cubic_meter)
 
     @property
     def millimoles_per_cubic_meter(self) -> T:
-        return self.quantity.in_units_of(units.millimoles_per_cubic_meter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millimoles_per_cubic_meter)
 
     @property
     def micromoles_per_cubic_meter(self) -> T:
-        return self.quantity.in_units_of(units.micromoles_per_cubic_meter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micromoles_per_cubic_meter)
 
     @property
     def nanomoles_per_cubic_meter(self) -> T:
-        return self.quantity.in_units_of(units.nanomoles_per_cubic_meter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanomoles_per_cubic_meter)
 
     @property
     def picomoles_per_cubic_meter(self) -> T:
-        return self.quantity.in_units_of(units.picomoles_per_cubic_meter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picomoles_per_cubic_meter)
 
     @property
     def femtomoles_per_cubic_meter(self) -> T:
-        return self.quantity.in_units_of(units.femtomoles_per_cubic_meter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtomoles_per_cubic_meter)
 
     @property
     def attomoles_per_cubic_meter(self) -> T:
-        return self.quantity.in_units_of(units.attomoles_per_cubic_meter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attomoles_per_cubic_meter)
 
     @property
     def moles_per_cubic_exameter(self) -> T:
-        return self.quantity.in_units_of(units.moles_per_cubic_exameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.moles_per_cubic_exameter)
 
     @property
     def millimoles_per_cubic_exameter(self) -> T:
-        return self.quantity.in_units_of(units.millimoles_per_cubic_exameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millimoles_per_cubic_exameter)
 
     @property
     def micromoles_per_cubic_exameter(self) -> T:
-        return self.quantity.in_units_of(units.micromoles_per_cubic_exameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micromoles_per_cubic_exameter)
 
     @property
     def nanomoles_per_cubic_exameter(self) -> T:
-        return self.quantity.in_units_of(units.nanomoles_per_cubic_exameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanomoles_per_cubic_exameter)
 
     @property
     def picomoles_per_cubic_exameter(self) -> T:
-        return self.quantity.in_units_of(units.picomoles_per_cubic_exameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picomoles_per_cubic_exameter)
 
     @property
     def femtomoles_per_cubic_exameter(self) -> T:
-        return self.quantity.in_units_of(units.femtomoles_per_cubic_exameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtomoles_per_cubic_exameter)
 
     @property
     def attomoles_per_cubic_exameter(self) -> T:
-        return self.quantity.in_units_of(units.attomoles_per_cubic_exameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attomoles_per_cubic_exameter)
 
     @property
     def moles_per_cubic_petameter(self) -> T:
-        return self.quantity.in_units_of(units.moles_per_cubic_petameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.moles_per_cubic_petameter)
 
     @property
     def millimoles_per_cubic_petameter(self) -> T:
-        return self.quantity.in_units_of(units.millimoles_per_cubic_petameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millimoles_per_cubic_petameter)
 
     @property
     def micromoles_per_cubic_petameter(self) -> T:
-        return self.quantity.in_units_of(units.micromoles_per_cubic_petameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micromoles_per_cubic_petameter)
 
     @property
     def nanomoles_per_cubic_petameter(self) -> T:
-        return self.quantity.in_units_of(units.nanomoles_per_cubic_petameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanomoles_per_cubic_petameter)
 
     @property
     def picomoles_per_cubic_petameter(self) -> T:
-        return self.quantity.in_units_of(units.picomoles_per_cubic_petameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picomoles_per_cubic_petameter)
 
     @property
     def femtomoles_per_cubic_petameter(self) -> T:
-        return self.quantity.in_units_of(units.femtomoles_per_cubic_petameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtomoles_per_cubic_petameter)
 
     @property
     def attomoles_per_cubic_petameter(self) -> T:
-        return self.quantity.in_units_of(units.attomoles_per_cubic_petameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attomoles_per_cubic_petameter)
 
     @property
     def moles_per_cubic_terameter(self) -> T:
-        return self.quantity.in_units_of(units.moles_per_cubic_terameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.moles_per_cubic_terameter)
 
     @property
     def millimoles_per_cubic_terameter(self) -> T:
-        return self.quantity.in_units_of(units.millimoles_per_cubic_terameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millimoles_per_cubic_terameter)
 
     @property
     def micromoles_per_cubic_terameter(self) -> T:
-        return self.quantity.in_units_of(units.micromoles_per_cubic_terameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micromoles_per_cubic_terameter)
 
     @property
     def nanomoles_per_cubic_terameter(self) -> T:
-        return self.quantity.in_units_of(units.nanomoles_per_cubic_terameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanomoles_per_cubic_terameter)
 
     @property
     def picomoles_per_cubic_terameter(self) -> T:
-        return self.quantity.in_units_of(units.picomoles_per_cubic_terameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picomoles_per_cubic_terameter)
 
     @property
     def femtomoles_per_cubic_terameter(self) -> T:
-        return self.quantity.in_units_of(units.femtomoles_per_cubic_terameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtomoles_per_cubic_terameter)
 
     @property
     def attomoles_per_cubic_terameter(self) -> T:
-        return self.quantity.in_units_of(units.attomoles_per_cubic_terameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attomoles_per_cubic_terameter)
 
     @property
     def moles_per_cubic_gigameter(self) -> T:
-        return self.quantity.in_units_of(units.moles_per_cubic_gigameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.moles_per_cubic_gigameter)
 
     @property
     def millimoles_per_cubic_gigameter(self) -> T:
-        return self.quantity.in_units_of(units.millimoles_per_cubic_gigameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millimoles_per_cubic_gigameter)
 
     @property
     def micromoles_per_cubic_gigameter(self) -> T:
-        return self.quantity.in_units_of(units.micromoles_per_cubic_gigameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micromoles_per_cubic_gigameter)
 
     @property
     def nanomoles_per_cubic_gigameter(self) -> T:
-        return self.quantity.in_units_of(units.nanomoles_per_cubic_gigameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanomoles_per_cubic_gigameter)
 
     @property
     def picomoles_per_cubic_gigameter(self) -> T:
-        return self.quantity.in_units_of(units.picomoles_per_cubic_gigameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picomoles_per_cubic_gigameter)
 
     @property
     def femtomoles_per_cubic_gigameter(self) -> T:
-        return self.quantity.in_units_of(units.femtomoles_per_cubic_gigameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtomoles_per_cubic_gigameter)
 
     @property
     def attomoles_per_cubic_gigameter(self) -> T:
-        return self.quantity.in_units_of(units.attomoles_per_cubic_gigameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attomoles_per_cubic_gigameter)
 
     @property
     def moles_per_cubic_megameter(self) -> T:
-        return self.quantity.in_units_of(units.moles_per_cubic_megameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.moles_per_cubic_megameter)
 
     @property
     def millimoles_per_cubic_megameter(self) -> T:
-        return self.quantity.in_units_of(units.millimoles_per_cubic_megameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millimoles_per_cubic_megameter)
 
     @property
     def micromoles_per_cubic_megameter(self) -> T:
-        return self.quantity.in_units_of(units.micromoles_per_cubic_megameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micromoles_per_cubic_megameter)
 
     @property
     def nanomoles_per_cubic_megameter(self) -> T:
-        return self.quantity.in_units_of(units.nanomoles_per_cubic_megameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanomoles_per_cubic_megameter)
 
     @property
     def picomoles_per_cubic_megameter(self) -> T:
-        return self.quantity.in_units_of(units.picomoles_per_cubic_megameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picomoles_per_cubic_megameter)
 
     @property
     def femtomoles_per_cubic_megameter(self) -> T:
-        return self.quantity.in_units_of(units.femtomoles_per_cubic_megameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtomoles_per_cubic_megameter)
 
     @property
     def attomoles_per_cubic_megameter(self) -> T:
-        return self.quantity.in_units_of(units.attomoles_per_cubic_megameter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attomoles_per_cubic_megameter)
 
     @property
     def moles_per_cubic_kilometer(self) -> T:
-        return self.quantity.in_units_of(units.moles_per_cubic_kilometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.moles_per_cubic_kilometer)
 
     @property
     def millimoles_per_cubic_kilometer(self) -> T:
-        return self.quantity.in_units_of(units.millimoles_per_cubic_kilometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millimoles_per_cubic_kilometer)
 
     @property
     def micromoles_per_cubic_kilometer(self) -> T:
-        return self.quantity.in_units_of(units.micromoles_per_cubic_kilometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micromoles_per_cubic_kilometer)
 
     @property
     def nanomoles_per_cubic_kilometer(self) -> T:
-        return self.quantity.in_units_of(units.nanomoles_per_cubic_kilometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanomoles_per_cubic_kilometer)
 
     @property
     def picomoles_per_cubic_kilometer(self) -> T:
-        return self.quantity.in_units_of(units.picomoles_per_cubic_kilometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picomoles_per_cubic_kilometer)
 
     @property
     def femtomoles_per_cubic_kilometer(self) -> T:
-        return self.quantity.in_units_of(units.femtomoles_per_cubic_kilometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtomoles_per_cubic_kilometer)
 
     @property
     def attomoles_per_cubic_kilometer(self) -> T:
-        return self.quantity.in_units_of(units.attomoles_per_cubic_kilometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attomoles_per_cubic_kilometer)
 
     @property
     def moles_per_cubic_millimeter(self) -> T:
-        return self.quantity.in_units_of(units.moles_per_cubic_millimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.moles_per_cubic_millimeter)
 
     @property
     def millimoles_per_cubic_millimeter(self) -> T:
-        return self.quantity.in_units_of(units.millimoles_per_cubic_millimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millimoles_per_cubic_millimeter)
 
     @property
     def micromoles_per_cubic_millimeter(self) -> T:
-        return self.quantity.in_units_of(units.micromoles_per_cubic_millimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micromoles_per_cubic_millimeter)
 
     @property
     def nanomoles_per_cubic_millimeter(self) -> T:
-        return self.quantity.in_units_of(units.nanomoles_per_cubic_millimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanomoles_per_cubic_millimeter)
 
     @property
     def picomoles_per_cubic_millimeter(self) -> T:
-        return self.quantity.in_units_of(units.picomoles_per_cubic_millimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picomoles_per_cubic_millimeter)
 
     @property
     def femtomoles_per_cubic_millimeter(self) -> T:
-        return self.quantity.in_units_of(units.femtomoles_per_cubic_millimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtomoles_per_cubic_millimeter)
 
     @property
     def attomoles_per_cubic_millimeter(self) -> T:
-        return self.quantity.in_units_of(units.attomoles_per_cubic_millimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attomoles_per_cubic_millimeter)
 
     @property
     def moles_per_cubic_micrometer(self) -> T:
-        return self.quantity.in_units_of(units.moles_per_cubic_micrometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.moles_per_cubic_micrometer)
 
     @property
     def millimoles_per_cubic_micrometer(self) -> T:
-        return self.quantity.in_units_of(units.millimoles_per_cubic_micrometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millimoles_per_cubic_micrometer)
 
     @property
     def micromoles_per_cubic_micrometer(self) -> T:
-        return self.quantity.in_units_of(units.micromoles_per_cubic_micrometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micromoles_per_cubic_micrometer)
 
     @property
     def nanomoles_per_cubic_micrometer(self) -> T:
-        return self.quantity.in_units_of(units.nanomoles_per_cubic_micrometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanomoles_per_cubic_micrometer)
 
     @property
     def picomoles_per_cubic_micrometer(self) -> T:
-        return self.quantity.in_units_of(units.picomoles_per_cubic_micrometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picomoles_per_cubic_micrometer)
 
     @property
     def femtomoles_per_cubic_micrometer(self) -> T:
-        return self.quantity.in_units_of(units.femtomoles_per_cubic_micrometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtomoles_per_cubic_micrometer)
 
     @property
     def attomoles_per_cubic_micrometer(self) -> T:
-        return self.quantity.in_units_of(units.attomoles_per_cubic_micrometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attomoles_per_cubic_micrometer)
 
     @property
     def moles_per_cubic_nanometer(self) -> T:
-        return self.quantity.in_units_of(units.moles_per_cubic_nanometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.moles_per_cubic_nanometer)
 
     @property
     def millimoles_per_cubic_nanometer(self) -> T:
-        return self.quantity.in_units_of(units.millimoles_per_cubic_nanometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millimoles_per_cubic_nanometer)
 
     @property
     def micromoles_per_cubic_nanometer(self) -> T:
-        return self.quantity.in_units_of(units.micromoles_per_cubic_nanometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micromoles_per_cubic_nanometer)
 
     @property
     def nanomoles_per_cubic_nanometer(self) -> T:
-        return self.quantity.in_units_of(units.nanomoles_per_cubic_nanometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanomoles_per_cubic_nanometer)
 
     @property
     def picomoles_per_cubic_nanometer(self) -> T:
-        return self.quantity.in_units_of(units.picomoles_per_cubic_nanometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picomoles_per_cubic_nanometer)
 
     @property
     def femtomoles_per_cubic_nanometer(self) -> T:
-        return self.quantity.in_units_of(units.femtomoles_per_cubic_nanometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtomoles_per_cubic_nanometer)
 
     @property
     def attomoles_per_cubic_nanometer(self) -> T:
-        return self.quantity.in_units_of(units.attomoles_per_cubic_nanometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attomoles_per_cubic_nanometer)
 
     @property
     def moles_per_cubic_picometer(self) -> T:
-        return self.quantity.in_units_of(units.moles_per_cubic_picometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.moles_per_cubic_picometer)
 
     @property
     def millimoles_per_cubic_picometer(self) -> T:
-        return self.quantity.in_units_of(units.millimoles_per_cubic_picometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millimoles_per_cubic_picometer)
 
     @property
     def micromoles_per_cubic_picometer(self) -> T:
-        return self.quantity.in_units_of(units.micromoles_per_cubic_picometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micromoles_per_cubic_picometer)
 
     @property
     def nanomoles_per_cubic_picometer(self) -> T:
-        return self.quantity.in_units_of(units.nanomoles_per_cubic_picometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanomoles_per_cubic_picometer)
 
     @property
     def picomoles_per_cubic_picometer(self) -> T:
-        return self.quantity.in_units_of(units.picomoles_per_cubic_picometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picomoles_per_cubic_picometer)
 
     @property
     def femtomoles_per_cubic_picometer(self) -> T:
-        return self.quantity.in_units_of(units.femtomoles_per_cubic_picometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtomoles_per_cubic_picometer)
 
     @property
     def attomoles_per_cubic_picometer(self) -> T:
-        return self.quantity.in_units_of(units.attomoles_per_cubic_picometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attomoles_per_cubic_picometer)
 
     @property
     def moles_per_cubic_femtometer(self) -> T:
-        return self.quantity.in_units_of(units.moles_per_cubic_femtometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.moles_per_cubic_femtometer)
 
     @property
     def millimoles_per_cubic_femtometer(self) -> T:
-        return self.quantity.in_units_of(units.millimoles_per_cubic_femtometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millimoles_per_cubic_femtometer)
 
     @property
     def micromoles_per_cubic_femtometer(self) -> T:
-        return self.quantity.in_units_of(units.micromoles_per_cubic_femtometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micromoles_per_cubic_femtometer)
 
     @property
     def nanomoles_per_cubic_femtometer(self) -> T:
-        return self.quantity.in_units_of(units.nanomoles_per_cubic_femtometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanomoles_per_cubic_femtometer)
 
     @property
     def picomoles_per_cubic_femtometer(self) -> T:
-        return self.quantity.in_units_of(units.picomoles_per_cubic_femtometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picomoles_per_cubic_femtometer)
 
     @property
     def femtomoles_per_cubic_femtometer(self) -> T:
-        return self.quantity.in_units_of(units.femtomoles_per_cubic_femtometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtomoles_per_cubic_femtometer)
 
     @property
     def attomoles_per_cubic_femtometer(self) -> T:
-        return self.quantity.in_units_of(units.attomoles_per_cubic_femtometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attomoles_per_cubic_femtometer)
 
     @property
     def moles_per_cubic_attometer(self) -> T:
-        return self.quantity.in_units_of(units.moles_per_cubic_attometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.moles_per_cubic_attometer)
 
     @property
     def millimoles_per_cubic_attometer(self) -> T:
-        return self.quantity.in_units_of(units.millimoles_per_cubic_attometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millimoles_per_cubic_attometer)
 
     @property
     def micromoles_per_cubic_attometer(self) -> T:
-        return self.quantity.in_units_of(units.micromoles_per_cubic_attometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micromoles_per_cubic_attometer)
 
     @property
     def nanomoles_per_cubic_attometer(self) -> T:
-        return self.quantity.in_units_of(units.nanomoles_per_cubic_attometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanomoles_per_cubic_attometer)
 
     @property
     def picomoles_per_cubic_attometer(self) -> T:
-        return self.quantity.in_units_of(units.picomoles_per_cubic_attometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picomoles_per_cubic_attometer)
 
     @property
     def femtomoles_per_cubic_attometer(self) -> T:
-        return self.quantity.in_units_of(units.femtomoles_per_cubic_attometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtomoles_per_cubic_attometer)
 
     @property
     def attomoles_per_cubic_attometer(self) -> T:
-        return self.quantity.in_units_of(units.attomoles_per_cubic_attometer)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attomoles_per_cubic_attometer)
 
     @property
     def moles_per_cubic_decimeter(self) -> T:
-        return self.quantity.in_units_of(units.moles_per_cubic_decimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.moles_per_cubic_decimeter)
 
     @property
     def millimoles_per_cubic_decimeter(self) -> T:
-        return self.quantity.in_units_of(units.millimoles_per_cubic_decimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millimoles_per_cubic_decimeter)
 
     @property
     def micromoles_per_cubic_decimeter(self) -> T:
-        return self.quantity.in_units_of(units.micromoles_per_cubic_decimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micromoles_per_cubic_decimeter)
 
     @property
     def nanomoles_per_cubic_decimeter(self) -> T:
-        return self.quantity.in_units_of(units.nanomoles_per_cubic_decimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanomoles_per_cubic_decimeter)
 
     @property
     def picomoles_per_cubic_decimeter(self) -> T:
-        return self.quantity.in_units_of(units.picomoles_per_cubic_decimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picomoles_per_cubic_decimeter)
 
     @property
     def femtomoles_per_cubic_decimeter(self) -> T:
-        return self.quantity.in_units_of(units.femtomoles_per_cubic_decimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtomoles_per_cubic_decimeter)
 
     @property
     def attomoles_per_cubic_decimeter(self) -> T:
-        return self.quantity.in_units_of(units.attomoles_per_cubic_decimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attomoles_per_cubic_decimeter)
 
     @property
     def moles_per_cubic_centimeter(self) -> T:
-        return self.quantity.in_units_of(units.moles_per_cubic_centimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.moles_per_cubic_centimeter)
 
     @property
     def millimoles_per_cubic_centimeter(self) -> T:
-        return self.quantity.in_units_of(units.millimoles_per_cubic_centimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millimoles_per_cubic_centimeter)
 
     @property
     def micromoles_per_cubic_centimeter(self) -> T:
-        return self.quantity.in_units_of(units.micromoles_per_cubic_centimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micromoles_per_cubic_centimeter)
 
     @property
     def nanomoles_per_cubic_centimeter(self) -> T:
-        return self.quantity.in_units_of(units.nanomoles_per_cubic_centimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanomoles_per_cubic_centimeter)
 
     @property
     def picomoles_per_cubic_centimeter(self) -> T:
-        return self.quantity.in_units_of(units.picomoles_per_cubic_centimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picomoles_per_cubic_centimeter)
 
     @property
     def femtomoles_per_cubic_centimeter(self) -> T:
-        return self.quantity.in_units_of(units.femtomoles_per_cubic_centimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtomoles_per_cubic_centimeter)
 
     @property
     def attomoles_per_cubic_centimeter(self) -> T:
-        return self.quantity.in_units_of(units.attomoles_per_cubic_centimeter)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attomoles_per_cubic_centimeter)
 
     @property
     def moles_per_cubic_angstrom(self) -> T:
-        return self.quantity.in_units_of(units.moles_per_cubic_angstrom)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.moles_per_cubic_angstrom)
 
     @property
     def millimoles_per_cubic_angstrom(self) -> T:
-        return self.quantity.in_units_of(units.millimoles_per_cubic_angstrom)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millimoles_per_cubic_angstrom)
 
     @property
     def micromoles_per_cubic_angstrom(self) -> T:
-        return self.quantity.in_units_of(units.micromoles_per_cubic_angstrom)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micromoles_per_cubic_angstrom)
 
     @property
     def nanomoles_per_cubic_angstrom(self) -> T:
-        return self.quantity.in_units_of(units.nanomoles_per_cubic_angstrom)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanomoles_per_cubic_angstrom)
 
     @property
     def picomoles_per_cubic_angstrom(self) -> T:
-        return self.quantity.in_units_of(units.picomoles_per_cubic_angstrom)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picomoles_per_cubic_angstrom)
 
     @property
     def femtomoles_per_cubic_angstrom(self) -> T:
-        return self.quantity.in_units_of(units.femtomoles_per_cubic_angstrom)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtomoles_per_cubic_angstrom)
 
     @property
     def attomoles_per_cubic_angstrom(self) -> T:
-        return self.quantity.in_units_of(units.attomoles_per_cubic_angstrom)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attomoles_per_cubic_angstrom)
 
     @property
     def moles_per_cubic_mile(self) -> T:
-        return self.quantity.in_units_of(units.moles_per_cubic_mile)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.moles_per_cubic_mile)
 
     @property
     def millimoles_per_cubic_mile(self) -> T:
-        return self.quantity.in_units_of(units.millimoles_per_cubic_mile)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millimoles_per_cubic_mile)
 
     @property
     def micromoles_per_cubic_mile(self) -> T:
-        return self.quantity.in_units_of(units.micromoles_per_cubic_mile)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micromoles_per_cubic_mile)
 
     @property
     def nanomoles_per_cubic_mile(self) -> T:
-        return self.quantity.in_units_of(units.nanomoles_per_cubic_mile)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanomoles_per_cubic_mile)
 
     @property
     def picomoles_per_cubic_mile(self) -> T:
-        return self.quantity.in_units_of(units.picomoles_per_cubic_mile)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picomoles_per_cubic_mile)
 
     @property
     def femtomoles_per_cubic_mile(self) -> T:
-        return self.quantity.in_units_of(units.femtomoles_per_cubic_mile)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtomoles_per_cubic_mile)
 
     @property
     def attomoles_per_cubic_mile(self) -> T:
-        return self.quantity.in_units_of(units.attomoles_per_cubic_mile)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attomoles_per_cubic_mile)
 
     @property
     def moles_per_cubic_yard(self) -> T:
-        return self.quantity.in_units_of(units.moles_per_cubic_yard)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.moles_per_cubic_yard)
 
     @property
     def millimoles_per_cubic_yard(self) -> T:
-        return self.quantity.in_units_of(units.millimoles_per_cubic_yard)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millimoles_per_cubic_yard)
 
     @property
     def micromoles_per_cubic_yard(self) -> T:
-        return self.quantity.in_units_of(units.micromoles_per_cubic_yard)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micromoles_per_cubic_yard)
 
     @property
     def nanomoles_per_cubic_yard(self) -> T:
-        return self.quantity.in_units_of(units.nanomoles_per_cubic_yard)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanomoles_per_cubic_yard)
 
     @property
     def picomoles_per_cubic_yard(self) -> T:
-        return self.quantity.in_units_of(units.picomoles_per_cubic_yard)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picomoles_per_cubic_yard)
 
     @property
     def femtomoles_per_cubic_yard(self) -> T:
-        return self.quantity.in_units_of(units.femtomoles_per_cubic_yard)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtomoles_per_cubic_yard)
 
     @property
     def attomoles_per_cubic_yard(self) -> T:
-        return self.quantity.in_units_of(units.attomoles_per_cubic_yard)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attomoles_per_cubic_yard)
 
     @property
     def moles_per_cubic_foot(self) -> T:
-        return self.quantity.in_units_of(units.moles_per_cubic_foot)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.moles_per_cubic_foot)
 
     @property
     def millimoles_per_cubic_foot(self) -> T:
-        return self.quantity.in_units_of(units.millimoles_per_cubic_foot)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millimoles_per_cubic_foot)
 
     @property
     def micromoles_per_cubic_foot(self) -> T:
-        return self.quantity.in_units_of(units.micromoles_per_cubic_foot)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micromoles_per_cubic_foot)
 
     @property
     def nanomoles_per_cubic_foot(self) -> T:
-        return self.quantity.in_units_of(units.nanomoles_per_cubic_foot)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanomoles_per_cubic_foot)
 
     @property
     def picomoles_per_cubic_foot(self) -> T:
-        return self.quantity.in_units_of(units.picomoles_per_cubic_foot)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picomoles_per_cubic_foot)
 
     @property
     def femtomoles_per_cubic_foot(self) -> T:
-        return self.quantity.in_units_of(units.femtomoles_per_cubic_foot)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtomoles_per_cubic_foot)
 
     @property
     def attomoles_per_cubic_foot(self) -> T:
-        return self.quantity.in_units_of(units.attomoles_per_cubic_foot)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attomoles_per_cubic_foot)
 
     @property
     def moles_per_cubic_inch(self) -> T:
-        return self.quantity.in_units_of(units.moles_per_cubic_inch)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.moles_per_cubic_inch)
 
     @property
     def millimoles_per_cubic_inch(self) -> T:
-        return self.quantity.in_units_of(units.millimoles_per_cubic_inch)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millimoles_per_cubic_inch)
 
     @property
     def micromoles_per_cubic_inch(self) -> T:
-        return self.quantity.in_units_of(units.micromoles_per_cubic_inch)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micromoles_per_cubic_inch)
 
     @property
     def nanomoles_per_cubic_inch(self) -> T:
-        return self.quantity.in_units_of(units.nanomoles_per_cubic_inch)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanomoles_per_cubic_inch)
 
     @property
     def picomoles_per_cubic_inch(self) -> T:
-        return self.quantity.in_units_of(units.picomoles_per_cubic_inch)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picomoles_per_cubic_inch)
 
     @property
     def femtomoles_per_cubic_inch(self) -> T:
-        return self.quantity.in_units_of(units.femtomoles_per_cubic_inch)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtomoles_per_cubic_inch)
 
     @property
     def attomoles_per_cubic_inch(self) -> T:
-        return self.quantity.in_units_of(units.attomoles_per_cubic_inch)
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attomoles_per_cubic_inch)
 
 
