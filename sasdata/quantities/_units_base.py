@@ -264,6 +264,6 @@ class GreedyAbsDimensionUnitFormatProcessor(UnitFormatProcessor):
 
 class UnitGroup:
     """ A group of units that all have the same dimensionality """
-    def __init__(self, name: str, units: list[Unit]):
+    def __init__(self, name: str, units: list[NamedUnit]):
         self.name = name
         self.units = sorted(units, key=lambda unit: unit.scale)
