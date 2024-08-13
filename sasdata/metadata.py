@@ -9,42 +9,41 @@ class Detector:
     """
 
     def __init__(self, target_object):
-        self.target_object = target_object
 
         # Name of the instrument [string]
-        self.name = StringAccessor(self.target_object, "detector.name")
+        self.name = StringAccessor(target_object, "detector.name")
 
         # Sample to detector distance [float] [mm]
-        self.distance = LengthAccessor[float](self.target_object,
+        self.distance = LengthAccessor[float](target_object,
                                               "detector.distance",
                                               "detector.distance.units",
                                               default_unit=units.millimeters)
 
         # Offset of this detector position in X, Y,
         # (and Z if necessary) [Vector] [mm]
-        self.offset = LengthAccessor[ArrayLike](self.target_object,
+        self.offset = LengthAccessor[ArrayLike](target_object,
                                                 "detector.offset",
                                                 "detector.offset.units",
                                                 default_units=units.millimeters)
 
-        self.orientation = AngleAccessor[ArrayLike](self.target_object,
+        self.orientation = AngleAccessor[ArrayLike](target_object,
                                                     "detector.orientation",
                                                     "detector.orientation.units",
                                                     default_units=units.degrees)
 
-        self.beam_center = LengthAccessor[ArrayLike](self.target_object,
+        self.beam_center = LengthAccessor[ArrayLike](target_object,
                                                      "detector.beam_center",
                                                      "detector.beam_center.units",
                                                      default_units=units.millimeters)
 
         # Pixel size in X, Y, (and Z if necessary) [Vector] [mm]
-        self.pixel_size = LengthAccessor[ArrayLike](self.target_object,
+        self.pixel_size = LengthAccessor[ArrayLike](target_object,
                                                     "detector.pixel_size",
                                                     "detector.pixel_size.units",
                                                     default_units=units.millimeters)
 
         # Slit length of the instrument for this detector.[float] [mm]
-        self.slit_length = LengthAccessor[float](self.target_object,
+        self.slit_length = LengthAccessor[float](target_object,
                                                  "detector.slit_length",
                                                  "detector.slit_length.units",
                                                  default_units=units.millimeters)
@@ -63,37 +62,34 @@ class Detector:
 class Aperture:
 
     def __init__(self, target_object):
-        self.target_object = target_object
 
         # Name
-        self.name = StringAccessor(self.target_object, "aperture.name")
+        self.name = StringAccessor(target_object, "aperture.name")
 
         # Type
-        self.type = StringAccessor(self.target_object, "aperture.type")
+        self.type = StringAccessor(target_object, "aperture.type")
 
         # Size name - TODO: What is the name of a size
-        self.size_name = StringAccessor(self.target_object, "aperture.size_name")
+        self.size_name = StringAccessor(target_object, "aperture.size_name")
 
         # Aperture size [Vector] # TODO: Wat!?!
-        self.size = QuantityAccessor(self.target_object,
+        self.size = QuantityAccessor[ArrayLike](target_object,
                                 "aperture.size",
                                 "aperture.size.units",
                                 default_unit=units.millimeters)
 
         # Aperture distance [float]
-        self.distance = QuantityAccessor(self.target_object,
+        self.distance = QuantityAccessor[float](self.target_object,
                                     "apature.distance",
                                     "apature.distance.units",
                                     default_unit=units.millimeters)
 
 
     def summary(self):
-        return (f"Aperture:"
-                f"  Name: {self.name.value}"
-                f"  Aperture size: {self.value}\n")
-            _str += "   Aperture_dist:%s [%s]\n" % \
-                (str(item.distance), str(item.distance_unit))
-
+        return (f"Aperture:\n"
+                f"  Name: {self.name.value}\n"
+                f"  Aperture size: {self.size.value}\n"
+                f"  Aperture distance: {self.distance.value}")
 
 class Collimation:
     """
@@ -103,13 +99,16 @@ class Collimation:
     def __init__(self, target_object):
 
         # Name
-        name = None
+        self.name = StringAccessor(target_object, "collimation.name")
         # Length [float] [mm]
-        length = None
-        length_unit = 'mm'
-        # Aperture
-        aperture = None
+        self.length = QuantityAccessor[float](target_object,
+                                              "collimation.length",
+                                              "collimation.length.units",
+                                              default_units=units.millimeters)
 
+
+        # Todo - how do we handle this
+        self.collimator = Collimation(target_object)
 
     def __str__(self):
         _str = "Collimation:\n"
