@@ -66,54 +66,56 @@ class Aperture:
         self.target_object = target_object
 
         # Name
-        name = StringAccessor(self.target_object, "aperture.name")
+        self.name = StringAccessor(self.target_object, "aperture.name")
 
         # Type
-        type = StringAccessor(self.target_object, "aperture.type")
+        self.type = StringAccessor(self.target_object, "aperture.type")
 
         # Size name - TODO: What is the name of a size
-        size_name = StringAccessor(self.target_object, "aperture.size_name")
+        self.size_name = StringAccessor(self.target_object, "aperture.size_name")
 
         # Aperture size [Vector] # TODO: Wat!?!
-        size = QuantityAccessor(self.target_object,
+        self.size = QuantityAccessor(self.target_object,
                                 "aperture.size",
-                                "aperture.size",
+                                "aperture.size.units",
                                 default_unit=units.millimeters)
-        size = None
-        size_unit = 'mm'
 
         # Aperture distance [float]
-        distance = None
-        distance_unit = 'mm'
+        self.distance = QuantityAccessor(self.target_object,
+                                    "apature.distance",
+                                    "apature.distance.units",
+                                    default_unit=units.millimeters)
+
 
     def summary(self):
-        pass
+        return (f"Aperture:"
+                f"  Name: {self.name.value}"
+                f"  Aperture size: {self.value}\n")
+            _str += "   Aperture_dist:%s [%s]\n" % \
+                (str(item.distance), str(item.distance_unit))
+
 
 class Collimation:
     """
     Class to hold collimation information
     """
-    # Name
-    name = None
-    # Length [float] [mm]
-    length = None
-    length_unit = 'mm'
-    # Aperture
-    aperture = None
 
-    def __init__(self):
-        self.aperture = []
+    def __init__(self, target_object):
+
+        # Name
+        name = None
+        # Length [float] [mm]
+        length = None
+        length_unit = 'mm'
+        # Aperture
+        aperture = None
+
 
     def __str__(self):
         _str = "Collimation:\n"
         _str += "   Length:       %s [%s]\n" % \
             (str(self.length), str(self.length_unit))
         for item in self.aperture:
-            _str += "   Aperture size:%s [%s]\n" % \
-                (str(item.size), str(item.size_unit))
-            _str += "   Aperture_dist:%s [%s]\n" % \
-                (str(item.distance), str(item.distance_unit))
-        return _str
 
 
 class Source:

@@ -344,6 +344,18 @@ with open("units.py", 'w', encoding=encoding) as fid:
         fid.write("])\n")
 
 
+    # List of dimensions
+    fid.write("\n\n")
+    fid.write("unit_group_names = [\n")
+    for dimension_name, _ in dimension_names:
+        fid.write(f"    '{dimension_name}',\n")
+    fid.write("]\n\n")
+
+    fid.write("unit_groups = {\n")
+    for dimension_name, _ in dimension_names:
+        fid.write(f"    '{dimension_name}': {dimension_name},\n")
+    fid.write("}\n\n")
+
 
 with open("accessors.py", 'w', encoding=encoding) as fid:
 
