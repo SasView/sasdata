@@ -193,6 +193,10 @@ class Unit:
 
     def __repr__(self):
         return f"Unit[{self.scale}, {self.dimensions}]"
+
+    @staticmethod
+    def parse(unit_string: str) -> "Unit":
+        pass
 class GreedyAbsDimensionUnitFormatProcessor(UnitFormatProcessor):
     """ This processor minimises the dimensionality of the unit by multiplying by as many
     units of the specified type as needed """
@@ -268,3 +272,4 @@ class UnitGroup:
     def __init__(self, name: str, units: list[NamedUnit]):
         self.name = name
         self.units = sorted(units, key=lambda unit: unit.scale)
+
