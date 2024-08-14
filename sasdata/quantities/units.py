@@ -633,7 +633,7 @@ pounds_force = NamedUnit(4.448222, Dimensions(1, -2, 1, 0, 0, 0, 0),name='pounds
 ounces = NamedUnit(0.028349523125, Dimensions(0, 0, 1, 0, 0, 0, 0),name='ounces',ascii_symbol='oz',symbol='oz')
 pounds_force_per_square_inch = NamedUnit(6894.757889515779, Dimensions(-1, -2, 1, 0, 0, 0, 0),name='pounds_force_per_square_inch',ascii_symbol='psi',symbol='psi')
 none = NamedUnit(1, Dimensions(0, 0, 0, 0, 0, 0, 0),name='none',ascii_symbol='none',symbol='none')
-percent = NamedUnit(100, Dimensions(0, 0, 0, 0, 0, 0, 0),name='percent',ascii_symbol='percent',symbol='%')
+percent = NamedUnit(0.01, Dimensions(0, 0, 0, 0, 0, 0, 0),name='percent',ascii_symbol='percent',symbol='%')
 square_meters = NamedUnit(1, Dimensions(length=2), name='square_meters', ascii_symbol='m^2', symbol='m²')
 cubic_meters = NamedUnit(1, Dimensions(length=3), name='cubic_meters', ascii_symbol='m^3', symbol='m³')
 per_meter = NamedUnit(1.0, Dimensions(length=-1), name='per_meter', ascii_symbol='m^-1', symbol='m⁻¹')
@@ -1951,6 +1951,7 @@ symbol_lookup = {
         "hour": hours,
         "a.u.": atomic_mass_units,
         "amu": atomic_mass_units,
+        "degr": degrees,
 }
 
 
