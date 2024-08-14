@@ -81,7 +81,7 @@ non_si_dimensioned_units: list[tuple[str, str | None, str, str, float, int, int,
 
 non_si_dimensionless_units: list[tuple[str, str | None, str, str, float, int, int, int, int, int, int, int, list]] = [
     ("none", None, "none", "none", 1, 0, 0, 0, 0, 0, 0, 0, []),
-    ("percent", "%", "percent", "percent", 100, 0, 0, 0, 0, 0, 0, 0, [])
+    ("percent", "%", "percent", "percent", 0.01, 0, 0, 0, 0, 0, 0, 0, [])
 ]
 
 non_si_units = non_si_dimensioned_units + non_si_dimensionless_units

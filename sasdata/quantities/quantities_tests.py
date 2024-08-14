@@ -75,6 +75,8 @@ def test_american_units():
     assert_unit_ratio(units.miles, units.inches, 63360)
     assert_unit_ratio(units.pounds_force_per_square_inch, units.pounds_force / (units.inches**2), 1, abs=1e-5)
 
+def test_percent():
+    assert Quantity(5, units.percent).in_units_of(units.none) == pytest.approx(0.05, 1e-10)
 
 @pytest.mark.parametrize("unit_1", si.all_si)
 @pytest.mark.parametrize("unit_2", si.all_si)
