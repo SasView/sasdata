@@ -2,7 +2,10 @@ import numpy as np
 from numpy.typing import ArrayLike
 
 import sasdata.quantities.units as units
-from sasdata.quantities.accessors import StringAccessor, LengthAccessor, AngleAccessor, QuantityAccessor
+from sasdata.quantities.accessors import StringAccessor, LengthAccessor, AngleAccessor, QuantityAccessor, \
+    DimensionlessAccessor, FloatAccessor, TemperatureAccessor
+
+
 class Detector:
     """
     Detector information
@@ -24,29 +27,29 @@ class Detector:
         self.offset = LengthAccessor[ArrayLike](target_object,
                                                 "detector.offset",
                                                 "detector.offset.units",
-                                                default_units=units.millimeters)
+                                                default_unit=units.millimeters)
 
         self.orientation = AngleAccessor[ArrayLike](target_object,
                                                     "detector.orientation",
                                                     "detector.orientation.units",
-                                                    default_units=units.degrees)
+                                                    default_unit=units.degrees)
 
         self.beam_center = LengthAccessor[ArrayLike](target_object,
                                                      "detector.beam_center",
                                                      "detector.beam_center.units",
-                                                     default_units=units.millimeters)
+                                                     default_unit=units.millimeters)
 
         # Pixel size in X, Y, (and Z if necessary) [Vector] [mm]
         self.pixel_size = LengthAccessor[ArrayLike](target_object,
                                                     "detector.pixel_size",
                                                     "detector.pixel_size.units",
-                                                    default_units=units.millimeters)
+                                                    default_unit=units.millimeters)
 
         # Slit length of the instrument for this detector.[float] [mm]
         self.slit_length = LengthAccessor[float](target_object,
                                                  "detector.slit_length",
                                                  "detector.slit_length.units",
-                                                 default_units=units.millimeters)
+                                                 default_unit=units.millimeters)
 
     def summary(self):
         return (f"Detector:\n"
@@ -79,7 +82,7 @@ class Aperture:
                                 default_unit=units.millimeters)
 
         # Aperture distance [float]
-        self.distance = QuantityAccessor[float](self.target_object,
+        self.distance = LengthAccessor[float](target_object,
                                     "apature.distance",
                                     "apature.distance.units",
                                     default_unit=units.millimeters)
@@ -101,76 +104,97 @@ class Collimation:
         # Name
         self.name = StringAccessor(target_object, "collimation.name")
         # Length [float] [mm]
-        self.length = QuantityAccessor[float](target_object,
+        self.length = LengthAccessor[float](target_object,
                                               "collimation.length",
                                               "collimation.length.units",
-                                              default_units=units.millimeters)
+                                              default_unit=units.millimeters)
 
 
         # Todo - how do we handle this
         self.collimator = Collimation(target_object)
 
-    def __str__(self):
-        _str = "Collimation:\n"
-        _str += "   Length:       %s [%s]\n" % \
-            (str(self.length), str(self.length_unit))
-        for item in self.aperture:
+    def summary(self):
+
+        #TODO collimation stuff
+        return (
+            f"Collimation:\n"
+            f"   Length: {self.length.value}\n")
+
 
 
 class Source:
     """
     Class to hold source information
     """
-    # Name
-    name = None
-    # Generic radiation type (Type and probe give more specific info) [string]
-    radiation = None
-    # Type and probe are only written to by the NXcanSAS reader
-    # Specific radiation type (Synchotron X-ray, Reactor neutron, etc) [string]
-    type = None
-    # Radiation probe (generic probe such as neutron, x-ray, muon, etc) [string]
-    probe = None
-    # Beam size name
-    beam_size_name = None
-    # Beam size [Vector] [mm]
-    beam_size = None
-    beam_size_unit = 'mm'
-    # Beam shape [string]
-    beam_shape = None
-    # Wavelength [float] [Angstrom]
-    wavelength = None
-    wavelength_unit = 'A'
-    # Minimum wavelength [float] [Angstrom]
-    wavelength_min = None
-    wavelength_min_unit = 'nm'
-    # Maximum wavelength [float] [Angstrom]
-    wavelength_max = None
-    wavelength_max_unit = 'nm'
-    # Wavelength spread [float] [Angstrom]
-    wavelength_spread = None
-    wavelength_spread_unit = 'percent'
 
-    def __init__(self):
-        self.beam_size = None #Vector()
+    def __init__(self, target_object):
+        # Name
+        self.name = StringAccessor(target_object, "source.name")
 
-    def __str__(self):
-        _str = "Source:\n"
-        radiation = self.radiation
-        if self.radiation is None and self.type and self.probe:
-            radiation = self.type + " " + self.probe
-        _str += "   Radiation:    %s\n" % str(radiation)
-        _str += "   Shape:        %s\n" % str(self.beam_shape)
-        _str += "   Wavelength:   %s [%s]\n" % \
-            (str(self.wavelength), str(self.wavelength_unit))
-        _str += "   Waveln_min:   %s [%s]\n" % \
-            (str(self.wavelength_min), str(self.wavelength_min_unit))
-        _str += "   Waveln_max:   %s [%s]\n" % \
-            (str(self.wavelength_max), str(self.wavelength_max_unit))
-        _str += "   Waveln_spread:%s [%s]\n" % \
-            (str(self.wavelength_spread), str(self.wavelength_spread_unit))
-        _str += "   Beam_size:    %s [%s]\n" % \
-            (str(self.beam_size), str(self.beam_size_unit))
-        return _str
+        # Generic radiation type (Type and probe give more specific info) [string]
+        self.radiation = StringAccessor(target_object, "source.radiation")
+
+        # Type and probe are only written to by the NXcanSAS reader
+        # Specific radiation type (Synchotron X-ray, Reactor neutron, etc) [string]
+        self.type = StringAccessor(target_object, "source.type")
+
+        # Radiation probe (generic probe such as neutron, x-ray, muon, etc) [string]
+        self.probe_particle = StringAccessor(target_object, "source.probe")
+
+        # Beam size name
+        self.beam_size_name = StringAccessor(target_object, "source.beam_size_name")
+
+        # Beam size [Vector] [mm]
+        self.beam_size = LengthAccessor[ArrayLike](target_object,
+                                                   "source.beam_size",
+                                                   "source.beam_size.units",
+                                                   default_unit=units.millimeters)
+
+        # Beam shape [string]
+        self.beam_shape = StringAccessor(target_object, "source.beam_shape")
+
+        # Wavelength [float] [Angstrom]
+        self.wavelength = LengthAccessor[float](target_object,
+                                                "source.wavelength",
+                                                "source.wavelength.units",
+                                                default_unit=units.angstroms)
+
+        # Minimum wavelength [float] [Angstrom]
+        self.wavelength_min = LengthAccessor[float](target_object,
+                                                    "source.wavelength_min",
+                                                    "source.wavelength_min.units",
+                                                    default_unit=units.angstroms)
+
+        # Maximum wavelength [float] [Angstrom]
+        self.wavelength_max = LengthAccessor[float](target_object,
+                                                    "source.wavelength_min",
+                                                    "source.wavelength_max.units",
+                                                    default_unit=units.angstroms)
+
+        # Wavelength spread [float] [Angstrom]
+        # Quantity because it might have other units, such as percent
+        self.wavelength_spread = QuantityAccessor[float](target_object,
+                                                         "source.wavelength_spread",
+                                                         "source.wavelength_spread.units",
+                                                         default_unit=units.angstroms)
+
+
+    def summary(self):
+
+        if self.radiation.value is None and self.type.value and self.probe_particle.value:
+            radiation = f"{self.type.value} {self.probe_particle.value}"
+        else:
+            radiation = f"{self.radiation.value}"
+
+        return (f"Source:\n"
+                f"    Radiation: {radiation}\n"
+                f"    Shape: {self.beam_shape.value}\n"
+                f"    Wavelength: {self.wavelength.value}\n"
+                f"    Min. Wavelength: {self.wavelength_min.value}\n"
+                f"    Max. Wavelength: {self.wavelength_max.value}\n"
+                f"    Wavelength Spread: {self.wavelength_spread.value}\n"
+                f"    Beam Size: {self.beam_size}\n")
+
 
 
 """
@@ -186,29 +210,40 @@ class Sample:
     """
     Class to hold the sample description
     """
-    # Short name for sample
-    name = ''
-    # ID
-    ID = ''
-    # Thickness [float] [mm]
-    thickness = None
-    thickness_unit = 'mm'
-    # Transmission [float] [fraction]
-    transmission = None
-    # Temperature [float] [No Default]
-    temperature = None
-    temperature_unit = None
-    # Position [Vector] [mm]
-    position = None
-    position_unit = 'mm'
-    # Orientation [Vector] [degrees]
-    orientation = None
-    orientation_unit = 'degree'
-    # Details
-    details = None
-    # SESANS zacceptance
-    zacceptance = (0,"")
-    yacceptance = (0,"")
+    def __init__(self, target_object):
+
+        # Short name for sample
+        self.name = StringAccessor(target_object, "sample.name")
+        # ID
+
+        self.sample_id = StringAccessor(target_object, "sample.id")
+
+        # Thickness [float] [mm]
+        self.thickness = LengthAccessor(target_object,
+                                        "sample.thickness",
+                                        "sample.thickness.units",
+                                        default_unit=units.millimeters)
+
+        # Transmission [float] [fraction]
+        self.transmission = FloatAccessor(target_object,"sample.transmission")
+
+        # Temperature [float] [No Default]
+        self.temperature = TemperatureAccessor(target_object,
+                                               "sample.temperature",
+                                               "sample.temperature.unit")
+        temperature = None
+        temperature_unit = None
+        # Position [Vector] [mm]
+        position = None
+        position_unit = 'mm'
+        # Orientation [Vector] [degrees]
+        orientation = None
+        orientation_unit = 'degree'
+        # Details
+        details = None
+        # SESANS zacceptance
+        zacceptance = (0,"")
+        yacceptance = (0,"")
 
     def __init__(self):
         self.position = None # Vector()

@@ -1,7 +1,8 @@
 from typing import TypeVar
 
+from quantities.quantity import Quantity
 from sasdata.quantities.accessors import TemperatureAccessor
-from sasdata.quantities.quantity import Quantity
+
 
 DataType = TypeVar("DataType")
 class AbsoluteTemperatureAccessor(TemperatureAccessor[DataType]):

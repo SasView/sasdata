@@ -75,3 +75,7 @@ class Quantity[QuantityType]:
 
     def __pow__(self: Self, other: int):
         return Quantity(self.value**other, self.units**other)
+
+    def parse(self, number_or_string: str | ArrayLike, unit: str, absolute_temperature: False):
+        pass
+

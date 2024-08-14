@@ -278,6 +278,10 @@ class Unit:
     def __repr__(self):
         return f"Unit[{self.scale}, {self.dimensions}]"
 
+    @staticmethod
+    def parse(unit_string: str) -> "Unit":
+        pass
+
 class NamedUnit(Unit):
     """ Units, but they have a name, and a symbol
 
@@ -351,6 +355,7 @@ class UnitGroup:
     def __init__(self, name: str, units: list[NamedUnit]):
         self.name = name
         self.units = sorted(units, key=lambda unit: unit.scale)
+
 
 
 #
@@ -595,7 +600,6 @@ years = NamedUnit(3155695.2, Dimensions(0, 1, 0, 0, 0, 0, 0),name='years',ascii_
 degrees = NamedUnit(57.29577951308232, Dimensions(0, 0, 0, 0, 0, 0, 1),name='degrees',ascii_symbol='deg',symbol='deg')
 radians = NamedUnit(1, Dimensions(0, 0, 0, 0, 0, 0, 1),name='radians',ascii_symbol='rad',symbol='rad')
 stradians = NamedUnit(1, Dimensions(0, 0, 0, 0, 0, 0, 2),name='stradians',ascii_symbol='sr',symbol='sr')
-none = NamedUnit(1, Dimensions(0, 0, 0, 0, 0, 0, 0),name='none',ascii_symbol='none',symbol='none')
 litres = NamedUnit(0.001, Dimensions(3, 0, 0, 0, 0, 0, 0),name='litres',ascii_symbol='l',symbol='l')
 electronvolts = NamedUnit(1.602176634e-19, Dimensions(2, -2, 1, 0, 0, 0, 0),name='electronvolts',ascii_symbol='eV',symbol='eV')
 exaelectronvolts = NamedUnit(0.1602176634, Dimensions(2, -2, 1, 0, 0),name='exaelectronvolts',ascii_symbol='EeV',symbol='EeV')
@@ -628,6 +632,8 @@ pounds = NamedUnit(0.45359237, Dimensions(0, 0, 1, 0, 0, 0, 0),name='pounds',asc
 pounds_force = NamedUnit(4.448222, Dimensions(1, -2, 1, 0, 0, 0, 0),name='pounds_force',ascii_symbol='lbf',symbol='lbf')
 ounces = NamedUnit(0.028349523125, Dimensions(0, 0, 1, 0, 0, 0, 0),name='ounces',ascii_symbol='oz',symbol='oz')
 pounds_force_per_square_inch = NamedUnit(6894.757889515779, Dimensions(-1, -2, 1, 0, 0, 0, 0),name='pounds_force_per_square_inch',ascii_symbol='psi',symbol='psi')
+none = NamedUnit(1, Dimensions(0, 0, 0, 0, 0, 0, 0),name='none',ascii_symbol='none',symbol='none')
+percent = NamedUnit(100, Dimensions(0, 0, 0, 0, 0, 0, 0),name='percent',ascii_symbol='percent',symbol='%')
 square_meters = NamedUnit(1, Dimensions(length=2), name='square_meters', ascii_symbol='m^2', symbol='m²')
 cubic_meters = NamedUnit(1, Dimensions(length=3), name='cubic_meters', ascii_symbol='m^3', symbol='m³')
 per_meter = NamedUnit(1.0, Dimensions(length=-1), name='per_meter', ascii_symbol='m^-1', symbol='m⁻¹')
@@ -1936,6 +1942,8 @@ symbol_lookup = {
         "lbf": pounds_force,
         "oz": ounces,
         "psi": pounds_force_per_square_inch,
+        "percent": percent,
+        "%": percent,
         "yr": years,
         "year": years,
         "day": days,
@@ -3166,6 +3174,7 @@ dimensionless = UnitGroup(
   name = 'dimensionless', 
   units = [
     none,
+    percent,
 ])
 
 angle = UnitGroup(
