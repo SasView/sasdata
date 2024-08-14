@@ -194,6 +194,10 @@ class Unit:
     def __repr__(self):
         return f"Unit[{self.scale}, {self.dimensions}]"
 
+    @staticmethod
+    def parse(unit_string: str) -> "Unit":
+        pass
+
 class NamedUnit(Unit):
     """ Units, but they have a name, and a symbol
 
@@ -267,3 +271,4 @@ class UnitGroup:
     def __init__(self, name: str, units: list[NamedUnit]):
         self.name = name
         self.units = sorted(units, key=lambda unit: unit.scale)
+

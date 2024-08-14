@@ -54,7 +54,7 @@ derived_si_units = [
     ("H", None, "henry", "henry", 1, 2, -2, 1, -2, 0, 0, 0, all_magnitudes),
 ]
 
-non_si_units: list[tuple[str, str | None, str, str, float, int, int, int, int, int, int, int, list]] = [
+non_si_dimensioned_units: list[tuple[str, str | None, str, str, float, int, int, int, int, int, int, int, list]] = [
     ("Ang", "Å", "angstrom", "angstroms", 1e-10, 1, 0, 0, 0, 0, 0, 0, []),
     ("min", None, "minute", "minutes", 60, 0, 1, 0, 0, 0, 0, 0, []),
     ("h", None, "hour", "hours", 360, 0, 1, 0, 0, 0, 0, 0, []),
@@ -63,7 +63,6 @@ non_si_units: list[tuple[str, str | None, str, str, float, int, int, int, int, i
     ("deg", None, "degree", "degrees", 180/np.pi, 0, 0, 0, 0, 0, 0, 1, []),
     ("rad", None, "radian", "radians", 1, 0, 0, 0, 0, 0, 0, 1, []),
     ("sr", None, "stradian", "stradians", 1, 0, 0, 0, 0, 0, 0, 2, []),
-    ("none", None, "none", "none", 1, 0, 0, 0, 0, 0, 0, 0, []),
     ("l", None, "litre", "litres", 1e-3, 3, 0, 0, 0, 0, 0, 0, []),
     ("eV", None, "electronvolt", "electronvolts", 1.602176634e-19, 2, -2, 1, 0, 0, 0, 0, all_magnitudes),
     ("au", None, "atomic mass unit", "atomic mass units", 1.660538921e-27, 0, 0, 1, 0, 0, 0, 0, []),
@@ -80,6 +79,13 @@ non_si_units: list[tuple[str, str | None, str, str, float, int, int, int, int, i
     ("psi", None, "pound force per square inch", "pounds force per square inch", 4.448222/(0.0254**2), -1, -2, 1, 0, 0, 0, 0, []),
 ]
 
+non_si_dimensionless_units: list[tuple[str, str | None, str, str, float, int, int, int, int, int, int, int, list]] = [
+    ("none", None, "none", "none", 1, 0, 0, 0, 0, 0, 0, 0, []),
+    ("percent", "%", "percent", "percent", 100, 0, 0, 0, 0, 0, 0, 0, [])
+]
+
+non_si_units = non_si_dimensioned_units + non_si_dimensionless_units
+
 # TODO:
 # Add Hartree? Rydberg? Bohrs?
 # Add CGS
@@ -89,7 +95,8 @@ aliases = {
     "d": ["day"],
     "h": ["hr", "hour"],
     "Ang": ["A", "Å"],
-    "au": ["a.u.", "amu"]
+    "au": ["a.u.", "amu"],
+    "percent": ["%"]
 }
 
 
@@ -325,7 +332,7 @@ with open("units.py", 'w', encoding=encoding) as fid:
         ("angle", Dimensions(angle_hint=1)),
         ("solid_angle", Dimensions(angle_hint=2)),
         ("amount", Dimensions(moles_hint=1)),
-        ("concentration", Dimensions(length=-3, moles_hint=1))
+        ("concentration", Dimensions(length=-3, moles_hint=1)),
     ]
 
     fid.write("\n#\n# Units by type \n#\n\n")
