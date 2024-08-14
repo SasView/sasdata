@@ -121,20 +121,22 @@ class QuantityAccessor[DataType](Accessor[DataType, Quantity[DataType]]):
         self.default_unit = default_unit
 
     def _numerical_part(self) -> DataType | None:
-        pass
+        """ Numerical part of the data """
 
     def _unit_part(self) -> str | None:
-        pass
+        """ String form of units for the data """
 
+    @property
     def unit(self) -> Unit:
         if self._unit_part() is None:
             return self.default_unit
         else:
             return Unit.parse(self._unit_part())
+
     @property
     def value(self) -> Quantity[DataType] | None:
         if self._unit_part() is not None and self._numerical_part() is not None:
-            return Quantity(self.unit())
+            return Quantity(self._numerical_part(), self.unit)
 
 
 
