@@ -2,6 +2,7 @@ import numpy as np
 from numpy.typing import ArrayLike
 
 import sasdata.quantities.units as units
+from quantities.absolute_temperature import AbsoluteTemperatureAccessor
 from sasdata.quantities.accessors import StringAccessor, LengthAccessor, AngleAccessor, QuantityAccessor, \
     DimensionlessAccessor, FloatAccessor, TemperatureAccessor
 
@@ -178,8 +179,7 @@ class Source:
                                                          "source.wavelength_spread.units",
                                                          default_unit=units.angstroms)
 
-
-    def summary(self):
+    def summary(self) -> str:
 
         if self.radiation.value is None and self.type.value and self.probe_particle.value:
             radiation = f"{self.type.value} {self.probe_particle.value}"
@@ -228,46 +228,44 @@ class Sample:
         self.transmission = FloatAccessor(target_object,"sample.transmission")
 
         # Temperature [float] [No Default]
-        self.temperature = TemperatureAccessor(target_object,
-                                               "sample.temperature",
-                                               "sample.temperature.unit")
-        temperature = None
-        temperature_unit = None
+        self.temperature = AbsoluteTemperatureAccessor(target_object,
+                                                       "sample.temperature",
+                                                       "sample.temperature.unit",
+                                                       default_unit=units.kelvin)
         # Position [Vector] [mm]
-        position = None
-        position_unit = 'mm'
+        self.position = LengthAccessor[ArrayLike](target_object,
+                                                  "sample.position",
+                                                  "sample.position.unit",
+                                                  default_unit=units.millimeters)
+
         # Orientation [Vector] [degrees]
-        orientation = None
-        orientation_unit = 'degree'
+        self.orientation = AngleAccessor[ArrayLike](target_object,
+                                                    "sample.orientation",
+                                                    "sample.orientation.unit",
+                                                    default_unit=units.degrees)
+
         # Details
-        details = None
+        self.details = StringAccessor(target_object, "sample.details")
+
+
         # SESANS zacceptance
         zacceptance = (0,"")
         yacceptance = (0,"")
 
-    def __init__(self):
-        self.position = None # Vector()
-        self.orientation = None # Vector()
-        self.details = []
-
-    def __str__(self):
-        _str = "Sample:\n"
-        _str += "   ID:           %s\n" % str(self.ID)
-        _str += "   Transmission: %s\n" % str(self.transmission)
-        _str += "   Thickness:    %s [%s]\n" % \
-            (str(self.thickness), str(self.thickness_unit))
-        _str += "   Temperature:  %s [%s]\n" % \
-            (str(self.temperature), str(self.temperature_unit))
-        _str += "   Position:     %s [%s]\n" % \
-            (str(self.position), str(self.position_unit))
-        _str += "   Orientation:  %s [%s]\n" % \
-            (str(self.orientation), str(self.orientation_unit))
-
-        _str += "   Details:\n"
-        for item in self.details:
-            _str += "      %s\n" % item
-
-        return _str
+    def summary(self) -> str:
+        return (f"Sample:\n"
+                f"   ID:           {self.sample_id.value}\n"
+                f"   Transmission: {self.transmission.value}\n"
+                f"   Thickness:    {self.thickness.value}\n"
+                f"   Temperature:  {self.temperature.value}\n"
+                f"   Position:     {self.position.value}\n"
+                f"   Orientation:  {self.orientation.value}\n")
+        #
+        # _str += "   Details:\n"
+        # for item in self.details:
+        #     _str += "      %s\n" % item
+        #
+        # return _str
 
 
 class Process:
@@ -275,74 +273,63 @@ class Process:
     Class that holds information about the processes
     performed on the data.
     """
-    name = ''
-    date = ''
-    description = ''
-    term = None
-    notes = None
+    def __init__(self, target_object):
+        self.name = StringAccessor(target_object, "process.name")
+        self.date = StringAccessor(target_object, "process.date")
+        self.description = StringAccessor(target_object, "process.description")
 
-    def __init__(self):
-        self.term = []
-        self.notes = []
+        #TODO: It seems like these might be lists of strings, this should be checked
 
-    def is_empty(self):
-        """
-            Return True if the object is empty
-        """
-        return (len(self.name) == 0 and len(self.date) == 0
-                and len(self.description) == 0 and len(self.term) == 0
-                and len(self.notes) == 0)
+        self.term = StringAccessor(target_object, "process.term")
+        self.notes = StringAccessor(target_object, "process.notes")
 
     def single_line_desc(self):
         """
             Return a single line string representing the process
         """
-        return "%s %s %s" % (self.name, self.date, self.description)
+        return f"{self.name.value} {self.date.value} {self.description.value}"
 
     def __str__(self):
-        _str = "Process:\n"
-        _str += "   Name:         %s\n" % self.name
-        _str += "   Date:         %s\n" % self.date
-        _str += "   Description:  %s\n" % self.description
-        for item in self.term:
-            _str += "   Term:         %s\n" % item
-        for item in self.notes:
-            _str += "   Note:         %s\n" % item
-        return _str
+        return (f"Process:\n"
+                f"    Name: {self.name.value}\n"
+                f"    Date: {self.date.value}\n"
+                f"    Description: {self.description.value}\n"
+                f"    Term: {self.term.value}\n"
+                f"    Notes: {self.notes.value}"
+                )
 
-
-class TransmissionSpectrum(object):
+class TransmissionSpectrum:
     """
     Class that holds information about transmission spectrum
     for white beams and spallation sources.
     """
-    name = ''
-    timestamp = ''
-    # Wavelength (float) [A]
-    wavelength = None
-    wavelength_unit = 'A'
-    # Transmission (float) [unit less]
-    transmission = None
-    transmission_unit = ''
-    # Transmission Deviation (float) [unit less]
-    transmission_deviation = None
-    transmission_deviation_unit = ''
+    def __init__(self, target_object):
+        # TODO: Needs to be multiple cases
+        self.name = StringAccessor(target_object, "transmission.")
+        self.timestamp = StringAccessor(target_object, "transmission.timestamp")
 
-    def __init__(self):
-        self.wavelength = []
-        self.transmission = []
-        self.transmission_deviation = []
+        # Wavelength (float) [A]
+        self.wavelength = LengthAccessor[ArrayLike](target_object,
+                                                    "transmission.wavelength",
+                                                    "transmission.wavelength.units")
 
-    def __str__(self):
-        _str = "Transmission Spectrum:\n"
-        _str += "   Name:             \t{0}\n".format(self.name)
-        _str += "   Timestamp:        \t{0}\n".format(self.timestamp)
-        _str += "   Wavelength unit:  \t{0}\n".format(self.wavelength_unit)
-        _str += "   Transmission unit:\t{0}\n".format(self.transmission_unit)
-        _str += "   Trans. Dev. unit:  \t{0}\n".format(
-                                            self.transmission_deviation_unit)
-        length_list = [len(self.wavelength), len(self.transmission),
-                       len(self.transmission_deviation)]
-        _str += "   Number of Pts:    \t{0}\n".format(max(length_list))
-        return _str
+        # Transmission (float) [unit less]
+        self.transmission = DimensionlessAccessor[ArrayLike](target_object,
+                                                             "transmission.transmission",
+                                                             "transmission.units",
+                                                             default_unit=units.none)
+
+        # Transmission Deviation (float) [unit less]
+        self.transmission_deviation = DimensionlessAccessor[ArrayLike](target_object,
+                                                                       "transmission.transmission_deviation",
+                                                                       "transmission.transmission_deviation.units",
+                                                                       default_units=units.none)
+
+
+    def summary(self) -> str:
+        return (f"Transmission Spectrum:\n"
+                f"    Name:             {self.name.value}\n"
+                f"    Timestamp:        {self.timestamp.value}\n"
+                f"    Wavelengths:      {self.wavelength.value}\n"
+                f"    Transmission:     {self.transmission.value}\n")
 
