@@ -79,3 +79,9 @@ class Quantity[QuantityType]:
     def parse(self, number_or_string: str | ArrayLike, unit: str, absolute_temperature: False):
         pass
 
+
+class NamedQuantity[QuantityType](Quantity[QuantityType]):
+    def __init__(self, value: QuantityType, units: Unit, name: str):
+        super().__init__(value, units)
+        self.name = name
+
