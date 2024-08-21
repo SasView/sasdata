@@ -1,6 +1,6 @@
 from dataclasses import dataclass
-from quantities.quantity import Quantity, NamedQuantity
-from sasdata.metadata import MetaData
+from sasdata.quantities.quantity import Quantity, NamedQuantity
+from sasdata.metadata import Metadata
 
 import numpy as np
 
@@ -10,10 +10,10 @@ from sasdata.model_requirements import ModellingRequirements
 
 
 @dataclass
-class SASData:
+class DataSet:
     abscissae: list[NamedQuantity[np.ndarray]]
     ordinate: NamedQuantity[np.ndarray]
     other: list[NamedQuantity[np.ndarray]]
 
-    metadata: MetaData
+    metadata: Metadata
     model_requirements: ModellingRequirements
