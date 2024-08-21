@@ -304,7 +304,7 @@ class TransmissionSpectrum:
     for white beams and spallation sources.
     """
     def __init__(self, target_object):
-        # TODO: Needs to be multiple cases
+        # TODO: Needs to be multiple instances
         self.name = StringAccessor(target_object, "transmission.")
         self.timestamp = StringAccessor(target_object, "transmission.timestamp")
 
@@ -333,3 +333,5 @@ class TransmissionSpectrum:
                 f"    Wavelengths:      {self.wavelength.value}\n"
                 f"    Transmission:     {self.transmission.value}\n")
 
+class Metadata:
+    pass
