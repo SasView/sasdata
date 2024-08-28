@@ -56,8 +56,6 @@ def load_data(filename) -> list[RawData]:
 
         for root_key in f.keys():
 
-            print(root_key)
-
             entry = f[root_key]
 
             data_contents = []
@@ -66,15 +64,18 @@ def load_data(filename) -> list[RawData]:
             entry_keys = [key for key in entry.keys()]
 
             if "sasdata" not in entry_keys:
-                logger.warning("")
+                logger.warning("No sasdata key")
 
             for key in entry_keys:
                 component = entry[key]
-                if key.lower() == "sasdata":
-                    print("found sasdata, skipping for now")
+                # if key.lower() == "sasdata":
+                #     datum = recurse_hdf5(component)
+                #     data_contents.append(datum)
+                #
+                # else:
+                #     raw_metadata[key] = recurse_hdf5(component)
+                raw_metadata[key] = recurse_hdf5(component)
 
-                else:
-                    raw_metadata[key] = recurse_hdf5(component)
 
 
             loaded_data.append(
