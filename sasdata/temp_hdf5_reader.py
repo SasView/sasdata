@@ -11,12 +11,11 @@ from h5py._hl.dataset import Dataset as HDF5Dataset
 from h5py._hl.group import Group as HDF5Group
 
 
-from sasdata.data import DataSet
 from sasdata.raw_form import RawData
 from sasdata.raw_form import Dataset as SASDataDataset, Group as SASDataGroup
 
 test_file = "./example_data/1d_data/33837rear_1D_1.75_16.5_NXcanSAS_v3.h5"
-test_file = "./example_data/1d_data/33837rear_1D_1.75_16.5_NXcanSAS.h5"
+# test_file = "./example_data/1d_data/33837rear_1D_1.75_16.5_NXcanSAS.h5"
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +30,7 @@ def recurse_hdf5(hdf5_entry):
 
         if isinstance(hdf5_entry.dtype, np.dtypes.BytesDType):
             data = hdf5_entry[()][0].decode("utf-8")
+
         else:
             data = np.array(hdf5_entry, dtype=hdf5_entry.dtype)
 

@@ -85,3 +85,15 @@ class NamedQuantity[QuantityType](Quantity[QuantityType]):
         super().__init__(value, units)
         self.name = name
 
+
+
+class UncertainQuantity[QuantityType](Quantity[QuantityType]):
+    def __init__(self, value: QuantityType, units: Unit, uncertainty: Quantity[QuantityType]):
+        super().__init__(value, units)
+        self.uncertainty = uncertainty
+
+class UncertainNamedQuantity[QuantityType](Quantity[QuantityType]):
+    def __init__(self, value: QuantityType, units: Unit, uncertainty: Quantity[QuantityType], name: str):
+        super().__init__(value, units)
+        self.uncertainty = uncertainty
+        self.name = name
