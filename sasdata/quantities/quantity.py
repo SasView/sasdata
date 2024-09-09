@@ -3,7 +3,10 @@ from dataclasses import dataclass
 
 from numpy._typing import ArrayLike
 
+from quantities.operations import Operation, Variable
 from sasdata.quantities.units import Unit
+
+import hashlib
 
 
 class UnitError(Exception):
@@ -12,7 +15,7 @@ class UnitError(Exception):
 
 QuantityType = TypeVar("QuantityType")
 
-class Quantity[QuantityType]:
+class BaseQuantity[QuantityType]:
     def __init__(self, value: QuantityType, units: Unit):
         self.value = value
         self.units = units
@@ -24,38 +27,37 @@ class Quantity[QuantityType]:
             raise UnitError(f"Target units ({units}) not compatible with existing units ({self.units}).")
 
     def __mul__(self: Self, other: ArrayLike | Self ) -> Self:
-        if isinstance(other, Quantity):
-            return Quantity(self.value * other.value, self.units * other.units)
+        if isinstance(other, BaseQuantity):
+            return BaseQuantity(self.value * other.value, self.units * other.units)
 
         else:
-            return Quantity(self.value * other, self.units)
+            return BaseQuantity(self.value * other, self.units)
 
     def __rmul__(self: Self, other: ArrayLike | Self):
-        if isinstance(other, Quantity):
-            return Quantity(other.value * self.value, other.units * self.units)
+        if isinstance(other, BaseQuantity):
+            return BaseQuantity(other.value * self.value, other.units * self.units)
 
         else:
-            return Quantity(other * self.value, self.units)
-
+            return BaseQuantity(other * self.value, self.units)
 
     def __truediv__(self: Self, other: float | Self) -> Self:
-        if isinstance(other, Quantity):
-            return Quantity(self.value / other.value, self.units / other.units)
+        if isinstance(other, BaseQuantity):
+            return BaseQuantity(self.value / other.value, self.units / other.units)
 
         else:
-            return Quantity(self.value / other, self.units)
+            return BaseQuantity(self.value / other, self.units)
 
     def __rtruediv__(self: Self, other: float | Self) -> Self:
-        if isinstance(other, Quantity):
-            return Quantity(self.value / other.value, self.units / other.units)
+        if isinstance(other, BaseQuantity):
+            return BaseQuantity(self.value / other.value, self.units / other.units)
 
         else:
-            return Quantity(self.value / other, self.units)
+            return BaseQuantity(self.value / other, self.units)
 
     def __add__(self: Self, other: Self | ArrayLike) -> Self:
-        if isinstance(other, Quantity):
+        if isinstance(other, BaseQuantity):
             if self.units.equivalent(other.units):
-                return Quantity(self.value + (other.value * other.units.scale)/self.units.scale, self.units)
+                return BaseQuantity(self.value + (other.value * other.units.scale) / self.units.scale, self.units)
             else:
                 raise UnitError(f"Units do not have the same dimensionality: {self.units} vs {other.units}")
 
@@ -65,7 +67,7 @@ class Quantity[QuantityType]:
     # Don't need __radd__ because only quantity/quantity operations should be allowed
 
     def __neg__(self):
-        return Quantity(-self.value, self.units)
+        return BaseQuantity(-self.value, self.units)
 
     def __sub__(self: Self, other: Self | ArrayLike) -> Self:
         return self + (-other)
@@ -74,26 +76,42 @@ class Quantity[QuantityType]:
         return (-self) + other
 
     def __pow__(self: Self, other: int):
-        return Quantity(self.value**other, self.units**other)
+        return BaseQuantity(self.value ** other, self.units ** other)
 
-    def parse(self, number_or_string: str | ArrayLike, unit: str, absolute_temperature: False):
+    @staticmethod
+    def parse(number_or_string: str | ArrayLike, unit: str, absolute_temperature: False):
         pass
 
 
-class NamedQuantity[QuantityType](Quantity[QuantityType]):
+class Quantity[QuantityType](BaseQuantity[QuantityType]):
+    def with_uncertainty(self, uncertainty: BaseQuantity[QuantityType]):
+        return UncertainQuantity(self.value, self.units, uncertainty=uncertainty)
+
+
+class NamedQuantity[QuantityType](BaseQuantity[QuantityType]):
     def __init__(self, value: QuantityType, units: Unit, name: str):
         super().__init__(value, units)
         self.name = name
 
+    def with_uncertainty(self, uncertainty: BaseQuantity[QuantityType]):
+        return UncertainNamedQuantity(self.value, self.units, uncertainty=uncertainty, name=self.name)
 
 
-class UncertainQuantity[QuantityType](Quantity[QuantityType]):
-    def __init__(self, value: QuantityType, units: Unit, uncertainty: Quantity[QuantityType]):
+class UncertainBaseQuantity[QuantityType](BaseQuantity[QuantityType]):
+    pass
+
+class UncertainQuantity[QuantityType](BaseQuantity[QuantityType]):
+    def __init__(self, value: QuantityType, units: Unit, uncertainty: BaseQuantity[QuantityType]):
         super().__init__(value, units)
         self.uncertainty = uncertainty
 
-class UncertainNamedQuantity[QuantityType](Quantity[QuantityType]):
-    def __init__(self, value: QuantityType, units: Unit, uncertainty: Quantity[QuantityType], name: str):
+        hash_value = hashlib.md5(value, uncertainty)
+
+
+class UncertainNamedQuantity[QuantityType](BaseQuantity[QuantityType]):
+    def __init__(self, value: QuantityType, units: Unit, uncertainty: BaseQuantity[QuantityType], name: str):
         super().__init__(value, units)
         self.uncertainty = uncertainty
         self.name = name
+
+        self.history = Variable(self.name)
