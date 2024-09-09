@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from sasdata.quantities.quantity import Quantity, NamedQuantity
+from sasdata.quantities.quantity import BaseQuantity, NamedQuantity
 from sasdata.metadata import Metadata
 
 import numpy as np
