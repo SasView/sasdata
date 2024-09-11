@@ -21,7 +21,13 @@ def parse_single_unit(unit_str: str) -> tuple[Unit | None, str]:
     remaining_str = unit_str[string_pos::]
     return (symbol_lookup[current_unit], remaining_str)
 
+# Its probably useful to work out the unit first, and then later work out if a named unit exists for it. Hence why there
+# are two functions.
 
-def parse_unit(unit_str: str) -> NamedUnit:
+def parse_unit(unit_str: str) -> Unit:
     # TODO: Not implemented. This is just to enable testing.
+    return Unit(1, Dimensions())
+
+def parse_named_unit(unit_str: str) -> NamedUnit:
+    # TODO: Not implemented.
     return NamedUnit(1, Dimensions())
