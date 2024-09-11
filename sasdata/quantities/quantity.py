@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 from numpy._typing import ArrayLike
 
-from quantities.operations import Operation, Variable
+from sasdata.quantities.operations import Operation, Variable
 from sasdata.quantities.units import Unit
 
 import hashlib
