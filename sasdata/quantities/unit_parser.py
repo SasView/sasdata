@@ -1,6 +1,19 @@
 from sasdata.quantities.units import Dimensions, NamedUnit, Unit, symbol_lookup
 from re import findall
 
+# TODO: This should probably be part of the Dimensions class but I don't want to change Lucas's code without asking him
+# when he gets back.
+def multiply_dimensions(dimensions_1: Dimensions, dimensions_2: Dimensions) -> Dimensions:
+    return Dimensions(
+        length=dimensions_1.length * dimensions_2.length,
+        time=dimensions_1.time * dimensions_2.time,
+        mass=dimensions_1.mass * dimensions_2.mass,
+        current=dimensions_1.current * dimensions_2.current,
+        temperature=dimensions_1.temperature * dimensions_2.temperature,
+        moles_hint=dimensions_1.moles_hint * dimensions_2.moles_hint,
+        angle_hint=dimensions_1.angle_hint * dimensions_2.angle_hint
+    )
+
 def split_unit_str(unit_str: str) -> list[str]:
     return findall(r'[A-Za-z]+|[-\d]+', unit_str)
 
