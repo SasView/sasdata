@@ -57,7 +57,11 @@ def parse_unit_stack(unit_str: str) -> list[Unit]:
 
 def parse_unit(unit_str: str) -> Unit:
     # TODO: Not implemented. This is just to enable testing.
-    return Unit(1, Dimensions())
+    parsed_unit = Unit(1, Dimensions())
+    unit_stack = parse_unit_stack(unit_str)
+    for unit in unit_stack:
+        parsed_unit *= unit
+    return parsed_unit
 
 def parse_named_unit(unit_str: str) -> NamedUnit:
     # TODO: Not implemented.
