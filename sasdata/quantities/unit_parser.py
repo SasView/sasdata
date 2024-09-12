@@ -21,6 +21,17 @@ def parse_single_unit(unit_str: str) -> tuple[Unit | None, str]:
     remaining_str = unit_str[string_pos::]
     return (symbol_lookup[current_unit], remaining_str)
 
+def parse_unit_strs(unit_str: str, current_units: list[Unit] | None=None) -> list[Unit]:
+    if current_units is None:
+        current_units = []
+    if unit_str == '':
+        return current_units
+    parsed_unit, remaining_str = parse_single_unit(unit_str)
+    if not parsed_unit is None:
+        current_units += [parsed_unit]
+    return parse_unit_strs(remaining_str, current_units)
+
+
 # Its probably useful to work out the unit first, and then later work out if a named unit exists for it. Hence why there
 # are two functions.
 
