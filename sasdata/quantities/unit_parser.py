@@ -35,6 +35,34 @@ def parse_unit_strs(unit_str: str, current_units: list[Unit] | None=None) -> lis
 # Its probably useful to work out the unit first, and then later work out if a named unit exists for it. Hence why there
 # are two functions.
 
+def parse_unit_stack(unit_str: str) -> list[Unit]:
+    # TODO: This doesn't work for 1/ (or any fraction) yet.
+    unit_stack: list[Unit] = []
+    split_str = split_unit_str(unit_str)
+    for token in split_str:
+        try:
+            dimension_modifier = int(token)
+            to_modify = unit_stack[-1]
+            # FIXME: This is horrible but I'm not sure how to fix this without changing the Dimension class itself.
+            to_modify.dimensions = Dimensions(
+                length=to_modify.dimensions.length * dimension_modifier,
+                time=to_modify.dimensions.time * dimension_modifier,
+                mass=to_modify.dimensions.mass * dimension_modifier,
+                current=to_modify.dimensions.current * dimension_modifier,
+                temperature=to_modify.dimensions.temperature * dimension_modifier,
+                moles_hint=to_modify.dimensions.moles_hint * dimension_modifier,
+                angle_hint=to_modify.dimensions.angle_hint * dimension_modifier
+            )
+
+        except ValueError:
+            new_units = parse_unit_strs(token)
+            unit_stack += new_units
+        # This error will happen if it tries to read a modifier but there are no units on the stack. We will just have
+        # to ignore it. Strings being parsed shouldn't really have it anyway (e.g. -1m).
+        except IndexError:
+            pass
+    return unit_stack
+
 def parse_unit(unit_str: str) -> Unit:
     # TODO: Not implemented. This is just to enable testing.
     return Unit(1, Dimensions())
