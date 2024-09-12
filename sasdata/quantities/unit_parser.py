@@ -1,19 +1,6 @@
 from sasdata.quantities.units import Dimensions, NamedUnit, Unit, symbol_lookup
 from re import findall
 
-# TODO: This should probably be part of the Dimensions class but I don't want to change Lucas's code without asking him
-# when he gets back.
-def multiply_dimensions(dimensions_1: Dimensions, dimensions_2: Dimensions) -> Dimensions:
-    return Dimensions(
-        length=dimensions_1.length * dimensions_2.length,
-        time=dimensions_1.time * dimensions_2.time,
-        mass=dimensions_1.mass * dimensions_2.mass,
-        current=dimensions_1.current * dimensions_2.current,
-        temperature=dimensions_1.temperature * dimensions_2.temperature,
-        moles_hint=dimensions_1.moles_hint * dimensions_2.moles_hint,
-        angle_hint=dimensions_1.angle_hint * dimensions_2.angle_hint
-    )
-
 def split_unit_str(unit_str: str) -> list[str]:
     return findall(r'[A-Za-z]+|[-\d]+', unit_str)
 
@@ -58,7 +45,7 @@ def parse_unit_stack(unit_str: str) -> list[Unit]:
             to_modify = unit_stack[-1]
             # FIXME: This is horrible but I'm not sure how to fix this without changing the Dimension class itself.
             multiplier = Dimensions(dimension_modifier, dimension_modifier, dimension_modifier, dimension_modifier, dimension_modifier, dimension_modifier, dimension_modifier)
-            to_modify.dimensions = multiply_dimensions(to_modify.dimensions, multiplier)
+            to_modify.dimensions *= multiplier
         except ValueError:
             new_units = parse_unit_strs(token)
             unit_stack += new_units
