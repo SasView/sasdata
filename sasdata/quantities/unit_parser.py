@@ -11,8 +11,8 @@ def parse_single_unit(unit_str: str) -> tuple[Unit | None, str]:
     string_pos = 0
     for char in unit_str:
         potential_unit_str = current_unit + char
-        potential_symbol = symbol_lookup.get(potential_unit_str, None)
-        if potential_symbol is None:
+        potential_symbols = [symbol for symbol in symbol_lookup.keys() if symbol.startswith(potential_unit_str)]
+        if len(potential_symbols) == 0:
             break
         string_pos += 1
         current_unit= potential_unit_str
