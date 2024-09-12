@@ -57,16 +57,8 @@ def parse_unit_stack(unit_str: str) -> list[Unit]:
             dimension_modifier = int(token)
             to_modify = unit_stack[-1]
             # FIXME: This is horrible but I'm not sure how to fix this without changing the Dimension class itself.
-            to_modify.dimensions = Dimensions(
-                length=to_modify.dimensions.length * dimension_modifier,
-                time=to_modify.dimensions.time * dimension_modifier,
-                mass=to_modify.dimensions.mass * dimension_modifier,
-                current=to_modify.dimensions.current * dimension_modifier,
-                temperature=to_modify.dimensions.temperature * dimension_modifier,
-                moles_hint=to_modify.dimensions.moles_hint * dimension_modifier,
-                angle_hint=to_modify.dimensions.angle_hint * dimension_modifier
-            )
-
+            multiplier = Dimensions(dimension_modifier, dimension_modifier, dimension_modifier, dimension_modifier, dimension_modifier, dimension_modifier, dimension_modifier)
+            to_modify.dimensions = multiply_dimensions(to_modify.dimensions, multiplier)
         except ValueError:
             new_units = parse_unit_strs(token)
             unit_stack += new_units
