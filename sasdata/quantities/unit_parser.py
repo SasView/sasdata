@@ -1,5 +1,12 @@
-from sasdata.quantities.units import Dimensions, NamedUnit, Unit, symbol_lookup
+from sasdata.quantities.units import Dimensions, NamedUnit, Unit, symbol_lookup, unit_groups
 from re import findall
+
+# TODO: This shouldn't be in this file but I don't want to edit Lucas' code before he is finished.
+
+all_units_groups = [group.units for group in unit_groups.values()]
+all_units: list[NamedUnit] = []
+for group in all_units_groups:
+    all_units.extend(group)
 
 def multiply_dimensions(dimensions_1: Dimensions, dimensions_2: Dimensions) -> Dimensions:
     return Dimensions(
@@ -95,8 +102,12 @@ def parse_unit(unit_str: str) -> Unit:
     return parsed_unit
 
 def parse_named_unit(unit_str: str) -> NamedUnit:
-    # TODO: Not implemented.
-    return NamedUnit(1, Dimensions())
+    # TODO: Not actually sure if this includes all units.
+    generic_unit = parse_unit(unit_str)
+    for named_unit in all_units:
+        if named_unit == generic_unit:
+            return named_unit
+    raise ValueError('A named unit does not exist for this unit.')
 
 if __name__ == "__main__":
-    print(parse_unit('kmh-1'))
+    print(parse_named_unit('kmh-1'))
