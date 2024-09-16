@@ -84,7 +84,7 @@ def parse_unit_stack(unit_str: str) -> list[Unit]:
             to_modify = unit_stack[-1]
             # FIXME: This is horrible but I'm not sure how to fix this without changing the Dimension class itself.
             multiplier = Dimensions(dimension_modifier, dimension_modifier, dimension_modifier, dimension_modifier, dimension_modifier, dimension_modifier, dimension_modifier)
-            to_modify.dimensions = multiply_dimensions(to_modify.dimensions, multiplier)
+            to_modify = Unit(to_modify.scale, multiply_dimensions(to_modify.dimensions, multiplier))
         except ValueError:
             new_units = parse_unit_strs(token)
             unit_stack += new_units
