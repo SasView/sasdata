@@ -12,6 +12,27 @@ def multiply_dimensions(dimensions_1: Dimensions, dimensions_2: Dimensions) -> D
         angle_hint=dimensions_1.angle_hint * dimensions_2.angle_hint
     )
 
+def sum_dimensions(dimensions: Dimensions):
+    return sum([
+        dimensions.length,
+        dimensions.time,
+        dimensions.mass,
+        dimensions.current,
+        dimensions.temperature,
+        dimensions.moles_hint,
+        dimensions.angle_hint
+    ])
+
+def combine_units(unit_1: Unit, unit_2: Unit):
+    if unit_1.dimensions.is_dimensionless or unit_2.dimensions.is_dimensionless:
+        unit_1_scale = unit_1.scale
+        unit_2_scale = unit_2.scale
+    else:
+        unit_1_scale = unit_1.scale ** sum_dimensions(unit_1.dimensions)
+        unit_2_scale = unit_2.scale ** sum_dimensions(unit_2.dimensions)
+    return Unit(unit_1_scale * unit_2_scale, unit_1.dimensions * unit_2.dimensions)
+
+
 def split_unit_str(unit_str: str) -> list[str]:
     return findall(r'[A-Za-z]+|[-\d]+', unit_str)
 
@@ -71,9 +92,12 @@ def parse_unit(unit_str: str) -> Unit:
     parsed_unit = Unit(1, Dimensions())
     unit_stack = parse_unit_stack(unit_str)
     for unit in unit_stack:
-        parsed_unit *= unit
+        parsed_unit = combine_units(parsed_unit, unit)
     return parsed_unit
 
 def parse_named_unit(unit_str: str) -> NamedUnit:
     # TODO: Not implemented.
     return NamedUnit(1, Dimensions())
+
+if __name__ == "__main__":
+    print(parse_unit('kmh-1'))
