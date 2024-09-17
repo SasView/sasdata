@@ -109,4 +109,11 @@ def parse_named_unit(unit_str: str, parsed_unit: Unit|None=None) -> NamedUnit:
     raise ValueError('A named unit does not exist for this unit.')
 
 if __name__ == "__main__":
-    print(parse_named_unit('kmh-1'))
+    to_parse = input('Enter a unit to parse:')
+    generic_unit = parse_unit(to_parse)
+    print(f'Generic Unit: {generic_unit}')
+    try:
+        named_unit = parse_named_unit(to_parse, generic_unit)
+        print(f'Named Unit: {named_unit}')
+    except ValueError:
+        print('There is no named unit available.')
