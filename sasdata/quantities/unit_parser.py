@@ -95,6 +95,8 @@ def parse_unit(unit_str: str) -> Unit:
         parsed_unit = combine_units(parsed_unit, unit)
     return parsed_unit
 
+# TODO: Just noticed that, if a parsed unit is already provided, then the unit_str is redundant. Could solve this
+# through function overloading but I don't know if I can do this based on the types of parameters alone.
 def parse_named_unit(unit_str: str, parsed_unit: Unit|None=None) -> NamedUnit:
     # TODO: Not actually sure if this includes all units.
     if parsed_unit is None:
