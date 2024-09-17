@@ -95,9 +95,12 @@ def parse_unit(unit_str: str) -> Unit:
         parsed_unit = combine_units(parsed_unit, unit)
     return parsed_unit
 
-def parse_named_unit(unit_str: str) -> NamedUnit:
+def parse_named_unit(unit_str: str, parsed_unit: Unit|None=None) -> NamedUnit:
     # TODO: Not actually sure if this includes all units.
-    generic_unit = parse_unit(unit_str)
+    if parsed_unit is None:
+        generic_unit = parse_unit(unit_str)
+    else:
+        generic_unit = parsed_unit
     for named_unit in all_units:
         if named_unit == generic_unit:
             return named_unit
