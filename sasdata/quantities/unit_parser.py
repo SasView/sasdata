@@ -31,14 +31,7 @@ def sum_dimensions(dimensions: Dimensions):
     ])
 
 def combine_units(unit_1: Unit, unit_2: Unit):
-    if unit_1.dimensions.is_dimensionless or unit_2.dimensions.is_dimensionless:
-        unit_1_scale = unit_1.scale
-        unit_2_scale = unit_2.scale
-    else:
-        unit_1_scale = unit_1.scale ** sum_dimensions(unit_1.dimensions)
-        unit_2_scale = unit_2.scale ** sum_dimensions(unit_2.dimensions)
-    return Unit(unit_1_scale * unit_2_scale, unit_1.dimensions * unit_2.dimensions)
-
+    return Unit(unit_1.scale * unit_2.scale, unit_1.dimensions * unit_2.dimensions)
 
 def split_unit_str(unit_str: str) -> list[str]:
     return findall(r'[A-Za-z]+|[-\d]+', unit_str)
@@ -84,7 +77,7 @@ def parse_unit_stack(unit_str: str) -> list[Unit]:
             to_modify = unit_stack[-1]
             # FIXME: This is horrible but I'm not sure how to fix this without changing the Dimension class itself.
             multiplier = Dimensions(dimension_modifier, dimension_modifier, dimension_modifier, dimension_modifier, dimension_modifier, dimension_modifier, dimension_modifier)
-            to_modify = Unit(to_modify.scale, multiply_dimensions(to_modify.dimensions, multiplier))
+            to_modify = Unit(to_modify.scale ** dimension_modifier, multiply_dimensions(to_modify.dimensions, multiplier))
             unit_stack[-1] = to_modify
         except ValueError:
             new_units = parse_unit_strs(token)
