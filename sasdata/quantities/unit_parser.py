@@ -63,6 +63,12 @@ def parse_unit_strs(unit_str: str, current_units: list[Unit] | None=None) -> lis
         current_units += [parsed_unit]
     return parse_unit_strs(remaining_str, current_units)
 
+def unit_power(to_modify: Unit, power: int):
+    # FIXME: This is horrible but I'm not sure how to fix this without changing the Dimension class itself.
+    dimension_multiplier = Dimensions(power, power, power, power, power, power, power)
+    scale_multiplier = 1 if power > 0 else -1
+    return Unit(to_modify.scale ** scale_multiplier, multiply_dimensions(to_modify.dimensions, dimension_multiplier))
+
 
 # Its probably useful to work out the unit first, and then later work out if a named unit exists for it. Hence why there
 # are two functions.
@@ -71,17 +77,22 @@ def parse_unit_stack(unit_str: str) -> list[Unit]:
     # TODO: This doesn't work for 1/ (or any fraction) yet.
     unit_stack: list[Unit] = []
     split_str = split_unit_str(unit_str)
+    inverse_next_unit = False
     for token in split_str:
         try:
-            dimension_modifier = int(token)
+            if token == '/':
+                inverse_next_unit = True
+                continue
+            power = int(token)
             to_modify = unit_stack[-1]
-            # FIXME: This is horrible but I'm not sure how to fix this without changing the Dimension class itself.
-            dimension_multiplier = Dimensions(dimension_modifier, dimension_modifier, dimension_modifier, dimension_modifier, dimension_modifier, dimension_modifier, dimension_modifier)
-            scale_multiplier = 1 if dimension_modifier > 0 else -1
-            to_modify = Unit(to_modify.scale ** scale_multiplier, multiply_dimensions(to_modify.dimensions, dimension_multiplier))
-            unit_stack[-1] = to_modify
+            modified = unit_power(to_modify, power)
+            unit_stack[-1] = modified
         except ValueError:
             new_units = parse_unit_strs(token)
+            if inverse_next_unit:
+                # TODO: Assume the power is going to be -1. This might not be true.
+                power = -1
+                new_units[0] = unit_power(new_units[0], power)
             unit_stack += new_units
         # This error will happen if it tries to read a modifier but there are no units on the stack. We will just have
         # to ignore it. Strings being parsed shouldn't really have it anyway (e.g. -1m).
