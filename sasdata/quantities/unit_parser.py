@@ -34,7 +34,7 @@ def combine_units(unit_1: Unit, unit_2: Unit):
     return Unit(unit_1.scale * unit_2.scale, unit_1.dimensions * unit_2.dimensions)
 
 def split_unit_str(unit_str: str) -> list[str]:
-    return findall(r'[A-Za-z]+|[-\d]+', unit_str)
+    return findall(r'[A-Za-z]+|[-\d]+|/', unit_str)
 
 def parse_single_unit(unit_str: str) -> tuple[Unit | None, str]:
     """Attempts to find a single unit for unit_str. Return this unit, and the remaining string in a tuple. If a unit
