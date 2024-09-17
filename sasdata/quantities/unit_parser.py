@@ -109,7 +109,7 @@ def parse_named_unit(unit_str: str, parsed_unit: Unit|None=None) -> NamedUnit:
     raise ValueError('A named unit does not exist for this unit.')
 
 if __name__ == "__main__":
-    to_parse = input('Enter a unit to parse:')
+    to_parse = input('Enter a unit to parse: ')
     generic_unit = parse_unit(to_parse)
     print(f'Generic Unit: {generic_unit}')
     try:
