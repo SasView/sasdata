@@ -3,7 +3,7 @@ from sasdata.quantities.units_tests import EqualUnits
 from sasdata.quantities.units import Dimensions, Unit, meters, meters_per_second, per_angstrom, \
     kilometers_per_square_hour
 
-# Lets start with the straight forward ones first, and get progressivel more complex as the list goes on.
+# Lets start with the straight forward ones first, and get progressively more complex as the list goes on.
 tests = [
     EqualUnits('Metres',
                meters,
