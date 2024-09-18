@@ -36,9 +36,14 @@ def combine_units(unit_1: Unit, unit_2: Unit):
 def split_unit_str(unit_str: str) -> list[str]:
     return findall(r'[A-Za-z]+|[-\d]+|/', unit_str)
 
-def parse_single_unit(unit_str: str) -> tuple[Unit | None, str]:
+def parse_single_unit(unit_str: str, longest_unit: bool = True) -> tuple[Unit | None, str]:
     """Attempts to find a single unit for unit_str. Return this unit, and the remaining string in a tuple. If a unit
-    cannot be parsed, the unit will be None, and the remaining string will be the entire unit_str"""
+    cannot be parsed, the unit will be None, and the remaining string will be the entire unit_str.
+
+    The shortest_unit parameter specifies how to resolve ambiguities. If it is true, then it will parse the longest unit
+    available. Otherwise, it will stop parsing as soon as it has found any unit.
+
+    """
     current_unit = ''
     string_pos = 0
     for char in unit_str:
@@ -48,6 +53,8 @@ def parse_single_unit(unit_str: str) -> tuple[Unit | None, str]:
             break
         string_pos += 1
         current_unit= potential_unit_str
+        if not longest_unit:
+            break
     if current_unit == '':
         return (None, unit_str)
     remaining_str = unit_str[string_pos::]
