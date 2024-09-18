@@ -60,15 +60,15 @@ def parse_single_unit(unit_str: str, longest_unit: bool = True) -> tuple[Unit | 
     remaining_str = unit_str[string_pos::]
     return (symbol_lookup[current_unit], remaining_str)
 
-def parse_unit_strs(unit_str: str, current_units: list[Unit] | None=None) -> list[Unit]:
+def parse_unit_strs(unit_str: str, current_units: list[Unit] | None=None, longest_unit: bool = True) -> list[Unit]:
     if current_units is None:
         current_units = []
     if unit_str == '':
         return current_units
-    parsed_unit, remaining_str = parse_single_unit(unit_str)
+    parsed_unit, remaining_str = parse_single_unit(unit_str, longest_unit)
     if not parsed_unit is None:
         current_units += [parsed_unit]
-    return parse_unit_strs(remaining_str, current_units)
+    return parse_unit_strs(remaining_str, current_units, longest_unit)
 
 def unit_power(to_modify: Unit, power: int):
     # FIXME: This is horrible but I'm not sure how to fix this without changing the Dimension class itself.
@@ -80,7 +80,7 @@ def unit_power(to_modify: Unit, power: int):
 # Its probably useful to work out the unit first, and then later work out if a named unit exists for it. Hence why there
 # are two functions.
 
-def parse_unit_stack(unit_str: str) -> list[Unit]:
+def parse_unit_stack(unit_str: str, longest_unit: bool = True) -> list[Unit]:
     # TODO: This doesn't work for 1/ (or any fraction) yet.
     unit_stack: list[Unit] = []
     split_str = split_unit_str(unit_str)
@@ -95,7 +95,7 @@ def parse_unit_stack(unit_str: str) -> list[Unit]:
             modified = unit_power(to_modify, power)
             unit_stack[-1] = modified
         except ValueError:
-            new_units = parse_unit_strs(token)
+            new_units = parse_unit_strs(token, None, longest_unit)
             if inverse_next_unit:
                 # TODO: Assume the power is going to be -1. This might not be true.
                 power = -1
@@ -107,9 +107,9 @@ def parse_unit_stack(unit_str: str) -> list[Unit]:
             pass
     return unit_stack
 
-def parse_unit(unit_str: str) -> Unit:
+def parse_unit(unit_str: str, longest_unit: bool = True) -> Unit:
     parsed_unit = Unit(1, Dimensions())
-    unit_stack = parse_unit_stack(unit_str)
+    unit_stack = parse_unit_stack(unit_str, longest_unit)
     for unit in unit_stack:
         parsed_unit = combine_units(parsed_unit, unit)
     return parsed_unit
