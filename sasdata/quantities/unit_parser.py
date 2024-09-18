@@ -53,7 +53,7 @@ def parse_single_unit(unit_str: str, longest_unit: bool = True) -> tuple[Unit | 
             break
         string_pos += 1
         current_unit= potential_unit_str
-        if not longest_unit:
+        if not longest_unit and current_unit in symbol_lookup.keys():
             break
     if current_unit == '':
         return (None, unit_str)
