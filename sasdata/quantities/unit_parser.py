@@ -145,7 +145,7 @@ def parse_named_unit(unit_str: str, parsed_unit: Unit|None=None) -> NamedUnit:
 
 def parse_named_unit_from_group(unit_str: str, from_group: UnitGroup) -> NamedUnit:
     parsed_unit = parse_unit_from_group(unit_str, from_group)
-    if parsed_unit == None:
+    if parsed_unit is None:
         raise ValueError('That unit cannot be parsed from the specified group.')
     return parse_named_unit('', parsed_unit)
 
