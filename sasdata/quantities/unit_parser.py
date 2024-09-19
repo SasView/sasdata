@@ -111,11 +111,14 @@ def parse_unit_stack(unit_str: str, longest_unit: bool = True) -> list[Unit]:
     return unit_stack
 
 def parse_unit(unit_str: str, longest_unit: bool = True) -> Unit:
-    parsed_unit = Unit(1, Dimensions())
-    unit_stack = parse_unit_stack(unit_str, longest_unit)
-    for unit in unit_stack:
-        parsed_unit = combine_units(parsed_unit, unit)
-    return parsed_unit
+    try:
+        parsed_unit = Unit(1, Dimensions())
+        unit_stack = parse_unit_stack(unit_str, longest_unit)
+        for unit in unit_stack:
+            parsed_unit = combine_units(parsed_unit, unit)
+        return parsed_unit
+    except KeyError:
+        raise ValueError('Unit string contains an unrecognised pattern.')
 
 def parse_unit_from_group(unit_str: str, from_group: UnitGroup) -> Unit | None:
     """Tries to use the given unit group to resolve ambiguities. Parse a unit twice with different options, and returns
