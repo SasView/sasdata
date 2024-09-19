@@ -143,6 +143,12 @@ def parse_named_unit(unit_str: str, parsed_unit: Unit|None=None) -> NamedUnit:
             return named_unit
     raise ValueError('A named unit does not exist for this unit.')
 
+def parse_named_unit_from_group(unit_str: str, from_group: UnitGroup) -> NamedUnit:
+    parsed_unit = parse_unit_from_group(unit_str, from_group)
+    if parsed_unit == None:
+        raise ValueError('That unit cannot be parsed from the specified group.')
+    return parse_named_unit('', parsed_unit)
+
 if __name__ == "__main__":
     to_parse = input('Enter a unit to parse: ')
     generic_unit = parse_unit(to_parse)
