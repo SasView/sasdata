@@ -85,7 +85,6 @@ def unit_power(to_modify: Unit, power: int):
 # are two functions.
 
 def parse_unit_stack(unit_str: str, longest_unit: bool = True) -> list[Unit]:
-    # TODO: This doesn't work for 1/ (or any fraction) yet.
     unit_stack: list[Unit] = []
     split_str = split_unit_str(unit_str)
     inverse_next_unit = False
