@@ -1,4 +1,4 @@
-from sasdata.quantities.units import Dimensions, NamedUnit, Unit, symbol_lookup, unit_groups
+from sasdata.quantities.units import Dimensions, NamedUnit, Unit, symbol_lookup, unit_groups, UnitGroup
 from re import findall
 
 # TODO: This shouldn't be in this file but I don't want to edit Lucas' code before he is finished.
@@ -36,7 +36,7 @@ def combine_units(unit_1: Unit, unit_2: Unit):
 def split_unit_str(unit_str: str) -> list[str]:
     return findall(r'[A-Za-z]+|[-\d]+|/', unit_str)
 
-def parse_single_unit(unit_str: str, longest_unit: bool = True) -> tuple[Unit | None, str]:
+def parse_single_unit(unit_str: str, longest_unit: bool = True, unit_group: UnitGroup | None = None) -> tuple[Unit | None, str]:
     """Attempts to find a single unit for unit_str. Return this unit, and the remaining string in a tuple. If a unit
     cannot be parsed, the unit will be None, and the remaining string will be the entire unit_str.
 
@@ -46,19 +46,23 @@ def parse_single_unit(unit_str: str, longest_unit: bool = True) -> tuple[Unit | 
     """
     current_unit = ''
     string_pos = 0
+    if unit_group is None:
+        lookup_dict = symbol_lookup
+    else:
+        lookup_dict = dict([name_unit for name_unit in symbol_lookup.items() if name_unit[1] in unit_group.units])
     for char in unit_str:
         potential_unit_str = current_unit + char
-        potential_symbols = [symbol for symbol in symbol_lookup.keys() if symbol.startswith(potential_unit_str)]
+        potential_symbols = [symbol for symbol in lookup_dict.keys() if symbol.startswith(potential_unit_str)]
         if len(potential_symbols) == 0:
             break
         string_pos += 1
         current_unit= potential_unit_str
-        if not longest_unit and current_unit in symbol_lookup.keys():
+        if not longest_unit and current_unit in lookup_dict.keys():
             break
     if current_unit == '':
         return (None, unit_str)
     remaining_str = unit_str[string_pos::]
-    return (symbol_lookup[current_unit], remaining_str)
+    return (lookup_dict[current_unit], remaining_str)
 
 def parse_unit_strs(unit_str: str, current_units: list[Unit] | None=None, longest_unit: bool = True) -> list[Unit]:
     if current_units is None:
