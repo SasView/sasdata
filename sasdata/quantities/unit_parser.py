@@ -153,9 +153,9 @@ def parse_named_unit_from_group(unit_str: str, from_group: UnitGroup) -> NamedUn
 
 if __name__ == "__main__":
     to_parse = input('Enter a unit to parse: ')
-    generic_unit = parse_unit(to_parse)
-    print(f'Generic Unit: {generic_unit}')
     try:
+        generic_unit = parse_unit(to_parse)
+        print(f'Generic Unit: {generic_unit}')
         named_unit = parse_named_unit(to_parse, generic_unit)
         print(f'Named Unit: {named_unit}')
     except ValueError:
