@@ -1,5 +1,6 @@
-from sasdata.quantities.unit_parser import parse_named_unit, parse_named_unit_from_group
+from sasdata.quantities.unit_parser import parse_named_unit, parse_named_unit_from_group, parse_unit
 from sasdata.quantities.units import meters, speed, meters_per_second, per_angstrom, kilometers_per_square_hour
+from pytest import raises
 
 
 def test_parse():
@@ -12,3 +13,11 @@ def test_parse():
     assert parsed_inverse_angstroms == per_angstrom
     parsed_kilometers_per_square_hour = parse_named_unit('kmh-2')
     assert parsed_kilometers_per_square_hour == kilometers_per_square_hour
+
+def test_parse_errors():
+    # Fails because the unit is not in that specific group.
+    with raises(ValueError, match='That unit cannot be parsed from the specified group.'):
+        parse_named_unit_from_group('km', speed)
+    # Fails because part of the unit matches but there is an unknown unit '@'
+    with raises(ValueError, match='Unit string contains an unrecognised pattern.'):
+        parse_unit('km@-1')
