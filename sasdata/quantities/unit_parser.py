@@ -117,6 +117,8 @@ def parse_unit_stack(unit_str: str, longest_unit: bool = True) -> list[Unit]:
 
 def parse_unit(unit_str: str, longest_unit: bool = True) -> Unit:
     try:
+        if not validate_unit_str(unit_str):
+            raise ValueError('unit_str contains forbidden characters.')
         parsed_unit = Unit(1, Dimensions())
         unit_stack = parse_unit_stack(unit_str, longest_unit)
         for unit in unit_stack:
