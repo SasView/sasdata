@@ -1,5 +1,5 @@
 from sasdata.quantities.units import Dimensions, NamedUnit, Unit, symbol_lookup, unit_groups, UnitGroup
-from re import findall
+from re import findall, fullmatch
 
 # TODO: This shouldn't be in this file but I don't want to edit Lucas' code before he is finished.
 
@@ -35,6 +35,9 @@ def combine_units(unit_1: Unit, unit_2: Unit):
 
 def split_unit_str(unit_str: str) -> list[str]:
     return findall(r'[A-Za-z]+|[-\d]+|/', unit_str)
+
+def validate_unit_str(unit_str: str) -> bool:
+    return not fullmatch(r'[A-Za-z1-9\-\+]+', unit_str) is None
 
 def parse_single_unit(unit_str: str, longest_unit: bool = True, unit_group: UnitGroup | None = None) -> tuple[Unit | None, str]:
     """Attempts to find a single unit for unit_str. Return this unit, and the remaining string in a tuple. If a unit
