@@ -19,5 +19,5 @@ def test_parse_errors():
     with raises(ValueError, match='That unit cannot be parsed from the specified group.'):
         parse_named_unit_from_group('km', speed)
     # Fails because part of the unit matches but there is an unknown unit '@'
-    with raises(ValueError, match='Unit string contains an unrecognised pattern.'):
+    with raises(ValueError, match='unit_str contains forbidden characters.'):
         parse_unit('km@-1')
