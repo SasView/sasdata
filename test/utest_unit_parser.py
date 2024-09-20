@@ -21,3 +21,6 @@ def test_parse_errors():
     # Fails because part of the unit matches but there is an unknown unit '@'
     with raises(ValueError, match='unit_str contains forbidden characters.'):
         parse_unit('km@-1')
+    # Fails because 'da' is not a unit.
+    with raises(ValueError, match='Unit string contains an unrecognised pattern.'):
+        parse_unit('mmda2')
