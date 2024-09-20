@@ -72,7 +72,9 @@ def parse_unit_strs(unit_str: str, current_units: list[Unit] | None=None, longes
     parsed_unit, remaining_str = parse_single_unit(unit_str, longest_unit)
     if not parsed_unit is None:
         current_units += [parsed_unit]
-    return parse_unit_strs(remaining_str, current_units, longest_unit)
+        return parse_unit_strs(remaining_str, current_units, longest_unit)
+    else:
+        raise ValueError(f'Could not interpret {remaining_str}')
 
 def unit_power(to_modify: Unit, power: int):
     # FIXME: This is horrible but I'm not sure how to fix this without changing the Dimension class itself.
