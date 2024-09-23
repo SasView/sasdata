@@ -2,8 +2,6 @@ from typing import Any, TypeVar, Union
 
 import json
 
-from sasdata.quantities.quantity import Quantity
-
 T = TypeVar("T")
 
 def hash_and_name(hash_or_name: int | str):
