@@ -11,8 +11,12 @@ def test_parse():
     assert parsed_metres_per_second == meters_per_second
     parsed_inverse_angstroms = parse_named_unit('A-1')
     assert parsed_inverse_angstroms == per_angstrom
+    parsed_inverse_angstroms_slant = parse_named_unit('1/A')
+    assert parsed_inverse_angstroms_slant == per_angstrom
     parsed_kilometers_per_square_hour = parse_named_unit('kmh-2')
     assert parsed_kilometers_per_square_hour == kilometers_per_square_hour
+    parsed_kilometers_per_square_hour_slant = parse_named_unit('km/h2')
+    assert parsed_kilometers_per_square_hour_slant == kilometers_per_square_hour
 
 def test_parse_errors():
     # Fails because the unit is not in that specific group.
