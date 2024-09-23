@@ -1,5 +1,5 @@
 from sasdata.quantities.unit_parser import parse_named_unit, parse_named_unit_from_group, parse_unit
-from sasdata.quantities.units import meters, speed, meters_per_second, per_angstrom, kilometers_per_square_hour
+from sasdata.quantities.units import meters, speed, meters_per_second, per_angstrom, kilometers_per_square_hour, newtons
 from pytest import raises
 
 
@@ -17,6 +17,8 @@ def test_parse():
     assert parsed_kilometers_per_square_hour == kilometers_per_square_hour
     parsed_kilometers_per_square_hour_slant = parse_named_unit('km/h2')
     assert parsed_kilometers_per_square_hour_slant == kilometers_per_square_hour
+    parsed_newton = parse_named_unit('kgm/s2')
+    assert parsed_newton == newtons
 
 def test_parse_errors():
     # Fails because the unit is not in that specific group.
