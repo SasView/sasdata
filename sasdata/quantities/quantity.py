@@ -13,12 +13,12 @@ import hashlib
 class UnitError(Exception):
     """ Errors caused by unit specification not being correct """
 
-def hash_numpy_data(*data: np.ndarray):
+def hash_data_via_numpy(*data: ArrayLike):
 
     md5_hash = hashlib.md5()
 
     for datum in data:
-        data_bytes = datum.tobytes()
+        data_bytes = np.array(datum).tobytes()
         md5_hash.update(data_bytes)
 
     # Hash function returns a hex string, we want an int
@@ -109,9 +109,9 @@ class Quantity[QuantityType]:
         """ Contains the variance if it is data driven, else it is """
 
         if variance is None:
-            self.hash_value = hash_numpy_data(value)
+            self.hash_value = hash_data_via_numpy(value)
         else:
-            self.hash_value = hash_numpy_data(value, variance.value)
+            self.hash_value = hash_data_via_numpy(value, variance.value)
 
         self.history = QuantityHistory.variable(self)
 
