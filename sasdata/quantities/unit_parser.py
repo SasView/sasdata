@@ -19,17 +19,6 @@ def multiply_dimensions(dimensions_1: Dimensions, dimensions_2: Dimensions) -> D
         angle_hint=dimensions_1.angle_hint * dimensions_2.angle_hint
     )
 
-def sum_dimensions(dimensions: Dimensions):
-    return sum([
-        dimensions.length,
-        dimensions.time,
-        dimensions.mass,
-        dimensions.current,
-        dimensions.temperature,
-        dimensions.moles_hint,
-        dimensions.angle_hint
-    ])
-
 def combine_units(unit_1: Unit, unit_2: Unit):
     return Unit(unit_1.scale * unit_2.scale, unit_1.dimensions * unit_2.dimensions)
 
