@@ -9,6 +9,7 @@ for group in all_units_groups:
     all_units.extend(group)
 
 def multiply_dimensions(dimensions_1: Dimensions, dimensions_2: Dimensions) -> Dimensions:
+    """Multiply each dimension in dimensions_1 with the same dimension in dimensions_2"""
     return Dimensions(
         length=dimensions_1.length * dimensions_2.length,
         time=dimensions_1.time * dimensions_2.time,
@@ -20,12 +21,16 @@ def multiply_dimensions(dimensions_1: Dimensions, dimensions_2: Dimensions) -> D
     )
 
 def combine_units(unit_1: Unit, unit_2: Unit):
+    """Combine unit_1, and unit_2 into one unit."""
     return Unit(unit_1.scale * unit_2.scale, unit_1.dimensions * unit_2.dimensions)
 
 def split_unit_str(unit_str: str) -> list[str]:
+    """Separate the letters from the numbers in unit_str"""
     return findall(r'[A-Za-z]+|[-\d]+|/', unit_str)
 
 def validate_unit_str(unit_str: str) -> bool:
+    """Validate whether unit_str is valid. This doesn't mean that the unit specified in unit_str exists but rather it
+    only consists of letters, and numbers as a unit string should."""
     return not fullmatch(r'[A-Za-z1-9\-\+/]+', unit_str) is None
 
 def parse_single_unit(unit_str: str, unit_group: UnitGroup | None = None, longest_unit: bool = True) -> tuple[Unit | None, str]:
@@ -58,6 +63,7 @@ def parse_single_unit(unit_str: str, unit_group: UnitGroup | None = None, longes
     return (lookup_dict[current_unit], remaining_str)
 
 def parse_unit_strs(unit_str: str, current_units: list[Unit] | None=None, longest_unit: bool = True) -> list[Unit]:
+    """Recursively parse units from unit_str until no more characters are present."""
     if current_units is None:
         current_units = []
     if unit_str == '':
@@ -70,6 +76,7 @@ def parse_unit_strs(unit_str: str, current_units: list[Unit] | None=None, longes
         raise ValueError(f'Could not interpret {remaining_str}')
 
 def unit_power(to_modify: Unit, power: int):
+    """Raise to_modify to power"""
     # FIXME: This is horrible but I'm not sure how to fix this without changing the Dimension class itself.
     dimension_multiplier = Dimensions(power, power, power, power, power, power, power)
     scale_multiplier = 1 if power > 0 else -1
@@ -80,6 +87,7 @@ def unit_power(to_modify: Unit, power: int):
 # are two functions.
 
 def parse_unit_stack(unit_str: str, longest_unit: bool = True) -> list[Unit]:
+    """Split unit_str into a stack of parsed units."""
     unit_stack: list[Unit] = []
     split_str = split_unit_str(unit_str)
     inverse_next_unit = False
@@ -106,6 +114,7 @@ def parse_unit_stack(unit_str: str, longest_unit: bool = True) -> list[Unit]:
     return unit_stack
 
 def parse_unit(unit_str: str, longest_unit: bool = True) -> Unit:
+    """Parse unit_str into a unit."""
     try:
         if not validate_unit_str(unit_str):
             raise ValueError('unit_str contains forbidden characters.')
