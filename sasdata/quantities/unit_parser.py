@@ -35,6 +35,7 @@ def parse_single_unit(unit_str: str, longest_unit: bool = True, unit_group: Unit
     The shortest_unit parameter specifies how to resolve ambiguities. If it is true, then it will parse the longest unit
     available. Otherwise, it will stop parsing as soon as it has found any unit.
 
+    If unit_group is set, it will only try to parse units within that group. This is useful for resolving ambiguities.
     """
     current_unit = ''
     string_pos = 0
