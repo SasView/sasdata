@@ -28,7 +28,7 @@ def split_unit_str(unit_str: str) -> list[str]:
 def validate_unit_str(unit_str: str) -> bool:
     return not fullmatch(r'[A-Za-z1-9\-\+/]+', unit_str) is None
 
-def parse_single_unit(unit_str: str, longest_unit: bool = True, unit_group: UnitGroup | None = None) -> tuple[Unit | None, str]:
+def parse_single_unit(unit_str: str, unit_group: UnitGroup | None = None, longest_unit: bool = True) -> tuple[Unit | None, str]:
     """Attempts to find a single unit for unit_str. Return this unit, and the remaining string in a tuple. If a unit
     cannot be parsed, the unit will be None, and the remaining string will be the entire unit_str.
 
