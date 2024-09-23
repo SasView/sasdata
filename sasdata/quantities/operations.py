@@ -2,7 +2,7 @@ from typing import Any, TypeVar, Union
 
 import json
 
-# from sasdata.quantities.quantity import BaseQuantity
+from sasdata.quantities.quantity import Quantity
 
 T = TypeVar("T")
 

@@ -1952,6 +1952,10 @@ symbol_lookup = {
         "a.u.": atomic_mass_units,
         "amu": atomic_mass_units,
         "degr": degrees,
+        "Counts": none,
+        "counts": none,
+        "cnts": none,
+        "Cnts": none,
 }
 
 
