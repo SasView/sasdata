@@ -43,8 +43,8 @@ def parse_single_unit(unit_str: str, unit_group: UnitGroup | None = None, longes
         lookup_dict = symbol_lookup
     else:
         lookup_dict = dict([name_unit for name_unit in symbol_lookup.items() if name_unit[1] in unit_group.units])
-    for char in unit_str:
-        potential_unit_str = current_unit + char
+    for next_char in unit_str:
+        potential_unit_str = current_unit + next_char
         potential_symbols = [symbol for symbol in lookup_dict.keys() if symbol.startswith(potential_unit_str)]
         if len(potential_symbols) == 0:
             break
