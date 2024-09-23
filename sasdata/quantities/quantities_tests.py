@@ -51,6 +51,32 @@ def test_good_add_sub():
 
     assert (Quantity(1, units.inches) + Quantity(1, units.feet)).in_units_of(units.inches) == 13
 
+@pytest.mark.parametrize("unit_in, power, unit_out", [
+    (units.meters**2, 1/2, units.meters),
+    (units.meters**3, 1/3, units.meters),
+    (units.meters**3, 2/3, units.meters**2),
+    (units.meters**3, -5/3, units.meters**-5),
+    (units.none, 1/10, units.none),
+    (units.none, 19/17, units.none),
+    (units.none, np.pi, units.none)
+])
+def test_good_non_integer_unit_powers(unit_in, power, unit_out):
+    """ Check that we can do various square and cube root stuff if we need to,
+    If dimensionless, we should be able to do arbitrary powers
+    """
+    assert unit_in**power == unit_out
+
+@pytest.mark.parametrize("unit, power", [
+    (units.meters, 1/2),
+    (units.milliohms, 1/3),
+    (units.meters, 3/2),
+    (units.meters**2, 2/3)
+])
+def test_bad_non_integer_unit_powers(unit, power):
+    """ Check that we get an error if we try and do something silly with powers"""
+    with pytest.raises(units.DimensionError):
+        x = unit**power
+
 
 @pytest.mark.parametrize("unit_1", si.all_si)
 @pytest.mark.parametrize("unit_2", si.all_si)
