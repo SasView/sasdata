@@ -138,8 +138,6 @@ def parse_unit_from_group(unit_str: str, from_group: UnitGroup) -> Unit | None:
     else:
         return None
 
-# TODO: Just noticed that, if a parsed unit is already provided, then the unit_str is redundant. Could solve this
-# through function overloading but I don't know if I can do this based on the types of parameters alone.
 def parse_named_unit(unit: str | Unit) -> NamedUnit:
     if isinstance(unit, str):
         generic_unit = parse_unit(unit)
