@@ -4,7 +4,8 @@ from dataclasses import dataclass
 import numpy as np
 from numpy._typing import ArrayLike
 
-from sasdata.quantities.operations import Operation, Variable
+from quantities.operations import Operation, Variable
+from quantities import operations
 from sasdata.quantities.units import Unit
 
 import hashlib
@@ -45,19 +46,25 @@ class QuantityHistory:
         @param: covariances, off diagonal entries for the covariance matrix
         """
 
+        if covariances:
+            raise NotImplementedError("User specified covariances not currently implemented")
+
         jacobian = self.jacobian()
 
         # Evaluate the jacobian
-        evaluated_jacobian = [entry.evaluate(self.references) for entry in jacobian] # should we use quantities here?
+        # TODO: should we use quantities here, does that work automatically?
+        evaluated_jacobian = [entry.evaluate(self.references) for entry in jacobian]
 
-        output = 0
+        hash_values = [key for key in self.references]
+        output = None
 
-        for hash_value in self.references:
-            output += evaluated_jacobian * (self.references[hash_value].variance * evaluated_jacobian)
+        for hash_value, jac_component in zip(hash_values, evaluated_jacobian):
+            if output is None:
+                output = jac_component * (self.references[hash_value].variance * jac_component)
+            else:
+                output += jac_component * (self.references[hash_value].variance * jac_component)
 
-        for (cov1, cov2) in covariances:
-            pass
-
+        return output
 
 
     @staticmethod
@@ -66,7 +73,7 @@ class QuantityHistory:
         return QuantityHistory(Variable(quantity.hash_value), {quantity.hash_value: quantity})
 
     @staticmethod
-    def _apply_operation(operation: type[Operation], *histories: "QuantityHistory") -> "QuantityHistory":
+    def apply_operation(operation: type[Operation], *histories: "QuantityHistory") -> "QuantityHistory":
         """ Apply an operation to the history
 
         This is slightly unsafe as it is possible to attempt to apply an n-ary operation to a number of trees other
@@ -117,10 +124,14 @@ class Quantity[QuantityType]:
 
     @property
     def variance(self) -> "Quantity":
-        pass
+        """ Get the variance of this object"""
+        if self._variance is None:
+            return Quantity(np.zeros_like(self.value), self.units**2)
+        else:
+            return Quantity(self._variance, self.units**2)
 
     def standard_deviation(self) -> "Quantity":
-        return self.variance ** (1/2)
+        return self.variance ** 0.5
 
     def in_units_of(self, units: Unit) -> QuantityType:
         """ Get this quantity in other units """
@@ -131,36 +142,86 @@ class Quantity[QuantityType]:
 
     def __mul__(self: Self, other: ArrayLike | Self ) -> Self:
         if isinstance(other, Quantity):
-            return Quantity(self.value * other.value, self.units * other.units)
+            return DerivedQuantity(
+                self.value * other.value,
+                self.units * other.units,
+                history=QuantityHistory.apply_operation(operations.Mul, self.history, other.history))
 
         else:
-            return Quantity(self.value * other, self.units)
+            return DerivedQuantity(self.value * other, self.units,
+                                   QuantityHistory(
+                                       operations.Mul(
+                                           self.history.operation_tree,
+                                           operations.Constant(other)),
+                                       self.history.references))
 
     def __rmul__(self: Self, other: ArrayLike | Self):
         if isinstance(other, Quantity):
-            return Quantity(other.value * self.value, other.units * self.units)
+            return DerivedQuantity(
+                    other.value * self.value,
+                    other.units * self.units,
+                    history=QuantityHistory.apply_operation(
+                        operations.Mul,
+                        other.history,
+                        self.history))
 
         else:
-            return Quantity(other * self.value, self.units)
+            return DerivedQuantity(other * self.value, self.units,
+                                   QuantityHistory(
+                                       operations.Mul(
+                                           operations.Constant(other),
+                                           self.history.operation_tree),
+                                       self.history.references))
 
     def __truediv__(self: Self, other: float | Self) -> Self:
         if isinstance(other, Quantity):
-            return Quantity(self.value / other.value, self.units / other.units)
+            return DerivedQuantity(
+                    self.value / other.value,
+                    self.units / other.units,
+                    history=QuantityHistory.apply_operation(
+                        operations.Div,
+                        self.history,
+                        other.history))
 
         else:
-            return Quantity(self.value / other, self.units)
+            return DerivedQuantity(self.value / other, self.units,
+                                   QuantityHistory(
+                                       operations.Div(
+                                           operations.Constant(other),
+                                           self.history.operation_tree),
+                                       self.history.references))
 
     def __rtruediv__(self: Self, other: float | Self) -> Self:
         if isinstance(other, Quantity):
-            return Quantity(self.value / other.value, self.units / other.units)
+            return DerivedQuantity(
+                    other.value / self.value,
+                    other.units / self.units,
+                    history=QuantityHistory.apply_operation(
+                        operations.Div,
+                        other.history,
+                        self.history
+                    ))
 
         else:
-            return Quantity(self.value / other, self.units)
+            return DerivedQuantity(
+                    other / self.value,
+                    self.units ** -1,
+                               QuantityHistory(
+                                   operations.Div(
+                                       operations.Constant(other),
+                                       self.history.operation_tree),
+                                   self.history.references))
 
     def __add__(self: Self, other: Self | ArrayLike) -> Self:
         if isinstance(other, Quantity):
             if self.units.equivalent(other.units):
-                return Quantity(self.value + (other.value * other.units.scale) / self.units.scale, self.units)
+                return DerivedQuantity(
+                            self.value + (other.value * other.units.scale) / self.units.scale,
+                            self.units,
+                            QuantityHistory.apply_operation(
+                                operations.Add,
+                                self.history,
+                                other.history))
             else:
                 raise UnitError(f"Units do not have the same dimensionality: {self.units} vs {other.units}")
 
@@ -170,7 +231,11 @@ class Quantity[QuantityType]:
     # Don't need __radd__ because only quantity/quantity operations should be allowed
 
     def __neg__(self):
-        return Quantity(-self.value, self.units)
+        return DerivedQuantity(-self.value, self.units,
+                               QuantityHistory.apply_operation(
+                                   operations.Neg,
+                                   self.history
+                               ))
 
     def __sub__(self: Self, other: Self | ArrayLike) -> Self:
         return self + (-other)
@@ -178,8 +243,14 @@ class Quantity[QuantityType]:
     def __rsub__(self: Self, other: Self | ArrayLike) -> Self:
         return (-self) + other
 
-    def __pow__(self: Self, other: int):
-        return Quantity(self.value ** other, self.units ** other)
+    def __pow__(self: Self, other: int | float):
+        return DerivedQuantity(self.value ** other,
+                               self.units ** other,
+                               QuantityHistory(
+                                   operations.Pow(
+                                       self.history.operation_tree,
+                                       other),
+                                   self.history.references))
 
     @staticmethod
     def parse(number_or_string: str | ArrayLike, unit: str, absolute_temperature: False):
@@ -197,9 +268,15 @@ class NamedQuantity[QuantityType](Quantity[QuantityType]):
         self.name = name
 
 class DerivedQuantity[QuantityType](Quantity[QuantityType]):
-    def __init__(self, value, units, variance, history):
+    def __init__(self, value: QuantityType, units: Unit, history: QuantityHistory):
+        super().__init__(value, units, variance=None)
 
+        self.history = history
         self._variance_cache = None
+
     @property
-    def variance(self):
-        pass
+    def variance(self) -> Quantity:
+        if self._variance_cache is None:
+            self._variance_cache = self.history.standard_error_propagate()
+
+        return self._variance_cache
