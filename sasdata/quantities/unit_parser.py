@@ -140,11 +140,13 @@ def parse_unit_from_group(unit_str: str, from_group: UnitGroup) -> Unit | None:
 
 # TODO: Just noticed that, if a parsed unit is already provided, then the unit_str is redundant. Could solve this
 # through function overloading but I don't know if I can do this based on the types of parameters alone.
-def parse_named_unit(unit_str: str, parsed_unit: Unit|None=None) -> NamedUnit:
-    if parsed_unit is None:
-        generic_unit = parse_unit(unit_str)
+def parse_named_unit(unit: str | Unit) -> NamedUnit:
+    if isinstance(unit, str):
+        generic_unit = parse_unit(unit)
+    elif isinstance(unit, Unit):
+        generic_unit = unit
     else:
-        generic_unit = parsed_unit
+        raise ValueError('Unit must be a string, or Unit')
     for named_unit in all_units:
         if named_unit == generic_unit:
             return named_unit
@@ -154,14 +156,14 @@ def parse_named_unit_from_group(unit_str: str, from_group: UnitGroup) -> NamedUn
     parsed_unit = parse_unit_from_group(unit_str, from_group)
     if parsed_unit is None:
         raise ValueError('That unit cannot be parsed from the specified group.')
-    return parse_named_unit('', parsed_unit)
+    return parse_named_unit(parsed_unit)
 
 if __name__ == "__main__":
     to_parse = input('Enter a unit to parse: ')
     try:
         generic_unit = parse_unit(to_parse)
         print(f'Generic Unit: {generic_unit}')
-        named_unit = parse_named_unit(to_parse, generic_unit)
+        named_unit = parse_named_unit(generic_unit)
         print(f'Named Unit: {named_unit}')
     except ValueError:
         print('There is no named unit available.')
