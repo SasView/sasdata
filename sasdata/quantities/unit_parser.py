@@ -139,6 +139,9 @@ def parse_unit_from_group(unit_str: str, from_group: UnitGroup) -> Unit | None:
         return None
 
 def parse_named_unit(unit: str | Unit) -> NamedUnit:
+    """Parses unit into a named unit. Parses unit into a Unit if it is not already, and then finds an equivaelent named
+    unit. Please note that this might not be the expected unit from the string itself. E.g. 'kgm/2' will become
+    newtons."""
     if isinstance(unit, str):
         generic_unit = parse_unit(unit)
     elif isinstance(unit, Unit):
@@ -151,6 +154,8 @@ def parse_named_unit(unit: str | Unit) -> NamedUnit:
     raise ValueError('A named unit does not exist for this unit.')
 
 def parse_named_unit_from_group(unit_str: str, from_group: UnitGroup) -> NamedUnit:
+    """Parses unit_str into a named unit. The named unit found must be part of from_group. If two units are found, the
+    unit that is present in from_group is returned. This is useful in cases of ambiguities."""
     parsed_unit = parse_unit_from_group(unit_str, from_group)
     if parsed_unit is None:
         raise ValueError('That unit cannot be parsed from the specified group.')
