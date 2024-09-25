@@ -69,7 +69,7 @@ def parse_unit_strs(unit_str: str, current_units: list[Unit] | None=None, longes
     if unit_str == '':
         return current_units
     parsed_unit, remaining_str = parse_single_unit(unit_str, longest_unit=longest_unit)
-    if not parsed_unit is None:
+    if parsed_unit is not None:
         current_units += [parsed_unit]
         return parse_unit_strs(remaining_str, current_units, longest_unit)
     else:
