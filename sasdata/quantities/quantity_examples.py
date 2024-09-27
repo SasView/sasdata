@@ -1,9 +1,8 @@
-from sasdata.quantities.quantity import Quantity
+from sasdata.quantities.quantity import Quantity, NamedQuantity
 from sasdata.quantities import units
 
-x = Quantity(1, units.meters, variance=1)
-y = Quantity(1, units.meters, variance=1)
+x = NamedQuantity("x", 1, units.meters, variance=1)
+y = NamedQuantity("y", 1, units.meters, variance=1)
 
-z = x+y
-
-print(z)
+print(x+y)
+print(x+x)
