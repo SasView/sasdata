@@ -5,7 +5,7 @@ import numpy as np
 from numpy._typing import ArrayLike
 
 from quantities.operations import Operation, Variable
-from quantities import operations
+from quantities import operations, units
 from sasdata.quantities.units import Unit
 
 import hashlib
@@ -93,6 +93,12 @@ class QuantityHistory:
             operation(*[history.operation_tree for history in histories]),
             references)
 
+    def has_variance(self):
+        for key in self.references:
+            if self.references[key].has_variance:
+                return True
+
+        return False
 
 
 class Quantity[QuantityType]:
@@ -101,7 +107,8 @@ class Quantity[QuantityType]:
     def __init__(self,
                  value: QuantityType,
                  units: Unit,
-                 variance: QuantityType | None = None):
+                 variance: QuantityType | None = None,
+                 hash_seed = ""):
 
         self.value = value
         """ Numerical value of this data, in the specified units"""
@@ -116,11 +123,15 @@ class Quantity[QuantityType]:
         """ Contains the variance if it is data driven, else it is """
 
         if variance is None:
-            self.hash_value = hash_data_via_numpy(value)
+            self.hash_value = hash_data_via_numpy(hash_seed, value)
         else:
-            self.hash_value = hash_data_via_numpy(value, variance.value)
+            self.hash_value = hash_data_via_numpy(hash_seed, value, variance)
 
         self.history = QuantityHistory.variable(self)
+
+    @property
+    def has_variance(self):
+        return self._variance is not None
 
     @property
     def variance(self) -> "Quantity":
@@ -139,6 +150,35 @@ class Quantity[QuantityType]:
             return (self.units.scale / units.scale) * self.value
         else:
             raise UnitError(f"Target units ({units}) not compatible with existing units ({self.units}).")
+
+    def variance_in_units_of(self, units: Unit) -> QuantityType:
+        """ Get the variance of quantity in other units """
+        variance = self.variance
+        if variance.units.equivalent(units):
+            return (variance.units.scale / units.scale) * variance
+        else:
+            raise UnitError(f"Target units ({units}) not compatible with existing units ({variance.units}).")
+
+    def in_si(self):
+        si_units = self.units.si_equivalent()
+        return self.in_units_of(si_units)
+
+    def in_units_of_with_standard_error(self, units):
+        variance = self.variance
+        units_squared = units**2
+
+        if variance.units.equivalent(units_squared):
+            scale_factor = self.units.scale / units.scale
+
+            return scale_factor*self.value, scale_factor * np.sqrt(self.variance.in_units_of(units_squared))
+        else:
+            raise UnitError(f"Target units ({units}) not compatible with existing units ({variance.units}).")
+
+    def in_si_with_standard_error(self):
+        if self.has_variance:
+            return self.in_units_of_with_standard_error(self.units.si_equivalent())
+        else:
+            return self.in_si(), None
 
     def __mul__(self: Self, other: ArrayLike | Self ) -> Self:
         if isinstance(other, Quantity):
@@ -253,19 +293,60 @@ class Quantity[QuantityType]:
                                    self.history.references))
 
     @staticmethod
+    def _array_repr_format(arr: np.ndarray):
+        """ Format the array """
+        order = len(arr.shape)
+        reshaped = arr.reshape(-1)
+        if len(reshaped) > 4:
+            numbers = ",".join([f"{n}" for n in reshaped])
+        else:
+            numbers = f"{reshaped[0]}, {reshaped[1]} ... {reshaped[-2]}, {reshaped[-1]}"
+
+        return "["*order + numbers + "]"*order
+
+    def __repr__(self):
+
+        if isinstance(self.units, units.NamedUnit):
+
+            value = self.value
+            error = np.sqrt(self.standard_deviation().value)
+            unit_string = self.units.symbol
+
+        else:
+            value, error = self.in_si_with_standard_error()
+            unit_string = self.units.dimensions.si_repr()
+
+        if isinstance(self.value, np.ndarray):
+            # Get the array in short form
+            numeric_string = self._array_repr_format(value)
+
+            if self.has_variance:
+                numeric_string += " ± " + self._array_repr_format(error)
+
+        else:
+            numeric_string = f"{value}"
+            if self.has_variance:
+                numeric_string += f" ± {error}"
+
+        return numeric_string + " " + unit_string
+
+    @staticmethod
     def parse(number_or_string: str | ArrayLike, unit: str, absolute_temperature: False):
         pass
 
 
 class NamedQuantity[QuantityType](Quantity[QuantityType]):
     def __init__(self,
+                 name: str,
                  value: QuantityType,
                  units: Unit,
-                 name: str,
                  variance: QuantityType | None = None):
 
-        super().__init__(value, units, variance=variance)
+        super().__init__(value, units, variance=variance, hash_seed=name)
         self.name = name
+
+    def __repr__(self):
+        return f"[{self.name}] " + super().__repr__()
 
 class DerivedQuantity[QuantityType](Quantity[QuantityType]):
     def __init__(self, value: QuantityType, units: Unit, history: QuantityHistory):
@@ -273,6 +354,11 @@ class DerivedQuantity[QuantityType](Quantity[QuantityType]):
 
         self.history = history
         self._variance_cache = None
+        self._has_variance = history.has_variance()
+
+    @property
+    def has_variance(self):
+        return self._has_variance
 
     @property
     def variance(self) -> Quantity:

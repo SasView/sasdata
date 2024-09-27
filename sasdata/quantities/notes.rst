@@ -5,6 +5,12 @@ DataSets: Immutable
 Quantities: Immutable
 Units: Hard coded
 
+Quantity methods
+----------------
+
+in_* methods return numbers/arrays in a given unit system
+to_* converts to different units
+
 
 Identifying of Quantities
 --------------------
