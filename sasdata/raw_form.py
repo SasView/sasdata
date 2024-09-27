@@ -5,6 +5,8 @@ from quantities.quantity import NamedQuantity
 
 DataType = TypeVar("DataType")
 
+""" Sasdata metadata tree """
+
 def shorten_string(string):
     lines = string.split("\n")
     if len(lines) <= 1:
