@@ -171,6 +171,36 @@ class Dimensions:
 
         return s
 
+    def si_repr(self):
+        s = ""
+        for name, size in [
+            ("kg", self.mass),
+            ("m", self.length),
+            ("s", self.time),
+            ("A", self.current),
+            ("K", self.temperature),
+            ("mol", self.moles_hint)]:
+
+            if size == 0:
+                pass
+            elif size == 1:
+                s += f"{name}"
+            else:
+                s += f"{name}{int_as_unicode_superscript(size)}"
+
+        match self.angle_hint:
+            case 0:
+                pass
+            case 2:
+                s += "sr"
+            case -2:
+                s += "sr" + int_as_unicode_superscript(-1)
+            case _:
+                s += "rad" + int_as_unicode_superscript(self.angle_hint)
+
+        return s
+
+
 class Unit:
     def __init__(self,
                  si_scaling_factor: float,
@@ -224,7 +254,12 @@ class Unit:
             pass
 
     def __repr__(self):
-        return f"Unit[{self.scale}, {self.dimensions}]"
+        if self.scale == 1:
+            # We're in SI
+            return self.dimensions.si_repr()
+
+        else:
+            return f"Unit[{self.scale}, {self.dimensions}]"
 
     @staticmethod
     def parse(unit_string: str) -> "Unit":
