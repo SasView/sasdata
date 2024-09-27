@@ -6,7 +6,7 @@ from numpy._typing import ArrayLike
 
 from quantities.operations import Operation, Variable
 from quantities import operations, units
-from sasdata.quantities.units import Unit
+from sasdata.quantities.units import Unit, NamedUnit
 
 import hashlib
 
@@ -68,8 +68,6 @@ class QuantityHistory:
         hash_values = [key for key in self.references]
         output = None
 
-        print(evaluated_jacobian)
-
         for hash_value, jac_component in zip(hash_values, evaluated_jacobian):
             if output is None:
                 output = jac_component * (self.references[hash_value].variance * jac_component)
@@ -128,6 +126,9 @@ class Quantity[QuantityType]:
         self.units = units
         """ Units of this data """
 
+        self._hash_seed = hash_seed
+        """ Retain this for copying operations"""
+
         self.hash_value = -1
         """ Hash based on value and uncertainty for data, -1 if it is a derived hash value """
 
@@ -163,6 +164,13 @@ class Quantity[QuantityType]:
             return (self.units.scale / units.scale) * self.value
         else:
             raise UnitError(f"Target units ({units}) not compatible with existing units ({self.units}).")
+
+    def to_units_of(self, new_units: Unit) -> "Quantity[QuantityType]":
+        new_value, new_error = self.in_units_of_with_standard_error(new_units)
+        return Quantity(value=new_value,
+                        units=new_units,
+                        standard_error=new_error,
+                        hash_seed=self._hash_seed)
 
     def variance_in_units_of(self, units: Unit) -> QuantityType:
         """ Get the variance of quantity in other units """
@@ -318,10 +326,10 @@ class Quantity[QuantityType]:
 
     def __repr__(self):
 
-        if isinstance(self.units, units.NamedUnit):
+        if isinstance(self.units, NamedUnit):
 
             value = self.value
-            error = self.standard_deviation().value
+            error = self.standard_deviation().in_units_of(self.units)
             unit_string = self.units.symbol
 
         else:
@@ -360,6 +368,15 @@ class NamedQuantity[QuantityType](Quantity[QuantityType]):
     def __repr__(self):
         return f"[{self.name}] " + super().__repr__()
 
+
+    def to_units_of(self, new_units: Unit) -> "NamedQuantity[QuantityType]":
+        new_value, new_error = self.in_units_of_with_standard_error(new_units)
+        return NamedQuantity(value=new_value,
+                        units=new_units,
+                        standard_error=new_error,
+                        name=self.name)
+
+
 class DerivedQuantity[QuantityType](Quantity[QuantityType]):
     def __init__(self, value: QuantityType, units: Unit, history: QuantityHistory):
         super().__init__(value, units, standard_error=None)
@@ -367,6 +384,14 @@ class DerivedQuantity[QuantityType](Quantity[QuantityType]):
         self.history = history
         self._variance_cache = None
         self._has_variance = history.has_variance()
+
+
+    def to_units_of(self, new_units: Unit) -> "Quantity[QuantityType]":
+        # TODO: Lots of tests needed for this
+        return DerivedQuantity(
+                value=self.in_units_of(new_units),
+                units=new_units,
+                history=self.history)
 
     @property
     def has_variance(self):
