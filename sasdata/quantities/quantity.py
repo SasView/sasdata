@@ -34,29 +34,41 @@ class QuantityHistory:
         self.operation_tree = operation_tree
         self.references = references
 
+        self.reference_key_list = [key for key in self.references]
+        self.si_reference_values = {key: self.references[key].in_si() for key in self.references}
+
     def jacobian(self) -> list[Operation]:
         """ Derivative of this quantity's operation history with respect to each of the references """
 
         # Use the hash value to specify the variable of differentiation
-        return [self.operation_tree.derivative(hash_value) for hash_value in self.references]
+        return [self.operation_tree.derivative(key) for key in self.reference_key_list]
 
-    def standard_error_propagate(self, covariances: dict[tuple[int, int]: "Quantity"] = {}):
+    def variance_propagate(self, quantity_units: Unit, covariances: dict[tuple[int, int]: "Quantity"] = {}):
         """ Do standard error propagation to calculate the uncertainties associated with this quantity
 
-        @param: covariances, off diagonal entries for the covariance matrix
+        :param quantity_units: units in which the output should be calculated
+        :param covariances: off diagonal entries for the covariance matrix
         """
 
         if covariances:
             raise NotImplementedError("User specified covariances not currently implemented")
 
         jacobian = self.jacobian()
+        # jacobian_units = [quantity_units / self.references[key].units for key in self.reference_key_list]
+        #
+        # # Evaluate the jacobian
+        # # TODO: should we use quantities here, does that work automatically?
+        # evaluated_jacobian = [Quantity(
+        #                         value=entry.evaluate(self.si_reference_values),
+        #                         units=unit.si_equivalent())
+        #                       for entry, unit in zip(jacobian, jacobian_units)]
 
-        # Evaluate the jacobian
-        # TODO: should we use quantities here, does that work automatically?
         evaluated_jacobian = [entry.evaluate(self.references) for entry in jacobian]
 
         hash_values = [key for key in self.references]
         output = None
+
+        print(evaluated_jacobian)
 
         for hash_value, jac_component in zip(hash_values, evaluated_jacobian):
             if output is None:
@@ -107,7 +119,7 @@ class Quantity[QuantityType]:
     def __init__(self,
                  value: QuantityType,
                  units: Unit,
-                 variance: QuantityType | None = None,
+                 standard_error: QuantityType | None = None,
                  hash_seed = ""):
 
         self.value = value
@@ -119,13 +131,14 @@ class Quantity[QuantityType]:
         self.hash_value = -1
         """ Hash based on value and uncertainty for data, -1 if it is a derived hash value """
 
-        self._variance = variance
         """ Contains the variance if it is data driven, else it is """
 
-        if variance is None:
+        if standard_error is None:
+            self._variance = None
             self.hash_value = hash_data_via_numpy(hash_seed, value)
         else:
-            self.hash_value = hash_data_via_numpy(hash_seed, value, variance)
+            self._variance = standard_error ** 2
+            self.hash_value = hash_data_via_numpy(hash_seed, value, standard_error)
 
         self.history = QuantityHistory.variable(self)
 
@@ -168,9 +181,8 @@ class Quantity[QuantityType]:
         units_squared = units**2
 
         if variance.units.equivalent(units_squared):
-            scale_factor = self.units.scale / units.scale
 
-            return scale_factor*self.value, scale_factor * np.sqrt(self.variance.in_units_of(units_squared))
+            return self.in_units_of(units), np.sqrt(self.variance.in_units_of(units_squared))
         else:
             raise UnitError(f"Target units ({units}) not compatible with existing units ({variance.units}).")
 
@@ -309,7 +321,7 @@ class Quantity[QuantityType]:
         if isinstance(self.units, units.NamedUnit):
 
             value = self.value
-            error = np.sqrt(self.standard_deviation().value)
+            error = self.standard_deviation().value
             unit_string = self.units.symbol
 
         else:
@@ -340,9 +352,9 @@ class NamedQuantity[QuantityType](Quantity[QuantityType]):
                  name: str,
                  value: QuantityType,
                  units: Unit,
-                 variance: QuantityType | None = None):
+                 standard_error: QuantityType | None = None):
 
-        super().__init__(value, units, variance=variance, hash_seed=name)
+        super().__init__(value, units, standard_error=standard_error, hash_seed=name)
         self.name = name
 
     def __repr__(self):
@@ -350,7 +362,7 @@ class NamedQuantity[QuantityType](Quantity[QuantityType]):
 
 class DerivedQuantity[QuantityType](Quantity[QuantityType]):
     def __init__(self, value: QuantityType, units: Unit, history: QuantityHistory):
-        super().__init__(value, units, variance=None)
+        super().__init__(value, units, standard_error=None)
 
         self.history = history
         self._variance_cache = None
@@ -363,6 +375,6 @@ class DerivedQuantity[QuantityType](Quantity[QuantityType]):
     @property
     def variance(self) -> Quantity:
         if self._variance_cache is None:
-            self._variance_cache = self.history.standard_error_propagate()
+            self._variance_cache = self.history.variance_propagate(self.units)
 
         return self._variance_cache
