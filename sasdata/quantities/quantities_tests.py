@@ -17,6 +17,12 @@ def test_unit_compounding_pow():
     assert (Quantity(1, units.millimeters) ** 2).in_units_of(units.square_meters) == 1e-6
     assert (Quantity(1, units.minutes) ** 3).in_units_of(units.seconds ** 3) == 60 ** 3
 
+def test_pow_scaling():
+    q2 = Quantity(1000, units.millimeters)**2
+    assert q2.units.scale == 1e-6
+    assert q2.value == 1e6
+
+
 def test_unit_compounding_mul():
     """ Test units compound correctly when __mul__ is used"""
     assert (Quantity(4, units.minutes) * Quantity(0.25, units.hertz)).in_units_of(units.none) == 60
@@ -49,7 +55,7 @@ def test_good_add_sub():
     assert (Quantity(1, units.seconds) + Quantity(1, units.milliseconds)).in_units_of(units.seconds) == 1.001
     assert (Quantity(1, units.seconds) - Quantity(1, units.milliseconds)).in_units_of(units.seconds) == 0.999
 
-    assert (Quantity(1, units.inches) + Quantity(1, units.feet)).in_units_of(units.inches) == 13
+    assert (Quantity(1, units.inches) + Quantity(1, units.feet)).in_units_of(units.inches) == pytest.approx(13, abs=1e-8)
 
 @pytest.mark.parametrize("unit_in, power, unit_out", [
     (units.meters**2, 1/2, units.meters),
