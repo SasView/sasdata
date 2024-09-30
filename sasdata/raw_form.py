@@ -18,7 +18,7 @@ def shorten_string(string):
 class Dataset[DataType]:
     name: str
     data: DataType
-    attributes: dict[str, Self]
+    attributes: dict[str, Self | str]
 
     def summary(self, indent_amount: int = 0, indent: str = "  ") -> str:
 
@@ -54,11 +54,14 @@ class RawData:
     data_contents: list[NamedQuantity]
     raw_metadata: dict[str, Dataset | Group]
 
-    def __repr__(self):
-        indent = "  "
-
+    def summary(self, indent = "  "):
         s = f"{self.name}\n"
+
+        for data in self.data_contents:
+            s += f"{indent}{data}\n"
+
+        s += f"{indent}Metadata:\n"
         for key in self.raw_metadata:
-            s += self.raw_metadata[key].summary(1, indent)
+            s += self.raw_metadata[key].summary(2, indent)
 
         return s
