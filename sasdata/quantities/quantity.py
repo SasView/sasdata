@@ -317,10 +317,15 @@ class Quantity[QuantityType]:
         """ Format the array """
         order = len(arr.shape)
         reshaped = arr.reshape(-1)
-        if len(reshaped) > 4:
+        if len(reshaped) <= 2:
             numbers = ",".join([f"{n}" for n in reshaped])
         else:
-            numbers = f"{reshaped[0]}, {reshaped[1]} ... {reshaped[-2]}, {reshaped[-1]}"
+            numbers = f"{reshaped[0]} ... {reshaped[-1]}"
+
+        # if len(reshaped) <= 4:
+        #     numbers = ",".join([f"{n}" for n in reshaped])
+        # else:
+        #     numbers = f"{reshaped[0]}, {reshaped[1]} ... {reshaped[-2]}, {reshaped[-1]}"
 
         return "["*order + numbers + "]"*order
 
@@ -368,13 +373,24 @@ class NamedQuantity[QuantityType](Quantity[QuantityType]):
     def __repr__(self):
         return f"[{self.name}] " + super().__repr__()
 
-
     def to_units_of(self, new_units: Unit) -> "NamedQuantity[QuantityType]":
         new_value, new_error = self.in_units_of_with_standard_error(new_units)
         return NamedQuantity(value=new_value,
-                        units=new_units,
-                        standard_error=new_error,
-                        name=self.name)
+                             units=new_units,
+                             standard_error=new_error,
+                             name=self.name)
+
+    def with_standard_error(self, standard_error: Quantity):
+        if standard_error.units.equivalent(self.units):
+            return NamedQuantity(
+                value=self.value,
+                units=self.units,
+                standard_error=standard_error.in_units_of(self.units),
+                name=self.name)
+
+        else:
+            raise UnitError(f"Standard error units ({standard_error.units}) "
+                            f"are not compatible with value units ({self.units})")
 
 
 class DerivedQuantity[QuantityType](Quantity[QuantityType]):
