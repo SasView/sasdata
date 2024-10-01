@@ -1,32 +1,61 @@
 from sasdata.quantities.unit_parser import parse_named_unit, parse_named_unit_from_group, parse_unit
-from sasdata.quantities.units import meters, speed, meters_per_second, per_angstrom, kilometers_per_square_hour, newtons
-from pytest import raises
+from sasdata.quantities import units
+from sasdata.quantities.units import Unit
+
+import pytest
+
+named_units_for_testing = [
+    ('m', units.meters),
+    ('A-1', units.per_angstrom),
+    ('1/A', units.per_angstrom),
+    ('kmh-2', units.kilometers_per_square_hour),
+    ('km/h2', units.kilometers_per_square_hour),
+    ('kgm/s2', units.newtons),
+    ('m m', units.square_meters),
+    ('mm', units.millimeters),
+    ('A^-1', units.per_angstrom),
+    ('V/Amps', units.ohms),
+    ('Ω', units.ohms),
+    ('Å', units.angstroms),
+    ('%', units.percent)
+]
+
+unnamed_units_for_testing = [
+    ('m13', units.meters**13),
+    ('kW/sr', units.kilowatts/units.stradians)
+]
 
 
-def test_parse():
-    parsed_metres = parse_named_unit('m')
-    assert parsed_metres == meters
-    # Have to specify a group because this is ambigious with inverse of milliseconds.
-    parsed_metres_per_second = parse_named_unit_from_group('ms-1', speed)
-    assert parsed_metres_per_second == meters_per_second
-    parsed_inverse_angstroms = parse_named_unit('A-1')
-    assert parsed_inverse_angstroms == per_angstrom
-    parsed_inverse_angstroms_slant = parse_named_unit('1/A')
-    assert parsed_inverse_angstroms_slant == per_angstrom
-    parsed_kilometers_per_square_hour = parse_named_unit('kmh-2')
-    assert parsed_kilometers_per_square_hour == kilometers_per_square_hour
-    parsed_kilometers_per_square_hour_slant = parse_named_unit('km/h2')
-    assert parsed_kilometers_per_square_hour_slant == kilometers_per_square_hour
-    parsed_newton = parse_named_unit('kgm/s2')
-    assert parsed_newton == newtons
+@pytest.mark.parametrize("string, expected_units", named_units_for_testing)
+def test_name_parse(string: str, expected_units: Unit):
+    """ Test basic parsing"""
+    assert parse_named_unit(string) == expected_units
+
+@pytest.mark.parametrize("string, expected_units", named_units_for_testing + unnamed_units_for_testing)
+def test_equivalent(string: str, expected_units: Unit):
+    """ Check dimensions of parsed units"""
+    assert parse_unit(string).equivalent(expected_units)
+
+
+@pytest.mark.parametrize("string, expected_units", named_units_for_testing + unnamed_units_for_testing)
+def test_scale_same(string: str, expected_units: Unit):
+    """ Test basic parsing"""
+    assert parse_unit(string).scale == pytest.approx(expected_units.scale, rel=1e-14)
+
+
+def test_parse_from_group():
+    """ Test group based disambiguation"""
+    parsed_metres_per_second = parse_named_unit_from_group('ms-1', units.speed)
+    assert parsed_metres_per_second == units.meters_per_second
+
 
 def test_parse_errors():
     # Fails because the unit is not in that specific group.
-    with raises(ValueError, match='That unit cannot be parsed from the specified group.'):
-        parse_named_unit_from_group('km', speed)
+    with pytest.raises(ValueError, match='That unit cannot be parsed from the specified group.'):
+        parse_named_unit_from_group('km', units.speed)
     # Fails because part of the unit matches but there is an unknown unit '@'
-    with raises(ValueError, match='unit_str contains forbidden characters.'):
+    with pytest.raises(ValueError, match='unit_str contains forbidden characters.'):
         parse_unit('km@-1')
     # Fails because 'da' is not a unit.
-    with raises(ValueError, match='Unit string contains an unrecognised pattern.'):
+    with pytest.raises(ValueError, match='Unit string contains an unrecognised pattern.'):
         parse_unit('mmda2')
