@@ -4,8 +4,8 @@ from dataclasses import dataclass
 import numpy as np
 from numpy._typing import ArrayLike
 
-from quantities.operations import Operation, Variable
-from quantities import operations, units
+from sasdata.quantities.operations import Operation, Variable
+from sasdata.quantities import operations, units
 from sasdata.quantities.units import Unit, NamedUnit
 
 import hashlib
