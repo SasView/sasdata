@@ -152,7 +152,7 @@ class Dimensions:
             17**abs(self.moles_hint) * 19**abs(self.angle_hint)
 
     def __repr__(self):
-        s = ""
+        tokens = []
         for name, size in [
             ("length", self.length),
             ("time", self.time),
@@ -165,14 +165,14 @@ class Dimensions:
             if size == 0:
                 pass
             elif size == 1:
-                s += f"{name}"
+                tokens.append(f"{name}")
             else:
-                s += f"{name}{int_as_unicode_superscript(size)}"
+                tokens.append(f"{name}{int_as_unicode_superscript(size)}")
 
-        return s
+        return ' '.join(tokens)
 
     def si_repr(self):
-        s = ""
+        tokens = []
         for name, size in [
             ("kg", self.mass),
             ("m", self.length),
@@ -184,21 +184,21 @@ class Dimensions:
             if size == 0:
                 pass
             elif size == 1:
-                s += f"{name}"
+                tokens.append(f"{name}")
             else:
-                s += f"{name}{int_as_unicode_superscript(size)}"
+                tokens.append(f"{name}{int_as_unicode_superscript(size)}")
 
         match self.angle_hint:
             case 0:
                 pass
             case 2:
-                s += "sr"
+                tokens.append("sr")
             case -2:
-                s += "sr" + int_as_unicode_superscript(-1)
+                tokens.append("sr" + int_as_unicode_superscript(-1))
             case _:
-                s += "rad" + int_as_unicode_superscript(self.angle_hint)
+                tokens.append("rad" + int_as_unicode_superscript(self.angle_hint))
 
-        return s
+        return ''.join(tokens)
 
 
 class Unit:

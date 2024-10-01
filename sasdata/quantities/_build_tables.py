@@ -90,7 +90,13 @@ non_si_units = non_si_dimensioned_units + non_si_dimensionless_units
 # Add Hartree? Rydberg? Bohrs?
 # Add CGS
 
-aliases = {
+# Two stages of aliases, to make sure units don't get lost
+
+aliases_1 = {
+    "A": ["Amps", "amps"]
+}
+
+aliases_2 = {
     "y": ["yr", "year"],
     "d": ["day"],
     "h": ["hr", "hour"],
@@ -100,6 +106,7 @@ aliases = {
     "deg": ["degr", "Deg", "degrees", "Degrees"],
     "none": ["Counts", "counts", "cnts", "Cnts"]
 }
+
 
 
 all_units = base_si_units + derived_si_units + non_si_units
@@ -237,7 +244,7 @@ with open("units.py", 'w', encoding=encoding) as fid:
                       f"ascii_symbol='{length_symbol}/{time_symbol}', "
                       f"symbol='{length_special_symbol}{time_special_symbol}⁻¹')\n")
 
-            fid.write(f"{accel_name} = NamedUnit({length_scale / time_scale}, "
+            fid.write(f"{accel_name} = NamedUnit({length_scale / time_scale**2}, "
                       f"Dimensions(length=1, time=-2), "
                       f"name='{accel_name}', "
                       f"ascii_symbol='{length_symbol}/{time_symbol}^2', "
@@ -286,10 +293,12 @@ with open("units.py", 'w', encoding=encoding) as fid:
     # Add aliases to symbol lookup table
     #
 
-    for base_name in aliases:
-        alias_list = aliases[base_name]
-        for alias in alias_list:
-            symbol_lookup[alias] = symbol_lookup[base_name]
+    # Apply the alias transforms sequentially
+    for aliases in [aliases_1, aliases_2]:
+        for base_name in aliases:
+            alias_list = aliases[base_name]
+            for alias in alias_list:
+                symbol_lookup[alias] = symbol_lookup[base_name]
 
     #
     # Write out the symbol lookup table
