@@ -68,19 +68,19 @@ in the file LICENSE that is included with this distribution.
 	<!-- ++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
 
 	<complexType name="SASentryType">
-		<sequence>
-			<xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax" />
+		<xsd:choice minOccurs="1" maxOccurs="unbounded">
+			<element name="Title" minOccurs="0" maxOccurs="unbounded" type="string" />
+			<element name="Run" minOccurs="0" maxOccurs="unbounded" />
 			<element name="SASdata" minOccurs="1" maxOccurs="unbounded" type="tns:SASdataType" />
-			<xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax">
-				<!-- Is a second *any* element needed here? -->
-				<annotation>
-					<appinfo>
-						<!-- Remap collision of Any when using JAXB --> 
-						<jaxb:property name="SASentryAny2" />
-					</appinfo>
-				</annotation>
-			</xsd:any>
-		</sequence>
+			<element name="SASsample" minOccurs="0" maxOccurs="unbounded" />
+			<element name="SASinstrument"  minOccurs="0" maxOccurs="unbounded" />
+			<element name="SASprocess" minOccurs="0" maxOccurs="unbounded" />
+			<element name="SASnote" minOccurs="0" maxOccurs="unbounded" />
+			<!-- SASnote is a free-form element.
+			Do not define any content for it or it will become restrictive.
+			-->
+			<xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax" namespace="##other" />
+		</xsd:choice>
 		<attribute name="name" type="string" use="optional" default="" />
 	</complexType>
 
