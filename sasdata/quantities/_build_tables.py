@@ -97,7 +97,8 @@ aliases = {
     "Ang": ["A", "Å"],
     "au": ["a.u.", "amu"],
     "percent": ["%"],
-    "deg": ["degr"],
+    "deg": ["degr", "Deg", "degrees", "Degrees"],
+    "none": ["Counts", "counts", "cnts", "Cnts"]
 }
 
 

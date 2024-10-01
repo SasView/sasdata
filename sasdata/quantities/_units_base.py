@@ -1,9 +1,13 @@
 from dataclasses import dataclass
 from typing import Sequence, Self, TypeVar
+from fractions import Fraction
 
 import numpy as np
 
 from sasdata.quantities.unicode_superscript import int_as_unicode_superscript
+
+class DimensionError(Exception):
+    pass
 
 class Dimensions:
     """
@@ -65,19 +69,46 @@ class Dimensions:
             self.moles_hint - other.moles_hint,
             self.angle_hint - other.angle_hint)
 
-    def __pow__(self, power: int):
+    def __pow__(self, power: int | float):
 
-        if not isinstance(power, int):
+        if not isinstance(power, (int, float)):
             return NotImplemented
 
+        frac = Fraction(power).limit_denominator(500) # Probably way bigger than needed, 10 would probably be fine
+        denominator = frac.denominator
+        numerator = frac.numerator
+
+        # Throw errors if dimension is not a multiple of the denominator
+
+        if self.length % denominator != 0:
+            raise DimensionError(f"Cannot apply power of {frac} to unit with length dimensionality {self.length}")
+
+        if self.time % denominator != 0:
+            raise DimensionError(f"Cannot apply power of {frac} to unit with time dimensionality {self.time}")
+
+        if self.mass % denominator != 0:
+            raise DimensionError(f"Cannot apply power of {frac} to unit with mass dimensionality {self.mass}")
+
+        if self.current % denominator != 0:
+            raise DimensionError(f"Cannot apply power of {frac} to unit with current dimensionality {self.current}")
+
+        if self.temperature % denominator != 0:
+            raise DimensionError(f"Cannot apply power of {frac} to unit with temperature dimensionality {self.temperature}")
+
+        if self.moles_hint % denominator != 0:
+            raise DimensionError(f"Cannot apply power of {frac} to unit with moles hint dimensionality of {self.moles_hint}")
+
+        if self.angle_hint % denominator != 0:
+            raise DimensionError(f"Cannot apply power of {frac} to unit with angle hint dimensionality of {self.angle_hint}")
+
         return Dimensions(
-            self.length * power,
-            self.time * power,
-            self.mass * power,
-            self.current * power,
-            self.temperature * power,
-            self.moles_hint * power,
-            self.angle_hint * power)
+            (self.length * numerator) // denominator,
+            (self.time * numerator) // denominator,
+            (self.mass * numerator) // denominator,
+            (self.current * numerator) // denominator,
+            (self.temperature * numerator) // denominator,
+            (self.moles_hint * numerator) // denominator,
+            (self.angle_hint * numerator) // denominator)
 
     def __eq__(self: Self, other: Self):
         if isinstance(other, Dimensions):
@@ -140,6 +171,36 @@ class Dimensions:
 
         return s
 
+    def si_repr(self):
+        s = ""
+        for name, size in [
+            ("kg", self.mass),
+            ("m", self.length),
+            ("s", self.time),
+            ("A", self.current),
+            ("K", self.temperature),
+            ("mol", self.moles_hint)]:
+
+            if size == 0:
+                pass
+            elif size == 1:
+                s += f"{name}"
+            else:
+                s += f"{name}{int_as_unicode_superscript(size)}"
+
+        match self.angle_hint:
+            case 0:
+                pass
+            case 2:
+                s += "sr"
+            case -2:
+                s += "sr" + int_as_unicode_superscript(-1)
+            case _:
+                s += "rad" + int_as_unicode_superscript(self.angle_hint)
+
+        return s
+
+
 class Unit:
     def __init__(self,
                  si_scaling_factor: float,
@@ -171,11 +232,12 @@ class Unit:
         else:
             return NotImplemented
 
-    def __pow__(self, power: int):
-        if not isinstance(power, int):
+    def __pow__(self, power: int | float):
+        if not isinstance(power, int | float):
             return NotImplemented
 
         return Unit(self.scale**power, self.dimensions**power)
+
 
     def equivalent(self: Self, other: "Unit"):
         return self.dimensions == other.dimensions
@@ -192,7 +254,12 @@ class Unit:
             pass
 
     def __repr__(self):
-        return f"Unit[{self.scale}, {self.dimensions}]"
+        if self.scale == 1:
+            # We're in SI
+            return self.dimensions.si_repr()
+
+        else:
+            return f"Unit[{self.scale}, {self.dimensions}]"
 
     @staticmethod
     def parse(unit_string: str) -> "Unit":

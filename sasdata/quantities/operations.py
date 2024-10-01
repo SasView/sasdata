@@ -2,8 +2,6 @@ from typing import Any, TypeVar, Union
 
 import json
 
-# from sasdata.quantities.quantity import BaseQuantity
-
 T = TypeVar("T")
 
 def hash_and_name(hash_or_name: int | str):
@@ -75,21 +73,21 @@ class Operation:
 
         derivative_string = derivative.serialise()
 
-        print("---------------")
-        print("Base")
-        print("---------------")
-        print(derivative.summary())
+        # print("---------------")
+        # print("Base")
+        # print("---------------")
+        # print(derivative.summary())
 
         # Inefficient way of doing repeated simplification, but it will work
         for i in range(100): # set max iterations
 
             derivative = derivative._clean()
-
-            print("-------------------")
-            print("Iteration", i+1)
-            print("-------------------")
-            print(derivative.summary())
-            print("-------------------")
+            #
+            # print("-------------------")
+            # print("Iteration", i+1)
+            # print("-------------------")
+            # print(derivative.summary())
+            # print("-------------------")
 
             new_derivative_string = derivative.serialise()
 
