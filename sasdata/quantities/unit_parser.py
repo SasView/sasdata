@@ -4,25 +4,10 @@ from re import findall, fullmatch
 # TODO: This shouldn't be in this file but I don't want to edit Lucas' code before he is finished.
 
 all_units_groups = [group.units for group in unit_groups.values()]
+unit_groups_by_dimension_hash = {hash(group.units[0].dimensions): group for group in unit_groups.values()}
 all_units: list[NamedUnit] = []
 for group in all_units_groups:
     all_units.extend(group)
-
-def multiply_dimensions(dimensions_1: Dimensions, dimensions_2: Dimensions) -> Dimensions:
-    """Multiply each dimension in dimensions_1 with the same dimension in dimensions_2"""
-    return Dimensions(
-        length=dimensions_1.length * dimensions_2.length,
-        time=dimensions_1.time * dimensions_2.time,
-        mass=dimensions_1.mass * dimensions_2.mass,
-        current=dimensions_1.current * dimensions_2.current,
-        temperature=dimensions_1.temperature * dimensions_2.temperature,
-        moles_hint=dimensions_1.moles_hint * dimensions_2.moles_hint,
-        angle_hint=dimensions_1.angle_hint * dimensions_2.angle_hint
-    )
-
-def combine_units(unit_1: Unit, unit_2: Unit):
-    """Combine unit_1, and unit_2 into one unit."""
-    return Unit(unit_1.scale * unit_2.scale, unit_1.dimensions * unit_2.dimensions)
 
 def split_unit_str(unit_str: str) -> list[str]:
     """Separate the letters from the numbers in unit_str"""
@@ -54,13 +39,13 @@ def parse_single_unit(unit_str: str, unit_group: UnitGroup | None = None, longes
         if len(potential_symbols) == 0:
             break
         string_pos += 1
-        current_unit= potential_unit_str
+        current_unit = potential_unit_str
         if not longest_unit and current_unit in lookup_dict.keys():
             break
     if current_unit == '':
-        return (None, unit_str)
+        return None, unit_str
     remaining_str = unit_str[string_pos::]
-    return (lookup_dict[current_unit], remaining_str)
+    return lookup_dict[current_unit], remaining_str
 
 def parse_unit_strs(unit_str: str, current_units: list[Unit] | None=None, longest_unit: bool = True) -> list[Unit]:
     """Recursively parse units from unit_str until no more characters are present."""
@@ -74,14 +59,6 @@ def parse_unit_strs(unit_str: str, current_units: list[Unit] | None=None, longes
         return parse_unit_strs(remaining_str, current_units, longest_unit)
     else:
         raise ValueError(f'Could not interpret {remaining_str}')
-
-def unit_power(to_modify: Unit, power: int):
-    """Raise to_modify to power"""
-    # FIXME: This is horrible but I'm not sure how to fix this without changing the Dimension class itself.
-    dimension_multiplier = Dimensions(power, power, power, power, power, power, power)
-    scale_multiplier = 1 if power > 0 else -1
-    return Unit(to_modify.scale ** scale_multiplier, multiply_dimensions(to_modify.dimensions, dimension_multiplier))
-
 
 # Its probably useful to work out the unit first, and then later work out if a named unit exists for it. Hence why there
 # are two functions.
@@ -98,14 +75,16 @@ def parse_unit_stack(unit_str: str, longest_unit: bool = True) -> list[Unit]:
                 continue
             power = int(token)
             to_modify = unit_stack[-1]
-            modified = unit_power(to_modify, power)
+            modified = to_modify ** power
+            # modified = unit_power(to_modify, power)
             unit_stack[-1] = modified
         except ValueError:
             new_units = parse_unit_strs(token, None, longest_unit)
             if inverse_next_unit:
                 # TODO: Assume the power is going to be -1. This might not be true.
                 power = -1
-                new_units[0] = unit_power(new_units[0], power)
+                new_units[0] = new_units[0] ** power
+                # new_units[0] = unit_power(new_units[0], power)
             unit_stack += new_units
         # This error will happen if it tries to read a modifier but there are no units on the stack. We will just have
         # to ignore it. Strings being parsed shouldn't really have it anyway (e.g. -1m).
@@ -121,7 +100,8 @@ def parse_unit(unit_str: str, longest_unit: bool = True) -> Unit:
         parsed_unit = Unit(1, Dimensions())
         unit_stack = parse_unit_stack(unit_str, longest_unit)
         for unit in unit_stack:
-            parsed_unit = combine_units(parsed_unit, unit)
+            # parsed_unit = combine_units(parsed_unit, unit)
+            parsed_unit *= unit
         return parsed_unit
     except KeyError:
         raise ValueError('Unit string contains an unrecognised pattern.')
@@ -138,20 +118,29 @@ def parse_unit_from_group(unit_str: str, from_group: UnitGroup) -> Unit | None:
     else:
         return None
 
-def parse_named_unit(unit: str | Unit) -> NamedUnit:
+def parse_named_unit(unit_string: str, rtol: float=1e-14) -> NamedUnit:
     """Parses unit into a named unit. Parses unit into a Unit if it is not already, and then finds an equivaelent named
     unit. Please note that this might not be the expected unit from the string itself. E.g. 'kgm/2' will become
-    newtons."""
-    if isinstance(unit, str):
-        generic_unit = parse_unit(unit)
-    elif isinstance(unit, Unit):
-        generic_unit = unit
-    else:
-        raise ValueError('Unit must be a string, or Unit')
-    for named_unit in all_units:
-        if named_unit == generic_unit:
-            return named_unit
+    newtons.
+
+    :param unit_string: string describing the units, e.g. km/s
+    :param rtol: relative tolerance for matching scale factors
+    """
+    unit = parse_unit(unit_string)
+    return find_named_unit(unit)
+
+def find_named_unit(unit: Unit, rtol: float=1e-14) -> NamedUnit:
+    """ Find a named unit matching the one provided """
+    dimension_hash = hash(unit.dimensions)
+    if dimension_hash in unit_groups_by_dimension_hash:
+        unit_group = unit_groups_by_dimension_hash[hash(unit.dimensions)]
+
+        for named_unit in unit_group.units:
+            if abs(named_unit.scale - unit.scale) < rtol*named_unit.scale:
+                return named_unit
+
     raise ValueError('A named unit does not exist for this unit.')
+
 
 def parse_named_unit_from_group(unit_str: str, from_group: UnitGroup) -> NamedUnit:
     """Parses unit_str into a named unit. The named unit found must be part of from_group. If two units are found, the
@@ -159,7 +148,7 @@ def parse_named_unit_from_group(unit_str: str, from_group: UnitGroup) -> NamedUn
     parsed_unit = parse_unit_from_group(unit_str, from_group)
     if parsed_unit is None:
         raise ValueError('That unit cannot be parsed from the specified group.')
-    return parse_named_unit(parsed_unit)
+    return find_named_unit(parsed_unit)
 
 if __name__ == "__main__":
     to_parse = input('Enter a unit to parse: ')
