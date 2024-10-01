@@ -127,9 +127,13 @@ def parse_named_unit(unit_string: str, rtol: float=1e-14) -> NamedUnit:
     :param rtol: relative tolerance for matching scale factors
     """
     unit = parse_unit(unit_string)
-    return find_named_unit(unit)
+    named_unit = find_named_unit(unit)
+    if named_unit is None:
+        raise ValueError(f"We don't have a for this unit: '{unit}'")
+    else:
+        return named_unit
 
-def find_named_unit(unit: Unit, rtol: float=1e-14) -> NamedUnit:
+def find_named_unit(unit: Unit, rtol: float=1e-14) -> NamedUnit | None:
     """ Find a named unit matching the one provided """
     dimension_hash = hash(unit.dimensions)
     if dimension_hash in unit_groups_by_dimension_hash:
@@ -139,7 +143,7 @@ def find_named_unit(unit: Unit, rtol: float=1e-14) -> NamedUnit:
             if abs(named_unit.scale - unit.scale) < rtol*named_unit.scale:
                 return named_unit
 
-    raise ValueError('A named unit does not exist for this unit.')
+    return None
 
 
 def parse_named_unit_from_group(unit_str: str, from_group: UnitGroup) -> NamedUnit:
@@ -150,12 +154,26 @@ def parse_named_unit_from_group(unit_str: str, from_group: UnitGroup) -> NamedUn
         raise ValueError('That unit cannot be parsed from the specified group.')
     return find_named_unit(parsed_unit)
 
+def parse(string: str,
+          name_lookup: bool = True,
+          longest_unit: bool = True,
+          lookup_rtol: float = 1e-14):
+
+    unit = parse_unit(string, longest_unit=longest_unit)
+    if name_lookup:
+        named = find_named_unit(unit, rtol=lookup_rtol)
+        if named is not None:
+            return named
+
+    return unit
+
+
 if __name__ == "__main__":
     to_parse = input('Enter a unit to parse: ')
     try:
         generic_unit = parse_unit(to_parse)
         print(f'Generic Unit: {generic_unit}')
-        named_unit = parse_named_unit(generic_unit)
+        named_unit = find_named_unit(generic_unit)
         print(f'Named Unit: {named_unit}')
     except ValueError:
         print('There is no named unit available.')
