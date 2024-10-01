@@ -14,11 +14,12 @@ from h5py._hl.group import Group as HDF5Group
 from sasdata.raw_form import RawData
 from sasdata.raw_form import Dataset as SASDataDataset, Group as SASDataGroup
 
-from quantities.quantity import NamedQuantity
-from quantities import units
+from sasdata.quantities.quantity import NamedQuantity
+from sasdata.quantities import units
+from sasdata.quantities.unit_parser import parse
 
-test_file = "./example_data/1d_data/33837rear_1D_1.75_16.5_NXcanSAS_v3.h5"
-# test_file = "./example_data/1d_data/33837rear_1D_1.75_16.5_NXcanSAS.h5"
+# test_file = "./example_data/1d_data/33837rear_1D_1.75_16.5_NXcanSAS_v3.h5"
+test_file = "./example_data/1d_data/33837rear_1D_1.75_16.5_NXcanSAS.h5"
 
 logger = logging.getLogger(__name__)
 
@@ -55,10 +56,7 @@ def recurse_hdf5(hdf5_entry):
     else:
         raise TypeError(f"Unknown type found during HDF5 parsing: {type(hdf5_entry)} ({hdf5_entry})")
 
-def parse_units_placeholder(string: str) -> units.Unit:
-    #TODO: Remove when not needed
-    return units.meters
-
+GET_UNITS_FROM_ELSEWHERE = units.meters
 def connected_data(node: SASDataGroup, name_prefix="") -> list[NamedQuantity]:
     """ In the context of NeXus files, load a group of data entries that are organised together
     match up the units and errors with their values"""
@@ -71,8 +69,11 @@ def connected_data(node: SASDataGroup, name_prefix="") -> list[NamedQuantity]:
     for name in node.children:
 
         child = node.children[name]
-        # TODO: Actual unit parser here
-        units = parse_units_placeholder(child.attributes["units"])
+
+        if "units" in child.attributes:
+            units = parse(child.attributes["units"])
+        else:
+            units = GET_UNITS_FROM_ELSEWHERE
 
         quantity = NamedQuantity(name=name_prefix+child.name,
                                  value=child.data,
