@@ -1,6 +1,6 @@
 # Data import/export requirements
 h5py
-lxml < 5.0
+lxml
 
 # Calculation
 numpy==1.*
