@@ -237,18 +237,21 @@ with open("units.py", 'w', encoding=encoding) as fid:
             speed_dimensions = Dimensions(length=1, time=-1)
             accel_dimensions = Dimensions(length=1, time=-2)
 
+            length_special = length_special_symbol if length_special_symbol is not None else length_symbol
+            time_special = time_special_symbol if time_special_symbol is not None else time_symbol
+
             fid.write(f"{speed_name} "
                       f"= NamedUnit({length_scale / time_scale}, "
                       f"Dimensions(length=1, time=-1), "
                       f"name='{speed_name}', "
                       f"ascii_symbol='{length_symbol}/{time_symbol}', "
-                      f"symbol='{length_special_symbol}{time_special_symbol}⁻¹')\n")
+                      f"symbol='{length_special}{time_special}⁻¹')\n")
 
             fid.write(f"{accel_name} = NamedUnit({length_scale / time_scale**2}, "
                       f"Dimensions(length=1, time=-2), "
                       f"name='{accel_name}', "
                       f"ascii_symbol='{length_symbol}/{time_symbol}^2', "
-                      f"symbol='{length_special_symbol}{time_special_symbol}⁻²')\n")
+                      f"symbol='{length_special}{time_special}⁻²')\n")
 
             unit_types[hash(speed_dimensions)].append(speed_name)
             unit_types[hash(accel_dimensions)].append(accel_name)
@@ -261,12 +264,15 @@ with open("units.py", 'w', encoding=encoding) as fid:
 
             dimensions = Dimensions(length=-3, mass=1)
 
+            mass_special = mass_symbol if mass_special_symbol is None else mass_special_symbol
+            length_special = length_symbol if length_special_symbol is None else length_special_symbol
+
             fid.write(f"{name} "
                       f"= NamedUnit({mass_scale / length_scale**3}, "
                       f"Dimensions(length=-3, mass=1), "
                       f"name='{name}', "
                       f"ascii_symbol='{mass_symbol} {length_symbol}^-3', "
-                      f"symbol='{mass_special_symbol}{length_special_symbol}⁻³')\n")
+                      f"symbol='{mass_special}{length_special}⁻³')\n")
 
             unit_types[hash(dimensions)].append(name)
 
@@ -278,12 +284,15 @@ with open("units.py", 'w', encoding=encoding) as fid:
 
             dimensions = Dimensions(length=-3, moles_hint=1)
 
+            length_special = length_symbol if length_special_symbol is None else length_special_symbol
+            amount_special = amount_symbol if amount_special_symbol is None else amount_special_symbol
+
             fid.write(f"{name} "
                       f"= NamedUnit({amount_scale / length_scale**3}, "
                       f"Dimensions(length=-3, moles_hint=1), "
                       f"name='{name}', "
                       f"ascii_symbol='{amount_symbol} {length_symbol}^-3', "
-                      f"symbol='{amount_special_symbol}{length_special_symbol}⁻³')\n")
+                      f"symbol='{amount_special}{length_special}⁻³')\n")
 
             unit_types[hash(dimensions)].append(name)
 
