@@ -185,7 +185,7 @@ with open("units.py", 'w', encoding=encoding) as fid:
             # Units
             dimensions = Dimensions(length, time, mass, current, temperature, moles_hint, angle_hint)
             fid.write(f"{combined_name_plural} = NamedUnit({combined_scale}, "
-                      f"Dimensions({length}, {time}, {mass}, {current}, {temperature}),"
+                      f"Dimensions({length}, {time}, {mass}, {current}, {temperature}, {moles_hint}, {angle_hint}),"
                       f"name='{combined_name_plural}',"
                       f"ascii_symbol='{combined_symbol}',"
                       f"symbol='{combined_special_symbol}')\n")
