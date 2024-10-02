@@ -1,4 +1,5 @@
 from PySide6.QtWidgets import QWidget, QApplication, QVBoxLayout, QLineEdit, QHBoxLayout, QLabel
+from sys import argv
 
 class MetadataFilenameDialog(QWidget):
     def __init__(self, filename: str):
@@ -22,9 +23,11 @@ class MetadataFilenameDialog(QWidget):
 
 if __name__ == "__main__":
     app = QApplication([])
-
-    filename = input('Input filename to test: ')
-    widget = MetadataFilenameDialog(filename)
+    if len(argv) < 2:
+        filename = input('Input filename to test: ')
+    else:
+        filename = argv[1]
+    widget = MetadataFilenameDialog(argv[1])
     widget.show()
 
 
