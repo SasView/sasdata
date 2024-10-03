@@ -4,13 +4,36 @@ from sasdata.quantities.quantity import Quantity
 import sasdata.quantities.units as units
 from sasdata.quantities.units import Dimensions, Unit
 
+from sasdata.raw_form import Group, Dataset
 
 DataType = TypeVar("DataType")
 OutputType = TypeVar("OutputType")
 
+class AccessorTarget:
+    def __init__(self, data: Group):
+        self._data = data
+
+    def get_value(self, path: str):
+
+        tokens = path.split(".")
+
+        # Navigate the tree from the entry we need
+
+        current_tree_position: Group | Dataset = self._data
+        
+        for token in tokens:
+            if isinstance(current_tree_position, Group):
+                current_tree_position = current_tree_position.children[token]
+            elif isinstance(current_tree_position, Dataset):
+                current_tree_position = current_tree_position.attributes[token]
+
+
+
+
+
 class Accessor[DataType, OutputType]:
     """ Base class """
-    def __init__(self, target_object, value_target: str):
+    def __init__(self, target_object: AccessorTarget, value_target: str):
         self.target_object = target_object
         self.value_target = value_target
 
@@ -35,7 +58,7 @@ class FloatAccessor(Accessor[float, float]):
 
 class QuantityAccessor[DataType](Accessor[DataType, Quantity[DataType]]):
     """ Base class for accessors that work with quantities that have units """
-    def __init__(self, target_object, value_target: str, unit_target: str, default_unit=None):
+    def __init__(self, target_object: AccessorTarget, value_target: str, unit_target: str, default_unit=units.none):
         super().__init__(target_object, value_target)
         self._unit_target = unit_target
         self.default_unit = default_unit
