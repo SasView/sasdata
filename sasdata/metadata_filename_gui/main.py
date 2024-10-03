@@ -3,6 +3,13 @@ from sys import argv
 import re
 
 def build_span(text: str, classname: str = '') -> str:
+    match classname:
+        case 'token':
+            return f"<font color='red'>{text}</font>"
+        case 'separator':
+            return f"<font color='grey'>{text}</font>"
+        case _:
+            return text
     return f'<span class="{classname}">{text}</span>'
 
 class MetadataFilenameDialog(QWidget):
@@ -12,7 +19,6 @@ class MetadataFilenameDialog(QWidget):
         self.filename = filename
 
         self.filename_line_label = QLabel()
-
         self.seperator_chars_label = QLabel('Seperators')
         self.separator_chars = QLineEdit()
         self.separator_chars.textChanged.connect(self.update_filename_separation)
