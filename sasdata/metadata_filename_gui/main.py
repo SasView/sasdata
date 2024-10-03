@@ -47,7 +47,6 @@ class MetadataFilenameDialog(QWidget):
         return font_elements
 
     def update_filename_separation(self):
-        print(self.formatted_filename())
         self.filename_line_label.setText(f'Filename: {self.formatted_filename()}')
 
 
