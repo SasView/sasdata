@@ -1,5 +1,9 @@
 from PySide6.QtWidgets import QWidget, QApplication, QVBoxLayout, QLineEdit, QHBoxLayout, QLabel
 from sys import argv
+import re
+
+def build_span(text: str, classname: str = '') -> str:
+    return f'<span class="{classname}">{text}</span>'
 
 class MetadataFilenameDialog(QWidget):
     def __init__(self, filename: str):
@@ -7,10 +11,14 @@ class MetadataFilenameDialog(QWidget):
 
         self.filename = filename
 
-        self.filename_line_label = QLabel(f'Filename: <b>{filename}</b>')
+        self.filename_line_label = QLabel()
 
         self.seperator_chars_label = QLabel('Seperators')
         self.separator_chars = QLineEdit()
+        self.separator_chars.textChanged.connect(self.update_filename_separation)
+
+        # Have to update this now because it relies on the value of the separator.
+        self.update_filename_separation()
 
         self.filename_separator_layout = QHBoxLayout()
         self.filename_separator_layout.addWidget(self.filename_line_label)
@@ -19,6 +27,23 @@ class MetadataFilenameDialog(QWidget):
 
         self.layout = QVBoxLayout(self)
         self.layout.addLayout(self.filename_separator_layout)
+
+    def formatted_filename(self) -> str:
+        sep_str = self.separator_chars.text()
+        if sep_str == '':
+            return f'<span>{filename}</span>'
+        # Won't escape characters; I'll handle that later.
+        separated = re.split(f'([{sep_str}])', self.filename)
+        spans = ''
+        for i, token in enumerate(separated):
+            classname = 'token' if i % 2 == 0 else 'separator'
+            spans += build_span(token, classname)
+        return spans
+
+    def update_filename_separation(self):
+        print(self.formatted_filename())
+        self.filename_line_label.setText(f'Filename: {self.formatted_filename()}')
+
 
 
 if __name__ == "__main__":
