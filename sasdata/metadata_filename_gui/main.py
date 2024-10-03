@@ -2,7 +2,7 @@ from PySide6.QtWidgets import QWidget, QApplication, QVBoxLayout, QLineEdit, QHB
 from sys import argv
 import re
 
-def build_span(text: str, classname: str = '') -> str:
+def build_font(text: str, classname: str = '') -> str:
     match classname:
         case 'token':
             return f"<font color='red'>{text}</font>"
@@ -40,11 +40,11 @@ class MetadataFilenameDialog(QWidget):
             return f'<span>{filename}</span>'
         # Won't escape characters; I'll handle that later.
         separated = re.split(f'([{sep_str}])', self.filename)
-        spans = ''
+        font_elements = ''
         for i, token in enumerate(separated):
             classname = 'token' if i % 2 == 0 else 'separator'
-            spans += build_span(token, classname)
-        return spans
+            font_elements += build_font(token, classname)
+        return font_elements
 
     def update_filename_separation(self):
         print(self.formatted_filename())
