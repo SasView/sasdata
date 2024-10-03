@@ -27,7 +27,7 @@ if __name__ == "__main__":
         filename = input('Input filename to test: ')
     else:
         filename = argv[1]
-    widget = MetadataFilenameDialog(argv[1])
+    widget = MetadataFilenameDialog(filename)
     widget.show()
 
 
