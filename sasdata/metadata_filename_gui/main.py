@@ -34,12 +34,15 @@ class MetadataFilenameDialog(QWidget):
         self.layout = QVBoxLayout(self)
         self.layout.addLayout(self.filename_separator_layout)
 
+    def split_filename(self) -> list[str]:
+        return re.split(f'([{self.separator_chars.text()}])', self.filename)
+
     def formatted_filename(self) -> str:
         sep_str = self.separator_chars.text()
         if sep_str == '':
             return f'<span>{filename}</span>'
         # Won't escape characters; I'll handle that later.
-        separated = re.split(f'([{sep_str}])', self.filename)
+        separated = self.split_filename()
         font_elements = ''
         for i, token in enumerate(separated):
             classname = 'token' if i % 2 == 0 else 'separator'
