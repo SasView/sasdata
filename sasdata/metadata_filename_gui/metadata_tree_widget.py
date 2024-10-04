@@ -7,15 +7,16 @@ class MetadataTreeWidget(QTreeWidget):
         self.setColumnCount(2)
         self.setHeaderLabels(['Name', 'Filename Components'])
 
-        # TODO: This is placeholder data that'll need to be replaced by the real metadata.
 
-    def draw_tree(self):
+    def draw_tree(self, options: list[str]):
         self.clear()
+        # TODO: This is placeholder data that'll need to be replaced by the real metadata.
         metadata = {'Instrument': ['Slit width', 'Other']}
         for top_level, items in metadata.items():
             top_level_item = QTreeWidgetItem([top_level])
             for metadatum in items:
                 selector = MetadataComponentSelector()
                 metadatum_item = QTreeWidgetItem([metadatum, selector])
+                selector.draw_options(options)
                 top_level_item.addChild(metadatum_item)
-            self.insertTopLevelItem(top_level_item)
+            self.insertTopLevelItem(0, top_level_item)
