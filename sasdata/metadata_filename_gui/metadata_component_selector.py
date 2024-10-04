@@ -1,0 +1,6 @@
+from PySide6.QtWidgets import QWidget
+
+class MetadataComponentSelector(QWidget):
+    def __init__(self):
+        super().__init__()
+        # TODO: Implement
