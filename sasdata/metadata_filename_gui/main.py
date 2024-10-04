@@ -37,6 +37,11 @@ class MetadataFilenameDialog(QWidget):
     def split_filename(self) -> list[str]:
         return re.split(f'([{self.separator_chars.text()}])', self.filename)
 
+    def filename_components(self) -> list[str]:
+        splitted = re.split(f'{self.separator_chars.text()}')
+        if splitted[-1].startswith('.'):
+            return splitted[:-1]
+
     def formatted_filename(self) -> str:
         sep_str = self.separator_chars.text()
         if sep_str == '':
