@@ -9,7 +9,8 @@ class MetadataTreeWidget(QTreeWidget):
 
         # TODO: This is placeholder data that'll need to be replaced by the real metadata.
 
-        # FIXME: This won't update.
+    def draw_tree(self):
+        self.clear()
         metadata = {'Instrument': ['Slit width', 'Other']}
         for top_level, items in metadata.items():
             top_level_item = QTreeWidgetItem([top_level])
