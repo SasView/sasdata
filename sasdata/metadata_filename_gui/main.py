@@ -1,4 +1,5 @@
 from PySide6.QtWidgets import QWidget, QApplication, QVBoxLayout, QLineEdit, QHBoxLayout, QLabel
+from sasdata.metadata_filename_gui.metadata_tree_widget import MetadataTreeWidget
 from sys import argv
 import re
 
@@ -23,24 +24,29 @@ class MetadataFilenameDialog(QWidget):
         self.separator_chars = QLineEdit()
         self.separator_chars.textChanged.connect(self.update_filename_separation)
 
-        # Have to update this now because it relies on the value of the separator.
-        self.update_filename_separation()
-
         self.filename_separator_layout = QHBoxLayout()
         self.filename_separator_layout.addWidget(self.filename_line_label)
         self.filename_separator_layout.addWidget(self.seperator_chars_label)
         self.filename_separator_layout.addWidget(self.separator_chars)
 
+        self.metadata_tree = MetadataTreeWidget()
+
+        # Have to update this now because it relies on the value of the separator, and tree.
+        self.update_filename_separation()
+
+
         self.layout = QVBoxLayout(self)
         self.layout.addLayout(self.filename_separator_layout)
+        self.layout.addWidget(self.metadata_tree)
 
     def split_filename(self) -> list[str]:
         return re.split(f'([{self.separator_chars.text()}])', self.filename)
 
     def filename_components(self) -> list[str]:
-        splitted = re.split(f'{self.separator_chars.text()}')
+        splitted = re.split(f'{self.separator_chars.text()}', self.filename)
         if splitted[-1].startswith('.'):
             return splitted[:-1]
+        return splitted
 
     def formatted_filename(self) -> str:
         sep_str = self.separator_chars.text()
@@ -56,6 +62,7 @@ class MetadataFilenameDialog(QWidget):
 
     def update_filename_separation(self):
         self.filename_line_label.setText(f'Filename: {self.formatted_filename()}')
+        self.metadata_tree.draw_tree(self.filename_components())
 
 
 
