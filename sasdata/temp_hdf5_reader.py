@@ -12,7 +12,7 @@ from h5py._hl.group import Group as HDF5Group
 
 
 from sasdata.data import SasData
-from sasdata.data import Dataset as SASDataDataset, Group as SASDataGroup
+from sasdata.data_backing import Dataset as SASDataDataset, Group as SASDataGroup
 
 from sasdata.quantities.quantity import NamedQuantity
 from sasdata.quantities import units
@@ -126,6 +126,7 @@ def load_data(filename) -> list[SasData]:
 
                 else:
                     raw_metadata[key] = recurse_hdf5(component)
+
 
             loaded_data.append(
                 SasData(
