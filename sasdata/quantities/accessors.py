@@ -83,17 +83,30 @@ from typing import TypeVar, Sequence
 from sasdata.quantities.quantity import Quantity
 import sasdata.quantities.units as units
 from sasdata.quantities.units import Dimensions, Unit
+from sasdata.quantities.unit_parser import parse_unit, parse_unit_from_group
 
 from sasdata.data_backing import Group, Dataset
+
+import logging
+# logger = logging.getLogger("Accessors")
+class LoggerDummy:
+    def info(self, data):
+        print(data)
+logger = LoggerDummy()
 
 DataType = TypeVar("DataType")
 OutputType = TypeVar("OutputType")
 
+
 class AccessorTarget:
-    def __init__(self, data: Group):
+    def __init__(self, data: Group, verbose=False):
         self._data = data
+        self.verbose = verbose
 
     def get_value(self, path: str):
+
+        if self.verbose:
+            logger.info(f"Finding: {path}")
 
         tokens = path.split(".")
 
@@ -103,11 +116,27 @@ class AccessorTarget:
 
         for token in tokens:
             if isinstance(current_tree_position, Group):
-                current_tree_position = current_tree_position.children[token]
-            elif isinstance(current_tree_position, Dataset):
-                current_tree_position = current_tree_position.attributes[token]
+                if token in current_tree_position.children:
+                    current_tree_position = current_tree_position.children[token]
+                else:
+                    if self.verbose:
+                        logger.info(f"Failed at token {token} on group {current_tree_position.name}. Options: " +
+                                    ",".join([key for key in current_tree_position.children]))
+                    return None
 
-        return current_tree_position
+            elif isinstance(current_tree_position, Dataset):
+                if token in current_tree_position.attributes:
+                    current_tree_position = current_tree_position.attributes[token]
+                else:
+                    if self.verbose:
+                        logger.info(f"Failed at token {token} on attribute {current_tree_position.name}. Options: " +
+                                    ",".join([key for key in current_tree_position.attributes]))
+                    return None
+
+        if self.verbose:
+            logger.info(f"Found value: {current_tree_position}")
+
+        return current_tree_position.data
 
 
 
@@ -119,19 +148,19 @@ class Accessor[DataType, OutputType]:
 
     @property
     def value(self) -> OutputType | None:
-        pass
+        self.target_object.get_value(self.value_target)
 
 class StringAccessor(Accessor[str, str]):
     """ String based fields """
     @property
     def value(self) -> str | None:
-        pass
+        self.target_object.get_value(self.value_target)
 
 class FloatAccessor(Accessor[float, float]):
     """ Float based fields """
     @property
     def value(self) -> float | None:
-        pass
+        self.target_object.get_value(self.value_target)
 
 
 
@@ -145,22 +174,31 @@ class QuantityAccessor[DataType](Accessor[DataType, Quantity[DataType]]):
 
     def _numerical_part(self) -> DataType | None:
         """ Numerical part of the data """
+        return self.target_object.get_value(self.value_target)
 
     def _unit_part(self) -> str | None:
         """ String form of units for the data """
+        return self.target_object.get_value(self._unit_target)
 
     @property
     def unit(self) -> Unit:
-        if self._unit_part() is None:
+        u = self._unit_part()
+        if u is None:
             return self.default_unit
         else:
-            return Unit.parse(self._unit_part())
+            return parse_unit(u)
 
     @property
     def value(self) -> Quantity[DataType] | None:
         if self._unit_part() is not None and self._numerical_part() is not None:
             return Quantity(self._numerical_part(), self.unit)
+        return None
 
+    @property
+    def quantity(self):
+        if self._unit_part() is not None and self._numerical_part() is not None:
+            return Quantity(self._numerical_part(), self.unit)
+        return None
 
 
 class LengthAccessor[T](QuantityAccessor[T]):
