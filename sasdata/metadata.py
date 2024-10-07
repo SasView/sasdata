@@ -93,7 +93,7 @@ class Aperture:
         return (f"Aperture:\n"
                 f"  Name: {self.name.value}\n"
                 f"  Aperture size: {self.size.value}\n"
-                f"  Aperture distance: {self.distance.value}")
+                f"  Aperture distance: {self.distance.value}\n")
 
 class Collimation:
     """
@@ -112,7 +112,7 @@ class Collimation:
 
 
         # Todo - how do we handle this
-        self.collimator = Collimation(target_object)
+        # self.collimator = Collimation(target_object)
 
     def summary(self):
 
@@ -193,7 +193,7 @@ class Source:
                 f"    Min. Wavelength: {self.wavelength_min.value}\n"
                 f"    Max. Wavelength: {self.wavelength_max.value}\n"
                 f"    Wavelength Spread: {self.wavelength_spread.value}\n"
-                f"    Beam Size: {self.beam_size}\n")
+                f"    Beam Size: {self.beam_size.value}\n")
 
 
 
@@ -289,13 +289,13 @@ class Process:
         """
         return f"{self.name.value} {self.date.value} {self.description.value}"
 
-    def __str__(self):
+    def summary(self):
         return (f"Process:\n"
                 f"    Name: {self.name.value}\n"
                 f"    Date: {self.date.value}\n"
                 f"    Description: {self.description.value}\n"
                 f"    Term: {self.term.value}\n"
-                f"    Notes: {self.notes.value}"
+                f"    Notes: {self.notes.value}\n"
                 )
 
 class TransmissionSpectrum(AccessorTarget):
@@ -323,7 +323,7 @@ class TransmissionSpectrum(AccessorTarget):
         self.transmission_deviation = DimensionlessAccessor[ArrayLike](target_object,
                                                                        "transmission.transmission_deviation",
                                                                        "transmission.transmission_deviation.units",
-                                                                       default_units=units.none)
+                                                                       default_unit=units.none)
 
 
     def summary(self) -> str:
@@ -345,3 +345,14 @@ class Metadata:
         self.sample = Sample(target)
         self.source = Source(target)
         self.transmission_spectrum = TransmissionSpectrum(target)
+
+    def summary(self):
+        return (
+            self.aperture.summary() +
+            self.collimation.summary() +
+            self.detector.summary() +
+            self.process.summary() +
+            self.sample.summary() +
+            self.source.summary() +
+            self.transmission_spectrum.summary()
+        )
