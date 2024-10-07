@@ -1843,7 +1843,7 @@ symbol_lookup = {
         "pW": picowatts,
         "fW": femtowatts,
         "aW": attowatts,
-        "C": degrees_celsius,
+        "C": kelvin,
         "EC": exacoulombs,
         "PC": petacoulombs,
         "TC": teracoulombs,
@@ -2013,12 +2013,13 @@ symbol_lookup = {
         "%": percent,
         "Amps": amperes,
         "amps": amperes,
+        "Coulombs": degrees_celsius,
+        "coulombs": degrees_celsius,
         "yr": years,
         "year": years,
         "day": days,
         "hr": hours,
         "hour": hours,
-        "a.u.": atomic_mass_units,
         "amu": atomic_mass_units,
         "degr": degrees,
         "Deg": degrees,
@@ -2028,6 +2029,9 @@ symbol_lookup = {
         "counts": none,
         "cnts": none,
         "Cnts": none,
+        "a.u.": none,
+        "fraction": none,
+        "Fraction": none,
 }
 
 

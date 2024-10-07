@@ -85,6 +85,7 @@ import sasdata.quantities.units as units
 from sasdata.quantities.units import Dimensions, Unit
 
 from sasdata.raw_form import Group, Dataset
+from sasdata.data import Group, Dataset
 
 DataType = TypeVar("DataType")
 OutputType = TypeVar("OutputType")
@@ -106,8 +107,6 @@ class AccessorTarget:
                 current_tree_position = current_tree_position.children[token]
             elif isinstance(current_tree_position, Dataset):
                 current_tree_position = current_tree_position.attributes[token]
-
-        return current_tree_position
 
 
 
