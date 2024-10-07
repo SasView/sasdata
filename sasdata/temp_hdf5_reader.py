@@ -10,6 +10,8 @@ import numpy as np
 from h5py._hl.dataset import Dataset as HDF5Dataset
 from h5py._hl.group import Group as HDF5Group
 
+
+from sasdata.data import SasData
 from sasdata.metadata import Metadata
 from sasdata.quantities.accessors import AccessorTarget
 from sasdata.raw_form import RawData, Dataset
@@ -133,7 +135,10 @@ def load_data(filename) -> list[RawData]:
             metadata = Metadata(target)
 
             loaded_data.append(
-                SasData)
+                SasData(
+                    name=root_key,
+                    data_contents=data_contents,
+                    raw_metadata=SASDataGroup("root", raw_metadata)))
 
         return loaded_data
 

@@ -93,7 +93,8 @@ non_si_units = non_si_dimensioned_units + non_si_dimensionless_units
 # Two stages of aliases, to make sure units don't get lost
 
 aliases_1 = {
-    "A": ["Amps", "amps"]
+    "A": ["Amps", "amps"],
+    "C": ["Coulombs", "coulombs"]
 }
 
 aliases_2 = {
@@ -101,10 +102,11 @@ aliases_2 = {
     "d": ["day"],
     "h": ["hr", "hour"],
     "Ang": ["A", "Å"],
-    "au": ["a.u.", "amu"],
+    "au": ["amu"],
     "percent": ["%"],
     "deg": ["degr", "Deg", "degrees", "Degrees"],
-    "none": ["Counts", "counts", "cnts", "Cnts"]
+    "none": ["Counts", "counts", "cnts", "Cnts", "a.u.", "fraction", "Fraction"],
+    "K": ["C"] # Ugh, cansas
 }
 
 
