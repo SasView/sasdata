@@ -132,7 +132,8 @@ def load_data(filename) -> list[SasData]:
                 SasData(
                     name=root_key,
                     data_contents=data_contents,
-                    raw_metadata=SASDataGroup("root", raw_metadata)))
+                    raw_metadata=SASDataGroup("root", raw_metadata),
+                    verbose=True))
 
         return loaded_data
 
@@ -142,4 +143,4 @@ def load_data(filename) -> list[SasData]:
 data = load_data(test_file)
 
 for dataset in data:
-    print(dataset.summary())
+    print(dataset.summary(include_raw=True))
