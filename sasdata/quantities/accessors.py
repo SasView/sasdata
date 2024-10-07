@@ -99,16 +99,28 @@ OutputType = TypeVar("OutputType")
 
 
 class AccessorTarget:
-    def __init__(self, data: Group, verbose=False):
+    def __init__(self, data: Group, verbose=False, prefix_tokens: tuple=()):
         self._data = data
         self.verbose = verbose
 
+        self.prefix_tokens = list(prefix_tokens)
+
+    def with_path_prefix(self, path_prexix: str):
+        """ Get an accessor that looks at a subtree of the metadata with the supplied prefix
+
+        For example, accessors aiming at a.b, when the target it c.d will look at c.d.a.b
+        """
+        return AccessorTarget(self._data,
+                              verbose=self.verbose,
+                              prefix_tokens=tuple(self.prefix_tokens + [path_prexix]))
+
     def get_value(self, path: str):
+
+        tokens = self.prefix_tokens + path.split(".")
 
         if self.verbose:
             logger.info(f"Finding: {path}")
-
-        tokens = path.split(".")
+            logger.info(f"Full path: {tokens}")
 
         # Navigate the tree from the entry we need
 
@@ -148,19 +160,19 @@ class Accessor[DataType, OutputType]:
 
     @property
     def value(self) -> OutputType | None:
-        self.target_object.get_value(self.value_target)
+        return self.target_object.get_value(self.value_target)
 
 class StringAccessor(Accessor[str, str]):
     """ String based fields """
     @property
     def value(self) -> str | None:
-        self.target_object.get_value(self.value_target)
+        return self.target_object.get_value(self.value_target)
 
 class FloatAccessor(Accessor[float, float]):
     """ Float based fields """
     @property
     def value(self) -> float | None:
-        self.target_object.get_value(self.value_target)
+        return self.target_object.get_value(self.value_target)
 
 
 
