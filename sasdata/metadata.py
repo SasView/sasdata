@@ -130,34 +130,34 @@ class Source:
 
     def __init__(self, target_object: AccessorTarget):
         # Name
-        self.name = StringAccessor(target_object, "source.name")
+        self.name = StringAccessor(target_object, "sassource.name")
 
         # Generic radiation type (Type and probe give more specific info) [string]
-        self.radiation = StringAccessor(target_object, "source.radiation")
+        self.radiation = StringAccessor(target_object, "sassource.radiation")
 
         # Type and probe are only written to by the NXcanSAS reader
         # Specific radiation type (Synchotron X-ray, Reactor neutron, etc) [string]
-        self.type = StringAccessor(target_object, "source.type")
+        self.type = StringAccessor(target_object, "sassource.type")
 
         # Radiation probe (generic probe such as neutron, x-ray, muon, etc) [string]
-        self.probe_particle = StringAccessor(target_object, "source.probe")
+        self.probe_particle = StringAccessor(target_object, "sassource.probe")
 
         # Beam size name
-        self.beam_size_name = StringAccessor(target_object, "source.beam_size_name")
+        self.beam_size_name = StringAccessor(target_object, "sassource.beam_size_name")
 
         # Beam size [Vector] [mm]
         self.beam_size = LengthAccessor[ArrayLike](target_object,
-                                                   "source.beam_size",
-                                                   "source.beam_size.units",
+                                                   "sassource.beam_size",
+                                                   "sassource.beam_size.units",
                                                    default_unit=units.millimeters)
 
         # Beam shape [string]
-        self.beam_shape = StringAccessor(target_object, "source.beam_shape")
+        self.beam_shape = StringAccessor(target_object, "sassource.beam_shape")
 
         # Wavelength [float] [Angstrom]
         self.wavelength = LengthAccessor[float](target_object,
-                                                "source.wavelength",
-                                                "source.wavelength.units",
+                                                "sassource.wavelength",
+                                                "sassource.wavelength.units",
                                                 default_unit=units.angstroms)
 
         # Minimum wavelength [float] [Angstrom]
@@ -274,14 +274,14 @@ class Process:
     performed on the data.
     """
     def __init__(self, target_object: AccessorTarget):
-        self.name = StringAccessor(target_object, "process.name")
-        self.date = StringAccessor(target_object, "process.date")
-        self.description = StringAccessor(target_object, "process.description")
+        self.name = StringAccessor(target_object, "sasprocess.name")
+        self.date = StringAccessor(target_object, "sasprocess.date")
+        self.description = StringAccessor(target_object, "sasprocess.description")
 
         #TODO: It seems like these might be lists of strings, this should be checked
 
-        self.term = StringAccessor(target_object, "process.term")
-        self.notes = StringAccessor(target_object, "process.notes")
+        self.term = StringAccessor(target_object, "sasprocess.term")
+        self.notes = StringAccessor(target_object, "sasprocess.notes")
 
     def single_line_desc(self):
         """
@@ -298,12 +298,12 @@ class Process:
                 f"    Notes: {self.notes.value}\n"
                 )
 
-class TransmissionSpectrum(AccessorTarget):
+class TransmissionSpectrum:
     """
     Class that holds information about transmission spectrum
     for white beams and spallation sources.
     """
-    def __init__(self, target_object):
+    def __init__(self, target_object: AccessorTarget):
         # TODO: Needs to be multiple instances
         self.name = StringAccessor(target_object, "transmission.")
         self.timestamp = StringAccessor(target_object, "transmission.timestamp")
