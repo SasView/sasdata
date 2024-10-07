@@ -22,3 +22,4 @@ class MetadataTreeWidget(QTreeWidget):
                 top_level_item.addChild(metadatum_item)
                 self.setItemWidget(metadatum_item, 1, selector)
             self.insertTopLevelItem(0, top_level_item)
+        self.expandAll()
