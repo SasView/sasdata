@@ -9,12 +9,13 @@ from sasdata.data_backing import Group, key_tree
 
 
 class SasData:
-    def __init__(self, name: str, data_contents: list[NamedQuantity], raw_metadata: Group):
+    def __init__(self, name: str, data_contents: list[NamedQuantity], raw_metadata: Group, verbose: bool=False):
         self.name = name
         self._data_contents = data_contents
         self._raw_metadata = raw_metadata
+        self._verbose = verbose
 
-        self.metadata = Metadata(AccessorTarget(raw_metadata))
+        self.metadata = Metadata(AccessorTarget(raw_metadata, verbose=verbose))
 
         # TO IMPLEMENT
 
@@ -25,7 +26,7 @@ class SasData:
         # metadata: Metadata
         # model_requirements: ModellingRequirements
 
-    def summary(self, indent = "  "):
+    def summary(self, indent = "  ", include_raw=False):
         s = f"{self.name}\n"
 
         for data in self._data_contents:
@@ -34,6 +35,7 @@ class SasData:
         s += f"{indent}Metadata:\n"
         s += self.metadata.summary()
 
-        s += key_tree(self._raw_metadata)
+        if include_raw:
+            s += key_tree(self._raw_metadata)
 
         return s
