@@ -3,10 +3,11 @@ from PySide6.QtCore import QAbstractItemModel
 from sasdata.metadata_filename_gui.metadata_component_selector import MetadataComponentSelector
 
 class MetadataTreeWidget(QTreeWidget):
-    def __init__(self):
+    def __init__(self, metadata_dict: dict[str, str]):
         super().__init__()
         self.setColumnCount(2)
         self.setHeaderLabels(['Name', 'Filename Components'])
+        self.metadata_dict = metadata_dict
 
 
     def draw_tree(self, options: list[str]):
@@ -16,7 +17,7 @@ class MetadataTreeWidget(QTreeWidget):
         for top_level, items in metadata.items():
             top_level_item = QTreeWidgetItem([top_level])
             for metadatum in items:
-                selector = MetadataComponentSelector()
+                selector = MetadataComponentSelector(self.metadata_dict)
                 metadatum_item = QTreeWidgetItem([metadatum])
                 selector.draw_options(options)
                 top_level_item.addChild(metadatum_item)

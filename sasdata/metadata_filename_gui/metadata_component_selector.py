@@ -1,11 +1,12 @@
 from PySide6.QtWidgets import QWidget, QPushButton, QHBoxLayout
 
 class MetadataComponentSelector(QWidget):
-    def __init__(self):
+    def __init__(self, metadata_dict: dict[str, str]):
         super().__init__()
         self.options: list[str]
         self.option_buttons: list[QPushButton]
         self.layout = QHBoxLayout(self)
+        self.metadata_dict = metadata_dict
 
     def clear_options(self):
         for i in reversed(range(self.layout.count() - 1)):
