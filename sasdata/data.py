@@ -31,7 +31,6 @@ class SasData:
             s += f"{indent}{data}\n"
 
         s += f"{indent}Metadata:\n"
-        for key in self._raw_metadata.children:
-            s += self._raw_metadata.children[key].summary(2, indent)
+        s += self.metadata.summary()
 
         return s
