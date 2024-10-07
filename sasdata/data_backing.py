@@ -1,6 +1,6 @@
+from typing import TypeVar, Self
 from dataclasses import dataclass
 from enum import Enum
-from typing import Self, TypeVar
 
 from sasdata.quantities.quantity import NamedQuantity
 
@@ -27,7 +27,7 @@ class Dataset[DataType]:
         s += f"{indent*(indent_amount+1)}{shorten_string(str(self.data))}\n"
         for key in self.attributes:
             value = self.attributes[key]
-            if isinstance(value, (Group | Dataset)):
+            if isinstance(value, (Group, Dataset)):
                 value_string = value.summary(indent_amount+1, indent)
             else:
                 value_string = f"{indent * (indent_amount+1)}{key}: {shorten_string(repr(value))}\n"
@@ -108,19 +108,3 @@ def build_main_data(data: list[NamedQuantity]) -> Function:
             pass
         case _:
             raise NotImplementedError("Unknown ")
-
-def key_tree(data: Group | Dataset, indent_amount=0, indent: str = "  ") -> str:
-    """ Show a metadata tree, showing the names of they keys used to access them"""
-    s = ""
-    if isinstance(data, Group):
-        for key in data.children:
-            s += indent*indent_amount + key + "\n"
-            s += key_tree(data.children[key], indent_amount=indent_amount+1, indent=indent)
-
-    if isinstance(data, Dataset):
-        s += indent*indent_amount + "[data]\n"
-        for key in data.attributes:
-            s += indent*indent_amount + key + "\n"
-            s += key_tree(data.attributes[key], indent_amount=indent_amount+1, indent=indent)
-
-    return s
