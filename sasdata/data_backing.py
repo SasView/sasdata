@@ -108,3 +108,19 @@ def build_main_data(data: list[NamedQuantity]) -> Function:
             pass
         case _:
             raise NotImplementedError("Unknown ")
+
+def key_tree(data: Group | Dataset, indent_amount=0, indent: str = "  ") -> str:
+    """ Show a metadata tree, showing the names of they keys used to access them"""
+    s = ""
+    if isinstance(data, Group):
+        for key in data.children:
+            s += indent*indent_amount + key + "\n"
+            s += key_tree(data.children[key], indent_amount=indent_amount+1, indent=indent)
+
+    if isinstance(data, Dataset):
+        s += indent*indent_amount + "[data]\n"
+        for key in data.attributes:
+            s += indent*indent_amount + key + "\n"
+            s += key_tree(data.attributes[key], indent_amount=indent_amount+1, indent=indent)
+
+    return s
