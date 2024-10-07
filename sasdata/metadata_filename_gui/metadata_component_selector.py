@@ -5,7 +5,7 @@ class MetadataComponentSelector(QWidget):
         super().__init__()
         self.options: list[str]
         self.option_buttons: list[QPushButton]
-        self.layout = QHBoxLayout()
+        self.layout = QHBoxLayout(self)
 
     def clear_options(self):
         for i in reversed(range(self.layout.count() - 1)):
