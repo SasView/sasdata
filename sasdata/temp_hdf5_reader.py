@@ -10,10 +10,9 @@ import numpy as np
 from h5py._hl.dataset import Dataset as HDF5Dataset
 from h5py._hl.group import Group as HDF5Group
 
-from sasdata.metadata import Metadata
-from sasdata.quantities.accessors import AccessorTarget
-from sasdata.raw_form import RawData, Dataset
-from sasdata.raw_form import Dataset as SASDataDataset, Group as SASDataGroup
+
+from sasdata.data import SasData
+from sasdata.data import Dataset as SASDataDataset, Group as SASDataGroup
 
 from sasdata.quantities.quantity import NamedQuantity
 from sasdata.quantities import units
@@ -101,10 +100,10 @@ def connected_data(node: SASDataGroup, name_prefix="") -> list[NamedQuantity]:
     return output
 
 
-def load_data(filename) -> list[RawData]:
+def load_data(filename) -> list[SasData]:
     with h5py.File(filename, 'r') as f:
 
-        loaded_data: list[RawData] = []
+        loaded_data: list[SasData] = []
 
         for root_key in f.keys():
 
@@ -128,12 +127,11 @@ def load_data(filename) -> list[RawData]:
                 else:
                     raw_metadata[key] = recurse_hdf5(component)
 
-
-            target = AccessorTarget(SASDataGroup("root", raw_metadata))
-            metadata = Metadata(target)
-
             loaded_data.append(
-                SasData)
+                SasData(
+                    name=root_key,
+                    data_contents=data_contents,
+                    raw_metadata=SASDataGroup("root", raw_metadata)))
 
         return loaded_data
 
