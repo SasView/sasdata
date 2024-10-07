@@ -20,14 +20,14 @@ class AccessorTarget:
         # Navigate the tree from the entry we need
 
         current_tree_position: Group | Dataset = self._data
-        
+
         for token in tokens:
             if isinstance(current_tree_position, Group):
                 current_tree_position = current_tree_position.children[token]
             elif isinstance(current_tree_position, Dataset):
                 current_tree_position = current_tree_position.attributes[token]
 
-
+        return current_tree_position
 
 
 
