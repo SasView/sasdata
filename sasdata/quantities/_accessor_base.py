@@ -4,7 +4,7 @@ from sasdata.quantities.quantity import Quantity
 import sasdata.quantities.units as units
 from sasdata.quantities.units import Dimensions, Unit
 
-from sasdata.data import Group, Dataset
+from sasdata.data_backing import Group, Dataset
 
 DataType = TypeVar("DataType")
 OutputType = TypeVar("OutputType")

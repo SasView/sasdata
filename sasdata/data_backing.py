@@ -36,34 +36,6 @@ class Dataset[DataType]:
 
         return s
 
-    @staticmethod
-    def deserialise_json(json_data: dict) -> "Dataset":
-        name = json_data["name"]
-        data = "" # TODO: figure out QuantityType serialisation
-        attributes = {}
-        for key in json_data["attributes"]:
-            value = json_data["attributes"][key]
-            if isinstance(value, dict):
-                attributes[key] = Dataset.deserialise_json(value)
-            else:
-                attributes[key] = value
-        return Dataset(name, data, attributes)
-
-    def serialise_json(self):
-        content = {
-            "name": self.name,
-            "data": "", # TODO: figure out QuantityType serialisation
-            "attributes": {},
-            "type": "dataset"
-        }
-        for key in self.attributes:
-            value = self.attributes[key]
-            if isinstance(value, (Group, Dataset)):
-                content["attributes"]["key"] = value.serialise_json()
-            else:
-                content["attributes"]["key"] = value
-        return content
-
 @dataclass
 class Group:
     name: str
@@ -75,27 +47,6 @@ class Group:
             s += self.children[key].summary(indent_amount+1, indent)
 
         return s
-
-    @staticmethod
-    def deserialise_json(json_data: dict) -> "Group":
-        name = json_data["name"]
-        children = {}
-        for key in json_data["children"]:
-            value = json_data["children"][key]
-            if value["type"] == "group":
-                children[key] = Group.deserialise_json(value)
-            else:
-                children[key] = Dataset.deserialise_json(value)
-        return Group(name, children)
-
-    def serialise_json(self):
-        return {
-            "name": self.name,
-            "children": {
-                key: self.children[key].serialise_json() for key in self.children
-            },
-            "type": "group"
-        }
 
 class Function:
     """ Representation of a (data driven) function, such as I vs Q """
@@ -157,19 +108,3 @@ def build_main_data(data: list[NamedQuantity]) -> Function:
             pass
         case _:
             raise NotImplementedError("Unknown ")
-
-def key_tree(data: Group | Dataset, indent_amount=0, indent: str = "  ") -> str:
-    """ Show a metadata tree, showing the names of they keys used to access them"""
-    s = ""
-    if isinstance(data, Group):
-        for key in data.children:
-            s += indent*indent_amount + key + "\n"
-            s += key_tree(data.children[key], indent_amount=indent_amount+1, indent=indent)
-
-    if isinstance(data, Dataset):
-        s += indent*indent_amount + "[data]\n"
-        for key in data.attributes:
-            s += indent*indent_amount + key + "\n"
-            s += key_tree(data.attributes[key], indent_amount=indent_amount+1, indent=indent)
-
-    return s
