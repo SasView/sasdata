@@ -32,7 +32,8 @@ class SasData:
         for data in self._data_contents:
             s += f"{indent}{data}\n"
 
-        s += f"{indent}Metadata:\n"
+        s += f"Metadata:\n"
+        s += "\n"
         s += self.metadata.summary()
 
         if include_raw:

@@ -130,7 +130,7 @@ def load_data(filename) -> list[SasData]:
                     name=root_key,
                     data_contents=data_contents,
                     raw_metadata=SASDataGroup("root", raw_metadata),
-                    verbose=True))
+                    verbose=False))
 
         return loaded_data
 
