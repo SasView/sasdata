@@ -4,7 +4,7 @@ from numpy.typing import ArrayLike
 import sasdata.quantities.units as units
 from quantities.absolute_temperature import AbsoluteTemperatureAccessor
 from sasdata.quantities.accessors import StringAccessor, LengthAccessor, AngleAccessor, QuantityAccessor, \
-    DimensionlessAccessor, FloatAccessor, TemperatureAccessor
+    DimensionlessAccessor, FloatAccessor, TemperatureAccessor, AccessorTarget
 
 
 class Detector:
@@ -12,7 +12,7 @@ class Detector:
     Detector information
     """
 
-    def __init__(self, target_object):
+    def __init__(self, target_object: AccessorTarget):
 
         # Name of the instrument [string]
         self.name = StringAccessor(target_object, "detector.name")
@@ -65,7 +65,7 @@ class Detector:
 
 class Aperture:
 
-    def __init__(self, target_object):
+    def __init__(self, target_object: AccessorTarget):
 
         # Name
         self.name = StringAccessor(target_object, "aperture.name")
@@ -100,7 +100,7 @@ class Collimation:
     Class to hold collimation information
     """
 
-    def __init__(self, target_object):
+    def __init__(self, target_object: AccessorTarget):
 
         # Name
         self.name = StringAccessor(target_object, "collimation.name")
@@ -128,7 +128,7 @@ class Source:
     Class to hold source information
     """
 
-    def __init__(self, target_object):
+    def __init__(self, target_object: AccessorTarget):
         # Name
         self.name = StringAccessor(target_object, "source.name")
 
@@ -210,7 +210,7 @@ class Sample:
     """
     Class to hold the sample description
     """
-    def __init__(self, target_object):
+    def __init__(self, target_object: AccessorTarget):
 
         # Short name for sample
         self.name = StringAccessor(target_object, "sample.name")
@@ -273,7 +273,7 @@ class Process:
     Class that holds information about the processes
     performed on the data.
     """
-    def __init__(self, target_object):
+    def __init__(self, target_object: AccessorTarget):
         self.name = StringAccessor(target_object, "process.name")
         self.date = StringAccessor(target_object, "process.date")
         self.description = StringAccessor(target_object, "process.description")
@@ -298,7 +298,7 @@ class Process:
                 f"    Notes: {self.notes.value}"
                 )
 
-class TransmissionSpectrum:
+class TransmissionSpectrum(AccessorTarget):
     """
     Class that holds information about transmission spectrum
     for white beams and spallation sources.
@@ -333,5 +333,15 @@ class TransmissionSpectrum:
                 f"    Wavelengths:      {self.wavelength.value}\n"
                 f"    Transmission:     {self.transmission.value}\n")
 
+
 class Metadata:
-    pass
+    def __init__(self, target: AccessorTarget):
+        self._target = target
+
+        self.aperture = Aperture(target)
+        self.collimation = Collimation(target)
+        self.detector = Detector(target)
+        self.process = Process(target)
+        self.sample = Sample(target)
+        self.source = Source(target)
+        self.transmission_spectrum = TransmissionSpectrum(target)
