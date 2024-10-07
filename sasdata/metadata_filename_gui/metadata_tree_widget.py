@@ -17,7 +17,7 @@ class MetadataTreeWidget(QTreeWidget):
         for top_level, items in metadata.items():
             top_level_item = QTreeWidgetItem([top_level])
             for metadatum in items:
-                selector = MetadataComponentSelector(self.metadata_dict)
+                selector = MetadataComponentSelector(metadatum, self.metadata_dict)
                 metadatum_item = QTreeWidgetItem([metadatum])
                 selector.draw_options(options)
                 top_level_item.addChild(metadatum_item)
