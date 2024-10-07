@@ -18,6 +18,8 @@ class MetadataFilenameDialog(QWidget):
         super().__init__()
 
         self.filename = filename
+        # Key is the metadatum, value is the component selected for it.
+        self.component_metadata: dict[str, str]
 
         self.filename_line_label = QLabel()
         self.seperator_chars_label = QLabel('Seperators')
