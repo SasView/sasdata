@@ -1,5 +1,5 @@
 from typing import Any, TypeVar, Union
-from math import log, e
+from math import log, e, sin, cos
 
 import json
 
@@ -724,6 +724,30 @@ class Ln(Log):
 
     def __init__(self, a):
         super().__init__(a, Constant(e))
+
+class Sin(UnaryOperation):
+    serialisation_name = "sin"
+
+    def _self_cls(self) -> type:
+        return Sin
+
+    def evaluate(self, variables: dict[int, T]) -> Operation:
+        return sin(self.a.evaluate(variables))
+
+    def _derivative(self, hash_value: int):
+        return
+
+class Cos(UnaryOperation):
+    serialisation_name = "cos"
+
+    def _sin_cls(self) -> type:
+        return Cos
+
+    def evaluate(self, variables: dict[int, T]) -> Operation:
+        return cos(self.a.evaluate(variables))
+
+    def _derivative(self, hash_value: int):
+        return Neg(Sin(self.a))
 
 
 _serialisable_classes = [AdditiveIdentity, MultiplicativeIdentity, Constant,
