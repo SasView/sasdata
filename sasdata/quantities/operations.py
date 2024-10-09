@@ -1,5 +1,5 @@
 from typing import Any, TypeVar, Union
-from math import log
+from math import log, e
 
 import json
 
@@ -719,9 +719,15 @@ class Log(BinaryOperation):
         # TODO: Check this derivative is right
         return Inv(Mul(self.a), Ln(self.b))
 
-class Ln(UnaryOperation):
-    # TODO: To implement
-    pass
+class Ln(Log):
+    serialisation_name = "ln"
+
+    def _self_cls(self) -> type:
+        return Ln
+
+    def __init__(self, a):
+        super().__init__(a, Constant(e))
+
 
 _serialisable_classes = [AdditiveIdentity, MultiplicativeIdentity, Constant,
                         Variable,
