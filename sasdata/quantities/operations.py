@@ -1,4 +1,5 @@
 from typing import Any, TypeVar, Union
+from math import log
 
 import json
 
@@ -701,6 +702,26 @@ class Pow(Operation):
     def __eq__(self, other):
         if isinstance(other, Pow):
             return self.a == other.a and self.power == other.power
+
+class Log(BinaryOperation):
+    serialisation_name = "log"
+
+    def _self_cls(self) -> type:
+        return Log
+
+    def evaluate(self, variables: dict[int, T]) -> Operation:
+        return log(self.a.evaluate(variables), self.b.evaluate(variables))
+
+    def evaluate(self, variables: dict[int, T]) -> T:
+        return
+
+    def _derivative(self, hash_value: int) -> Operation:
+        # TODO: Check this derivative is right
+        return Inv(Mul(self.a), Ln(self.b))
+
+class Ln(UnaryOperation):
+    # TODO: To implement
+    pass
 
 _serialisable_classes = [AdditiveIdentity, MultiplicativeIdentity, Constant,
                         Variable,
