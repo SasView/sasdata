@@ -1,8 +1,10 @@
-import numpy as np
 
-from sasdata.quantities.quantity import Quantity, UnitError
-import sasdata.quantities.units as units
 import pytest
+
+import sasdata.quantities.units as units
+from sasdata.quantities.quantity import Quantity, UnitError
+
+
 def test_in_units_of_calculation():
     """ Just a couple of unit conversions """
     assert Quantity(1, units.meters).in_units_of(units.kilometers) == 1e-3
