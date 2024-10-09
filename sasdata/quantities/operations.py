@@ -712,9 +712,6 @@ class Log(BinaryOperation):
     def evaluate(self, variables: dict[int, T]) -> Operation:
         return log(self.a.evaluate(variables), self.b.evaluate(variables))
 
-    def evaluate(self, variables: dict[int, T]) -> T:
-        return
-
     def _derivative(self, hash_value: int) -> Operation:
         # TODO: Check this derivative is right
         return Inv(Mul(self.a), Ln(self.b))
