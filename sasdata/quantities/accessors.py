@@ -127,21 +127,40 @@ class AccessorTarget:
         current_tree_position: Group | Dataset = self._data
 
         for token in tokens:
+
+            options = token.split("|")
+
             if isinstance(current_tree_position, Group):
-                if token in current_tree_position.children:
-                    current_tree_position = current_tree_position.children[token]
-                else:
+
+                found = False
+                for option in options:
+                    if option in current_tree_position.children:
+                        current_tree_position = current_tree_position.children[option]
+                        found = True
+
+                        if self.verbose:
+                            logger.info(f"Found option: {option}")
+
+                if not found:
                     if self.verbose:
-                        logger.info(f"Failed at token {token} on group {current_tree_position.name}. Options: " +
+                        logger.info(f"Failed to find any of {options} on group {current_tree_position.name}. Options: " +
                                     ",".join([key for key in current_tree_position.children]))
                     return None
 
             elif isinstance(current_tree_position, Dataset):
-                if token in current_tree_position.attributes:
-                    current_tree_position = current_tree_position.attributes[token]
-                else:
+
+                found = False
+                for option in options:
+                    if option in current_tree_position.attributes:
+                        current_tree_position = current_tree_position.attributes[option]
+                        found = True
+
+                        if self.verbose:
+                            logger.info(f"Found option: {option}")
+
+                if not found:
                     if self.verbose:
-                        logger.info(f"Failed at token {token} on attribute {current_tree_position.name}. Options: " +
+                        logger.info(f"Failed to find any of {options} on attribute {current_tree_position.name}. Options: " +
                                     ",".join([key for key in current_tree_position.attributes]))
                     return None
 
