@@ -2,8 +2,10 @@ import pytest
 
 from sasdata.quantities.operations import Operation, \
     Neg, Inv, \
-    Add, Sub, Mul, Div, Pow, \
+    Add, Sub, Mul, Div, Pow, Sqrt, \
     Variable, Constant, AdditiveIdentity, MultiplicativeIdentity
+
+from math import pi
 
 operation_with_everything = \
     Div(
@@ -41,6 +43,14 @@ def test_serialise_deserialise():
     (Pow, 7, 2, 49)])
 def test_binary_evaluation(op, a, b, result):
     f = op(Constant(a), b if op == Pow else Constant(b))
+    assert f.evaluate({}) == result
+
+@pytest.mark.parametrize("op, a, result", [
+    (Inv, 1, 1.0),
+    (Sqrt, 25, 5.0),
+])
+def test_unary_operation(op: Operation, a: int, result: int | float):
+    f = op(Constant(a))
     assert f.evaluate({}) == result
 
 x = Variable("x")
