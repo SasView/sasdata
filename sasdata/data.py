@@ -2,6 +2,8 @@ from enum import Enum
 from typing import TypeVar, Any, Self
 from dataclasses import dataclass
 
+import numpy as np
+
 from quantities.quantity import NamedQuantity
 from sasdata.metadata import Metadata
 from sasdata.quantities.accessors import AccessorTarget
@@ -9,7 +11,11 @@ from sasdata.data_backing import Group, key_tree
 
 
 class SasData:
-    def __init__(self, name: str, data_contents: list[NamedQuantity], raw_metadata: Group, verbose: bool=False):
+    def __init__(self, name: str,
+                 data_contents: list[NamedQuantity],
+                 raw_metadata: Group,
+                 verbose: bool=False):
+
         self.name = name
         self._data_contents = data_contents
         self._raw_metadata = raw_metadata
@@ -17,14 +23,11 @@ class SasData:
 
         self.metadata = Metadata(AccessorTarget(raw_metadata, verbose=verbose))
 
-        # TO IMPLEMENT
-
-        # abscissae: list[NamedQuantity[np.ndarray]]
-        # ordinate: NamedQuantity[np.ndarray]
-        # other: list[NamedQuantity[np.ndarray]]
-        #
-        # metadata: Metadata
-        # model_requirements: ModellingRequirements
+        # Components that need to be organised after creation
+        self.ordinate: NamedQuantity[np.ndarray] = None # TODO: fill out
+        self.abscissae: list[NamedQuantity[np.ndarray]] = None # TODO: fill out
+        self.mask = None # TODO: fill out
+        self.model_requirements = None # TODO: fill out
 
     def summary(self, indent = "  ", include_raw=False):
         s = f"{self.name}\n"
