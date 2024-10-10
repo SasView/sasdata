@@ -703,6 +703,12 @@ class Pow(Operation):
         if isinstance(other, Pow):
             return self.a == other.a and self.power == other.power
 
+class Exp(Pow):
+    serialisation_name = "exp"
+
+    def __init__(self, a: Operation):
+        super().__init__(a, e)
+
 class Log(BinaryOperation):
     serialisation_name = "log"
 
