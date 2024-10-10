@@ -772,7 +772,7 @@ class ArcSin(UnaryOperation):
 
     def _derivative(self, hash_value: int) -> Operation:
         # Need to implement sqrt.
-        raise NotImplementedError()
+        return Div(1, Sqrt(Sub(1, Pow(self.a, 2))))
 
 
 _serialisable_classes = [AdditiveIdentity, MultiplicativeIdentity, Constant,
