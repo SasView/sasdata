@@ -234,6 +234,42 @@ class Quantity[QuantityType]:
                                        self.history.references))
 
 
+    def __matmul__(self, other: ArrayLike | Self):
+        if isinstance(other, Quantity):
+            return DerivedQuantity(
+                self.value @ other.value,
+                self.units * other.units,
+                history=QuantityHistory.apply_operation(
+                    operations.MatMul,
+                    self.history,
+                    other.history))
+        else:
+            return DerivedQuantity(
+                      self.value @ other,
+                      self.units,
+                      QuantityHistory(
+                          operations.MatMul(
+                              self.history.operation_tree,
+                              operations.Constant(other)),
+                          self.history.references))
+
+    def __rmatmul__(self, other: ArrayLike | Self):
+        if isinstance(other, Quantity):
+            return DerivedQuantity(
+                    other.value @ self.value,
+                    other.units * self.units,
+                    history=QuantityHistory.apply_operation(
+                        operations.MatMul,
+                        other.history,
+                        self.history))
+
+        else:
+            return DerivedQuantity(other @ self.value, self.units,
+                                   QuantityHistory(
+                                       operations.MatMul(
+                                           operations.Constant(other),
+                                           self.history.operation_tree),
+                                       self.history.references))
 
 
     def __truediv__(self: Self, other: float | Self) -> Self:
