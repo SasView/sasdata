@@ -233,6 +233,9 @@ class Quantity[QuantityType]:
                                            self.history.operation_tree),
                                        self.history.references))
 
+
+
+
     def __truediv__(self: Self, other: float | Self) -> Self:
         if isinstance(other, Quantity):
             return DerivedQuantity(
