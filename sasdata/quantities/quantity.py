@@ -132,10 +132,10 @@ class Quantity[QuantityType]:
         self.hash_value = -1
         """ Hash based on value and uncertainty for data, -1 if it is a derived hash value """
 
-        """ Contains the variance if it is data driven, else it is """
+        self._variance = None
+        """ Contains the variance if it is data driven """
 
         if standard_error is None:
-            self._variance = None
             self.hash_value = hash_data_via_numpy(hash_seed, value)
         else:
             self._variance = standard_error ** 2
