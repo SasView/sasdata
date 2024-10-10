@@ -77,4 +77,9 @@ def test_d_xyz_by_components_should_be_1():
     f = Mul(Mul(x, y), z)
     assert f.derivative(x).derivative(y).derivative(z) == MultiplicativeIdentity()
 
+@pytest.mark.parametrize("f, expected_derivative", [
+    (Mul(x, x), Mul(Constant(2), x))
+])
+def test_expected_derivative(f: Operation, expected_derivative: Operation):
+    assert f.derivative(x) == expected_derivative
 
