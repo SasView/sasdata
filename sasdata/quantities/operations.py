@@ -1,5 +1,5 @@
 from typing import Any, TypeVar, Union
-from math import log, e, sin, cos, asin, sqrt
+from math import log, e, sin, cos, asin, acos, sqrt
 
 import json
 
@@ -773,6 +773,15 @@ class ArcSin(UnaryOperation):
     def _derivative(self, hash_value: int) -> Operation:
         # Need to implement sqrt.
         return Div(1, Sqrt(Sub(1, Pow(self.a, 2))))
+
+class ArcCos(UnaryOperation):
+    serialisation_name = "arccos"
+
+    def evaluate(self, variables: dict[int, T]) -> T:
+        return acos(self.a.evaluate(variables))
+
+    def _derivative(self, hash_value: int) -> Operation:
+        return Div(-1, Sqrt(Sub(1, Pow(self.a, 2))))
 
 
 _serialisable_classes = [AdditiveIdentity, MultiplicativeIdentity, Constant,
