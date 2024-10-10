@@ -131,8 +131,9 @@ class Operation:
     def _serialise_parameters(self) -> dict[str, Any]:
         raise NotImplementedError("_serialise_parameters not implemented")
 
+    # FIXME: Very hacky way of checking for equality. If they serialise the same, they ought to be equal.
     def __eq__(self, other: "Operation"):
-        return NotImplemented
+        return self.serialise() == other.serialise()
 
 class ConstantBase(Operation):
     pass
