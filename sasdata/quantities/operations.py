@@ -702,9 +702,119 @@ class Pow(Operation):
         if isinstance(other, Pow):
             return self.a == other.a and self.power == other.power
 
+
+
+#
+# Matrix operations
+#
+
+class Transpose(UnaryOperation):
+    """ Transpose operation - as per numpy"""
+
+    serialisation_name = "transpose"
+
+    def evaluate(self, variables: dict[int, T]) -> T:
+        return np.transpose(self.a.evaluate(variables))
+
+    def _derivative(self, hash_value: int) -> Operation:
+        return Transpose(self.a.derivative(hash_value)) # TODO: Check!
+
+    def _clean(self):
+        clean_a = self.a._clean()
+        return Transpose(clean_a)
+
+    @staticmethod
+    def _deserialise(parameters: dict) -> "Operation":
+        return Transpose(Operation.deserialise_json(parameters["a"]))
+
+    def _summary_open(self):
+        return "Transpose"
+
+    def __eq__(self, other):
+        if isinstance(other, Transpose):
+            return other.a == self.a
+
+
+class Dot(BinaryOperation):
+    """ Dot product - backed by numpy's dot method"""
+
+    serialisation_name = "dot"
+
+    def _self_cls(self) -> type:
+        return Dot
+
+    def evaluate(self, variables: dict[int, T]) -> T:
+        return np.dot(self.a.evaluate(variables) + self.b.evaluate(variables))
+
+    def _derivative(self, hash_value: int) -> Operation:
+        return Add(
+                Dot(self.a,
+                    self.b._derivative(hash_value)),
+                Dot(self.a._derivative(hash_value),
+                    self.b))
+
+    def _clean_ab(self, a, b):
+        return Dot(a, b) # Do nothing for now
+
+    @staticmethod
+    def _deserialise(parameters: dict) -> "Operation":
+        return Dot(*BinaryOperation._deserialise_ab(parameters))
+
+    def _summary_open(self):
+        return "Dot"
+
+
+# TODO: Add to base operation class, and to quantities
+class MatMul(BinaryOperation):
+    """ Matrix multiplication, using __matmul__ dunder"""
+
+    serialisation_name = "matmul"
+
+    def _self_cls(self) -> type:
+        return MatMul
+
+    def evaluate(self, variables: dict[int, T]) -> T:
+        return self.a.evaluate(variables) @ self.b.evaluate(variables)
+
+    def _derivative(self, hash_value: int) -> Operation:
+        return Add(
+                MatMul(self.a,
+                       self.b._derivative(hash_value)),
+                MatMul(self.a._derivative(hash_value),
+                       self.b))
+
+    def _clean_ab(self, a, b):
+
+        if isinstance(a, AdditiveIdentity) or isinstance(b, AdditiveIdentity):
+            # Convert 0*b or a*0 to 0
+            return AdditiveIdentity()
+
+        elif isinstance(a, ConstantBase) and isinstance(b, ConstantBase):
+            # Convert constant "a"@"b" to "a@b"
+            return Constant(a.evaluate({}) @ b.evaluate({}))._clean()
+
+        elif isinstance(a, Neg):
+            return Neg(Mul(a.a, b))
+
+        elif isinstance(b, Neg):
+            return Neg(Mul(a, b.a))
+
+        return MatMul(a, b)
+
+
+    @staticmethod
+    def _deserialise(parameters: dict) -> "Operation":
+        return MatMul(*BinaryOperation._deserialise_ab(parameters))
+
+    def _summary_open(self):
+        return "MatMul"
+
+
+
 _serialisable_classes = [AdditiveIdentity, MultiplicativeIdentity, Constant,
                         Variable,
                         Neg, Inv,
-                        Add, Sub, Mul, Div, Pow]
+                        Add, Sub, Mul, Div, Pow,
+                        Transpose, Dot, MatMul]
 
 _serialisation_lookup = {cls.serialisation_name: cls for cls in _serialisable_classes}
