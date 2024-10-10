@@ -1,5 +1,5 @@
 from typing import Any, TypeVar, Union
-from math import log, e, sin, cos, asin
+from math import log, e, sin, cos, asin, sqrt
 
 import json
 
@@ -708,6 +708,15 @@ class Exp(Pow):
 
     def __init__(self, a: Operation):
         super().__init__(a, e)
+
+class Sqrt(UnaryOperation):
+    serialisation_name = "sqrt"
+
+    def evaluate(self, variables: dict[int, T]) -> Operation:
+        return sqrt(self.a.evaluate(variables))
+
+    def _derivative(self, hash_value: int):
+        return Div(1, Mul(2, Sqrt(self.a)))
 
 class Log(BinaryOperation):
     serialisation_name = "log"
