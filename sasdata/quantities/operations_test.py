@@ -2,7 +2,7 @@ import pytest
 
 from sasdata.quantities.operations import Operation, \
     Neg, Inv, \
-    Add, Sub, Mul, Div, Pow, Sqrt, \
+    Add, Sub, Mul, Div, Pow, Sqrt, Sin, Cos, \
     Variable, Constant, AdditiveIdentity, MultiplicativeIdentity
 
 from math import pi
@@ -48,6 +48,8 @@ def test_binary_evaluation(op, a, b, result):
 @pytest.mark.parametrize("op, a, result", [
     (Inv, 1, 1.0),
     (Sqrt, 25, 5.0),
+    (Sin, pi/2, 1.0),
+    (Cos, pi, -1.0)
 ])
 def test_unary_operation(op: Operation, a: int, result: int | float):
     f = op(Constant(a))
