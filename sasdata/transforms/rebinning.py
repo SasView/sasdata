@@ -32,7 +32,9 @@ def calculate_interpolation_matrix_1d(input_axis: Quantity[ArrayLike],
     input_sort = np.argsort(input_x)
     output_sort = np.argsort(output_x)
 
+    input_unsort = np.arange(len(output_x), dtype=int)[input_sort]
     output_unsort = np.arange(len(input_x), dtype=int)[output_sort]
+
     sorted_in = input_x[input_sort]
     sorted_out = output_x[output_sort]
 
@@ -40,13 +42,33 @@ def calculate_interpolation_matrix_1d(input_axis: Quantity[ArrayLike],
         case InterpolationOptions.NEAREST_NEIGHBOUR:
 
             # COO Sparse matrix definition data
-            values = []
-            j_entries = []
             i_entries = []
+            j_entries = []
+
+            crossing_points = 0.5*(sorted_out[1:] + sorted_out[:-1])
 
             # Find the output values nearest to each of the input values
-            for x_in in sorted_in:
-                
+            n_i = len(sorted_in)
+            n_j = len(sorted_out)
+            i=0
+            for k, crossing_point in enumerate(crossing_points):
+                while i < n_i and sorted_in[i] < crossing_point:
+                    i_entries.append(i)
+                    j_entries.append(k)
+                    i += 1
+
+            # All the rest in the last bin
+            while i < n_i:
+                i_entries.append(i)
+                j_entries.append(n_j-1)
+                i += 1
+
+            i_entries = input_unsort[np.array(i_entries, dtype=int)]
+            j_entries = output_unsort[np.array(j_entries, dtype=int)]
+            values = np.ones_like(i_entries, dtype=float)
+
+            return coo_matrix((values, (i_entries, j_entries)), shape=(n_i, n_j))
+
 
         case _:
             raise ValueError(f"Unsupported interpolation order: {order}")
