@@ -546,6 +546,9 @@ class Mul(BinaryOperation):
             # Convert constant "a"*"b" to "a*b"
             return Constant(a.evaluate({}) * b.evaluate({}))._clean()
 
+        elif isinstance(a, ConstantBase) and isinstance(b, Mul) and isinstance(b.a, ConstantBase):
+            return Mul(Constant(a.evaluate({}) * b.a.evaluate({})), b.b)
+
         elif isinstance(a, Inv) and isinstance(b, Inv):
             return Inv(Mul(a.a, b.a))
 
