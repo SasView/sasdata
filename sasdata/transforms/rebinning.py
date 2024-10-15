@@ -13,13 +13,17 @@ from enum import Enum
 class InterpolationOptions(Enum):
     NEAREST_NEIGHBOUR = 0
     LINEAR = 1
+    CUBIC = 3
 
+class InterpolationError(Exception):
+    """ We probably want to raise exceptions because interpolation is not appropriate/well-defined,
+    not the same as numerical issues that will raise ValueErrors"""
 
 
 def calculate_interpolation_matrix_1d(input_axis: Quantity[ArrayLike],
                                       output_axis: Quantity[ArrayLike],
                                       mask: ArrayLike | None = None,
-                                      order: InterpolationOptions = InterpolationOptions.NEAREST_NEIGHBOUR,
+                                      order: InterpolationOptions = InterpolationOptions.LINEAR,
                                       is_density=False):
 
     # We want the input values in terms of the output units, will implicitly check compatability
@@ -33,8 +37,8 @@ def calculate_interpolation_matrix_1d(input_axis: Quantity[ArrayLike],
     input_sort = np.argsort(input_x)
     output_sort = np.argsort(output_x)
 
-    input_unsort = np.arange(len(output_x), dtype=int)[input_sort]
-    output_unsort = np.arange(len(input_x), dtype=int)[output_sort]
+    input_unsort = np.arange(len(input_x), dtype=int)[input_sort]
+    output_unsort = np.arange(len(output_x), dtype=int)[output_sort]
 
     sorted_in = input_x[input_sort]
     sorted_out = output_x[output_sort]
@@ -86,8 +90,8 @@ def calculate_interpolation_matrix_1d(input_axis: Quantity[ArrayLike],
 
             fractional = np.interp(x=sorted_out, xp=sorted_in, fp=input_indices, left=0, right=n_in-1)
 
-            left_bins = np.floor(fractional, dtype=int)
-            right_bins = np.ceil(fractional, dtype=int)
+            left_bins = np.floor(fractional).astype(int)
+            right_bins = np.ceil(fractional).astype(int)
 
             right_weight = fractional % 1
             left_weight = 1 - right_weight
@@ -114,18 +118,60 @@ def calculate_interpolation_matrix_1d(input_axis: Quantity[ArrayLike],
 
             conversion_matrix = coo_matrix((weights, (i_entries, j_entries)), shape=(n_in, n_out))
 
+        case InterpolationOptions.CUBIC:
+            # Cubic interpolation, much harder to implement because we can't just cheat and use numpy
+            raise NotImplementedError("Cubic interpolation not implemented yet")
+
         case _:
-            raise ValueError(f"Unsupported interpolation order: {order}")
+            raise InterpolationError(f"Unsupported interpolation order: {order}")
 
 
     return conversion_matrix
+
+def calculate_interpolation_matrix_2d_axis_axis(input_1: Quantity[ArrayLike],
+                                                input_2: Quantity[ArrayLike],
+                                                output_1: Quantity[ArrayLike],
+                                                output_2: Quantity[ArrayLike],
+                                                mask,
+                                                order: InterpolationOptions = InterpolationOptions.LINEAR,
+                                                is_density: bool = False):
+
+    match order:
+        case InterpolationOptions.NEAREST_NEIGHBOUR:
+            pass
+
+        case InterpolationOptions.LINEAR:
+            pass
+
+        case InterpolationOptions.CUBIC:
+            pass
+
+        case _:
+            pass
+
 
 def calculate_interpolation_matrix(input_axes: list[Quantity[ArrayLike]],
                                    output_axes: list[Quantity[ArrayLike]],
                                    data: ArrayLike | None = None,
                                    mask: ArrayLike | None = None):
 
-    pass
+    # TODO: We probably should delete this, but lets keep it for now
+
+    if len(input_axes) not in (1, 2):
+        raise InterpolationError("Interpolation is only supported for 1D and 2D data")
+
+    if len(input_axes) == 1 and len(output_axes) == 1:
+        # Check for dimensionality
+        input_axis = input_axes[0]
+        output_axis = output_axes[0]
+
+        if len(input_axis.value.shape) == 1:
+            if len(output_axis.value.shape) == 1:
+                calculate_interpolation_matrix_1d()
+
+    if len(output_axes) != len(input_axes):
+        # Input or output axes might be 2D matrices
+
 
 
 
