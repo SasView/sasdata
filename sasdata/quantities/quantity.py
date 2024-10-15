@@ -110,6 +110,16 @@ class QuantityHistory:
 
         return False
 
+    def summary(self):
+
+        variable_strings = [self.references[key].string_repr for key in self.references]
+
+        s = "Variables: "+",".join(variable_strings)
+        s += "\n"
+        s += self.operation_tree.summary()
+
+        return s
+
 
 class Quantity[QuantityType]:
 
@@ -398,6 +408,10 @@ class Quantity[QuantityType]:
     def parse(number_or_string: str | ArrayLike, unit: str, absolute_temperature: False):
         pass
 
+    @property
+    def string_repr(self):
+        return str(self.hash_value)
+
 
 class NamedQuantity[QuantityType](Quantity[QuantityType]):
     def __init__(self,
@@ -431,6 +445,10 @@ class NamedQuantity[QuantityType](Quantity[QuantityType]):
             raise UnitError(f"Standard error units ({standard_error.units}) "
                             f"are not compatible with value units ({self.units})")
 
+
+    @property
+    def string_repr(self):
+        return self.name
 
 class DerivedQuantity[QuantityType](Quantity[QuantityType]):
     def __init__(self, value: QuantityType, units: Unit, history: QuantityHistory):
