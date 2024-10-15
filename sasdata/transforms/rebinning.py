@@ -26,7 +26,11 @@ def calculate_interpolation_matrix_1d(input_axis: Quantity[ArrayLike],
                                       order: InterpolationOptions = InterpolationOptions.LINEAR,
                                       is_density=False):
 
+    """ Calculate the matrix that converts values recorded at points specified by input_axis to
+    values recorded at points specified by output_axis"""
+
     # We want the input values in terms of the output units, will implicitly check compatability
+    # TODO: incorporate mask
 
     working_units = output_axis.units
 
@@ -135,6 +139,8 @@ def calculate_interpolation_matrix_2d_axis_axis(input_1: Quantity[ArrayLike],
                                                 mask,
                                                 order: InterpolationOptions = InterpolationOptions.LINEAR,
                                                 is_density: bool = False):
+
+    # If it wasn't for the mask, this would be the same as just two sets of 1D interpolation
 
     match order:
         case InterpolationOptions.NEAREST_NEIGHBOUR:
