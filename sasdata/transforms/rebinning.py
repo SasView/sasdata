@@ -177,7 +177,7 @@ def calculate_interpolation_matrix(input_axes: list[Quantity[ArrayLike]],
 
     if len(output_axes) != len(input_axes):
         # Input or output axes might be 2D matrices
-
+        pass
 
 
 
