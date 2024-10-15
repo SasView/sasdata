@@ -1,0 +1,142 @@
+""" Algorithms for interpolation and rebinning """
+from typing import TypeVar
+
+import numpy as np
+from numpy._typing import ArrayLike
+from scipy.interpolate import interp1d
+
+from sasdata.quantities.quantity import Quantity
+from scipy.sparse import coo_matrix
+
+from enum import Enum
+
+class InterpolationOptions(Enum):
+    NEAREST_NEIGHBOUR = 0
+    LINEAR = 1
+
+
+
+def calculate_interpolation_matrix_1d(input_axis: Quantity[ArrayLike],
+                                      output_axis: Quantity[ArrayLike],
+                                      mask: ArrayLike | None = None,
+                                      order: InterpolationOptions = InterpolationOptions.NEAREST_NEIGHBOUR,
+                                      is_density=False):
+
+    # We want the input values in terms of the output units, will implicitly check compatability
+
+    working_units = output_axis.units
+
+    input_x = input_axis.in_units_of(working_units)
+    output_x = output_axis.in_units_of(working_units)
+
+    # Get the array indices that will map the array to a sorted one
+    input_sort = np.argsort(input_x)
+    output_sort = np.argsort(output_x)
+
+    input_unsort = np.arange(len(output_x), dtype=int)[input_sort]
+    output_unsort = np.arange(len(input_x), dtype=int)[output_sort]
+
+    sorted_in = input_x[input_sort]
+    sorted_out = output_x[output_sort]
+
+    n_in = len(sorted_in)
+    n_out = len(sorted_out)
+
+    conversion_matrix = None # output
+
+    match order:
+        case InterpolationOptions.NEAREST_NEIGHBOUR:
+
+            # COO Sparse matrix definition data
+            i_entries = []
+            j_entries = []
+
+            crossing_points = 0.5*(sorted_out[1:] + sorted_out[:-1])
+
+            # Find the output values nearest to each of the input values
+            i=0
+            for k, crossing_point in enumerate(crossing_points):
+                while i < n_in and sorted_in[i] < crossing_point:
+                    i_entries.append(i)
+                    j_entries.append(k)
+                    i += 1
+
+            # All the rest in the last bin
+            while i < n_in:
+                i_entries.append(i)
+                j_entries.append(n_out-1)
+                i += 1
+
+            i_entries = input_unsort[np.array(i_entries, dtype=int)]
+            j_entries = output_unsort[np.array(j_entries, dtype=int)]
+            values = np.ones_like(i_entries, dtype=float)
+
+            conversion_matrix = coo_matrix((values, (i_entries, j_entries)), shape=(n_in, n_out))
+
+        case InterpolationOptions.LINEAR:
+
+            # Leverage existing linear interpolation methods to get the mapping
+            # do a linear interpolation on indices
+            #   the floor should give the left bin
+            #   the ceil should give the right bin
+            #   the fractional part should give the relative weightings
+
+            input_indices = np.arange(n_in, dtype=int)
+            output_indices = np.arange(n_out, dtype=int)
+
+            fractional = np.interp(x=sorted_out, xp=sorted_in, fp=input_indices, left=0, right=n_in-1)
+
+            left_bins = np.floor(fractional, dtype=int)
+            right_bins = np.ceil(fractional, dtype=int)
+
+            right_weight = fractional % 1
+            left_weight = 1 - right_weight
+
+            # There *should* be no repeated entries for both i and j in the main part, but maybe at the ends
+            # If left bin is the same as right bin, then we only want one entry, and the weight should be 1
+
+            same = left_bins == right_bins
+            not_same = ~same
+
+            same_bins = left_bins[same] # could equally be right bins, they're the same
+
+            same_indices = output_indices[same]
+            not_same_indices = output_indices[not_same]
+
+            j_entries_sorted = np.concatenate((same_indices, not_same_indices, not_same_indices))
+            i_entries_sorted = np.concatenate((same_bins, left_bins[not_same], right_bins[not_same]))
+
+            i_entries = input_unsort[i_entries_sorted]
+            j_entries = output_unsort[j_entries_sorted]
+
+            # weights don't need to be unsorted # TODO: check this is right, it should become obvious if we use unsorted data
+            weights = np.concatenate((np.ones_like(same_bins, dtype=float), left_weight[not_same], right_weight[not_same]))
+
+            conversion_matrix = coo_matrix((weights, (i_entries, j_entries)), shape=(n_in, n_out))
+
+        case _:
+            raise ValueError(f"Unsupported interpolation order: {order}")
+
+
+    return conversion_matrix
+
+def calculate_interpolation_matrix(input_axes: list[Quantity[ArrayLike]],
+                                   output_axes: list[Quantity[ArrayLike]],
+                                   data: ArrayLike | None = None,
+                                   mask: ArrayLike | None = None):
+
+    pass
+
+
+
+def rebin(data: Quantity[ArrayLike],
+          axes: list[Quantity[ArrayLike]],
+          new_axes: list[Quantity[ArrayLike]],
+          mask: ArrayLike | None = None,
+          interpolation_order: int = 1):
+
+    """ This algorithm is only for operations that preserve dimensionality,
+    i.e. non-projective rebinning.
+    """
+
+    pass
