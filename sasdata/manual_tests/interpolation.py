@@ -1,11 +1,12 @@
-import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.pyplot as plt
 
-from sasdata.quantities import units
-from sasdata.quantities.plotting import quantity_plot
 from sasdata.quantities.quantity import NamedQuantity
-from sasdata.transforms.rebinning import InterpolationOptions, calculate_interpolation_matrix_1d
+from sasdata.quantities.plotting import quantity_plot
+from sasdata.quantities import units
 
+from sasdata.transforms.rebinning import calculate_interpolation_matrix_1d
+from sasdata.transforms.rebinning import InterpolationOptions
 
 def linear_interpolation_check():
 
@@ -33,7 +34,7 @@ def linear_interpolation_check():
 
             quantity_plot(new_x, new_y)
 
-            print(new_y.history.summary())
+            # print(new_y.history.summary())
 
     plt.show()
 
