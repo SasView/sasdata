@@ -4,9 +4,9 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from sasdata.data_util.slicing.meshes.mesh import Mesh
-from sasdata.data_util.slicing.meshes.voronoi_mesh import voronoi_mesh
-from sasdata.data_util.slicing.meshes.meshmerge import meshmerge
+from sasdata.slicing.meshes.mesh import Mesh
+from sasdata.slicing.meshes.voronoi_mesh import voronoi_mesh
+from sasdata.slicing.meshes.meshmerge import meshmerge
 
 import time
 
