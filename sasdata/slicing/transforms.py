@@ -1,58 +1,58 @@
-import matplotlib.pyplot as plt
 import numpy as np
+from scipy.spatial import Voronoi, Delaunay
+import matplotlib.pyplot as plt
 from matplotlib import cm
-from scipy.spatial import Voronoi
 
-if __name__ == "__main__":
-    # Some test data
 
-    qx_base_values = np.linspace(-10, 10, 21)
-    qy_base_values = np.linspace(-10, 10, 21)
+# Some test data
 
-    qx, qy = np.meshgrid(qx_base_values, qy_base_values)
+qx_base_values = np.linspace(-10, 10, 21)
+qy_base_values = np.linspace(-10, 10, 21)
 
-    include = np.logical_not((np.abs(qx) < 2) & (np.abs(qy) < 2))
+qx, qy = np.meshgrid(qx_base_values, qy_base_values)
 
-    qx = qx[include]
-    qy = qy[include]
+include = np.logical_not((np.abs(qx) < 2) & (np.abs(qy) < 2))
 
-    r = np.sqrt(qx**2 + qy**2)
+qx = qx[include]
+qy = qy[include]
 
-    data = np.log((1+np.cos(3*r))*np.exp(-r*r))
+r = np.sqrt(qx**2 + qy**2)
 
-    colormap = cm.get_cmap('winter', 256)
+data = np.log((1+np.cos(3*r))*np.exp(-r*r))
 
-    def get_data_mesh(x, y, data):
+colormap = cm.get_cmap('winter', 256)
 
-        input_data = np.array((x, y)).T
-        voronoi = Voronoi(input_data)
+def get_data_mesh(x, y, data):
 
-        # plt.scatter(voronoi.vertices[:,0], voronoi.vertices[:,1])
-        # plt.scatter(voronoi.points[:,0], voronoi.points[:,1])
+    input_data = np.array((x, y)).T
+    voronoi = Voronoi(input_data)
 
-        cmin = np.min(data)
-        cmax = np.max(data)
+    # plt.scatter(voronoi.vertices[:,0], voronoi.vertices[:,1])
+    # plt.scatter(voronoi.points[:,0], voronoi.points[:,1])
 
-        color_index_map = np.array(255 * (data - cmin) / (cmax - cmin), dtype=int)
+    cmin = np.min(data)
+    cmax = np.max(data)
 
-        for point_index, points in enumerate(voronoi.points):
+    color_index_map = np.array(255 * (data - cmin) / (cmax - cmin), dtype=int)
 
-            region_index = voronoi.point_region[point_index]
-            region = voronoi.regions[region_index]
+    for point_index, points in enumerate(voronoi.points):
 
-            if len(region) > 0:
+        region_index = voronoi.point_region[point_index]
+        region = voronoi.regions[region_index]
 
-                if -1 in region:
+        if len(region) > 0:
 
-                    pass
+            if -1 in region:
 
-                else:
+                pass
 
-                    color = colormap(color_index_map[point_index])
+            else:
 
-                    circly = region + [region[0]]
-                    plt.fill(voronoi.vertices[circly, 0], voronoi.vertices[circly, 1], color=color, edgecolor="white")
+                color = colormap(color_index_map[point_index])
 
-        plt.show()
+                circly = region + [region[0]]
+                plt.fill(voronoi.vertices[circly, 0], voronoi.vertices[circly, 1], color=color, edgecolor="white")
 
-    get_data_mesh(qx.reshape(-1), qy.reshape(-1), data)
+    plt.show()
+
+get_data_mesh(qx.reshape(-1), qy.reshape(-1), data)

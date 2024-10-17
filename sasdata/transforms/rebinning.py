@@ -130,7 +130,17 @@ def calculate_interpolation_matrix_1d(input_axis: Quantity[ArrayLike],
             raise InterpolationError(f"Unsupported interpolation order: {order}")
 
 
-    return conversion_matrix
+    if mask is None:
+        return conversion_matrix, None
+    else:
+        # Create a new mask
+
+        # Convert to numerical values
+        # Conservative masking: anything touched by the previous mask is now masked
+        new_mask = (np.array(mask, dtype=float) @ conversion_matrix) != 0.0
+
+        return conversion_matrix, new_mask
+
 
 def calculate_interpolation_matrix_2d_axis_axis(input_1: Quantity[ArrayLike],
                                                 input_2: Quantity[ArrayLike],
@@ -140,7 +150,7 @@ def calculate_interpolation_matrix_2d_axis_axis(input_1: Quantity[ArrayLike],
                                                 order: InterpolationOptions = InterpolationOptions.LINEAR,
                                                 is_density: bool = False):
 
-    # If it wasn't for the mask, this would be the same as just two sets of 1D interpolation
+    # This is just the same 1D matrices things
 
     match order:
         case InterpolationOptions.NEAREST_NEIGHBOUR:
