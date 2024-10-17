@@ -2,7 +2,7 @@ import numpy as np
 from scipy.spatial import Voronoi
 
 
-from sasdata.data_util.slicing.meshes.mesh import Mesh
+from sasdata.slicing.meshes.mesh import Mesh
 
 def voronoi_mesh(x, y, debug_plot=False) -> Mesh:
     """ Create a mesh based on a voronoi diagram of points """

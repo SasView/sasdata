@@ -4,9 +4,8 @@ import numpy as np
 
 import matplotlib.pyplot as plt
 
-from sasdata.data_util.slicing.slicers.AnularSector import AnularSector
-from sasdata.data_util.slicing.meshes.mesh import Mesh
-from sasdata.data_util.slicing.meshes.voronoi_mesh import voronoi_mesh
+from sasdata.slicing.slicers.AnularSector import AnularSector
+from sasdata.slicing.meshes.voronoi_mesh import voronoi_mesh
 
 
 
