@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.spatial import Delaunay
 
-from sasdata.data_util.slicing.meshes.mesh import Mesh
+from sasdata.slicing.meshes.mesh import Mesh
 
 def delaunay_mesh(x, y) -> Mesh:
     """ Create a triangulated mesh based on input points """
