@@ -1,9 +1,7 @@
 import numpy as np
 
-from sasdata.data_util.slicing.meshes.mesh import Mesh
-from sasdata.data_util.slicing.meshes.delaunay_mesh import delaunay_mesh
-from sasdata.data_util.slicing.meshes.util import closed_loop_edges
-
+from sasdata.slicing.meshes.mesh import Mesh
+from sasdata.slicing.meshes.delaunay_mesh import delaunay_mesh
 
 import time
 
