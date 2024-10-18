@@ -9,5 +9,5 @@ class AsciiSeparator(Enum):
     Whitespace = 1,
     Tab = 2
 
-def load_data(filename: str, starting_line: int, columns: list[tuple[str, NamedUnit]], separators: list[AsciiSeparator]) -> list[SasData]:
+def load_data(filename: str, starting_line: int, columns: list[tuple[str, NamedUnit]], separators: list[AsciiSeparator], excluded_lines: list[int]) -> list[SasData]:
     raise NotImplementedError()
