@@ -1068,14 +1068,14 @@ class Quantity[QuantityType]:
             return DerivedQuantity(
                 self.value * other.value,
                 self.units * other.units,
-                history=QuantityHistory.apply_operation(operations.Mul, self.history, other.history))
+                history=QuantityHistory.apply_operation(Mul, self.history, other.history))
 
         else:
             return DerivedQuantity(self.value * other, self.units,
                                    QuantityHistory(
-                                       operations.Mul(
+                                       Mul(
                                            self.history.operation_tree,
-                                           operations.Constant(other)),
+                                           Constant(other)),
                                        self.history.references))
 
     def __rmul__(self: Self, other: ArrayLike | Self):
@@ -1084,15 +1084,15 @@ class Quantity[QuantityType]:
                     other.value * self.value,
                     other.units * self.units,
                     history=QuantityHistory.apply_operation(
-                        operations.Mul,
+                        Mul,
                         other.history,
                         self.history))
 
         else:
             return DerivedQuantity(other * self.value, self.units,
                                    QuantityHistory(
-                                       operations.Mul(
-                                           operations.Constant(other),
+                                       Mul(
+                                           Constant(other),
                                            self.history.operation_tree),
                                        self.history.references))
 
@@ -1103,7 +1103,7 @@ class Quantity[QuantityType]:
                 self.value @ other.value,
                 self.units * other.units,
                 history=QuantityHistory.apply_operation(
-                    operations.MatMul,
+                    MatMul,
                     self.history,
                     other.history))
         else:
@@ -1111,9 +1111,9 @@ class Quantity[QuantityType]:
                       self.value @ other,
                       self.units,
                       QuantityHistory(
-                          operations.MatMul(
+                          MatMul(
                               self.history.operation_tree,
-                              operations.Constant(other)),
+                              Constant(other)),
                           self.history.references))
 
     def __rmatmul__(self, other: ArrayLike | Self):
@@ -1122,15 +1122,15 @@ class Quantity[QuantityType]:
                     other.value @ self.value,
                     other.units * self.units,
                     history=QuantityHistory.apply_operation(
-                        operations.MatMul,
+                        MatMul,
                         other.history,
                         self.history))
 
         else:
             return DerivedQuantity(other @ self.value, self.units,
                                    QuantityHistory(
-                                       operations.MatMul(
-                                           operations.Constant(other),
+                                       MatMul(
+                                           Constant(other),
                                            self.history.operation_tree),
                                        self.history.references))
 
@@ -1141,15 +1141,15 @@ class Quantity[QuantityType]:
                     self.value / other.value,
                     self.units / other.units,
                     history=QuantityHistory.apply_operation(
-                        operations.Div,
+                        Div,
                         self.history,
                         other.history))
 
         else:
             return DerivedQuantity(self.value / other, self.units,
                                    QuantityHistory(
-                                       operations.Div(
-                                           operations.Constant(other),
+                                       Div(
+                                           Constant(other),
                                            self.history.operation_tree),
                                        self.history.references))
 
@@ -1159,7 +1159,7 @@ class Quantity[QuantityType]:
                     other.value / self.value,
                     other.units / self.units,
                     history=QuantityHistory.apply_operation(
-                        operations.Div,
+                        Div,
                         other.history,
                         self.history
                     ))
@@ -1169,8 +1169,8 @@ class Quantity[QuantityType]:
                     other / self.value,
                     self.units ** -1,
                                QuantityHistory(
-                                   operations.Div(
-                                       operations.Constant(other),
+                                   Div(
+                                       Constant(other),
                                        self.history.operation_tree),
                                    self.history.references))
 
@@ -1181,7 +1181,7 @@ class Quantity[QuantityType]:
                             self.value + (other.value * other.units.scale) / self.units.scale,
                             self.units,
                             QuantityHistory.apply_operation(
-                                operations.Add,
+                                Add,
                                 self.history,
                                 other.history))
             else:
@@ -1195,7 +1195,7 @@ class Quantity[QuantityType]:
     def __neg__(self):
         return DerivedQuantity(-self.value, self.units,
                                QuantityHistory.apply_operation(
-                                   operations.Neg,
+                                   Neg,
                                    self.history
                                ))
 
@@ -1209,7 +1209,7 @@ class Quantity[QuantityType]:
         return DerivedQuantity(self.value ** other,
                                self.units ** other,
                                QuantityHistory(
-                                   operations.Pow(
+                                   Pow(
                                        self.history.operation_tree,
                                        other),
                                    self.history.references))
