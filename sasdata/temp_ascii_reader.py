@@ -46,23 +46,23 @@ def split_line(separator_dict: dict[str, bool], line: str) -> list[str]:
     return re.split(expr, line)
 
 # TODO: Implement error handling.
-def load_quantities(filename: str, starting_line: int, columns: list[tuple[str, NamedUnit]], separators: list[AsciiSeparator], excluded_lines: list[int], separator_dict: dict[str, bool]) -> list[NamedQuantity]:
-    with open(filename) as ascii_file:
+def load_quantities(params: AsciiReaderParams) -> list[NamedQuantity]:
+    with open(params.filename) as ascii_file:
         lines = ascii_file.readlines()
         arrays: list[np.ndarray] = []
-        for _ in columns:
+        for _ in params.columns:
             arrays.append(np.zeros(len(lines)))
         for i, current_line in enumerate(lines):
-            if i < starting_line or current_line in excluded_lines:
+            if i < params.starting_line or current_line in params.excluded_lines:
                 continue
-            line_split = split_line(separator_dict)
+            line_split = split_line(params.separator_dict)
             for j, token in enumerate(line_split):
                 # TODO: Data might not be floats. Maybe don't hard code this.
                 arrays[i][j] = float(token)
-    quantities = [NamedQuantity(name, arrays[i], unit) for i, (name, unit) in enumerate(columns)]
+    quantities = [NamedQuantity(name, arrays[i], unit) for i, (name, unit) in enumerate(params.columns)]
     return quantities
 
-def load_data(filename: str, starting_line: int, columns: list[tuple[str, NamedUnit]], separators: list[AsciiSeparator], excluded_lines: list[int], separator_dict: dict[str, bool]) -> SasData:
-    quantities = load_quantities(filename, starting_line, columns, separators, excluded_lines, separator_dict)
+def load_data(params: AsciiReaderParams) -> SasData:
+    quantities = load_quantities(params)
     # Name is placeholder; this might come from the metadata.
-    return SasData(filename, quantities, None)
+    return SasData(params.filename, quantities, None)
