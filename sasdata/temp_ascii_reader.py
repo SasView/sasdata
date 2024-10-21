@@ -50,3 +50,8 @@ def load_quantities(filename: str, starting_line: int, columns: list[tuple[str, 
                 arrays[i][j] = float(token)
     quantities = [NamedQuantity(name, arrays[i], unit) for i, (name, unit) in enumerate(columns)]
     return quantities
+
+def load_data(filename: str, starting_line: int, columns: list[tuple[str, NamedUnit]], separators: list[AsciiSeparator], excluded_lines: list[int], separator_dict: dict[str, bool]) -> SasData:
+    quantities = load_quantities(filename, starting_line, columns, separators, excluded_lines, separator_dict)
+    # Name is placeholder; this might come from the metadata.
+    return SasData(filename, quantities, None)
