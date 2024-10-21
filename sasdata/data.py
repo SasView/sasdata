@@ -2,8 +2,6 @@ from enum import Enum
 from typing import TypeVar, Any, Self
 from dataclasses import dataclass
 
-import numpy as np
-
 from sasdata.quantities.quantity import NamedQuantity
 from sasdata.metadata import Metadata
 from sasdata.quantities.accessors import AccessorTarget
