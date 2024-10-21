@@ -55,7 +55,7 @@ def load_quantities(params: AsciiReaderParams) -> list[NamedQuantity]:
         for i, current_line in enumerate(lines):
             if i < params.starting_line or current_line in params.excluded_lines:
                 continue
-            line_split = split_line(params.separator_dict)
+            line_split = split_line(params.separator_dict, current_line)
             for j, token in enumerate(line_split):
                 # TODO: Data might not be floats. Maybe don't hard code this.
                 arrays[i][j] = float(token)
