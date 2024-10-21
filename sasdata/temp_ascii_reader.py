@@ -18,7 +18,7 @@ class AsciiReaderParams:
     filename: str
     starting_line: int
     columns: list[tuple[str, NamedUnit]]
-    sepearators: list[AsciiSeparator]
+    # sepearators: list[AsciiSeparator]
     excluded_lines: set[int]
     separator_dict: dict[str, bool]
 
