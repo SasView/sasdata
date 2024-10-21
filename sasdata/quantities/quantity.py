@@ -23,15 +23,23 @@ T = TypeVar("T")
 
 ################### Quantity based operations, need to be here to avoid cyclic dependencies #####################
 
-
-def transpose(a: Union["Quantity[ArrayLike]", ArrayLike]):
-    """ Transpose an array or an array based quantity """
+def transpose(a: Union["Quantity[ArrayLike]", ArrayLike], axes: tuple | None = None):
+    """ Transpose an array or an array based quantity, can also do reordering of axes"""
     if isinstance(a, Quantity):
-        return DerivedQuantity(value=np.transpose(a.value),
-                               units=a.units,
-                               history=QuantityHistory.apply_operation(Transpose, a.history))
+
+        if axes is None:
+            return DerivedQuantity(value=np.transpose(a.value, axes=axes),
+                                   units=a.units,
+                                   history=QuantityHistory.apply_operation(Transpose, a.history))
+
+        else:
+            return DerivedQuantity(value=np.transpose(a.value, axes=axes),
+                                   units=a.units,
+                                   history=QuantityHistory.apply_operation(Transpose, a.history, axes=axes))
+
     else:
-        return np.transpose(a)
+        return np.transpose(a, axes=axes)
+
 
 def dot(a: Union["Quantity[ArrayLike]", ArrayLike], b: Union["Quantity[ArrayLike]", ArrayLike]):
     """ Dot product of two arrays or two array based quantities """
@@ -43,10 +51,10 @@ def dot(a: Union["Quantity[ArrayLike]", ArrayLike], b: Union["Quantity[ArrayLike
         # If its only one of them that is a quantity, convert the other one
 
         if not a_is_quantity:
-            a = Quantity(a, units.dimensionless)
+            a = Quantity(a, units.none)
 
         if not b_is_quantity:
-            b = Quantity(b, units.dimensionless)
+            b = Quantity(b, units.none)
 
         return DerivedQuantity(
             value=np.dot(a.value, b.value),
@@ -57,6 +65,18 @@ def dot(a: Union["Quantity[ArrayLike]", ArrayLike], b: Union["Quantity[ArrayLike
         return np.dot(a, b)
 
 def tensordot(a: Union["Quantity[ArrayLike]", ArrayLike] | ArrayLike, b: Union["Quantity[ArrayLike]", ArrayLike], a_index: int, b_index: int):
+    """ Tensor dot product - equivalent to contracting two tensors, such as
+
+    A_{i0, i1, i2, i3...} and B_{j0, j1, j2...}
+
+    e.g. if a_index is 1 and b_index is zero, it will be the sum
+
+    C_{i0, i2, i3 ..., j1, j2 ...} = sum_k A_{i0, k, i2, i3 ...} B_{k, j1, j2 ...}
+
+    (I think, have to check what happens with indices TODO!)
+
+    """
+
     a_is_quantity = isinstance(a, Quantity)
     b_is_quantity = isinstance(b, Quantity)
 
@@ -65,10 +85,10 @@ def tensordot(a: Union["Quantity[ArrayLike]", ArrayLike] | ArrayLike, b: Union["
         # If its only one of them that is a quantity, convert the other one
 
         if not a_is_quantity:
-            a = Quantity(a, units.dimensionless)
+            a = Quantity(a, units.none)
 
         if not b_is_quantity:
-            b = Quantity(b, units.dimensionless)
+            b = Quantity(b, units.none)
 
         return DerivedQuantity(
             value=np.tensordot(a.value, b.value, axes=(a_index, b_index)),
@@ -791,10 +811,14 @@ class Pow(Operation):
 # Matrix operations
 #
 
-class Transpose(UnaryOperation):
+class Transpose(Operation):
     """ Transpose operation - as per numpy"""
 
     serialisation_name = "transpose"
+
+    def __init__(self, a: Operation, axes: tuple[int] | None = None):
+        self.a = a
+        self.axes = axes
 
     def evaluate(self, variables: dict[int, T]) -> T:
         return np.transpose(self.a.evaluate(variables))
@@ -806,9 +830,27 @@ class Transpose(UnaryOperation):
         clean_a = self.a._clean()
         return Transpose(clean_a)
 
+
+    def _serialise_parameters(self) -> dict[str, Any]:
+        if self.axes is None:
+            return { "a": self.a._serialise_json() }
+        else:
+            return {
+                "a": self.a._serialise_json(),
+                "axes": list(self.axes)
+            }
+
+
     @staticmethod
     def _deserialise(parameters: dict) -> "Operation":
-        return Transpose(Operation.deserialise_json(parameters["a"]))
+        if "axes" in parameters:
+            return Transpose(
+                a=Operation.deserialise_json(parameters["a"]),
+                axes=tuple(parameters["axes"]))
+        else:
+            return Transpose(
+                a=Operation.deserialise_json(parameters["a"]))
+
 
     def _summary_open(self):
         return "Transpose"
@@ -974,6 +1016,10 @@ class QuantityHistory:
         # Use the hash value to specify the variable of differentiation
         return [self.operation_tree.derivative(key) for key in self.reference_key_list]
 
+    def _recalculate(self):
+        """ Recalculate the value of this object - primary use case is for testing """
+        return self.operation_tree.evaluate(self.references)
+
     def variance_propagate(self, quantity_units: Unit, covariances: dict[tuple[int, int]: "Quantity"] = {}):
         """ Do standard error propagation to calculate the uncertainties associated with this quantity
 
@@ -985,14 +1031,6 @@ class QuantityHistory:
             raise NotImplementedError("User specified covariances not currently implemented")
 
         jacobian = self.jacobian()
-        # jacobian_units = [quantity_units / self.references[key].units for key in self.reference_key_list]
-        #
-        # # Evaluate the jacobian
-        # # TODO: should we use quantities here, does that work automatically?
-        # evaluated_jacobian = [Quantity(
-        #                         value=entry.evaluate(self.si_reference_values),
-        #                         units=unit.si_equivalent())
-        #                       for entry, unit in zip(jacobian, jacobian_units)]
 
         evaluated_jacobian = [entry.evaluate(self.references) for entry in jacobian]
 
