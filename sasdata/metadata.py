@@ -338,10 +338,10 @@ class TransmissionSpectrum:
 
 class Instrument:
     def __init__(self, target: AccessorTarget):
-        self.aperture = Aperture(target.with_path_prefix("sasaperture|aperture"))
-        self.collimation = Collimation(target.with_path_prefix("sascollimation|collimation"))
-        self.detector = Detector(target.with_path_prefix("sasdetector|detector"))
-        self.source = Source(target.with_path_prefix("sassource|source"))
+        self.aperture = Aperture(target.with_path_prefix("sasaperture"))
+        self.collimation = Collimation(target.with_path_prefix("sascollimation"))
+        self.detector = Detector(target.with_path_prefix("sasdetector"))
+        self.source = Source(target.with_path_prefix("sassource"))
 
     def summary(self):
         return (
@@ -350,51 +350,27 @@ class Instrument:
             self.detector.summary() +
             self.source.summary())
 
-def decode_string(data):
-    """ This is some crazy stuff"""
-
-    if isinstance(data, str):
-        return data
-
-    elif isinstance(data, np.ndarray):
-
-        if data.dtype == object:
-
-            data = data.reshape(-1)
-            data = data[0]
-
-            if isinstance(data, bytes):
-                return data.decode("utf-8")
-
-            return str(data)
-
-        else:
-            return data.tobytes().decode("utf-8")
-
-    else:
-        return str(data)
 
 class Metadata:
     def __init__(self, target: AccessorTarget):
         self._target = target
 
-        self.instrument = Instrument(target.with_path_prefix("sasinstrument|instrument"))
-        self.process = Process(target.with_path_prefix("sasprocess|process"))
-        self.sample = Sample(target.with_path_prefix("sassample|sample"))
-        self.transmission_spectrum = TransmissionSpectrum(target.with_path_prefix("sastransmission_spectrum|transmission_spectrum"))
+        self.instrument = Instrument(target.with_path_prefix("sasinstrument"))
+        self.process = Process(target.with_path_prefix("sasprocess"))
+        self.sample = Sample(target.with_path_prefix("sassample"))
+        self.transmission_spectrum = TransmissionSpectrum(target.with_path_prefix("sastransmission_spectrum"))
 
         self._title = StringAccessor(target, "title")
         self._run = StringAccessor(target, "run")
-        self._definition = StringAccessor(target, "definition")
+        self._definitiion = StringAccessor(target, "definition")
 
-        self.title: str = decode_string(self._title.value)
-        self.run: str = decode_string(self._run.value)
-        self.definition: str = decode_string(self._definition.value)
+        self.title: str = self._title.value
+        self.run: str = self._run.value
+        self.definitiion: str = self._definitiion.value
 
     def summary(self):
         return (
-            f"  {self.title}, Run: {self.run}\n" +
-            "  " + "="*len(self.title) +
+            f"  {self.title}, Run: {self.run}\n" + "  " + "="*len(self.title) +
                            "=======" +
             "="*len(self.run) + "\n\n" +
             f"Definition: {self.title}\n" +
