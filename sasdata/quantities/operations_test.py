@@ -1,6 +1,6 @@
 import pytest
 
-from sasdata.quantities.operations import Operation, \
+from sasdata.quantities.quantity import Operation, \
     Neg, Inv, \
     Add, Sub, Mul, Div, Pow, \
     Variable, Constant, AdditiveIdentity, MultiplicativeIdentity
