@@ -4,6 +4,7 @@ from sasdata.data import SasData
 from sasdata.quantities.units import NamedUnit
 from sasdata.quantities.quantity import NamedQuantity
 from enum import Enum
+from dataclasses import dataclass
 import numpy as np
 import re
 
@@ -11,6 +12,16 @@ class AsciiSeparator(Enum):
     Comma = 0,
     Whitespace = 1,
     Tab = 2
+
+@dataclass
+class AsciiReaderParams:
+    filename: str
+    starting_line: int
+    columns: list[tuple[str, NamedUnit]]
+    sepearators: list[AsciiSeparator]
+    excluded_lines: set[int]
+    separator_dict: dict[str, bool]
+
 
 # TODO: This has mostly been copied from the ASCII dialog but really the widget should use the implementation here.
 def split_line(separator_dict: dict[str, bool], line: str) -> list[str]:
