@@ -25,12 +25,63 @@ T = TypeVar("T")
 
 
 def transpose(a: Union["Quantity[ArrayLike]", ArrayLike]):
+    """ Transpose an array or an array based quantity """
     if isinstance(a, Quantity):
-        return
+        return DerivedQuantity(value=np.transpose(a.value),
+                               units=a.units,
+                               history=QuantityHistory.apply_operation(Transpose, a.history))
+    else:
+        return np.transpose(a)
 
+def dot(a: Union["Quantity[ArrayLike]", ArrayLike], b: Union["Quantity[ArrayLike]", ArrayLike]):
+    """ Dot product of two arrays or two array based quantities """
+    a_is_quantity = isinstance(a, Quantity)
+    b_is_quantity = isinstance(b, Quantity)
+
+    if a_is_quantity or b_is_quantity:
+
+        # If its only one of them that is a quantity, convert the other one
+
+        if not a_is_quantity:
+            a = Quantity(a, units.dimensionless)
+
+        if not b_is_quantity:
+            b = Quantity(b, units.dimensionless)
+
+        return DerivedQuantity(
+            value=np.dot(a.value, b.value),
+            units=a.units * b.units,
+            history=QuantityHistory.apply_operation(Dot, a.history, b.history))
+
+    else:
+        return np.dot(a, b)
 
 def tensordot(a: Union["Quantity[ArrayLike]", ArrayLike] | ArrayLike, b: Union["Quantity[ArrayLike]", ArrayLike], a_index: int, b_index: int):
-    pass
+    a_is_quantity = isinstance(a, Quantity)
+    b_is_quantity = isinstance(b, Quantity)
+
+    if a_is_quantity or b_is_quantity:
+
+        # If its only one of them that is a quantity, convert the other one
+
+        if not a_is_quantity:
+            a = Quantity(a, units.dimensionless)
+
+        if not b_is_quantity:
+            b = Quantity(b, units.dimensionless)
+
+        return DerivedQuantity(
+            value=np.tensordot(a.value, b.value, axes=(a_index, b_index)),
+            units=a.units * b.units,
+            history=QuantityHistory.apply_operation(
+                        TensorDot,
+                        a.history,
+                        b.history,
+                        a_index=a_index,
+                        b_index=b_index))
+
+    else:
+        return np.tensordot(a, b, axes=(a_index, b_index))
 
 
 ################### Operation Definitions #######################################
@@ -773,7 +824,7 @@ class Dot(BinaryOperation):
     serialisation_name = "dot"
 
     def evaluate(self, variables: dict[int, T]) -> T:
-        return np.dot(self.a.evaluate(variables) + self.b.evaluate(variables))
+        return dot(self.a.evaluate(variables), self.b.evaluate(variables))
 
     def _derivative(self, hash_value: int) -> Operation:
         return Add(
@@ -784,6 +835,7 @@ class Dot(BinaryOperation):
 
     def _clean_ab(self, a, b):
         return Dot(a, b) # Do nothing for now
+
 
     @staticmethod
     def _deserialise(parameters: dict) -> "Operation":
@@ -835,7 +887,7 @@ class MatMul(BinaryOperation):
     def _summary_open(self):
         return "MatMul"
 
-class TensorProduct(Operation):
+class TensorDot(Operation):
     serialisation_name = "tensor_product"
 
     def __init__(self, a: Operation, b: Operation, a_index: int, b_index: int):
@@ -845,21 +897,32 @@ class TensorProduct(Operation):
         self.b_index = b_index
 
     def evaluate(self, variables: dict[int, T]) -> T:
-        return np.tensordot(self.a, self.b, axes=(self.a_index, self.b_index))
+        return tensordot(self.a, self.b, self.a_index, self.b_index)
+
+
+    def _serialise_parameters(self) -> dict[str, Any]:
+        return {
+            "a": self.a._serialise_json(),
+            "b": self.b._serialise_json(),
+            "a_index": self.a_index,
+            "b_index": self.b_index }
 
     @staticmethod
     def _deserialise(parameters: dict) -> "Operation":
-        pass
+        return TensorDot(a = Operation.deserialise_json(parameters["a"]),
+                         b = Operation.deserialise_json(parameters["b"]),
+                         a_index=int(parameters["a_index"]),
+                         b_index=int(parameters["b_index"]))
 
     def _summary_open(self):
         return "TensorProduct"
 
 
 _serialisable_classes = [AdditiveIdentity, MultiplicativeIdentity, Constant,
-                        Variable,
-                        Neg, Inv,
-                        Add, Sub, Mul, Div, Pow,
-                        Transpose, Dot, MatMul]
+                         Variable,
+                         Neg, Inv,
+                         Add, Sub, Mul, Div, Pow,
+                         Transpose, Dot, MatMul, TensorDot]
 
 _serialisation_lookup = {cls.serialisation_name: cls for cls in _serialisable_classes}
 
@@ -879,10 +942,25 @@ def hash_data_via_numpy(*data: ArrayLike):
     return int(md5_hash.hexdigest(), 16)
 
 
+
+#####################################
+#                                   #
+#                                   #
+#                                   #
+#       Quantities begin here       #
+#                                   #
+#                                   #
+#                                   #
+#####################################
+
+
+
 QuantityType = TypeVar("QuantityType")
 
 
 class QuantityHistory:
+    """ Class that holds the information for keeping track of operations done on quantities """
+
     def __init__(self, operation_tree: Operation, references: dict[int, "Quantity"]):
         self.operation_tree = operation_tree
         self.references = references
@@ -936,7 +1014,7 @@ class QuantityHistory:
         return QuantityHistory(Variable(quantity.hash_value), {quantity.hash_value: quantity})
 
     @staticmethod
-    def apply_operation(operation: type[Operation], *histories: "QuantityHistory") -> "QuantityHistory":
+    def apply_operation(operation: type[Operation], *histories: "QuantityHistory", **extra_parameters) -> "QuantityHistory":
         """ Apply an operation to the history
 
         This is slightly unsafe as it is possible to attempt to apply an n-ary operation to a number of trees other
@@ -953,7 +1031,7 @@ class QuantityHistory:
             references.update(history.references)
 
         return QuantityHistory(
-            operation(*[history.operation_tree for history in histories]),
+            operation(*[history.operation_tree for history in histories], **extra_parameters),
             references)
 
     def has_variance(self):
