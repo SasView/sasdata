@@ -2,7 +2,7 @@ from enum import Enum
 from typing import TypeVar, Any, Self
 from dataclasses import dataclass
 
-from quantities.quantity import NamedQuantity
+from sasdata.quantities.quantity import NamedQuantity
 from sasdata.metadata import Metadata
 from sasdata.quantities.accessors import AccessorTarget
 from sasdata.data_backing import Group, key_tree
