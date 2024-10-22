@@ -1,3 +1,5 @@
+""" Tests for the encoding and decoding of numerical data"""
+
 import numpy as np
 import pytest
 
