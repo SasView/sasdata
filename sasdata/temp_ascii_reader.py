@@ -58,7 +58,7 @@ def load_quantities(params: AsciiReaderParams) -> list[NamedQuantity]:
             line_split = split_line(params.separator_dict, current_line)
             for j, token in enumerate(line_split):
                 # TODO: Data might not be floats. Maybe don't hard code this.
-                arrays[i][j] = float(token)
+                arrays[j][i] = float(token)
     quantities = [NamedQuantity(name, arrays[i], unit) for i, (name, unit) in enumerate(params.columns)]
     return quantities
 
