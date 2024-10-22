@@ -57,6 +57,10 @@ def load_quantities(params: AsciiReaderParams) -> list[NamedQuantity]:
                 continue
             line_split = split_line(params.separator_dict, current_line)
             for j, token in enumerate(line_split):
+                # Sometimes in the split, there might be an extra column that doesn't need to be there (e.g. an empty
+                # string.) This won't convert to a float so we need to ignore it.
+                if j >= len(params.columns):
+                    continue
                 # TODO: Data might not be floats. Maybe don't hard code this.
                 arrays[j][i] = float(token)
     quantities = [NamedQuantity(name, arrays[i], unit) for i, (name, unit) in enumerate(params.columns)]
