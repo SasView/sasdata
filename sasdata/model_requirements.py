@@ -3,7 +3,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from sasdata.metadata import Metadata
-from sasdata.quantities.operations import Operation
+from sasdata.quantities.quantity import Operation
 
 
 @dataclass

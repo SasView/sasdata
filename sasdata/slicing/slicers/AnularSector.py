@@ -1,7 +1,7 @@
 import numpy as np
 
-from sasdata.data_util.slicing.rebinning import Rebinner
-from sasdata.data_util.slicing.meshes.mesh import Mesh
+from sasdata.slicing.rebinning import Rebinner
+from sasdata.slicing.meshes.mesh import Mesh
 
 class AnularSector(Rebinner):
     """ A single annular sector (wedge sum)"""
