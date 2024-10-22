@@ -2,4 +2,3 @@
 
 # TODO Implementations for trig and exp
 # TODO Implementations for linear algebra stuff
-
