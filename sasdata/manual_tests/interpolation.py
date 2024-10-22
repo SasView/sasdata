@@ -34,7 +34,7 @@ def linear_interpolation_check():
 
             quantity_plot(new_x, new_y)
 
-            # print(new_y.history.summary())
+            print(new_y.history.summary())
 
     plt.show()
 
