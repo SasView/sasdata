@@ -1,14 +1,17 @@
+from encodings.base64_codec import base64_decode
 from typing import Collection, Sequence, TypeVar, Generic, Self
 from dataclasses import dataclass
 
 import numpy as np
+from lxml.etree import SerialisationError
 from numpy._typing import ArrayLike
 
 from sasdata.quantities import units
 from sasdata.quantities.units import Unit, NamedUnit
 
 import hashlib
-
+import base64
+import struct
 
 from typing import Any, TypeVar, Union
 import numpy as np
@@ -130,7 +133,6 @@ def hash_and_name(hash_or_name: int | str):
 
     else:
         raise TypeError("Variable name_or_hash_value must be either str or int")
-
 
 class Operation:
 

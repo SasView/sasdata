@@ -1,9 +1,7 @@
-""" Tests for the encoding and decoding of numerical data"""
-
 import numpy as np
 import pytest
 
-from sasdata.quantities.numerical_encoding import numerical_decode, numerical_encode
+from sasdata.quantities.numerical_encoding import numerical_encode, numerical_decode
 
 
 @pytest.mark.parametrize("value", [-100.0, -10.0, -1.0, 0.0, 0.5, 1.0, 10.0, 100.0, 1e100])
@@ -54,13 +52,3 @@ def test_numpy_dtypes_encode_decode(dtype):
     decoded = numerical_decode(encoded)
 
     assert decoded.dtype == test_matrix.dtype
-
-@pytest.mark.parametrize("dtype", [int, float, complex])
-@pytest.mark.parametrize("shape, n, m", [
-    ((8, 8), (1,3,5),(2,5,7)),
-    ((6, 8), (1,0,5),(0,5,0)),
-    ((6, 1), (1, 0, 5), (0, 0, 0)),
-])
-def test_coo_matrix_encode_decode(shape, n, m, dtype):
-
-    values = np.arange(10)
