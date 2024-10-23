@@ -54,3 +54,12 @@ def test_numpy_dtypes_encode_decode(dtype):
     decoded = numerical_decode(encoded)
 
     assert decoded.dtype == test_matrix.dtype
+
+@pytest.mark.parametrize("dtype", [int, float, complex])
+@pytest.mark.parametrize("shape, n, m", [
+    ((8, 8), (1,3,5),(2,5,7)),
+    ((6, 8), (1,0,5),(0,5,0)),
+    ((6, 1), (1, 0, 5), (0, 0, 0)),
+])
+def test_coo_matrix_encode_decode(shape, n, m, dtype):
+    test_matrix = np.arange()
