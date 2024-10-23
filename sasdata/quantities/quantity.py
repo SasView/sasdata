@@ -1,5 +1,4 @@
 
-
 from typing import Self
 
 import numpy as np
