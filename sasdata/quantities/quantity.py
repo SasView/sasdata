@@ -1,17 +1,15 @@
-from typing import Collection, Sequence, TypeVar, Generic, Self
-from dataclasses import dataclass
+from typing import Self
 
 import numpy as np
 from numpy._typing import ArrayLike
 
 from sasdata.quantities import units
+from sasdata.quantities.numerical_encoding import numerical_decode, numerical_encode
 from sasdata.quantities.units import Unit, NamedUnit
 
 import hashlib
 
-
 from typing import Any, TypeVar, Union
-import numpy as np
 
 import json
 
@@ -130,7 +128,6 @@ def hash_and_name(hash_or_name: int | str):
 
     else:
         raise TypeError("Variable name_or_hash_value must be either str or int")
-
 
 class Operation:
 
@@ -307,7 +304,7 @@ class Constant(ConstantBase):
         self.value = value
 
     def summary(self, indent_amount: int = 0, indent: str="  "):
-        pass
+        return repr(self.value)
 
     def evaluate(self, variables: dict[int, T]) -> T:
         return self.value
@@ -328,13 +325,12 @@ class Constant(ConstantBase):
 
     @staticmethod
     def _deserialise(parameters: dict) -> "Operation":
-        value = parameters["value"]
+        value = numerical_decode(parameters["value"])
         return Constant(value)
 
 
     def _serialise_parameters(self) -> dict[str, Any]:
-        return {"value": self.value}
-
+        return {"value": numerical_encode(self.value)}
 
     def summary(self, indent_amount: int=0, indent="  "):
         return f"{indent_amount*indent}{self.value}"
