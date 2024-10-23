@@ -21,6 +21,7 @@ class AsciiReaderParams:
     # sepearators: list[AsciiSeparator]
     excluded_lines: set[int]
     separator_dict: dict[str, bool]
+    raw_metadata: dict[str, str]
 
 
 # TODO: This has mostly been copied from the ASCII dialog but really the widget should use the implementation here.
