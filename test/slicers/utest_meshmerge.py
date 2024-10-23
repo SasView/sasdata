@@ -4,7 +4,7 @@ Tests for mesh merging operations.
 It's pretty hard to test componentwise, but we can do some tests of the general behaviour
 """
 
-from sasdata.slicing.meshes import meshmerge
+from sasdata.slicing.meshes.meshmerge import meshmerge
 from test.slicers.meshes_for_testing import (
     grid_mesh, shape_mesh, expected_grid_mappings, expected_shape_mappings)
 
