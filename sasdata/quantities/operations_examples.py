@@ -1,4 +1,4 @@
-from sasdata.quantities.operations import Variable, Mul
+from sasdata.quantities.quantity import Variable, Mul
 
 x = Variable("x")
 y = Variable("y")
