@@ -3,6 +3,8 @@
 from sasdata.data import SasData
 from sasdata.quantities.units import NamedUnit
 from sasdata.quantities.quantity import NamedQuantity
+from sasdata.quantities.accessors import AccessorTarget, Group
+from sasdata.metadata import Metadata
 from enum import Enum
 from dataclasses import dataclass
 import numpy as np
@@ -68,7 +70,13 @@ def load_quantities(params: AsciiReaderParams) -> list[NamedQuantity]:
     quantities = [NamedQuantity(name, arrays[i], unit) for i, (name, unit) in enumerate(params.columns)]
     return quantities
 
+def load_metadata(params: AsciiReaderParams):
+    root_group = Group('root', {})
+    metadata = Metadata(AccessorTarget(root_group))
+    # TODO: Actually fill this metadata in based on params.
+    return metadata
+
 def load_data(params: AsciiReaderParams) -> SasData:
     quantities = load_quantities(params)
     # Name is placeholder; this might come from the metadata.
-    return SasData(params.filename, quantities, None)
+    return SasData(params.filename, quantities, load_metadata(params))
