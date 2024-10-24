@@ -21,6 +21,7 @@ class AsciiReaderParams:
     # sepearators: list[AsciiSeparator]
     excluded_lines: set[int]
     separator_dict: dict[str, bool]
+    # The value of the metadatum will need to be parsed based on what it actually is.
     raw_metadata: dict[str, str]
 
 
