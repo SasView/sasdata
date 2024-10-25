@@ -55,7 +55,7 @@ def load_quantities(params: AsciiReaderParams) -> list[NamedQuantity]:
         lines = ascii_file.readlines()
         arrays: list[np.ndarray] = []
         for _ in params.columns:
-            arrays.append(np.zeros(len(lines)))
+            arrays.append(np.zeros(len(lines) - params.starting_line))
         for i, current_line in enumerate(lines):
             if i < params.starting_line or current_line in params.excluded_lines:
                 continue
@@ -66,7 +66,7 @@ def load_quantities(params: AsciiReaderParams) -> list[NamedQuantity]:
                 if j >= len(params.columns):
                     continue
                 # TODO: Data might not be floats. Maybe don't hard code this.
-                arrays[j][i] = float(token)
+                arrays[j][i - params.starting_line] = float(token)
     quantities = [NamedQuantity(name, arrays[i], unit) for i, (name, unit) in enumerate(params.columns)]
     return quantities
 
