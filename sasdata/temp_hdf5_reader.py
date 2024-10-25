@@ -11,15 +11,18 @@ from h5py._hl.dataset import Dataset as HDF5Dataset
 from h5py._hl.group import Group as HDF5Group
 
 
-from sasdata.raw_form import RawData
-from sasdata.raw_form import Dataset as SASDataDataset, Group as SASDataGroup
+from sasdata.data import SasData
+from sasdata.data_backing import Dataset as SASDataDataset, Group as SASDataGroup
 
 from sasdata.quantities.quantity import NamedQuantity
 from sasdata.quantities import units
 from sasdata.quantities.unit_parser import parse
 
 # test_file = "./example_data/1d_data/33837rear_1D_1.75_16.5_NXcanSAS_v3.h5"
-test_file = "./example_data/1d_data/33837rear_1D_1.75_16.5_NXcanSAS.h5"
+# test_file = "./example_data/1d_data/33837rear_1D_1.75_16.5_NXcanSAS.h5"
+# test_file = "./example_data/2d_data/BAM_2D.h5"
+test_file = "./example_data/2d_data/14250_2D_NoDetInfo_NXcanSAS_v3.h5"
+# test_file = "./example_data/2d_data/33837rear_2D_1.75_16.5_NXcanSAS_v3.h5"
 
 logger = logging.getLogger(__name__)
 
@@ -79,8 +82,12 @@ def connected_data(node: SASDataGroup, name_prefix="") -> list[NamedQuantity]:
                                  value=child.data,
                                  units=units)
 
-        if "uncertainty" in child.attributes:
-            uncertainty_name = child.attributes["uncertainty"]
+        # Turns out people can't be trusted to use the same keys here
+        if "uncertainty" in child.attributes or "uncertainties" in child.attributes:
+            try:
+                uncertainty_name = child.attributes["uncertainty"]
+            except:
+                uncertainty_name = child.attributes["uncertainties"]
             uncertainty_map[name] = uncertainty_name
             uncertainties.add(uncertainty_name)
 
@@ -100,10 +107,10 @@ def connected_data(node: SASDataGroup, name_prefix="") -> list[NamedQuantity]:
     return output
 
 
-def load_data(filename) -> list[RawData]:
+def load_data(filename) -> list[SasData]:
     with h5py.File(filename, 'r') as f:
 
-        loaded_data: list[RawData] = []
+        loaded_data: list[SasData] = []
 
         for root_key in f.keys():
 
@@ -114,12 +121,13 @@ def load_data(filename) -> list[RawData]:
 
             entry_keys = [key for key in entry.keys()]
 
-            if "sasdata" not in entry_keys:
-                logger.warning("No sasdata key")
+            if "sasdata" not in entry_keys and "data" not in entry_keys:
+                logger.warning("No sasdata or data key")
 
             for key in entry_keys:
                 component = entry[key]
-                if key.lower() == "sasdata":
+                lower_key = key.lower()
+                if lower_key == "sasdata" or lower_key == "data":
                     datum = recurse_hdf5(component)
                     # TODO: Use named identifier
                     data_contents = connected_data(datum, "FILE_ID_HERE")
@@ -129,10 +137,11 @@ def load_data(filename) -> list[RawData]:
 
 
             loaded_data.append(
-                RawData(
+                SasData(
                     name=root_key,
                     data_contents=data_contents,
-                    raw_metadata=raw_metadata))
+                    raw_metadata=SASDataGroup("root", raw_metadata),
+                    verbose=False))
 
         return loaded_data
 
@@ -142,4 +151,4 @@ def load_data(filename) -> list[RawData]:
 data = load_data(test_file)
 
 for dataset in data:
-    print(dataset.summary())
+    print(dataset.summary(include_raw=False))
