@@ -78,4 +78,4 @@ def load_metadata(params: AsciiReaderParams) -> Group:
 def load_data(params: AsciiReaderParams) -> SasData:
     quantities = load_quantities(params)
     # Name is placeholder; this might come from the metadata.
-    return SasData(params.filename, quantities, load_metadata(params)))
+    return SasData(params.filename, quantities, load_metadata(params))))
