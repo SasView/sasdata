@@ -13,6 +13,8 @@ from sasdata.dataloader.loader import Loader as LoaderMain
 
 logger = logging.getLogger(__name__)
 
+BASE_URL = 'https://github.com/SasView/sasdata/raw/master/test/sasdataloader/data/'
+
 
 def find(filename):
     return os.path.join(os.path.dirname(__file__), 'data', filename)
@@ -24,23 +26,22 @@ class ExtensionRegistryTests(unittest.TestCase):
         # Local and remote files to compare loading
         # NXcanSAS
         self.valid_hdf_file = find("MAR07232_rest.h5")
-        self.valid_hdf_url = "https://github.com/SasView/sasdata/raw/master/test/sasdataloader/data/MAR07232_rest.h5"
+        self.valid_hdf_url = BASE_URL + "MAR07232_rest.h5"
         # canSAS XML
         self.valid_xml_file = find("valid_cansas_xml.xml")
-        self.valid_xml_url = "https://github.com/SasView/sasdata/raw/master/test/sasdataloader/data/valid_cansas_xml.xml"
+        self.valid_xml_url = BASE_URL + "valid_cansas_xml.xml"
         # ASCII Text
         self.valid_txt_file = find("avg_testdata.txt")
-        self.valid_txt_url = "https://github.com/SasView/sasdata/raw/master/test/sasdataloader/data/avg_testdata.txt"
+        self.valid_txt_url = BASE_URL + "avg_testdata.txt"
         # ABS Text
         self.valid_abs_file = find("ascii_test_4.abs")
-        self.valid_abs_url = "https://github.com/SasView/sasdata/raw/master/test/sasdataloader/data/ascii_test_4.abs"
+        self.valid_abs_url = BASE_URL + "ascii_test_4.abs"
         # DAT 2D NIST format
         self.valid_dat_file = find("detector_square.dat")
-        self.valid_dat_url = "https://github.com/SasView/sasdata/raw/master/test/sasdataloader/data/detector_square.dat"
+        self.valid_dat_url = BASE_URL + "detector_square.dat"
         # Anton Parr SAXSess PDH format
-        # TODO: This should point to the sasdata package, but the file doesn't exist there yet.
         self.valid_pdh_file = find("Anton-Paar.pdh")
-        self.valid_pdh_url = "https://github.com/SasView/sasview/raw/main/src/sas/example_data/1d_data/Anton-Paar.pdh"
+        self.valid_pdh_url = BASE_URL + "Anton-Paar.pdh"
 
         self.valid_file_wrong_known_ext = find("valid_cansas_xml.txt")
         self.valid_file_wrong_unknown_ext = find("valid_cansas_xml.xyz")

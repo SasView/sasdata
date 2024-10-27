@@ -1,15 +1,13 @@
 # Data import/export requirements
 h5py
-lxml
+lxml < 5.0
 
 # Calculation
-numpy
-scipy
+numpy==1.*
 
 # Unit testing
 pytest
 unittest-xml-reporting
 
-# Documentation (future)
+# Documentation
 sphinx
-html5lib
