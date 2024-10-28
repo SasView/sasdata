@@ -278,10 +278,10 @@ def test_compact():
     # non-finite values
     assert value_str(-np.inf,None) == "-inf"
     assert value_str(np.inf,None) == "inf"
-    assert value_str(np.NaN,None) == "NaN"
+    assert value_str(np.nan,None) == "NaN"
     
     # bad or missing uncertainty
-    assert value_str(-1.23567,np.NaN) == "-1.23567"
+    assert value_str(-1.23567,np.nan) == "-1.23567"
     assert value_str(-1.23567,-np.inf) == "-1.23567"
     assert value_str(-1.23567,-0.1) == "-1.23567"
     assert value_str(-1.23567,0) == "-1.23567"
@@ -409,10 +409,10 @@ def test_pm():
     # non-finite values
     assert value_str(-np.inf,None) == "-inf"
     assert value_str(np.inf,None) == "inf"
-    assert value_str(np.NaN,None) == "NaN"
+    assert value_str(np.nan,None) == "NaN"
     
     # bad or missing uncertainty
-    assert value_str(-1.23567,np.NaN) == "-1.23567"
+    assert value_str(-1.23567,np.nan) == "-1.23567"
     assert value_str(-1.23567,-np.inf) == "-1.23567"
     assert value_str(-1.23567,-0.1) == "-1.23567"
     assert value_str(-1.23567,0) == "-1.23567"
