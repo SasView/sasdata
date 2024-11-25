@@ -95,7 +95,7 @@ def merge_uncertainties(quantities: list[NamedQuantity[list]]) -> list[NamedQuan
     new_quantities = []
     error_quantity_names = pairings.values()
     for quantity in quantities:
-        if quantity in error_quantity_names:
+        if quantity.name in error_quantity_names:
             continue
         pairing = pairings.get(quantity.name, '')
         error_quantity = None
