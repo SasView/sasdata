@@ -71,11 +71,29 @@ def load_quantities(params: AsciiReaderParams) -> list[NamedQuantity]:
     quantities = [NamedQuantity(name, arrays[i], unit) for i, (name, unit) in enumerate(params.columns)]
     return quantities
 
+# TODO: idk if metadata dict is gonna stay flat like this. May need to change later.
+def metadata_dict_to_data_backing(metadata_dict: dict[str, dict[str, str]]) -> dict[str, Dataset | Group]:
+    root_children = {}
+    for top_level_key, top_level_item in metadata_dict.items():
+        children = {}
+        for metadatum_name, metadatum in top_level_item.items():
+            children[metadatum_name] = Dataset(metadatum_name, metadatum, {})
+        # This is a special set which needs to live at the root of the group.
+        # TODO: the 'other' name will probably need to change.
+        if top_level_key == 'other':
+            root_children = root_children | children
+        else:
+            group = Group(top_level_key, children)
+            root_children[top_level_key] = group
+    return Group('root', root_children)
+
+
 def load_metadata(params: AsciiReaderParams) -> Group:
     instrument_group = Group('instrument', {'detector': Dataset(name='detector', data=params.raw_metadata['detector'], attributes={}),
                                             # TODO: To fill. Just testing for now.
                                 'source': Dataset(name='source', data=params.raw_metadata['source'], attributes={})})
     root_group = Group('root', {'instrument': instrument_group})
+
     # TODO: Actually fill this metadata in based on params.
     return root_group
 
