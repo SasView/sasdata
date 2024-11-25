@@ -5,6 +5,7 @@ from sasdata.quantities.units import NamedUnit
 from sasdata.quantities.quantity import NamedQuantity
 from sasdata.quantities.accessors import AccessorTarget, Group
 from sasdata.metadata import Metadata
+from sasdata.data_backing import Dataset, Group
 from enum import Enum
 from dataclasses import dataclass
 import numpy as np
@@ -71,8 +72,14 @@ def load_quantities(params: AsciiReaderParams) -> list[NamedQuantity]:
     return quantities
 
 def load_metadata(params: AsciiReaderParams) -> Group:
-    root_group = Group('root', {})
+    instrument_group = Group('instrument', {'detector': Dataset(name='detector', data=params.raw_metadata['detector'], attributes={}),
+                                            # TODO: To fill. Just testing for now.
+                                'source': Dataset(name='source', data=params.raw_metadata['source'], attributes={})})
+    root_group = Group('root', {'instrument': instrument_group})
     # TODO: Actually fill this metadata in based on params.
+    return root_group
+
+    root_group.children['instrument'] = instrument_group
     return root_group
 
 def load_data(params: AsciiReaderParams) -> SasData:
