@@ -87,8 +87,30 @@ def metadata_dict_to_data_backing(metadata_dict: dict[str, dict[str, str]]) -> d
             root_children[top_level_key] = group
     return Group('root', root_children)
 
+# TODO: There may be a better place for this.
+# pairings = [('I', 'Idev')] # TODO: fill later.
+pairings = {'I': 'dI'}
+
+def merge_uncertainties(quantities: list[NamedQuantity[list]]) -> list[NamedQuantity]:
+    new_quantities = []
+    error_quantity_names = pairings.values()
+    for quantity in quantities:
+        if quantity in error_quantity_names:
+            continue
+        pairing = pairings.get(quantity.name, '')
+        error_quantity = None
+        for other_quantity in quantities:
+            if other_quantity.name == pairing:
+                error_quantity = other_quantity
+        if not error_quantity is None:
+            to_add = quantity.with_standard_error(error_quantity)
+        else:
+            to_add = quantity
+        new_quantities.append(to_add)
+    return new_quantities
+
 def load_data(params: AsciiReaderParams) -> SasData:
     quantities = load_quantities(params)
     # Name is placeholder; this might come from the metadata.
     metadata = metadata_dict_to_data_backing(params.raw_metadata)
-    return SasData(params.filename, quantities, metadata)
+    return SasData(params.filename, merge_uncertainties(quantities), metadata)
