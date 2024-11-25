@@ -87,20 +87,8 @@ def metadata_dict_to_data_backing(metadata_dict: dict[str, dict[str, str]]) -> d
             root_children[top_level_key] = group
     return Group('root', root_children)
 
-
-def load_metadata(params: AsciiReaderParams) -> Group:
-    instrument_group = Group('instrument', {'detector': Dataset(name='detector', data=params.raw_metadata['detector'], attributes={}),
-                                            # TODO: To fill. Just testing for now.
-                                'source': Dataset(name='source', data=params.raw_metadata['source'], attributes={})})
-    root_group = Group('root', {'instrument': instrument_group})
-
-    # TODO: Actually fill this metadata in based on params.
-    return root_group
-
-    root_group.children['instrument'] = instrument_group
-    return root_group
-
 def load_data(params: AsciiReaderParams) -> SasData:
     quantities = load_quantities(params)
     # Name is placeholder; this might come from the metadata.
-    return SasData(params.filename, quantities, load_metadata(params))
+    metadata = metadata_dict_to_data_backing(params.raw_metadata)
+    return SasData(params.filename, quantities, metadata)
