@@ -48,7 +48,7 @@ def split_line(separator_dict: dict[str, bool], line: str) -> list[str]:
                     seperator_text = r'\t'
             expr += seperator_text
 
-    return re.split(expr, line)
+    return re.split(expr, line.strip())
 
 # TODO: Implement error handling.
 def load_quantities(params: AsciiReaderParams) -> list[NamedQuantity]:
