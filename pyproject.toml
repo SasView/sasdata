@@ -1,0 +1,110 @@
+[build-system]
+requires = [
+  "hatchling",
+  "hatch-requirements-txt",
+  "hatch-sphinx",
+]
+build-backend = "hatchling.build"
+
+
+[project]
+name = "sasdata"
+dynamic = [
+  "version",
+  "dependencies",
+]
+description = "Sas Data Loader application"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "BSD-3-Clause" }
+authors = [
+    {name = "SasView Team", email = "developers@sasview.org"},
+]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Programming Language :: Python",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: BSD License",
+]
+keywords = [
+  "small-angle",
+  "scattering",
+  "data analysis",
+  "neutron",
+  "X-ray",
+]
+
+[project.urls]
+homepage = "http://sasview.org"
+
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+]
+
+[tool.hatch.metadata.hooks.requirements_txt]
+files = [ "requirements.txt" ]
+
+[tool.hatch.version]
+path = "sasdata/__init__.py"
+
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "docs/source",
+  "sasdata",
+  "test",
+]
+exclude = [
+  ".gitignore",
+  "build",
+]
+ignore-vcs = true
+
+
+[tool.hatch.build.targets.wheel]
+packages = ["sasdata"]
+exclude = [
+  "test",
+]
+
+[tool.hatch.build.targets.wheel.force-include]
+#     "**/UI/*py",
+"docs/source" = "sasdata/docs-source"
+"build/docs" = "sasdata/docs"
+
+[[tool.hatch.build.targets.wheel.hooks.sphinx.tools]]
+tool = "apidoc"
+source = "../sasdata"
+out_dir = "source/dev/generated"
+depth = 8
+private = false
+header = "SasData"
+
+[[tool.hatch.build.targets.wheel.hooks.sphinx.tools]]
+tool = "build"
+format = "html"
+source = "source"
+out_dir = "build"
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+python_files = [
+  "utest*py",
+]
+addopts = [
+  "--ignore=test/utest_sasdata.py",
+  "-v",
+  "-rsx",
+]
+log_level = "DEBUG"
+filterwarnings = [
+]
+testpaths = [
+  "sasdata",
+  "test",
+]
+norecursedirs = [
+  "sasdata",
+]
