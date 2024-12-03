@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from sasdata.ascii_reader_metadata import AsciiReaderMetadata
+from sasdata.ascii_reader_metadata import AsciiMetadataCategory, AsciiReaderMetadata
 from sasdata.data import SasData
 from sasdata.quantities.units import NamedUnit
 from sasdata.quantities.quantity import NamedQuantity
@@ -74,12 +74,11 @@ def load_quantities(params: AsciiReaderParams) -> list[list[NamedQuantity]]:
         loaded_files.append(file_quantities)
     return loaded_files
 
-# TODO: idk if metadata dict is gonna stay flat like this. May need to change later.
-def metadata_dict_to_data_backing(metadata_dict: dict[str, dict[str, str]]) -> dict[str, Dataset | Group]:
+def metadata_to_data_backing(metadata: dict[str, AsciiMetadataCategory[str]]) -> dict[str, Dataset | Group]:
     root_children = {}
-    for top_level_key, top_level_item in metadata_dict.items():
+    for top_level_key, top_level_item in metadata.items():
         children = {}
-        for metadatum_name, metadatum in top_level_item.items():
+        for metadatum_name, metadatum in top_level_item.values.items():
             children[metadatum_name] = Dataset(metadatum_name, metadatum, {})
         # This is a special set which needs to live at the root of the group.
         # TODO: the 'other' name will probably need to change.
