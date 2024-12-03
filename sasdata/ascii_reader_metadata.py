@@ -32,6 +32,27 @@ class AsciiReaderMetadata:
     def filename_components(self, filename: str) -> list[str]:
         return re_split(self.filename_separator[filename], filename)
 
+    def all_file_metadata(self, filename: str) -> dict[str, AsciiMetadataCategory[str]]:
+        file_metadata = self.filename_specific_metadata[filename]
+        components = self.filename_components(filename)
+        # The ordering here is important. If there are conflicts, the second dictionary will override the first one.
+        # Conflicts shouldn't really be happening anyway but if they do, we're gonna go with the master metadata taking
+        # precedence for now.
+        return_metadata: dict[str, AsciiMetadataCategory[str]] = {}
+        for category_name, category in file_metadata.items():
+            combined_category_dict = category.values | self.master_metadata[category_name].values
+            new_category_dict: dict[str, str] = {}
+            for key, value in combined_category_dict:
+                if isinstance(value, str):
+                    new_category_dict[key] = value
+                elif isinstance(value, int):
+                    new_category_dict[key] = components[value]
+                else:
+                    raise TypeError(f'Invalid value for {key} in {category_name}')
+            new_category = AsciiMetadataCategory(new_category_dict)
+            return_metadata[category_name] = new_category
+        return return_metadata
+
     def get_metadata(self, category: str, value: str, filename: str, error_on_not_found=False) -> str | None:
         components = self.filename_components(filename)
 
