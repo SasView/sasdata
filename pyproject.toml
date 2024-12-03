@@ -86,7 +86,8 @@ header = "SasData"
 tool = "build"
 format = "html"
 source = "source"
-out_dir = "build"
+out_dir = "../build/docs"
+environment = { PYTHONPATH=".." }
 
 [tool.pytest.ini_options]
 minversion = "6.0"
