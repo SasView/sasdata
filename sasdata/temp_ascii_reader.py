@@ -50,25 +50,29 @@ def split_line(separator_dict: dict[str, bool], line: str) -> list[str]:
     return re.split(expr, line.strip())
 
 # TODO: Implement error handling.
-def load_quantities(params: AsciiReaderParams) -> list[NamedQuantity]:
-    with open(params.filename) as ascii_file:
-        lines = ascii_file.readlines()
-        arrays: list[np.ndarray] = []
-        for _ in params.columns:
-            arrays.append(np.zeros(len(lines) - params.starting_line))
-        for i, current_line in enumerate(lines):
-            if i < params.starting_line or current_line in params.excluded_lines:
-                continue
-            line_split = split_line(params.separator_dict, current_line)
-            for j, token in enumerate(line_split):
-                # Sometimes in the split, there might be an extra column that doesn't need to be there (e.g. an empty
-                # string.) This won't convert to a float so we need to ignore it.
-                if j >= len(params.columns):
+def load_quantities(params: AsciiReaderParams) -> list[list[NamedQuantity]]:
+    loaded_files: list[list[NamedQuantity]] = []
+    for filename in params.filenames:
+
+        with open(filename) as ascii_file:
+            lines = ascii_file.readlines()
+            arrays: list[np.ndarray] = []
+            for _ in params.columns:
+                arrays.append(np.zeros(len(lines) - params.starting_line))
+            for i, current_line in enumerate(lines):
+                if i < params.starting_line or current_line in params.excluded_lines:
                     continue
-                # TODO: Data might not be floats. Maybe don't hard code this.
-                arrays[j][i - params.starting_line] = float(token)
-    quantities = [NamedQuantity(name, arrays[i], unit) for i, (name, unit) in enumerate(params.columns)]
-    return quantities
+                line_split = split_line(params.separator_dict, current_line)
+                for j, token in enumerate(line_split):
+                    # Sometimes in the split, there might be an extra column that doesn't need to be there (e.g. an empty
+                    # string.) This won't convert to a float so we need to ignore it.
+                    if j >= len(params.columns):
+                        continue
+                    # TODO: Data might not be floats. Maybe don't hard code this.
+                    arrays[j][i - params.starting_line] = float(token)
+        file_quantities = [NamedQuantity(name, arrays[i], unit) for i, (name, unit) in enumerate(params.columns)]
+        loaded_files.append(file_quantities)
+    return loaded_files
 
 # TODO: idk if metadata dict is gonna stay flat like this. May need to change later.
 def metadata_dict_to_data_backing(metadata_dict: dict[str, dict[str, str]]) -> dict[str, Dataset | Group]:
