@@ -3,7 +3,7 @@ h5py
 lxml
 
 # Calculation
-numpy==1.*
+numpy
 
 # Unit testing
 pytest
