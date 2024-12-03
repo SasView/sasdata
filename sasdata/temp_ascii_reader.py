@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from sasdata.ascii_reader_metadata import AsciiReaderMetadata
 from sasdata.data import SasData
 from sasdata.quantities.units import NamedUnit
 from sasdata.quantities.quantity import NamedQuantity
@@ -18,14 +19,12 @@ class AsciiSeparator(Enum):
 
 @dataclass
 class AsciiReaderParams:
-    filename: str
+    filenames: list[str]
     starting_line: int
     columns: list[tuple[str, NamedUnit]]
-    # sepearators: list[AsciiSeparator]
     excluded_lines: set[int]
     separator_dict: dict[str, bool]
-    # The value of the metadatum will need to be parsed based on what it actually is.
-    raw_metadata: dict[str, str]
+    metadata: AsciiReaderMetadata
 
 
 # TODO: This has mostly been copied from the ASCII dialog but really the widget should use the implementation here.
