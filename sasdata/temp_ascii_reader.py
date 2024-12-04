@@ -70,7 +70,7 @@ def load_quantities(params: AsciiReaderParams, filename: str) -> list[NamedQuant
     file_quantities = [NamedQuantity(name, arrays[i], unit) for i, (name, unit) in enumerate(params.columns)]
     return file_quantities
 
-def metadata_to_data_backing(metadata: dict[str, AsciiMetadataCategory[str]]) -> dict[str, Dataset | Group]:
+def metadata_to_data_backing(metadata: dict[str, AsciiMetadataCategory[str]]) -> Group:
     root_children = {}
     for top_level_key, top_level_item in metadata.items():
         children = {}
