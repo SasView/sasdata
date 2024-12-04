@@ -11,6 +11,7 @@ from enum import Enum
 from dataclasses import dataclass
 import numpy as np
 import re
+from os import path
 
 class AsciiSeparator(Enum):
     Comma = 0,
@@ -19,7 +20,7 @@ class AsciiSeparator(Enum):
 
 @dataclass
 class AsciiReaderParams:
-    filenames: list[str]
+    filenames: list[str] # These will be the FULL file path. Will need to convert to basenames for some functions.
     starting_line: int
     columns: list[tuple[str, NamedUnit]]
     excluded_lines: set[int]
@@ -111,6 +112,6 @@ def load_data(params: AsciiReaderParams) -> list[SasData]:
     loaded_data: list[SasData] = []
     for filename in params.filenames:
         quantities = load_quantities(params, filename)
-        metadata = metadata_to_data_backing(params.metadata.all_file_metadata(filename))
+        metadata = metadata_to_data_backing(params.metadata.all_file_metadata(path.basename(filename)))
         loaded_data.append(SasData(filename, merge_uncertainties(quantities), metadata))
     return loaded_data
