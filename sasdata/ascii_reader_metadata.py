@@ -30,7 +30,14 @@ class AsciiReaderMetadata:
     master_metadata: dict[str, AsciiMetadataCategory[int]] = field(default_factory=default_categories)
 
     def filename_components(self, filename: str) -> list[str]:
-        return re_split(self.filename_separator[filename], filename)
+        splitted = re_split(f'{self.filename_separator[filename]}', filename)
+        # If the last component has a file extensions, remove it.
+        last_component = splitted[-1]
+        if '.' in last_component:
+            pos = last_component.index('.')
+            last_component = last_component[:pos]
+            splitted[-1] = last_component
+        return splitted
 
     def all_file_metadata(self, filename: str) -> dict[str, AsciiMetadataCategory[str]]:
         file_metadata = self.filename_specific_metadata[filename]
