@@ -42,7 +42,7 @@ class AsciiReaderMetadata:
         for category_name, category in file_metadata.items():
             combined_category_dict = category.values | self.master_metadata[category_name].values
             new_category_dict: dict[str, str] = {}
-            for key, value in combined_category_dict:
+            for key, value in combined_category_dict.items():
                 if isinstance(value, str):
                     new_category_dict[key] = value
                 elif isinstance(value, int):
