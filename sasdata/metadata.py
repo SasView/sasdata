@@ -397,7 +397,7 @@ class Metadata:
             "  " + "="*len(self.title) +
                            "=======" +
             "="*len(self.run) + "\n\n" +
-            f"Definition: {self.title}\n" +
+            f"Definition: {self.definition}\n" +
             self.process.summary() +
             self.sample.summary() +
             self.instrument.summary() +
