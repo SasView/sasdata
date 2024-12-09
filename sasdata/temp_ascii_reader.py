@@ -72,7 +72,7 @@ def load_quantities(params: AsciiReaderParams, filename: str) -> list[NamedQuant
             except ValueError:
                 # If any of the lines contain non-numerical data, then this line can't be read in as a quantity so it
                 # should be ignored entirely.
-                print(f'Line {i} skipped.')
+                print(f'Line {i + 1} skipped.')
                 continue
     file_quantities = [NamedQuantity(name, arrays[i], unit) for i, (name, unit) in enumerate(params.columns)]
     return file_quantities
