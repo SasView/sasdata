@@ -61,13 +61,19 @@ def load_quantities(params: AsciiReaderParams, filename: str) -> list[NamedQuant
             if i < params.starting_line or current_line in params.excluded_lines:
                 continue
             line_split = split_line(params.separator_dict, current_line)
-            for j, token in enumerate(line_split):
-                # Sometimes in the split, there might be an extra column that doesn't need to be there (e.g. an empty
-                # string.) This won't convert to a float so we need to ignore it.
-                if j >= len(params.columns):
-                    continue
-                # TODO: Data might not be floats. Maybe don't hard code this.
-                arrays[j][i - params.starting_line] = float(token)
+            try:
+                for j, token in enumerate(line_split):
+                    # Sometimes in the split, there might be an extra column that doesn't need to be there (e.g. an empty
+                    # string.) This won't convert to a float so we need to ignore it.
+                    if j >= len(params.columns):
+                        continue
+                    # TODO: Data might not be floats. Maybe don't hard code this.
+                    arrays[j][i - params.starting_line] = float(token)
+            except ValueError:
+                # If any of the lines contain non-numerical data, then this line can't be read in as a quantity so it
+                # should be ignored entirely.
+                print(f'Line {i} skipped.')
+                continue
     file_quantities = [NamedQuantity(name, arrays[i], unit) for i, (name, unit) in enumerate(params.columns)]
     return file_quantities
 
