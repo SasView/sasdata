@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from typing import TypeVar
-from re import split as re_split
+import re
 
 initial_metadata = {
     'source': ['name', 'radiation', 'type', 'probe_particle', 'beam_size_name', 'beam_size', 'beam_shape', 'wavelength', 'wavelength_min', 'wavelength_max', 'wavelength_spread'],
@@ -26,11 +26,16 @@ def default_categories() -> dict[str, AsciiMetadataCategory[str | int]]:
 class AsciiReaderMetadata:
     # Key is the filename.
     filename_specific_metadata: dict[str, dict[str, AsciiMetadataCategory[str]]] = field(default_factory=dict)
-    filename_separator: dict[str, str] = field(default_factory=dict)
+    # True instead of str means use the casing to separate the filename.
+    filename_separator: dict[str, str | bool] = field(default_factory=dict)
     master_metadata: dict[str, AsciiMetadataCategory[int]] = field(default_factory=default_categories)
 
     def filename_components(self, filename: str) -> list[str]:
-        splitted = re_split(f'{self.filename_separator[filename]}', filename)
+        separator = self.filename_separator[filename]
+        if isinstance(separator, str):
+            splitted = re.split(f'{self.filename_separator[filename]}', filename)
+        else:
+            splitted = re.findall(r'[A-Z][a-z]*', filename)
         # If the last component has a file extensions, remove it.
         last_component = splitted[-1]
         if '.' in last_component:
