@@ -32,12 +32,14 @@ class AsciiReaderMetadata:
     filename_separator: dict[str, str | bool] = field(default_factory=dict)
     master_metadata: dict[str, AsciiMetadataCategory[int]] = field(default_factory=default_categories)
 
-    def filename_components(self, filename: str, cut_off_extension: bool = True) -> list[str]:
+    def filename_components(self, filename: str, cut_off_extension: bool = True, capture: bool = True) -> list[str]:
         separator = self.filename_separator[filename]
+        # FIXME: This sort of string construction may be an issue. Might need an alternative.
+        base_str = '({})' if capture else '{}'
         if isinstance(separator, str):
-            splitted = re.split(f'{self.filename_separator[filename]}', filename)
+            splitted = re.split(base_str.replace('{}', separator), filename)
         else:
-            splitted = re.findall(CASING_REGEX, filename)
+            splitted = re.findall(base_str.replace('{}', CASING_REGEX), filename)
         # If the last component has a file extensions, remove it.
         last_component = splitted[-1]
         if cut_off_extension and '.' in last_component:
