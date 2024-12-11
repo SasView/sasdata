@@ -32,7 +32,7 @@ class AsciiReaderMetadata:
     filename_separator: dict[str, str | bool] = field(default_factory=dict)
     master_metadata: dict[str, AsciiMetadataCategory[int]] = field(default_factory=default_categories)
 
-    def filename_components(self, filename: str) -> list[str]:
+    def filename_components(self, filename: str, cut_off_extension: bool = True) -> list[str]:
         separator = self.filename_separator[filename]
         if isinstance(separator, str):
             splitted = re.split(f'{self.filename_separator[filename]}', filename)
@@ -40,7 +40,7 @@ class AsciiReaderMetadata:
             splitted = re.findall(CASING_REGEX, filename)
         # If the last component has a file extensions, remove it.
         last_component = splitted[-1]
-        if '.' in last_component:
+        if cut_off_extension and '.' in last_component:
             pos = last_component.index('.')
             last_component = last_component[:pos]
             splitted[-1] = last_component
