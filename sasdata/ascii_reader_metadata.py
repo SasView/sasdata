@@ -32,7 +32,7 @@ class AsciiReaderMetadata:
     filename_separator: dict[str, str | bool] = field(default_factory=dict)
     master_metadata: dict[str, AsciiMetadataCategory[int]] = field(default_factory=default_categories)
 
-    def filename_components(self, filename: str, cut_off_extension: bool = True, capture: bool = True) -> list[str]:
+    def filename_components(self, filename: str, cut_off_extension: bool = True, capture: bool = False) -> list[str]:
         separator = self.filename_separator[filename]
         # FIXME: This sort of string construction may be an issue. Might need an alternative.
         base_str = '({})' if capture else '{}'
