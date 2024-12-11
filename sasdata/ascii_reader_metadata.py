@@ -13,6 +13,8 @@ initial_metadata = {
     'other': ['title', 'run', 'definition']
 }
 
+CASING_REGEX = r'[A-Z][a-z]*'
+
 T = TypeVar('T')
 
 @dataclass
@@ -35,7 +37,7 @@ class AsciiReaderMetadata:
         if isinstance(separator, str):
             splitted = re.split(f'{self.filename_separator[filename]}', filename)
         else:
-            splitted = re.findall(r'[A-Z][a-z]*', filename)
+            splitted = re.findall(CASING_REGEX, filename)
         # If the last component has a file extensions, remove it.
         last_component = splitted[-1]
         if '.' in last_component:
