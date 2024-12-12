@@ -93,7 +93,6 @@ def metadata_to_data_backing(metadata: dict[str, AsciiMetadataCategory[str]]) ->
     return Group('root', root_children)
 
 # TODO: There may be a better place for this.
-# pairings = [('I', 'Idev')]
 pairings = {'I': 'dI', 'Q': 'dQ', 'Qx': 'dQx', 'Qy': 'dQy'}
 
 def merge_uncertainties(quantities: list[NamedQuantity[list]]) -> list[NamedQuantity]:
