@@ -48,6 +48,18 @@ class AsciiReaderMetadata:
             splitted[-1] = last_component
         return splitted
 
+    def purge_unreachable(self, filename: str):
+        """This is used when the separator has changed. If lets say we now have 2 components when there were 5 but the
+        3rd component was selected, this will now produce an index out of range exception. Thus we'll need to purge this
+        to stop exceptions from happening."""
+        components = self.filename_components(filename)
+        component_length = len(components)
+        # Converting to list as this mutates the dictionary as it goes through it.
+        for category_name, category in list(self.master_metadata.items()):
+            for key, value in list(category.values.items()):
+                if value >= component_length:
+                    del self.master_metadata[category_name].values[key]
+
     def all_file_metadata(self, filename: str) -> dict[str, AsciiMetadataCategory[str]]:
         file_metadata = self.filename_specific_metadata[filename]
         components = self.filename_components(filename)
