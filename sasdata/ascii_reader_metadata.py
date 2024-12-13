@@ -98,7 +98,6 @@ class AsciiReaderMetadata:
             new_category = AsciiMetadataCategory(new_category_dict)
             return_metadata[category_name] = new_category
         return return_metadata
-
     def get_metadata(self, category: str, value: str, filename: str, error_on_not_found=False) -> str | None:
         components = self.filename_components(filename)
 
