@@ -15,7 +15,21 @@ initial_metadata = {
 
 CASING_REGEX = r'[A-Z][a-z]*'
 
+# First item has the highest precedence.
+SEPARATOR_PRECEDENCE = [
+    '_',
+    '-',
+    # TODO: Thing/look at others.
+]
+# If none of these characters exist in that string, use casing. See init_separator
+
 T = TypeVar('T')
+
+# TODO: There may be a better place for this.
+pairings = {'I': 'dI', 'Q': 'dQ', 'Qx': 'dQx', 'Qy': 'dQy'}
+pairing_error = {value: key for key, value in pairings.items()}
+# Allows this to be bidirectional.
+pairings = pairings | pairing_error
 
 @dataclass
 class AsciiMetadataCategory[T]:
