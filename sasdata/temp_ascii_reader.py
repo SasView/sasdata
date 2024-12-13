@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from sasdata.ascii_reader_metadata import AsciiMetadataCategory, AsciiReaderMetadata
+from sasdata.ascii_reader_metadata import AsciiMetadataCategory, AsciiReaderMetadata, pairings
 from sasdata.data import SasData
 from sasdata.quantities.units import NamedUnit
 from sasdata.quantities.quantity import NamedQuantity
@@ -91,9 +91,6 @@ def metadata_to_data_backing(metadata: dict[str, AsciiMetadataCategory[str]]) ->
             group = Group(top_level_key, children)
             root_children[top_level_key] = group
     return Group('root', root_children)
-
-# TODO: There may be a better place for this.
-pairings = {'I': 'dI', 'Q': 'dQ', 'Qx': 'dQx', 'Qy': 'dQy'}
 
 def merge_uncertainties(quantities: list[NamedQuantity[list]]) -> list[NamedQuantity]:
     new_quantities = []
