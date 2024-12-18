@@ -27,8 +27,6 @@ class AsciiReaderParams:
     separator_dict: dict[str, bool]
     metadata: AsciiReaderMetadata
 
-
-# TODO: This has mostly been copied from the ASCII dialog but really the widget should use the implementation here.
 def split_line(separator_dict: dict[str, bool], line: str) -> list[str]:
     """Split a line in a CSV file based on which seperators the user has
     selected on the widget.
