@@ -33,7 +33,7 @@ def split_line(separator_dict: dict[str, bool], line: str) -> list[str]:
 
     """
     expr = ''
-    for seperator, isenabled in separator_dict:
+    for seperator, isenabled in separator_dict.items():
         if isenabled:
             if expr != r'':
                 expr += r'|'
