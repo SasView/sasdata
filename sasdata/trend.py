@@ -9,6 +9,9 @@ from sasdata.data import SasData
 @dataclass
 class Trend:
     data: list[SasData]
+    # This is going to be a path to a specific metadatum.
+    #
+    # TODO: But what if the trend axis will be a particular NamedQuantity? Will probably need to think on this.
     trend_axis: str
 
     # Designed to take in a particular value of the trend axis, and return the SasData object that matches it.
