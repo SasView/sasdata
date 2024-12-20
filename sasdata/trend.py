@@ -40,7 +40,7 @@ class Trend:
         raise KeyError()
     @property
     def trend_axes(self) -> list[float]:
-        raise NotImplementedError()
+        return [get_metadatum_from_path(datum, self.trend_axis) for datum in self.data]
 
     # TODO: Assumes there are at least 2 items in data. Is this reasonable to assume? Should there be error handling for
     # situations where this may not be the case?
