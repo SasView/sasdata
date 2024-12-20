@@ -19,6 +19,10 @@ class Trend:
     def __getitem__(self, item) -> SasData:
         raise NotImplementedError()
 
+    @property
+    def trend_axes(self) -> list[float]:
+        raise NotImplementedError()
+
     # TODO: Assumes there are at least 2 items in data. Is this reasonable to assume? Should there be error handling for
     # situations where this may not be the case?
     def all_axis_match(self, axis: str) -> bool:
