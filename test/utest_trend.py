@@ -38,7 +38,7 @@ def test_trend_build(directory_name: str):
         columns=[('Q', per_nanometer), ('I', per_nanometer), ('dI', per_nanometer)],
         excluded_lines=set(),
         separator_dict={'Whitespace': True, 'Comma': False, 'Tab': False},
-        metadata=metadata,
+        metadata=metadata
     )
     data = ascii_reader.load_data(params)
     trend = Trend(
