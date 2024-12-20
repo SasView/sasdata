@@ -15,8 +15,9 @@ test_directories = [
 @pytest.mark.parametrize('directory_name', test_directories)
 def test_trend_build(directory_name: str):
     """Try to build a trend object on the MuMag datasets, and see if all the Q items match (as they should)."""
-    load_from = path.join(path.dirname(__file__), directory_name)
-    files_to_load = listdir(load_from)
+    load_from = path.join(path.dirname(__file__), 'trend_test_data', directory_name)
+    base_filenames_to_load = listdir(load_from)
+    files_to_load = [path.join(load_from, basename) for basename in base_filenames_to_load]
 
     metadata = AsciiReaderMetadata()
     metadata.master_metadata['magnetic'] = AsciiMetadataCategory(
