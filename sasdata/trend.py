@@ -16,8 +16,16 @@ class Trend:
     def __getitem__(self, item) -> SasData:
         raise NotImplementedError()
 
+    # TODO: Assumes there are at least 2 items in data. Is this reasonable to assume? Should there be error handling for
+    # situations where this may not be the case?
     def all_axis_match(self, axis: str) -> bool:
-        raise NotImplementedError()
+        reference_data = self.data[0]
+        for datum in self.data[1::]:
+            contents = datum._data_contents
+            axis_datum = [content for content in contents if content.name == axis][0]
+            if axis_datum != datum:
+                return False
+        return True
 
     # TODO: Not sure if this should return a new trend, or just mutate the existing trend
     # TODO: May be some details on the method as well.
