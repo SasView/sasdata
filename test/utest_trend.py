@@ -28,6 +28,9 @@ def test_trend_build(directory_name: str):
             'demagnetizing_field': 3
         }
     )
+    for basename in base_filenames_to_load:
+        metadata.filename_separator[basename] = '_'
+        metadata.filename_specific_metadata[basename] = {}
 
     params = AsciiReaderParams(
         filenames=files_to_load,
