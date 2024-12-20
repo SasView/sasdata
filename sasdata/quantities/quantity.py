@@ -312,6 +312,9 @@ class Quantity[QuantityType]:
                                        other),
                                    self.history.references))
 
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, Quantity) and self.hash_value == other.hash_value
+
     @staticmethod
     def _array_repr_format(arr: np.ndarray):
         """ Format the array """
