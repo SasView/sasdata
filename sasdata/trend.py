@@ -52,7 +52,7 @@ class Trend:
             contents = datum._data_contents
             axis_datum = [content for content in contents if content.name == axis][0]
             # FIXME: Linter is complaining about typing.
-            if not np.isclose(axis_datum.value, reference_data_axis.value):
+            if not np.all(np.isclose(axis_datum.value, reference_data_axis.value)):
                 return False
         return True
 
