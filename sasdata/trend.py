@@ -46,10 +46,11 @@ class Trend:
     # situations where this may not be the case?
     def all_axis_match(self, axis: str) -> bool:
         reference_data = self.data[0]
+        reference_data_axis = [content for content in reference_data._data_contents if content.name == axis]
         for datum in self.data[1::]:
             contents = datum._data_contents
             axis_datum = [content for content in contents if content.name == axis][0]
-            if axis_datum != datum:
+            if axis_datum != reference_data_axis:
                 return False
         return True
 
