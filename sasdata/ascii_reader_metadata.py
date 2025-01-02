@@ -31,7 +31,7 @@ T = TypeVar('T')
 pairings = {'I': 'dI', 'Q': 'dQ', 'Qx': 'dQx', 'Qy': 'dQy'}
 pairing_error = {value: key for key, value in pairings.items()}
 # Allows this to be bidirectional.
-pairings = pairings | pairing_error
+bidirectional_pairings = pairings | pairing_error
 
 @dataclass
 class AsciiMetadataCategory[T]:

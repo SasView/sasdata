@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from sasdata.ascii_reader_metadata import AsciiMetadataCategory, AsciiReaderMetadata, pairings
+from sasdata.ascii_reader_metadata import AsciiMetadataCategory, AsciiReaderMetadata, pairings, bidirectional_pairings
 from sasdata.data import SasData
 from sasdata.quantities.units import NamedUnit
 from sasdata.quantities.quantity import NamedQuantity
@@ -96,7 +96,7 @@ def merge_uncertainties(quantities: list[NamedQuantity[list]]) -> list[NamedQuan
     for quantity in quantities:
         if quantity.name in error_quantity_names:
             continue
-        pairing = pairings.get(quantity.name, '')
+        pairing = bidirectional_pairings.get(quantity.name, '')
         error_quantity = None
         for other_quantity in quantities:
             if other_quantity.name == pairing:
