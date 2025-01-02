@@ -77,3 +77,4 @@ def test_trend_q_axis_match():
         data=data,
         trend_axis=['counting_index']
     )
+    assert trend.all_axis_match('Q')
