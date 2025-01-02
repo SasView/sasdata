@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Self
 from sasdata.data import SasData
 from sasdata.data_backing import Dataset, Group
+import numpy as np
 
 # Axis strs refer to the name of their associated NamedQuantity.
 
@@ -46,11 +47,12 @@ class Trend:
     # situations where this may not be the case?
     def all_axis_match(self, axis: str) -> bool:
         reference_data = self.data[0]
-        reference_data_axis = [content for content in reference_data._data_contents if content.name == axis]
+        reference_data_axis = [content for content in reference_data._data_contents if content.name == axis][0]
         for datum in self.data[1::]:
             contents = datum._data_contents
             axis_datum = [content for content in contents if content.name == axis][0]
-            if axis_datum != reference_data_axis:
+            # FIXME: Linter is complaining about typing.
+            if not np.isclose(axis_datum.value, reference_data_axis.value):
                 return False
         return True
 
