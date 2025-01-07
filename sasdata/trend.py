@@ -65,7 +65,7 @@ class Trend:
         return True
 
     # TODO: For now, return a new trend, but decide later. Shouldn't be too hard to change.
-    def interpolate(self, axis: str) -> Self:
+    def interpolate(self, axis: str) -> "Trend":
         new_data: list[SasData] = []
         reference_data = self.data[0]
         # TODO: I don't like the repetition here. Can probably abstract a function for this ot make it clearer.
