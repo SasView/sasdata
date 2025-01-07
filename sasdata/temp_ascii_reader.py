@@ -40,6 +40,11 @@ class AsciiReaderParams:
     starting_line: int = 0
     excluded_lines: set[int] = field(default_factory=set)
 
+    def __init__(self, filenames: list[str], separator_dict: dict[str, bool]):
+        self.filenames = filenames
+        self.separator_dict = separator_dict
+        self.metadata = initialise_metadata(filenames)
+
 def split_line(separator_dict: dict[str, bool], line: str) -> list[str]:
     """Split a line in a CSV file based on which seperators the user has
     selected on the widget.
