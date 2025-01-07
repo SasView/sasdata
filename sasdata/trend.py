@@ -5,6 +5,8 @@ from typing import Self
 from sasdata.data import SasData
 from sasdata.data_backing import Dataset, Group
 import numpy as np
+from sasdata.quantities.quantity import NamedQuantity
+from sasdata.transforms.rebinning import calculate_interpolation_matrix
 
 # Axis strs refer to the name of their associated NamedQuantity.
 
@@ -56,7 +58,30 @@ class Trend:
                 return False
         return True
 
-    # TODO: Not sure if this should return a new trend, or just mutate the existing trend
-    # TODO: May be some details on the method as well.
+    # TODO: For now, return a new trend, but decide later. Shouldn't be too hard to change.
     def interpolate(self, axis: str) -> Self:
-        raise NotImplementedError()
+        new_data: list[SasData] = []
+        reference_data = self.data[0]
+        # TODO: I don't like the repetition here. Can probably abstract a function for this ot make it clearer.
+        reference_data_axis = [content for content in reference_data._data_contents if content.name == axis][0]
+        for i, datum in enumerate(self.data):
+            if i == 0:
+                # This is already the reference axis; no need to interpolate it.
+                continue
+            # TODO: Again, repetition
+            axis_datum = [content for content in datum._data_contents if content.name == axis][0]
+            # TODO: There are other options which may need to be filled (or become new params to this method)
+            mat = calculate_interpolation_matrix(axis_datum, reference_data_axis)
+            new_quantities: list[NamedQuantity]  = []
+            for quantity in datum._data_contents:
+                if quantity.name == axis_datum.name:
+                    continue
+                new_quantities.append(quantity @ mat)
+
+            new_datum = SasData(datum.name,
+                                new_quantities,
+                                datum._raw_metadata)
+            new_data.append(new_datum)
+        new_trend = Trend(new_data,
+                          self.trend_axis)
+        return new_trend
