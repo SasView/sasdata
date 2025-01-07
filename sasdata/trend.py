@@ -6,7 +6,7 @@ from sasdata.data import SasData
 from sasdata.data_backing import Dataset, Group
 import numpy as np
 from sasdata.quantities.quantity import NamedQuantity
-from sasdata.transforms.rebinning import calculate_interpolation_matrix
+from sasdata.transforms.rebinning import calculate_interpolation_matrix_1d
 
 # Axis strs refer to the name of their associated NamedQuantity.
 
@@ -77,7 +77,7 @@ class Trend:
             # TODO: Again, repetition
             axis_datum = [content for content in datum._data_contents if content.name == axis][0]
             # TODO: There are other options which may need to be filled (or become new params to this method)
-            mat = calculate_interpolation_matrix(axis_datum, data_axis)
+            mat = calculate_interpolation_matrix_1d(axis_datum, data_axis)
             new_quantities: list[NamedQuantity]  = []
             for quantity in datum._data_contents:
                 if quantity.name == axis_datum.name:
