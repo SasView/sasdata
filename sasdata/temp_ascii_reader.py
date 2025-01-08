@@ -8,7 +8,7 @@ from sasdata.quantities.accessors import AccessorTarget, Group
 from sasdata.metadata import Metadata
 from sasdata.data_backing import Dataset, Group
 from enum import Enum
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import numpy as np
 import re
 from os import path
@@ -18,14 +18,31 @@ class AsciiSeparator(Enum):
     Whitespace = 1,
     Tab = 2
 
+def initialise_metadata(filenames: list[str]) -> AsciiReaderMetadata:
+    metadata = AsciiReaderMetadata()
+    for filename in filenames:
+        basename = path.basename(filename)
+        metadata.filename_separator[basename] = '_'
+        metadata.filename_specific_metadata[basename] = {}
+    return metadata
+
+# TODO: Turn them all of for now so the caller can turn one of them on. But is this the desired behaviour.
+def initialise_separator_dict() -> dict[str, bool]:
+    return {'Whitespace': True,
+            'Comma': False,
+            'Tab': False}
+
 @dataclass
 class AsciiReaderParams:
     filenames: list[str] # These will be the FULL file path. Will need to convert to basenames for some functions.
-    starting_line: int
-    columns: list[tuple[str, NamedUnit]]
-    excluded_lines: set[int]
     separator_dict: dict[str, bool]
     metadata: AsciiReaderMetadata
+    columns: list[tuple[str, NamedUnit]]
+    starting_line: int = 0
+    excluded_lines: set[int] = field(default_factory=set)
+
+    def __post__init__(self):
+        self.metadata = initialise_metadata(self.filenames)
 
 def split_line(separator_dict: dict[str, bool], line: str) -> list[str]:
     """Split a line in a CSV file based on which seperators the user has
