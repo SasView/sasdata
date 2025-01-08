@@ -37,6 +37,7 @@ class AsciiReaderParams:
     filenames: list[str] # These will be the FULL file path. Will need to convert to basenames for some functions.
     separator_dict: dict[str, bool]
     metadata: AsciiReaderMetadata
+    columns: list[tuple[str, NamedUnit]]
     starting_line: int = 0
     excluded_lines: set[int] = field(default_factory=set)
 
