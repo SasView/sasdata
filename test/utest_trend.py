@@ -14,13 +14,16 @@ mumag_test_directories = [
 
 custom_test_directory = 'custom_test'
 
-@pytest.mark.parametrize('directory_name', mumag_test_directories)
-def test_trend_build(directory_name: str):
-    """Try to build a trend object on the MuMag datasets"""
+def get_files_to_load(directory_name: str) -> list[str]:
     load_from = path.join(path.dirname(__file__), 'trend_test_data', directory_name)
     base_filenames_to_load = listdir(load_from)
     files_to_load = [path.join(load_from, basename) for basename in base_filenames_to_load]
+    return files_to_load
 
+@pytest.mark.parametrize('directory_name', mumag_test_directories)
+def test_trend_build(directory_name: str):
+    """Try to build a trend object on the MuMag datasets"""
+    files_to_load = get_files_to_load(directory_name)
     params = AsciiReaderParams(
         filenames=files_to_load,
         columns=[('Q', per_nanometer), ('I', per_nanometer), ('dI', per_nanometer)],
