@@ -21,7 +21,7 @@ def get_files_to_load(directory_name: str) -> list[str]:
     return files_to_load
 
 @pytest.mark.parametrize('directory_name', mumag_test_directories)
-def test_trend_build(directory_name: str):
+def test_trend_build_interpolate(directory_name: str):
     """Try to build a trend object on the MuMag datasets"""
     files_to_load = get_files_to_load(directory_name)
     params = AsciiReaderParams(
@@ -42,7 +42,11 @@ def test_trend_build(directory_name: str):
         data=data,
         trend_axis=['magnetic', 'applied_magnetic_field']
     )
-    # TODO: Trend setup without error but should have some verificaton that it works.
+    # Initially, the q axes in this date don't exactly match
+    to_interpolate_on = 'Q'
+    assert not trend.all_axis_match(to_interpolate_on)
+    interpolated_trend = trend.interpolate(to_interpolate_on)
+    assert interpolated_trend.all_axis_match(to_interpolate_on)
 
 def test_trend_q_axis_match():
     files_to_load = get_files_to_load(custom_test_directory)
