@@ -21,26 +21,18 @@ def test_trend_build(directory_name: str):
     base_filenames_to_load = listdir(load_from)
     files_to_load = [path.join(load_from, basename) for basename in base_filenames_to_load]
 
-    metadata = AsciiReaderMetadata()
-    metadata.master_metadata['magnetic'] = AsciiMetadataCategory(
+    params = AsciiReaderParams(
+        filenames=files_to_load,
+        columns=[('Q', per_nanometer), ('I', per_nanometer), ('dI', per_nanometer)],
+    )
+    params.separator_dict['Whitespace'] = True
+    params.metadata.master_metadata['magnetic'] = AsciiMetadataCategory(
         values={
             'counting_index': 0,
             'applied_magnetic_field': 1,
             'saturation_magnetization': 2,
             'demagnetizing_field': 3
         }
-    )
-    for basename in base_filenames_to_load:
-        metadata.filename_separator[basename] = '_'
-        metadata.filename_specific_metadata[basename] = {}
-
-    params = AsciiReaderParams(
-        filenames=files_to_load,
-        starting_line=0,
-        columns=[('Q', per_nanometer), ('I', per_nanometer), ('dI', per_nanometer)],
-        excluded_lines=set(),
-        separator_dict={'Whitespace': True, 'Comma': False, 'Tab': False},
-        metadata=metadata
     )
     data = ascii_reader.load_data(params)
     trend = Trend(
