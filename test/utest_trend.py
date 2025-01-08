@@ -58,6 +58,6 @@ def test_trend_q_axis_match():
     data = ascii_reader.load_data(params)
     trend = Trend(
         data=data,
-        trend_axis=['counting_index']
+        trend_axis=['magnetic', 'counting_index']
     )
     assert trend.all_axis_match('Q')
