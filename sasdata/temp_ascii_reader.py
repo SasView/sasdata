@@ -28,7 +28,7 @@ def initialise_metadata(filenames: list[str]) -> AsciiReaderMetadata:
 
 # TODO: Turn them all of for now so the caller can turn one of them on. But is this the desired behaviour?
 def initialise_separator_dict() -> dict[str, bool]:
-    return {'Whitespace': True,
+    return {'Whitespace': False,
             'Comma': False,
             'Tab': False}
 
