@@ -44,7 +44,6 @@ def test_trend_build(directory_name: str):
     )
     # TODO: Trend setup without error but should have some verificaton that it works.
 
-# TODO: Some of this loading logic is repeated. Can it be abstracted into its own function?
 def test_trend_q_axis_match():
     files_to_load = get_files_to_load(custom_test_directory)
     params = AsciiReaderParams(
