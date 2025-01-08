@@ -26,20 +26,20 @@ def initialise_metadata(filenames: list[str]) -> AsciiReaderMetadata:
         metadata.filename_specific_metadata[basename] = {}
     return metadata
 
-# TODO: Turn them all of for now so the caller can turn one of them on. But is this the desired behaviour.
+# TODO: Turn them all of for now so the caller can turn one of them on. But is this the desired behaviour?
 def initialise_separator_dict() -> dict[str, bool]:
-    return {'Whitespace': True,
+    return {'Whitespace': False,
             'Comma': False,
             'Tab': False}
 
 @dataclass
 class AsciiReaderParams:
     filenames: list[str] # These will be the FULL file path. Will need to convert to basenames for some functions.
-    separator_dict: dict[str, bool]
     metadata: AsciiReaderMetadata
     columns: list[tuple[str, NamedUnit]]
     starting_line: int = 0
     excluded_lines: set[int] = field(default_factory=set)
+    separator_dict: dict[str, bool] = field(default_factory=initialise_separator_dict)
 
     def __post__init__(self):
         self.metadata = initialise_metadata(self.filenames)
