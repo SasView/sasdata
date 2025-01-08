@@ -35,8 +35,8 @@ def initialise_separator_dict() -> dict[str, bool]:
 @dataclass
 class AsciiReaderParams:
     filenames: list[str] # These will be the FULL file path. Will need to convert to basenames for some functions.
-    metadata: AsciiReaderMetadata
     columns: list[tuple[str, NamedUnit]]
+    metadata: AsciiReaderMetadata = field(default_factory=AsciiReaderMetadata)
     starting_line: int = 0
     excluded_lines: set[int] = field(default_factory=set)
     separator_dict: dict[str, bool] = field(default_factory=initialise_separator_dict)
