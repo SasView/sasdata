@@ -33,7 +33,7 @@ class AsciiReaderParams:
     excluded_lines: set[int] = field(default_factory=set)
     separator_dict: dict[str, bool] = field(default_factory=initialise_separator_dict)
 
-    def __post__init__(self):
+    def __post_init__(self):
         self.initialise_metadata()
 
     def initialise_metadata(self):
