@@ -46,26 +46,15 @@ def test_trend_build(directory_name: str):
 
 # TODO: Some of this loading logic is repeated. Can it be abstracted into its own function?
 def test_trend_q_axis_match():
-    load_from = path.join(path.dirname(__file__), 'trend_test_data', custom_test_directory)
-    base_filenames_to_load = listdir(load_from)
-    files_to_load = [path.join(load_from, basename) for basename in base_filenames_to_load]
-    metadata = AsciiReaderMetadata()
-    metadata.master_metadata['magnetic'] = AsciiMetadataCategory(
+    files_to_load = get_files_to_load(custom_test_directory)
+    params = AsciiReaderParams(
+        filenames=files_to_load,
+        columns=[('Q', per_angstrom), ('I', per_angstrom)]
+    )
+    params.metadata.master_metadata['magnetic'] = AsciiMetadataCategory(
         values={
             'counting_index': 0,
         }
-    )
-    for basename in base_filenames_to_load:
-        metadata.filename_separator[basename] = '_'
-        metadata.filename_specific_metadata[basename] = {}
-
-    params = AsciiReaderParams(
-        filenames=files_to_load,
-        starting_line=0,
-        columns=[('Q', per_angstrom), ('I', per_angstrom)],
-        excluded_lines=set(),
-        separator_dict={'Whitespace': False, 'Comma': True, 'Tab': False},
-        metadata=metadata
     )
     data = ascii_reader.load_data(params)
     trend = Trend(
