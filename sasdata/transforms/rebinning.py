@@ -132,6 +132,7 @@ def calculate_interpolation_matrix_1d(input_axis: Quantity[ArrayLike],
 
     if mask is None:
         return conversion_matrix, None
+
     else:
         # Create a new mask
 
