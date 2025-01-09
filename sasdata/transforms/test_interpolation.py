@@ -23,7 +23,7 @@ def test_linear_interpolate_matrix_inside(fun: Callable[[Quantity[ArrayLike]], Q
     test_points = NamedQuantity("x_test", np.linspace(-5, 5, 11), units.meters)
 
 
-    mapping = calculate_interpolation_matrix_1d(original_points, test_points, order=InterpolationOptions.LINEAR)
+    mapping, _ = calculate_interpolation_matrix_1d(original_points, test_points, order=InterpolationOptions.LINEAR)
 
     y_original = fun(original_points)
     y_test = y_original @ mapping
@@ -53,7 +53,7 @@ def test_linear_interpolate_different_units(fun: Callable[[Quantity[ArrayLike]],
     original_points = NamedQuantity("x_base", np.linspace(-10,10, 107), units.meters)
     test_points = NamedQuantity("x_test", np.linspace(-5000, 5000, 11), units.millimeters)
 
-    mapping = calculate_interpolation_matrix_1d(original_points, test_points, order=InterpolationOptions.LINEAR)
+    mapping, _ = calculate_interpolation_matrix_1d(original_points, test_points, order=InterpolationOptions.LINEAR)
 
     y_original = fun(original_points)
     y_test = y_original @ mapping
@@ -83,7 +83,7 @@ def test_linearity_linear():
     x_and_y = NamedQuantity("x_base", np.linspace(-10, 10, 2), units.meters)
     new_x = NamedQuantity("x_test", np.linspace(-5000, 5000, 101), units.millimeters)
 
-    mapping = calculate_interpolation_matrix_1d(x_and_y, new_x, order=InterpolationOptions.LINEAR)
+    mapping, _ = calculate_interpolation_matrix_1d(x_and_y, new_x, order=InterpolationOptions.LINEAR)
 
     linear_points = x_and_y @ mapping
 
