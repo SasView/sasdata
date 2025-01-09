@@ -77,7 +77,7 @@ class Trend:
             # TODO: Again, repetition
             axis_datum = [content for content in datum._data_contents if content.name == axis][0]
             # TODO: There are other options which may need to be filled (or become new params to this method)
-            mat = calculate_interpolation_matrix_1d(axis_datum, data_axis)
+            mat, _ = calculate_interpolation_matrix_1d(axis_datum, data_axis)
             new_quantities: list[NamedQuantity]  = []
             for quantity in datum._data_contents:
                 if quantity.name == axis_datum.name:
