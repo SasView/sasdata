@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from sasdata.dataset_types import DatasetType
 from sasdata.quantities.quantity import NamedQuantity, Quantity
 from sasdata.metadata import Metadata
 from sasdata.quantities.accessors import AccessorTarget
@@ -13,6 +14,7 @@ from sasdata.data_backing import Group, key_tree
 class SasData:
     def __init__(self, name: str,
                  data_contents: list[Quantity],
+                 dataset_type: DatasetType,
                  raw_metadata: Group,
                  verbose: bool=False):
 
@@ -22,6 +24,9 @@ class SasData:
         self._verbose = verbose
 
         self.metadata = Metadata(AccessorTarget(raw_metadata, verbose=verbose))
+
+        # TODO: Could this be optional?
+        self.dataset_type: DatasetType = dataset_type
 
         # Components that need to be organised after creation
         self.mask = None # TODO: fill out
