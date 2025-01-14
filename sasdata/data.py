@@ -29,11 +29,11 @@ class SasData:
 
     #TODO: This seems oriented around 1D I vs Q data. What about 2D data?
     @property
-    def ordinate() -> Quantity:
+    def ordinate(self) -> Quantity:
         raise NotImplementedError()
 
     @property
-    def abscissae() -> list[Quantity]:
+    def abscissae(self) -> list[Quantity]:
         raise NotImplementedError()
 
     def summary(self, indent = "  ", include_raw=False):
