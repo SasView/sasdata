@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from quantities.quantity import NamedQuantity
+from sasdata.quantities.quantity import NamedQuantity, Quantity
 from sasdata.metadata import Metadata
 from sasdata.quantities.accessors import AccessorTarget
 from sasdata.data_backing import Group, key_tree
@@ -12,7 +12,7 @@ from sasdata.data_backing import Group, key_tree
 
 class SasData:
     def __init__(self, name: str,
-                 data_contents: list[NamedQuantity],
+                 data_contents: list[Quantity],
                  raw_metadata: Group,
                  verbose: bool=False):
 
