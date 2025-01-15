@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 from sasdata.ascii_reader_metadata import AsciiMetadataCategory, AsciiReaderMetadata, pairings, bidirectional_pairings
 from sasdata.data import SasData
 from sasdata.quantities.units import NamedUnit
