@@ -66,6 +66,7 @@ def split_line(separator_dict: dict[str, bool], line: str) -> list[str]:
 
 # TODO: Implement error handling.
 def load_quantities(params: AsciiReaderParams, filename: str) -> list[NamedQuantity]:
+    """Load a list of quantities from the filename based on the params."""
     with open(filename) as ascii_file:
         lines = ascii_file.readlines()
         arrays: list[np.ndarray] = []
@@ -92,6 +93,8 @@ def load_quantities(params: AsciiReaderParams, filename: str) -> list[NamedQuant
     return file_quantities
 
 def metadata_to_data_backing(metadata: dict[str, AsciiMetadataCategory[str]]) -> Group:
+    """This converts the ASCII reader's internal metadata structures into the
+    backing data structure defined in data_backing.py"""
     root_children = {}
     for top_level_key, top_level_item in metadata.items():
         children = {}
@@ -107,6 +110,9 @@ def metadata_to_data_backing(metadata: dict[str, AsciiMetadataCategory[str]]) ->
     return Group('root', root_children)
 
 def merge_uncertainties(quantities: list[NamedQuantity[list]]) -> list[NamedQuantity]:
+    """Data in the ASCII files will have the uncertainties in a separate column.
+    This function will merge columns of data with the columns containing their
+    uncertainties so that both are in one Quantity object."""
     new_quantities = []
     error_quantity_names = pairings.values()
     for quantity in quantities:
@@ -125,6 +131,9 @@ def merge_uncertainties(quantities: list[NamedQuantity[list]]) -> list[NamedQuan
     return new_quantities
 
 def load_data(params: AsciiReaderParams) -> list[SasData]:
+    """This loads a series of SasData objects based on the params. The amount of
+    SasData objects loaded will depend on how many filenames are present in the
+    list contained in the params."""
     loaded_data: list[SasData] = []
     for filename in params.filenames:
         quantities = load_quantities(params, filename)
