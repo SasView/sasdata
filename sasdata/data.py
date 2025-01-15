@@ -44,6 +44,9 @@ class SasData:
     def abscissae(self) -> list[Quantity]:
         raise NotImplementedError()
 
+    def __getitem__(self, item: str):
+        return self._data_contents[item]
+
     def summary(self, indent = "  ", include_raw=False):
         s = f"{self.name}\n"
 
