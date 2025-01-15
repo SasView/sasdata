@@ -1,7 +1,7 @@
 from sasdata.ascii_reader_metadata import AsciiMetadataCategory, AsciiReaderMetadata, pairings, bidirectional_pairings
 from sasdata.data import SasData
 from sasdata.quantities.units import NamedUnit
-from sasdata.quantities.quantity import NamedQuantity
+from sasdata.quantities.quantity import NamedQuantity, Quantity
 from sasdata.quantities.accessors import AccessorTarget, Group
 from sasdata.metadata import Metadata
 from sasdata.data_backing import Dataset, Group
@@ -66,7 +66,7 @@ def split_line(separator_dict: dict[str, bool], line: str) -> list[str]:
     return re.split(expr, line.strip())
 
 # TODO: Implement error handling.
-def load_quantities(params: AsciiReaderParams, filename: str) -> list[NamedQuantity]:
+def load_quantities(params: AsciiReaderParams, filename: str) -> dict[str, Quantity]:
     """Load a list of quantities from the filename based on the params."""
     with open(filename) as ascii_file:
         lines = ascii_file.readlines()
@@ -90,7 +90,7 @@ def load_quantities(params: AsciiReaderParams, filename: str) -> list[NamedQuant
                 # should be ignored entirely.
                 print(f'Line {i + 1} skipped.')
                 continue
-    file_quantities = [NamedQuantity(name, arrays[i], unit) for i, (name, unit) in enumerate(params.columns)]
+    file_quantities = {name: Quantity(arrays[i], unit) for i, (name, unit) in enumerate(params.columns) }
     return file_quantities
 
 def metadata_to_data_backing(metadata: dict[str, AsciiMetadataCategory[str]]) -> Group:
