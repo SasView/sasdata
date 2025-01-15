@@ -19,7 +19,6 @@ CASING_REGEX = r'[A-Z][a-z]*'
 SEPARATOR_PRECEDENCE = [
     '_',
     '-',
-    # TODO: Thing/look at others.
 ]
 # If none of these characters exist in that string, use casing. See init_separator
 
