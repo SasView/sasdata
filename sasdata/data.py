@@ -13,12 +13,15 @@ from sasdata.data_backing import Group, key_tree
 
 class SasData:
     def __init__(self, name: str,
-                 data_contents: list[Quantity],
+                 data_contents: dict[str, Quantity],
                  dataset_type: DatasetType,
                  raw_metadata: Group,
                  verbose: bool=False):
 
         self.name = name
+        # validate data contents
+        if not all([key in dataset_type.optional or key in dataset_type.required for key in data_contents.keys()]):
+            raise ValueError("Columns don't match the dataset type")
         self._data_contents = data_contents
         self._raw_metadata = raw_metadata
         self._verbose = verbose
