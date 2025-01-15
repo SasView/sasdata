@@ -4,6 +4,9 @@ from dataclasses import dataclass
 
 from sasdata.quantities.quantity import NamedQuantity
 import numpy as np
+
+from sasdata.dataset_types import DatasetType
+from sasdata.quantities.quantity import NamedQuantity, Quantity
 from sasdata.metadata import Metadata
 from sasdata.quantities.accessors import AccessorTarget
 from sasdata.data_backing import Group, key_tree
@@ -11,22 +14,39 @@ from sasdata.data_backing import Group, key_tree
 
 class SasData:
     def __init__(self, name: str,
-                 data_contents: list[NamedQuantity],
+                 data_contents: dict[str, Quantity],
+                 dataset_type: DatasetType,
                  raw_metadata: Group,
                  verbose: bool=False):
 
         self.name = name
+        # validate data contents
+        if not all([key in dataset_type.optional or key in dataset_type.required for key in data_contents.keys()]):
+            raise ValueError("Columns don't match the dataset type")
         self._data_contents = data_contents
         self._raw_metadata = raw_metadata
         self._verbose = verbose
 
         self.metadata = Metadata(AccessorTarget(raw_metadata, verbose=verbose))
 
+        # TODO: Could this be optional?
+        self.dataset_type: DatasetType = dataset_type
+
         # Components that need to be organised after creation
-        self.ordinate: NamedQuantity[np.ndarray] = None # TODO: fill out
-        self.abscissae: list[NamedQuantity[np.ndarray]] = None # TODO: fill out
         self.mask = None # TODO: fill out
         self.model_requirements = None # TODO: fill out
+
+    #TODO: This seems oriented around 1D I vs Q data. What about 2D data?
+    @property
+    def ordinate(self) -> Quantity:
+        raise NotImplementedError()
+
+    @property
+    def abscissae(self) -> list[Quantity]:
+        raise NotImplementedError()
+
+    def __getitem__(self, item: str):
+        return self._data_contents[item]
 
     def summary(self, indent = "  ", include_raw=False):
         s = f"{self.name}\n"
