@@ -110,25 +110,25 @@ def metadata_to_data_backing(metadata: dict[str, AsciiMetadataCategory[str]]) ->
             root_children[top_level_key] = group
     return Group('root', root_children)
 
-def merge_uncertainties(quantities: list[NamedQuantity[list]]) -> list[NamedQuantity]:
+def merge_uncertainties(quantities: dict[str, Quantity]) -> dict[str, Quantity]:
     """Data in the ASCII files will have the uncertainties in a separate column.
     This function will merge columns of data with the columns containing their
     uncertainties so that both are in one Quantity object."""
-    new_quantities = []
+    new_quantities: dict[str, Quantity] = {}
     error_quantity_names = pairings.values()
-    for quantity in quantities:
-        if quantity.name in error_quantity_names:
+    for name, quantity in quantities.items():
+        if name in error_quantity_names:
             continue
-        pairing = bidirectional_pairings.get(quantity.name, '')
+        pairing = bidirectional_pairings.get(name, '')
         error_quantity = None
-        for other_quantity in quantities:
-            if other_quantity.name == pairing:
+        for other_name, other_quantity in quantities.items():
+            if other_name == pairing:
                 error_quantity = other_quantity
         if not error_quantity is None:
             to_add = quantity.with_standard_error(error_quantity)
         else:
             to_add = quantity
-        new_quantities.append(to_add)
+        new_quantities[name] = to_add
     return new_quantities
 
 def load_data(params: AsciiReaderParams) -> list[SasData]:
