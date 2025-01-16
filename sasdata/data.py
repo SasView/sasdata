@@ -4,12 +4,9 @@ from dataclasses import dataclass
 
 from sasdata.quantities.quantity import NamedQuantity
 import numpy as np
-<<<<<<< HEAD
-=======
 
 from sasdata.dataset_types import DatasetType
 from sasdata.quantities.quantity import NamedQuantity, Quantity
->>>>>>> changes-to-quantities
 from sasdata.metadata import Metadata
 from sasdata.quantities.accessors import AccessorTarget
 from sasdata.data_backing import Group, key_tree
