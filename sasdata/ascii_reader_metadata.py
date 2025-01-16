@@ -21,7 +21,6 @@ CASING_REGEX = r'[A-Z][a-z]*'
 SEPARATOR_PRECEDENCE = [
     '_',
     '-',
-    # TODO: Thing/look at others.
 ]
 # If none of these characters exist in that string, use casing. See init_separator
 
@@ -53,6 +52,7 @@ class AsciiReaderMetadata:
         self.filename_separator[filename] = separator
 
     def filename_components(self, filename: str, cut_off_extension: bool = True, capture: bool = False) -> list[str]:
+        """Split the filename into several components based on the current separator for that file."""
         separator = self.filename_separator[filename]
         # FIXME: This sort of string construction may be an issue. Might need an alternative.
         base_str = '({})' if capture else '{}'
@@ -81,6 +81,9 @@ class AsciiReaderMetadata:
                     del self.master_metadata[category_name].values[key]
 
     def all_file_metadata(self, filename: str) -> dict[str, AsciiMetadataCategory[str]]:
+        """Return all of the metadata for known for the specified filename. This
+        will combin the master metadata specified for all files with the
+        metadata specific to that filename."""
         file_metadata = self.filename_specific_metadata[filename]
         components = self.filename_components(filename)
         # The ordering here is important. If there are conflicts, the second dictionary will override the first one.
@@ -101,6 +104,7 @@ class AsciiReaderMetadata:
             return_metadata[category_name] = new_category
         return return_metadata
     def get_metadata(self, category: str, value: str, filename: str, error_on_not_found=False) -> str | None:
+        """Get a particular piece of metadata for the filename."""
         components = self.filename_components(filename)
 
         # We prioritise the master metadata.
@@ -119,6 +123,10 @@ class AsciiReaderMetadata:
             return None
 
     def update_metadata(self, category: str, key: str, filename: str, new_value: str | int):
+        """Update the metadata for a filename. If the new_value is a string,
+        then this new metadata will be specific to that file. Otherwise, if
+        new_value is an integer, then this will represent the component of the
+        filename that this metadata applies to all."""
         if isinstance(new_value, str):
             self.filename_specific_metadata[filename][category].values[key] = new_value
             # TODO: What about the master metadata? Until that's gone, that still takes precedence.
@@ -128,6 +136,7 @@ class AsciiReaderMetadata:
             raise TypeError('Invalid type for new_value')
 
     def clear_metadata(self, category: str, key: str, filename: str):
+        """Remove any metadata recorded for a certain filename."""
         category_obj = self.filename_specific_metadata[filename][category]
         if key in category_obj.values:
             del category_obj.values[key]
@@ -135,5 +144,7 @@ class AsciiReaderMetadata:
             del self.master_metadata[category].values[key]
 
     def add_file(self, new_filename: str):
+        """Add a filename to the metadata, filling it with some default
+        categories."""
         # TODO: Fix typing here. Pyright is showing errors.
         self.filename_specific_metadata[new_filename] = default_categories()
