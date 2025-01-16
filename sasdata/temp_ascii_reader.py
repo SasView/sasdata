@@ -142,5 +142,10 @@ def load_data(params: AsciiReaderParams) -> list[SasData]:
     for filename in params.filenames:
         quantities = load_quantities(params, filename)
         metadata = metadata_to_data_backing(params.metadata.all_file_metadata(path.basename(filename)))
-        loaded_data.append(SasData(filename, merge_uncertainties(quantities), metadata))
+        data = SasData(
+            filename,
+            merge_uncertainties(quantities),
+            params.dataset_type,
+            metadata)
+        loaded_data.append(data)
     return loaded_data
