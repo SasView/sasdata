@@ -1120,7 +1120,7 @@ class Quantity[QuantityType]:
 
     # TODO: Adding this method as a temporary measure but we need a single
     # method that does this.
-    def with_standard_error(self, standard_error: Quantity):
+    def with_standard_error(self, standard_error: "Quantity"):
         if standard_error.units.equivalent(self.units):
             return NamedQuantity(
                 value=self.value,
