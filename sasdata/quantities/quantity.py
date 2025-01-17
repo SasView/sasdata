@@ -1122,7 +1122,7 @@ class Quantity[QuantityType]:
     # method that does this.
     def with_standard_error(self, standard_error: "Quantity"):
         if standard_error.units.equivalent(self.units):
-            return NamedQuantity(
+            return Quantity(
                 value=self.value,
                 units=self.units,
                 standard_error=standard_error.in_units_of(self.units),)
