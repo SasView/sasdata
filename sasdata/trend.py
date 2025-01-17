@@ -74,6 +74,7 @@ class Trend:
             new_quantities: dict[str, Quantity] = {}
             for name, quantity in datum._data_contents.items():
                 if name == axis:
+                    new_quantities[name] = data_axis
                     continue
                 new_quantities[name] = quantity @ mat
 
