@@ -1118,6 +1118,18 @@ class Quantity[QuantityType]:
 
         self.history = QuantityHistory.variable(self)
 
+    # TODO: Adding this method as a temporary measure but we need a single
+    # method that does this.
+    def with_standard_error(self, standard_error: Quantity):
+        if standard_error.units.equivalent(self.units):
+            return NamedQuantity(
+                value=self.value,
+                units=self.units,
+                standard_error=standard_error.in_units_of(self.units),)
+        else:
+            raise UnitError(f"Standard error units ({standard_error.units}) "
+                            f"are not compatible with value units ({self.units})")
+
     @property
     def has_variance(self):
         return self._variance is not None
