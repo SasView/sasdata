@@ -1,13 +1,17 @@
+import os
+
 from django.shortcuts import render
 from django.shortcuts import get_object_or_404
 
 # Create your views here
-from django.http import HttpResponse, HttpResponseBadRequest
+from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 from sasdata.dataloader.loader import Loader
+from .serializers import DataSerializer
 from .models import Data
+from .forms import DataForm
 
 @api_view(['GET'])
 def list_data(request, username = None):
@@ -47,8 +51,41 @@ def data_info(request, db_id):
         return Response(return_data)
     return HttpResponseBadRequest()
 
-def upload(request, db_id = None):
-    return HttpResponse("This is going to allow data uploads.")
+@api_view(['POST', 'PUT'])
+def upload(request, data_id = None, version = None):
+    #saves file
+    if request.method == 'POST':
+        form = DataForm(request.data, request.FILES)
+        if form.is_valid():
+            form.save()
+        db = Data.objects.get(pk = form.instance.pk)
+
+        if request.user.is_authenticated:
+            serializer = DataSerializer(db, data={"file_name":os.path.basename(form.instance.file.path), "current_user" : request.user.id})
+        else:
+            serializer = DataSerializer(db, data={"file_name":os.path.basename(form.instance.file.path)})
+
+
+    #saves or updates file
+    elif request.method == 'PUT':
+        #require data_id
+        if data_id != None and request.user:
+            if request.user.is_authenticated:
+                db = get_object_or_404(Data, current_user = request.user.id, id = data_id)
+                form = DataForm(request.data, request.FILES, instance=db)
+                if form.is_valid():
+                    form.save()
+                serializer = DataSerializer(db, data={"file_name":os.path.basename(form.instance.file.path)}, partial = True)
+            else:
+                return HttpResponseForbidden("user is not logged in")
+        else:
+            return HttpResponseBadRequest()
+
+    if serializer.is_valid():
+        serializer.save()
+        #TODO get warnings/errors later
+    return_data = {"current_user":request.user.username, "authenticated" : request.user.is_authenticated, "file_id" : db.id, "file_alternative_name":serializer.data["file_name"],"is_public" : serializer.data["is_public"]}
+    return Response(return_data)
 
 def download(request, data_id):
     return HttpResponse("This is going to allow downloads of data %s." % data_id)
