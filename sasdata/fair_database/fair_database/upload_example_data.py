@@ -31,7 +31,7 @@ def parse_sesans():
         upload_file(file_path)
 
 def upload_file(file_path):
-    url = 'http://localhost:8000/data/upload/'
+    url = 'http://localhost:8000/v1/data/upload/'
     file = open(file_path, 'rb')
     requests.request('POST', url, data={'is_public': True}, files={'file':file})
 
