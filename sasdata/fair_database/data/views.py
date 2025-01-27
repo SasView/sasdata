@@ -92,6 +92,8 @@ def download(request, data_id, version = None):
             # add session key later
             if not request.user.is_authenticated:
                 return HttpResponseBadRequest("data is private, must log in")
+            if not request.user == data.current_user:
+                return HttpResponseBadRequest("data is private")
         # TODO add issues later
         try:
             file = open(data.file.path, 'rb')
