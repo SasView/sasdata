@@ -14,7 +14,7 @@ from .models import Data
 from .forms import DataForm
 
 @api_view(['GET'])
-def list_data(request, username = None):
+def list_data(request, username = None, version = None):
     if request.method == 'GET':
         if username:
             data_list = {"user_data_ids": {}}
@@ -33,7 +33,7 @@ def list_data(request, username = None):
     return HttpResponseBadRequest("not get method")
 
 @api_view(['GET'])
-def data_info(request, db_id):
+def data_info(request, db_id, version = None):
     if request.method == 'GET':
         loader = Loader()
         data_db = get_object_or_404(Data, id=db_id)
@@ -87,5 +87,5 @@ def upload(request, data_id = None, version = None):
     return_data = {"current_user":request.user.username, "authenticated" : request.user.is_authenticated, "file_id" : db.id, "file_alternative_name":serializer.data["file_name"],"is_public" : serializer.data["is_public"]}
     return Response(return_data)
 
-def download(request, data_id):
+def download(request, data_id, version = None):
     return HttpResponse("This is going to allow downloads of data %s." % data_id)
