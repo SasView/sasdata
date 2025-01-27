@@ -2,9 +2,7 @@ import os
 
 from django.shortcuts import render
 from django.shortcuts import get_object_or_404
-
-# Create your views here
-from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden
+from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, Http404, FileResponse
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
@@ -87,5 +85,20 @@ def upload(request, data_id = None, version = None):
     return_data = {"current_user":request.user.username, "authenticated" : request.user.is_authenticated, "file_id" : db.id, "file_alternative_name":serializer.data["file_name"],"is_public" : serializer.data["is_public"]}
     return Response(return_data)
 
+#downloads a file
 def download(request, data_id, version = None):
-    return HttpResponse("This is going to allow downloads of data %s." % data_id)
+    if request.method == 'GET':
+        data = get_object_or_404(Data, id=data_id)
+        if not data.is_public:
+            # add session key later
+            if not request.user.is_authenticated:
+                return HttpResponseBadRequest("data is private, must log in")
+        # TODO add issues later
+        try:
+            file = open(data.file.path, 'rb')
+        except Exception as e:
+            return HttpResponseBadRequest(str(e))
+        if file is None:
+            raise Http404("File not found.")
+        return FileResponse(file, as_attachment=True)
+    return HttpResponseBadRequest()
