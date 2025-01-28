@@ -4,7 +4,7 @@ import numpy as np
 from numpy.typing import ArrayLike
 
 import sasdata.quantities.units as units
-from quantities.absolute_temperature import AbsoluteTemperatureAccessor
+from sasdata.quantities.absolute_temperature import AbsoluteTemperatureAccessor
 from sasdata.quantities.accessors import StringAccessor, LengthAccessor, AngleAccessor, QuantityAccessor, \
     DimensionlessAccessor, FloatAccessor, TemperatureAccessor, AccessorTarget
 
