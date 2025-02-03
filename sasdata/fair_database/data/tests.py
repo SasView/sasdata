@@ -88,10 +88,15 @@ class TestingDatabase(APITestCase):
         Data.objects.get(id = 2).delete()
 
     #TODO write tests for download
-    '''
+
     def test_does_download(self):
-        self.client.get()
-    '''
+        request = self.client.get('/v1/data/2/download/')
+        print('Starting download tests')
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        file_contents = b''.join(request.streaming_content)
+        test_file = open(find('cyl_400_20.txt'), 'rb')
+        self.assertEqual(file_contents, test_file.read())
+
 
     def tearDown(self):
         shutil.rmtree(settings.MEDIA_ROOT)
