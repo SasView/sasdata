@@ -85,15 +85,16 @@ def upload(request, data_id = None, version = None):
     return Response(return_data)
 
 #downloads a file
+@api_view(['GET'])
 def download(request, data_id, version = None):
     if request.method == 'GET':
         data = get_object_or_404(Data, id=data_id)
         if not data.is_public:
             # add session key later
             if not request.user.is_authenticated:
-                return HttpResponseBadRequest("data is private, must log in")
+                return HttpResponseForbidden("data is private, must log in")
             if not request.user == data.current_user:
-                return HttpResponseBadRequest("data is private")
+                return HttpResponseForbidden("data is private")
         # TODO add issues later
         try:
             file = open(data.file.path, 'rb')
