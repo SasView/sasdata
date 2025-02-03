@@ -91,8 +91,9 @@ class TestingDatabase(APITestCase):
 
     def test_does_download(self):
         request = self.client.get('/v1/data/2/download/')
-        print('Starting download tests')
+        request2 = self.client2.get('/v1/data/2/download/')
         self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertEqual(request2.status_code, status.HTTP_403_FORBIDDEN)
         file_contents = b''.join(request.streaming_content)
         test_file = open(find('cyl_400_20.txt'), 'rb')
         self.assertEqual(file_contents, test_file.read())
