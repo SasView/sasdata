@@ -20,4 +20,5 @@ from django.urls import include, path, re_path
 urlpatterns = [
     re_path(r"^(?P<version>(v1))/data/", include("data.urls")),
     path("admin/", admin.site.urls),
+    path("accounts/", include("allauth.urls")),
 ]
