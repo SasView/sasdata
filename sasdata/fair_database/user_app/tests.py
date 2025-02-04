@@ -65,8 +65,14 @@ class AuthTests(TestCase):
             "new_password2": "sasview?",
             "old_password": "sasview!"
         }
+        l_data = self.login_data
+        l_data["password"] = "sasview?"
         response = self.client.post('/dj-rest-auth/password/change', data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        logout_response = self.client.post('/dj-rest-auth/logout')
+        login_response = self.client.post('/dj-rest-auth/login', data=l_data)
+        self.assertEqual(logout_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(login_response.status_code, status.HTTP_200_OK)
 
 #can register a user, user is w/in User model
 # user is logged in after registration
