@@ -23,6 +23,9 @@ class AuthTests(TestCase):
             "password": "sasview!"
         }
 
+    def tearDown(self):
+        self.client.post('/dj-rest-auth/logout')
+
     def test_register(self):
         response = self.client.post('/dj-rest-auth/registration/',data=self.register_data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -54,6 +57,16 @@ class AuthTests(TestCase):
         self.assertEqual(register_response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(logout_response.status_code, status.HTTP_200_OK)
         self.assertEqual(login_response.status_code, status.HTTP_200_OK)
+
+    def test_password_change(self):
+        self.client.post('/dj-rest-auth/registration/', data=self.register_data)
+        data = {
+            "new_password1": "sasview?",
+            "new_password2": "sasview?",
+            "old_password": "sasview!"
+        }
+        response = self.client.post('/dj-rest-auth/password/change', data=data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 #can register a user, user is w/in User model
 # user is logged in after registration
