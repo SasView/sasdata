@@ -128,12 +128,11 @@ def calculate_interpolation_matrix_1d(input_axis: Quantity[ArrayLike],
             input_indices = np.arange(n_in, dtype=int)
             output_indices = np.arange(n_out, dtype=int)
 
-            # xj = sorted_out[::]
-            lower_bound = np.zeros(n_out, dtype=int)
-
-            for idx, value in enumerate(sorted_out):
-                best = sorted_in[sorted_in < value].size - 1
-                lower_bound[idx] = best
+            # Find the location of the largest value in sorted_in that
+            # is less than every value of sorted_out
+            lower_bound = (
+                np.sum(np.where(np.less.outer(sorted_in, sorted_out), 1, 0), axis=0) - 1
+            )
 
             # We're using the Finite Difference Cubic Hermite spline
             # https://en.wikipedia.org/wiki/Cubic_Hermite_spline#Interpolation_on_an_arbitrary_interval
