@@ -170,17 +170,22 @@ def calculate_interpolation_matrix_1d(input_axis: Quantity[ArrayLike],
 
             conversion_matrix = np.zeros((n_in, n_out))
 
-            for i in range(t.size):
-                if lower_bound[i] > 0:
-                    conversion_matrix[lower_bound[i] - 1, i] = y0[i]
-                conversion_matrix[lower_bound[i], i] = y1[i]
-                conversion_matrix[lower_bound[i] + 1, i] = y2[i]
-                if lower_bound[i] + 2 < sorted_in.size:
-                    conversion_matrix[lower_bound[i] + 2, i] = y3[i]
+            (row, column) = np.indices(conversion_matrix.shape)
+
+            mask1 = row == lower_bound[column]
+
+            conversion_matrix[np.roll(mask1, -1, axis=0)] = y0
+            conversion_matrix[mask1] = y1
+            conversion_matrix[np.roll(mask1, 1, axis=0)] = y2
+
+            # Special boundary condition for y3
+            pick = np.roll(mask1, 2, axis=0)
+            pick[0:1, :] = 0
+            if pick.any():
+                conversion_matrix[pick] = y3
 
         case _:
             raise InterpolationError(f"Unsupported interpolation order: {order}")
-
 
     if mask is None:
         return conversion_matrix, None
