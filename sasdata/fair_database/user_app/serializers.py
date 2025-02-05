@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from rest_auth.serializers import UserDetailsSerializer
+from dj_rest_auth.serializers import UserDetailsSerializer
 
 
 class KnoxSerializer(serializers.Serializer):
@@ -9,3 +9,6 @@ class KnoxSerializer(serializers.Serializer):
     """
     token = serializers.CharField()
     user = UserDetailsSerializer()
+
+    def get_token(self, obj):
+      return obj["token"][1]

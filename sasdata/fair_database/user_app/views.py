@@ -1,16 +1,21 @@
-from rest_framework.response import Response
+from django.conf import settings
 
+from rest_framework.response import Response
 from dj_rest_auth.views import LoginView
 from dj_rest_auth.registration.views import RegisterView
 from knox.models import AuthToken
-
 from allauth.account.utils import complete_signup
 from allauth.account import app_settings as allauth_settings
 
-from serializers import KnoxSerializer
+from .serializers import KnoxSerializer
+from .util import create_knox_token
 
 
 class KnoxLoginView(LoginView):
+
+    '''def get_response_serializer(self):
+        response_serializer = settings.REST_AUTH_SERIALIZERS['TOKEN_SERIALIZER']
+        return response_serializer'''
 
     def get_response(self):
         serializer_class = self.get_response_serializer()
@@ -31,6 +36,6 @@ class KnoxRegisterView(RegisterView):
 
     def perform_create(self, serializer):
         user = serializer.save(self.request)
-        self.token = AuthToken.objects.create(user=user)
+        self.token = create_knox_token(None,user,None)
         complete_signup(self.request._request, user, allauth_settings.EMAIL_VERIFICATION, None)
         return user
