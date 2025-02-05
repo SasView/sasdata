@@ -54,7 +54,7 @@ class AuthTests(TestCase):
         response = self.client.put('/dj-rest-auth/user', data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.content,
-                         b'{"pk":1,"username":"newName","email":"email@domain.org","first_name":"","last_name":""}')
+            b'{"pk":1,"username":"newName","email":"email@domain.org","first_name":"","last_name":""}')
 
     def test_user_put_name(self):
         user = User.objects.create_user(username="testUser", password="sasview!", email="email@domain.org")
@@ -67,7 +67,14 @@ class AuthTests(TestCase):
         response = self.client.put('/dj-rest-auth/user', data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.content,
-                         b'{"pk":1,"username":"newName","email":"email@domain.org","first_name":"Clark","last_name":"Kent"}')
+            b'{"pk":1,"username":"newName","email":"email@domain.org","first_name":"Clark","last_name":"Kent"}')
+
+    def test_user_unauthenticated(self):
+        response = self.client.get('/dj-rest-auth/user')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        print(response.content)
+        self.assertEqual(response.content,
+            b'{"detail":"Authentication credentials were not provided."}')
 
     def test_login_logout(self):
         user = User.objects.create_user(username="testUser", password="sasview!", email="email@domain.org")
