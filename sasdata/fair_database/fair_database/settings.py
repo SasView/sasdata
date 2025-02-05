@@ -44,11 +44,11 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'allauth',
     'allauth.account',
-    #'allauth.headless',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.orcid',
     'dj_rest_auth',
     'dj_rest_auth.registration',
+    'knox',
 ]
 
 SITE_ID = 1
@@ -89,7 +89,22 @@ AUTHENTICATION_BACKENDS = (
     'allauth.account.auth_backends.AuthenticationBackend',
 )
 
-HEADLESS_ONLY = False
+REST_FRAMEWORK = {
+    'DEFAULT ATHENTICATION CLASSES': ('knox.auth.TokenAuthentication'),
+    'DEFAULT_FILTER_BACKENDS': (
+        'django_filters.rest_framework.DjangoFilterBackend',
+    ),
+}
+
+REST_AUTH_TOKEN_MODEL = 'knox.models.AuthToken'
+REST_AUTH_TOKEN_CREATOR = 'project.apps.accounts.utils.create_knox_token'
+
+REST_AUTH_SERIALIZERS = {
+    'USER_DETAILS_SERIALIZER': 'project.apps.accounts.serializers.UserDetailsSerializer',
+    'TOKEN_SERIALIZER': 'project.apps.accounts.serializers.KnoxSerializer',
+}
+
+HEADLESS_ONLY = True
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 
 # Database
