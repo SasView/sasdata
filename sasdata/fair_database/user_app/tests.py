@@ -37,6 +37,38 @@ class AuthTests(TestCase):
         response = self.client.post('/dj-rest-auth/login', data=self.login_data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+    def test_user_get(self):
+        user = User.objects.create_user(username="testUser", password="sasview!", email="email@domain.org")
+        self.client.force_authenticate(user=user)
+        response = self.client.get('/dj-rest-auth/user')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.content,
+            b'{"pk":1,"username":"testUser","email":"email@domain.org","first_name":"","last_name":""}')
+
+    def test_user_put_username(self):
+        user = User.objects.create_user(username="testUser", password="sasview!", email="email@domain.org")
+        self.client.force_authenticate(user=user)
+        data = {
+            "username": "newName"
+        }
+        response = self.client.put('/dj-rest-auth/user', data=data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.content,
+                         b'{"pk":1,"username":"newName","email":"email@domain.org","first_name":"","last_name":""}')
+
+    def test_user_put_name(self):
+        user = User.objects.create_user(username="testUser", password="sasview!", email="email@domain.org")
+        self.client.force_authenticate(user=user)
+        data = {
+            "username": "newName",
+            "first_name": "Clark",
+            "last_name": "Kent"
+        }
+        response = self.client.put('/dj-rest-auth/user', data=data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.content,
+                         b'{"pk":1,"username":"newName","email":"email@domain.org","first_name":"Clark","last_name":"Kent"}')
+
     def test_login_logout(self):
         user = User.objects.create_user(username="testUser", password="sasview!", email="email@domain.org")
         self.client.post('/dj-rest-auth/login', data=self.login_data)
