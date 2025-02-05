@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'dj_rest_auth',
     'dj_rest_auth.registration',
     'knox',
+    'user_app.apps.UserAppConfig',
 ]
 
 SITE_ID = 1
@@ -91,9 +92,6 @@ AUTHENTICATION_BACKENDS = (
 
 REST_FRAMEWORK = {
     'DEFAULT ATHENTICATION CLASSES': ('knox.auth.TokenAuthentication'),
-    'DEFAULT_FILTER_BACKENDS': (
-        'django_filters.rest_framework.DjangoFilterBackend',
-    ),
 }
 
 REST_AUTH_TOKEN_MODEL = 'knox.models.AuthToken'
