@@ -1,11 +1,11 @@
 from django.urls import path
-from dj_rest_auth.views import (LoginView, LogoutView,
+from dj_rest_auth.views import (LogoutView,
                                 UserDetailsView, PasswordChangeView)
-from dj_rest_auth.registration.views import RegisterView
+from .views import KnoxLoginView, KnoxRegisterView
 
 urlpatterns = [
-    path('register/', RegisterView.as_view(), name='register'),
-    path('login/', LoginView.as_view(), name='login'),
+    path('register/', KnoxRegisterView.as_view(), name='register'),
+    path('login/', KnoxLoginView.as_view(), name='login'),
     path('logout/', LogoutView.as_view(), name='logout'),
     path('user/', UserDetailsView.as_view(), name='view user information'),
     path('password/change/', PasswordChangeView.as_view(), name='change password'),
