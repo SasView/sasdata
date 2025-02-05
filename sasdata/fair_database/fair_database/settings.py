@@ -94,12 +94,11 @@ REST_FRAMEWORK = {
     'DEFAULT ATHENTICATION CLASSES': ('knox.auth.TokenAuthentication'),
 }
 
-REST_AUTH_TOKEN_MODEL = 'knox.models.AuthToken'
-REST_AUTH_TOKEN_CREATOR = 'project.apps.accounts.utils.create_knox_token'
-
-REST_AUTH_SERIALIZERS = {
-    'USER_DETAILS_SERIALIZER': 'project.apps.accounts.serializers.UserDetailsSerializer',
-    'TOKEN_SERIALIZER': 'project.apps.accounts.serializers.KnoxSerializer',
+REST_AUTH = {
+    'TOKEN_SERIALIZER': 'user_app.serializers.KnoxSerializer',
+    'USER_DETAILS_SERIALIZER': 'dj_rest_auth.serializers.UserDetailsSerializer',
+    'TOKEN_MODEL': 'knox.models.AuthToken',
+    'TOKEN_CREATOR': 'user_app.util.create_knox_token',
 }
 
 HEADLESS_ONLY = True
