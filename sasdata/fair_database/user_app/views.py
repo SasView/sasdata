@@ -2,10 +2,10 @@ from django.conf import settings
 
 from rest_framework.response import Response
 from dj_rest_auth.views import LoginView
-from dj_rest_auth.registration.views import RegisterView
-from knox.models import AuthToken
+from dj_rest_auth.registration.views import RegisterView, SocialLoginView
 from allauth.account.utils import complete_signup
 from allauth.account import app_settings as allauth_settings
+from allauth.socialaccount.providers.orcid.view import OrcidOAuth2Adapter
 
 from .serializers import KnoxSerializer
 from .util import create_knox_token
@@ -39,3 +39,6 @@ class KnoxRegisterView(RegisterView):
         self.token = create_knox_token(None,user,None)
         complete_signup(self.request._request, user, allauth_settings.EMAIL_VERIFICATION, None)
         return user
+
+class OrcidLoginView(SocialLoginView):
+    adapter_class = OrcidOAuth2Adapter
