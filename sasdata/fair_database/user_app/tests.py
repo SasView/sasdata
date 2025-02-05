@@ -31,11 +31,15 @@ class AuthTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         user = User.objects.get(username="testUser")
         self.assertEquals(user.email, self.register_data["email"])
+        response2 = self.client.get('/dj-rest-auth/user')
+        self.assertEquals(response2.status_code, status.HTTP_200_OK)
 
     def test_login(self):
-        user = User.objects.create_user(username="testUser", password="sasview!", email="email@domain.org")
+        User.objects.create_user(username="testUser", password="sasview!", email="email@domain.org")
         response = self.client.post('/dj-rest-auth/login', data=self.login_data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response2 = self.client.get('/dj-rest-auth/user')
+        self.assertEquals(response2.status_code, status.HTTP_200_OK)
 
     def test_user_get(self):
         user = User.objects.create_user(username="testUser", password="sasview!", email="email@domain.org")
@@ -72,22 +76,25 @@ class AuthTests(TestCase):
     def test_user_unauthenticated(self):
         response = self.client.get('/dj-rest-auth/user')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        print(response.content)
         self.assertEqual(response.content,
             b'{"detail":"Authentication credentials were not provided."}')
 
     def test_login_logout(self):
-        user = User.objects.create_user(username="testUser", password="sasview!", email="email@domain.org")
+        User.objects.create_user(username="testUser", password="sasview!", email="email@domain.org")
         self.client.post('/dj-rest-auth/login', data=self.login_data)
         response = self.client.post('/dj-rest-auth/logout')
+        response2 = self.client.get('/dj-rest-auth/user')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.content, b'{"detail":"Successfully logged out."}')
+        self.assertEquals(response2.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_register_logout(self):
         self.client.post('/dj-rest-auth/registration/', data=self.register_data)
         response = self.client.post('/dj-rest-auth/logout')
+        response2 = self.client.get('/dj-rest-auth/user')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.content, b'{"detail":"Successfully logged out."}')
+        self.assertEquals(response2.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_register_login(self):
         register_response = self.client.post('/dj-rest-auth/registration/', data=self.register_data)
