@@ -23,10 +23,6 @@ class AuthTests(TestCase):
             "password": "sasview!"
         }
 
-    '''
-    def tearDown(self):
-        self.client.post('/auth/logout/') '''
-
     # Test if registration successfully creates a new user and logs in
     def test_register(self):
         response = self.client.post('/auth/register/',data=self.register_data)
@@ -43,6 +39,16 @@ class AuthTests(TestCase):
         response2 = self.client.get('/auth/user/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response2.status_code, status.HTTP_200_OK)
+
+    # Test simultaneous login by multiple clients
+    def test_multiple_login(self):
+        User.objects.create_user(username="testUser", password="sasview!", email="email@domain.org")
+        client2 = APIClient()
+        response = self.client.post('/auth/login/', data=self.login_data)
+        response2 = client2.post('/auth/login/', data=self.login_data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response2.status_code, status.HTTP_200_OK)
+        self.assertNotEqual(response.content, response2.content)
 
     # Test get user information
     def test_user_get(self):
@@ -104,6 +110,18 @@ class AuthTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.content, b'{"detail":"Successfully logged out."}')
         self.assertEqual(response2.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_multiple_logout(self):
+        User.objects.create_user(username="testUser", password="sasview!", email="email@domain.org")
+        client2 = APIClient()
+        self.client.post('/auth/login/', data=self.login_data)
+        client2.post('/auth/login/', data=self.login_data)
+        response = self.client.post('/auth/logout/')
+        response2 = client2.get('/auth/user/')
+        response3 = client2.post('/auth/logout/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response2.status_code, status.HTTP_200_OK)
+        self.assertEqual(response3.status_code, status.HTTP_200_OK)
 
     # Test login is successful after registering then logging out
     def test_register_login(self):
