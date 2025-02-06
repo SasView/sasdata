@@ -146,13 +146,32 @@ class DataListPermissionsTests(APITestCase):
         self.assertEqual(response2.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(response3.status_code, status.HTTP_403_FORBIDDEN)
 
-    # Anyone can download public data
-
-    # Authenticated user can download own data
+    # Authenticated user can download public and own data
+    def test_download_authenticated(self):
+        self.client.post('/auth/login/', data=self.login_data_1)
+        response = self.client.get('/v1/data/1/download/')
+        response2 = self.client.get('/v1/data/2/download/')
+        response3 = self.client.get('/v1/data/3/download/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response2.status_code, status.HTTP_200_OK)
+        self.assertEqual(response3.status_code, status.HTTP_200_OK)
 
     # Authenticated user cannot download others' data
+    def test_download_unauthorized(self):
+        self.client.post('/auth/login/', data=self.login_data_2)
+        response = self.client.get('/v1/data/2/download/')
+        response2 = self.client.get('/v1/data/3/download/')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response2.status_code, status.HTTP_200_OK)
 
     # Unauthenticated user cannot download private data
+    def test_download_unauthenticated(self):
+        response = self.client.get('/v1/data/1/download/')
+        response2 = self.client.get('/v1/data/2/download/')
+        response3 = self.client.get('/v1/data/3/download/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response2.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response3.status_code, status.HTTP_200_OK)
 
     def tearDown(self):
         shutil.rmtree(settings.MEDIA_ROOT)
