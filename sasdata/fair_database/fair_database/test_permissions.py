@@ -68,20 +68,30 @@ class DataListPermissionsTests(APITestCase):
                          {"public_data_ids": {1: "cyl_400_40.txt", 3: "cyl_testdata.txt"}})
         self.assertEqual(response2.status_code, status.HTTP_400_BAD_REQUEST)
 
-
-    # Authenticated user can load public data
-    def test_load_authenticated_public(self):
+    # Authenticated user can load public data and owned private data
+    def test_load_authenticated(self):
         self.client.post('/auth/login/', data=self.login_data_1)
         response = self.client.get('/v1/data/load/1/')
+        response2 = self.client.get('/v1/data/load/2/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-    # Authenticated user can load own private data
+        self.assertEqual(response2.status_code, status.HTTP_200_OK)
 
     # Authenticated user cannot load others' private data
+    def test_load_unauthorized(self):
+        self.client.post('/auth/login/', data=self.login_data_2)
+        response = self.client.get('/v1/data/load/2/')
+        response2 = self.client.get('/v1/data/load/3/')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response2.status_code, status.HTTP_200_OK)
 
-    # Unauthenticated user can load public data
-
-    # Unauthenticated user cannot load others' private data
+    # Unauthenticated user can load public data only
+    def test_load_unauthenticated(self):
+        response = self.client.get('/v1/data/load/1/')
+        response2 = self.client.get('/v1/data/load/2/')
+        response3 = self.client.get('/v1/data/load/3/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response2.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response3.status_code, status.HTTP_200_OK)
 
     # Authenticated user can upload data
 
