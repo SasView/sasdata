@@ -14,10 +14,12 @@ def find(filename):
 
 class TestLists(TestCase):
     def setUp(self):
-        public_test_data = Data.objects.create(id = 1, file_name = "cyl_400_40.txt", is_public = True)
+        public_test_data = Data.objects.create(id = 1, file_name = "cyl_400_40.txt",
+            is_public = True)
         public_test_data.file.save("cyl_400_40.txt", open(find("cyl_400_40.txt"), 'rb'))
         self.user = User.objects.create_user(username="testUser", password="secret", id = 2)
-        private_test_data = Data.objects.create(id = 3, current_user = self.user, file_name = "cyl_400_20.txt", is_public = False)
+        private_test_data = Data.objects.create(id = 3, current_user = self.user,
+            file_name = "cyl_400_20.txt", is_public = False)
         private_test_data.file.save("cyl_400_20.txt", open(find("cyl_400_20.txt"), 'rb'))
         self.client = APIClient()
         self.client.force_authenticate(user=self.user)
@@ -35,13 +37,11 @@ class TestLists(TestCase):
     # Test loading a public data file
     def test_does_load_data_info_public(self):
         request = self.client.get('/v1/data/load/1/')
-        print(request.data)
         self.assertEqual(request.status_code, status.HTTP_200_OK)
 
     # Test loading private data with authorization
     def test_does_load_data_info_private(self):
         request = self.client.get('/v1/data/load/3/')
-        print(request.data)
         self.assertEqual(request.status_code, status.HTTP_200_OK)
 
     def tearDown(self):
@@ -50,7 +50,8 @@ class TestLists(TestCase):
 class TestingDatabase(APITestCase):
     def setUp(self):
         self.user = User.objects.create_user(username="testUser", password="secret", id = 1)
-        self.data = Data.objects.create(id = 2, current_user = self.user, file_name = "cyl_400_20.txt", is_public = False)
+        self.data = Data.objects.create(id = 2, current_user = self.user,
+            file_name = "cyl_400_20.txt", is_public = False)
         self.data.file.save("cyl_400_20.txt", open(find("cyl_400_20.txt"), 'rb'))
         self.client = APIClient()
         self.client.force_authenticate(user=self.user)
@@ -65,7 +66,8 @@ class TestingDatabase(APITestCase):
         }
         request = self.client.post('/v1/data/upload/', data=data)
         self.assertEqual(request.status_code, status.HTTP_200_OK)
-        self.assertEqual(request.data, {"current_user":'testUser', "authenticated" : True, "file_id" : 3, "file_alternative_name":"cyl_400_40.txt","is_public" : False})
+        self.assertEqual(request.data, {"current_user":'testUser', "authenticated" : True,
+            "file_id" : 3, "file_alternative_name":"cyl_400_40.txt","is_public" : False})
         Data.objects.get(id = 3).delete()
 
     # Test data upload w/out authenticated user
@@ -77,7 +79,8 @@ class TestingDatabase(APITestCase):
         }
         request = self.client2.post('/v1/data/upload/', data=data)
         self.assertEqual(request.status_code, status.HTTP_200_OK)
-        self.assertEqual(request.data, {"current_user":'', "authenticated" : False, "file_id" : 3, "file_alternative_name":"cyl_400_40.txt","is_public" : False})
+        self.assertEqual(request.data, {"current_user":'', "authenticated" : False,
+            "file_id" : 3, "file_alternative_name":"cyl_400_40.txt","is_public" : False})
         Data.objects.get(id = 3).delete()
 
     # Test updating file
@@ -88,21 +91,33 @@ class TestingDatabase(APITestCase):
             "is_public":False
         }
         request = self.client.put('/v1/data/upload/2/', data = data)
-        request2 = self.client2.put('/v1/data/upload/2/', data = data)
-        self.assertEqual(request.data, {"current_user":'testUser', "authenticated" : True, "file_id" : 2, "file_alternative_name":"cyl_400_40.txt","is_public" : False})
-        self.assertEqual(request2.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(request.data, {"current_user":'testUser', "authenticated" : True,
+            "file_id" : 2, "file_alternative_name":"cyl_400_40.txt","is_public" : False})
         Data.objects.get(id = 2).delete()
+
+    # Test file upload update fails when unauthorized
+    def test_unauthorized_file_upload_update(self):
+        file = open(find("cyl_400_40.txt"))
+        data = {
+            "file": file,
+            "is_public": False
+        }
+        request = self.client2.put('/v1/data/upload/2/', data=data)
+        self.assertEqual(request.status_code, status.HTTP_403_FORBIDDEN)
+        Data.objects.get(id=2).delete()
 
     # Test file download
     def test_does_download(self):
         request = self.client.get('/v1/data/2/download/')
-        request2 = self.client2.get('/v1/data/2/download/')
-        self.assertEqual(request.status_code, status.HTTP_200_OK)
-        self.assertEqual(request2.status_code, status.HTTP_403_FORBIDDEN)
         file_contents = b''.join(request.streaming_content)
         test_file = open(find('cyl_400_20.txt'), 'rb')
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
         self.assertEqual(file_contents, test_file.read())
 
+    # Test file download fails when unauthorized
+    def test_unauthorized_download(self):
+        request2 = self.client2.get('/v1/data/2/download/')
+        self.assertEqual(request2.status_code, status.HTTP_403_FORBIDDEN)
 
     def tearDown(self):
         shutil.rmtree(settings.MEDIA_ROOT)
