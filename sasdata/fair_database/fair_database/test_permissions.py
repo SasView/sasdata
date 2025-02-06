@@ -1,5 +1,7 @@
 import os
+import shutil
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
@@ -99,13 +101,50 @@ class DataListPermissionsTests(APITestCase):
 
     # Unauthenticated user cannot upload private data
 
-    # Authenticated user can update own public data
+    # Authenticated user can update own data
+    def test_upload_put_authenticated(self):
+        self.client.post('/auth/login/', data=self.login_data_1)
+        data = {
+            "is_public": False
+        }
+        response = self.client.put('/v1/data/upload/2/', data=data)
+        response2 = self.client.put('/v1/data/upload/3/', data=data)
+        self.assertEqual(response.data,
+            {"current_user": 'testUser', "authenticated": True, "file_id": 2,
+             "file_alternative_name": "cyl_400_20.txt", "is_public": False})
+        self.assertEqual(response2.data,
+            {"current_user": 'testUser', "authenticated": True, "file_id": 3,
+             "file_alternative_name": "cyl_testdata.txt", "is_public": False})
+        Data.objects.get(id=3).is_public = True
 
-    # Authenticated user can update own private data
-
-    # Authenticated user cannot update unowned public data
+    # Authenticated user cannot update unowned data
+    def test_upload_put_unauthorized(self):
+        self.client.post('/auth/login/', data=self.login_data_2)
+        file = open(find("cyl_400_40.txt"))
+        data = {
+            "file": file,
+            "is_public": False
+        }
+        response = self.client.put('/v1/data/upload/1/', data=data)
+        response2 = self.client.put('/v1/data/upload/2/', data=data)
+        response3 = self.client.put('/v1/data/upload/3/', data=data)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response2.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response3.status_code, status.HTTP_404_NOT_FOUND)
 
     # Unauthenticated user cannot update data
+    def test_upload_put_unauthenticated(self):
+        file = open(find("cyl_400_40.txt"))
+        data = {
+            "file": file,
+            "is_public": False
+        }
+        response = self.client.put('/v1/data/upload/1/', data=data)
+        response2 = self.client.put('/v1/data/upload/2/', data=data)
+        response3 = self.client.put('/v1/data/upload/3/', data=data)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response2.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response3.status_code, status.HTTP_403_FORBIDDEN)
 
     # Anyone can download public data
 
@@ -114,3 +153,6 @@ class DataListPermissionsTests(APITestCase):
     # Authenticated user cannot download others' data
 
     # Unauthenticated user cannot download private data
+
+    def tearDown(self):
+        shutil.rmtree(settings.MEDIA_ROOT)
