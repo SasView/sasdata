@@ -5,7 +5,7 @@ from dj_rest_auth.views import LoginView
 from dj_rest_auth.registration.views import RegisterView, SocialLoginView
 from allauth.account.utils import complete_signup
 from allauth.account import app_settings as allauth_settings
-from allauth.socialaccount.providers.orcid.view import OrcidOAuth2Adapter
+from allauth.socialaccount.providers.orcid.views import OrcidOAuth2Adapter
 
 from .serializers import KnoxSerializer
 from .util import create_knox_token
