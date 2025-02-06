@@ -27,21 +27,24 @@ class AuthTests(TestCase):
     def tearDown(self):
         self.client.post('/auth/logout/') '''
 
+    # Test if registration successfully creates a new user and logs in
     def test_register(self):
         response = self.client.post('/auth/register/',data=self.register_data)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         user = User.objects.get(username="testUser")
-        self.assertEquals(user.email, self.register_data["email"])
         response2 = self.client.get('/auth/user/')
-        self.assertEquals(response2.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(user.email, self.register_data["email"])
+        self.assertEqual(response2.status_code, status.HTTP_200_OK)
 
+    # Test if login successful
     def test_login(self):
         User.objects.create_user(username="testUser", password="sasview!", email="email@domain.org")
         response = self.client.post('/auth/login/', data=self.login_data)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
         response2 = self.client.get('/auth/user/')
-        self.assertEquals(response2.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response2.status_code, status.HTTP_200_OK)
 
+    # Test get user information
     def test_user_get(self):
         user = User.objects.create_user(username="testUser", password="sasview!", email="email@domain.org")
         self.client.force_authenticate(user=user)
@@ -50,6 +53,7 @@ class AuthTests(TestCase):
         self.assertEqual(response.content,
             b'{"pk":1,"username":"testUser","email":"email@domain.org","first_name":"","last_name":""}')
 
+    # Test changing username
     def test_user_put_username(self):
         user = User.objects.create_user(username="testUser", password="sasview!", email="email@domain.org")
         self.client.force_authenticate(user=user)
@@ -61,6 +65,7 @@ class AuthTests(TestCase):
         self.assertEqual(response.content,
             b'{"pk":1,"username":"newName","email":"email@domain.org","first_name":"","last_name":""}')
 
+    # Test changing username and first and last name
     def test_user_put_name(self):
         user = User.objects.create_user(username="testUser", password="sasview!", email="email@domain.org")
         self.client.force_authenticate(user=user)
@@ -74,12 +79,14 @@ class AuthTests(TestCase):
         self.assertEqual(response.content,
             b'{"pk":1,"username":"newName","email":"email@domain.org","first_name":"Clark","last_name":"Kent"}')
 
+    # Test user info inaccessible when unauthenticated
     def test_user_unauthenticated(self):
         response = self.client.get('/auth/user/')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(response.content,
             b'{"detail":"Authentication credentials were not provided."}')
 
+    # Test logout is successful after login
     def test_login_logout(self):
         User.objects.create_user(username="testUser", password="sasview!", email="email@domain.org")
         self.client.post('/auth/login/', data=self.login_data)
@@ -87,16 +94,18 @@ class AuthTests(TestCase):
         response2 = self.client.get('/auth/user/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.content, b'{"detail":"Successfully logged out."}')
-        self.assertEquals(response2.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response2.status_code, status.HTTP_403_FORBIDDEN)
 
+    # Test logout is successful after registration
     def test_register_logout(self):
         self.client.post('/auth/register/', data=self.register_data)
         response = self.client.post('/auth/logout/')
         response2 = self.client.get('/auth/user/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.content, b'{"detail":"Successfully logged out."}')
-        self.assertEquals(response2.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response2.status_code, status.HTTP_403_FORBIDDEN)
 
+    # Test login is successful after registering then logging out
     def test_register_login(self):
         register_response = self.client.post('/auth/register/', data=self.register_data)
         logout_response = self.client.post('/auth/logout/')
@@ -105,6 +114,7 @@ class AuthTests(TestCase):
         self.assertEqual(logout_response.status_code, status.HTTP_200_OK)
         self.assertEqual(login_response.status_code, status.HTTP_200_OK)
 
+    # Test password is successfully changed
     def test_password_change(self):
         self.client.post('/auth/register/', data=self.register_data)
         data = {
@@ -115,16 +125,14 @@ class AuthTests(TestCase):
         l_data = self.login_data
         l_data["password"] = "sasview?"
         response = self.client.post('/auth/password/change/', data=data)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
         logout_response = self.client.post('/auth/logout/')
         login_response = self.client.post('/auth/login/', data=l_data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(logout_response.status_code, status.HTTP_200_OK)
         self.assertEqual(login_response.status_code, status.HTTP_200_OK)
 
-#can register a user, user is w/in User model
-# user is logged in after registration
+
 # logged-in user can create Data, is data's current_user
-# test log out
 
 
 # Permissions
