@@ -10,12 +10,9 @@ from allauth.socialaccount.providers.orcid.views import OrcidOAuth2Adapter
 from .serializers import KnoxSerializer
 from .util import create_knox_token
 
+#Login using knox tokens rather than django-rest-framework tokens.
 
 class KnoxLoginView(LoginView):
-
-    '''def get_response_serializer(self):
-        response_serializer = settings.REST_AUTH_SERIALIZERS['TOKEN_SERIALIZER']
-        return response_serializer'''
 
     def get_response(self):
         serializer_class = self.get_response_serializer()
@@ -28,7 +25,7 @@ class KnoxLoginView(LoginView):
 
         return Response(serializer.data, status=200)
 
-#do we want to use email?
+# Registration using knox tokens rather than django-rest-framework tokens.
 class KnoxRegisterView(RegisterView):
 
     def get_response_data(self, user):
@@ -40,5 +37,6 @@ class KnoxRegisterView(RegisterView):
         complete_signup(self.request._request, user, allauth_settings.EMAIL_VERIFICATION, None)
         return user
 
+# For ORCID login
 class OrcidLoginView(SocialLoginView):
     adapter_class = OrcidOAuth2Adapter

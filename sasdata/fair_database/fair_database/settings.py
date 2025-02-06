@@ -85,7 +85,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'fair_database.wsgi.application'
 
-#Authentication
+# Authentication
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
     'allauth.account.auth_backends.AuthenticationBackend',
@@ -102,10 +102,11 @@ REST_AUTH = {
     'TOKEN_CREATOR': 'user_app.util.create_knox_token',
 }
 
+# allauth settings
 HEADLESS_ONLY = True
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 
-#to enable ORCID, register for credentials through ORCID and fill out client_id and secret
+# to enable ORCID, register for credentials through ORCID and fill out client_id and secret
 SOCIALACCOUNT_PROVIDERS = {
     'orcid': {
         'APPS': [
