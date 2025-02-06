@@ -85,6 +85,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'fair_database.wsgi.application'
 
+#Authentication
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
     'allauth.account.auth_backends.AuthenticationBackend',
@@ -103,6 +104,30 @@ REST_AUTH = {
 
 HEADLESS_ONLY = True
 ACCOUNT_EMAIL_VERIFICATION = 'none'
+
+#to enable ORCID, register for credentials through ORCID and fill out client_id and secret
+SOCIALACCOUNT_PROVIDERS = {
+    'orcid': {
+        'APPS': [
+            {
+                'client_id': '',
+                'secret': '',
+                'key': '',
+            }
+
+        ],
+        'SCOPE': [
+            'profile', 'email',
+        ],
+        'AUTH_PARAMETERS': {
+            'access_type': 'online'
+        },
+        # Base domain of the API. Default value: 'orcid.org', for the production API
+        'BASE_DOMAIN':'sandbox.orcid.org',  # for the sandbox API
+        # Member API or Public API? Default: False (for the public API)
+        'MEMBER_API': False,
+    }
+}
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
