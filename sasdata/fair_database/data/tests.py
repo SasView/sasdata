@@ -22,20 +22,23 @@ class TestLists(TestCase):
         self.client = APIClient()
         self.client.force_authenticate(user=self.user)
 
-    #working
+    # Test list public data
     def test_does_list_public(self):
         request = self.client.get('/v1/data/list/')
         self.assertEqual(request.data, {"public_data_ids":{1:"cyl_400_40.txt"}})
 
+    # Test list a user's private data
     def test_does_list_user(self):
         request = self.client.get('/v1/data/list/testUser/', user = self.user)
         self.assertEqual(request.data, {"user_data_ids":{3:"cyl_400_20.txt"}})
 
+    # Test loading a public data file
     def test_does_load_data_info_public(self):
         request = self.client.get('/v1/data/load/1/')
         print(request.data)
         self.assertEqual(request.status_code, status.HTTP_200_OK)
 
+    # Test loading private data with authorization
     def test_does_load_data_info_private(self):
         request = self.client.get('/v1/data/load/3/')
         print(request.data)
@@ -53,6 +56,7 @@ class TestingDatabase(APITestCase):
         self.client.force_authenticate(user=self.user)
         self.client2 = APIClient()
 
+    # Test data upload creates data in database
     def test_is_data_being_created(self):
         file = open(find("cyl_400_40.txt"), 'rb')
         data = {
@@ -64,6 +68,7 @@ class TestingDatabase(APITestCase):
         self.assertEqual(request.data, {"current_user":'testUser', "authenticated" : True, "file_id" : 3, "file_alternative_name":"cyl_400_40.txt","is_public" : False})
         Data.objects.get(id = 3).delete()
 
+    # Test data upload w/out authenticated user
     def test_is_data_being_created_no_user(self):
         file = open(find("cyl_400_40.txt"), 'rb')
         data = {
@@ -75,6 +80,7 @@ class TestingDatabase(APITestCase):
         self.assertEqual(request.data, {"current_user":'', "authenticated" : False, "file_id" : 3, "file_alternative_name":"cyl_400_40.txt","is_public" : False})
         Data.objects.get(id = 3).delete()
 
+    # Test updating file
     def test_does_file_upload_update(self):
         file = open(find("cyl_400_40.txt"))
         data = {
@@ -87,8 +93,7 @@ class TestingDatabase(APITestCase):
         self.assertEqual(request2.status_code, status.HTTP_403_FORBIDDEN)
         Data.objects.get(id = 2).delete()
 
-    #TODO write tests for download
-
+    # Test file download
     def test_does_download(self):
         request = self.client.get('/v1/data/2/download/')
         request2 = self.client2.get('/v1/data/2/download/')
