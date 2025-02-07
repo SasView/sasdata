@@ -96,10 +96,38 @@ class DataListPermissionsTests(APITestCase):
         self.assertEqual(response3.status_code, status.HTTP_200_OK)
 
     # Authenticated user can upload data
+    def test_upload_authenticated(self):
+        self.client.post('/auth/login/', data=self.login_data_1)
+        file = open(find('cyl_testdata1.txt'), 'rb')
+        data = {
+            'file': file,
+            'is_public': False
+        }
+        response = self.client.post('/v1/data/upload/', data=data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, {"current_user": 'testUser', "authenticated": True,
+            "file_id": 4, "file_alternative_name": "cyl_testdata1.txt", "is_public": False})
+        Data.objects.get(id=4).delete()
 
-    # ***Unauthenticated user can upload public data
-
-    # Unauthenticated user cannot upload private data
+    # Unauthenticated user can upload public data only
+    def test_upload_unauthenticated(self):
+        file = open(find('cyl_testdata2.txt'), 'rb')
+        file2 = open(find('cyl_testdata2.txt'), 'rb')
+        data = {
+            'file': file,
+            'is_public': True
+        }
+        data2 = {
+            'file': file2,
+            'is_public': False
+        }
+        response = self.client.post('/v1/data/upload/', data=data)
+        response2 = self.client.post('/v1/data/upload/', data=data2)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, {"current_user": '', "authenticated": False,
+                                         "file_id": 4, "file_alternative_name": "cyl_testdata2.txt",
+                                         "is_public": True})
+        self.assertEqual(response2.status_code, status.HTTP_400_BAD_REQUEST)
 
     # Authenticated user can update own data
     def test_upload_put_authenticated(self):
