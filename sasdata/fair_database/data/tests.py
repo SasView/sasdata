@@ -7,7 +7,7 @@ from django.contrib.auth.models import User
 from rest_framework.test import APIClient, APITestCase
 from rest_framework import status
 
-from .models import Data
+from data.models import Data
 
 def find(filename):
     return os.path.join(os.path.dirname(__file__), "../../example_data/1d_data", filename)
@@ -94,6 +94,20 @@ class TestingDatabase(APITestCase):
         self.assertEqual(request.data, {"current_user":'testUser', "authenticated" : True,
             "file_id" : 2, "file_alternative_name":"cyl_400_40.txt","is_public" : False})
         Data.objects.get(id = 2).delete()
+
+    def test_public_file_upload_update(self):
+        data_object = Data.objects.create(id=3, current_user=self.user,
+                                        file_name="cyl_testdata.txt", is_public=True)
+        data_object.file.save("cyl_testdata.txt", open(find("cyl_testdata.txt"), 'rb'))
+        file = open(find("cyl_testdata1.txt"))
+        data = {
+            "file": file,
+            "is_public": True
+        }
+        request = self.client.put('/v1/data/upload/3/', data=data)
+        self.assertEqual(request.data, {"current_user": 'testUser', "authenticated": True,
+                                        "file_id": 3, "file_alternative_name": "cyl_testdata1.txt", "is_public": True})
+        Data.objects.get(id=3).delete()
 
     # Test file upload update fails when unauthorized
     def test_unauthorized_file_upload_update(self):
