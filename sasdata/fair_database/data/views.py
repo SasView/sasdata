@@ -50,8 +50,8 @@ def data_info(request, db_id, version = None):
 
 @api_view(['POST', 'PUT'])
 def upload(request, data_id = None, version = None):
-    #saves file
-    if request.method == 'POST':
+    # saves file
+    if request.method in ['POST', 'PUT'] and data_id == None:
         form = DataForm(request.data, request.FILES)
         if form.is_valid():
             form.save()
@@ -62,21 +62,16 @@ def upload(request, data_id = None, version = None):
         else:
             serializer = DataSerializer(db, data={"file_name":os.path.basename(form.instance.file.path)})
 
-
-    #saves or updates file
+    # updates file
     elif request.method == 'PUT':
-        #require data_id
-        if data_id != None and request.user:
-            if request.user.is_authenticated:
-                db = get_object_or_404(Data, current_user = request.user.id, id = data_id)
-                form = DataForm(request.data, request.FILES, instance=db)
-                if form.is_valid():
-                    form.save()
-                serializer = DataSerializer(db, data={"file_name":os.path.basename(form.instance.file.path)}, partial = True)
-            else:
-                return HttpResponseForbidden("user is not logged in")
+        if request.user.is_authenticated:
+            db = get_object_or_404(Data, current_user = request.user.id, id = data_id)
+            form = DataForm(request.data, request.FILES, instance=db)
+            if form.is_valid():
+                form.save()
+            serializer = DataSerializer(db, data={"file_name":os.path.basename(form.instance.file.path)}, partial = True)
         else:
-            return HttpResponseBadRequest()
+            return HttpResponseForbidden("user is not logged in")
 
     if serializer.is_valid():
         serializer.save()
