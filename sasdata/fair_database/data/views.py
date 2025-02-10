@@ -58,9 +58,13 @@ def upload(request, data_id = None, version = None):
         db = Data.objects.get(pk = form.instance.pk)
 
         if request.user.is_authenticated:
-            serializer = DataSerializer(db, data={"file_name":os.path.basename(form.instance.file.path), "current_user" : request.user.id})
+            serializer = DataSerializer(db,
+                data={"file_name":os.path.basename(form.instance.file.path), "current_user" : request.user.id},
+                                        context={"is_public": db.is_public})
         else:
-            serializer = DataSerializer(db, data={"file_name":os.path.basename(form.instance.file.path)})
+            serializer = DataSerializer(db,
+                data={"file_name":os.path.basename(form.instance.file.path), "current_user": None},
+                context={"is_public": db.is_public})
 
     # updates file
     elif request.method == 'PUT':
@@ -69,11 +73,11 @@ def upload(request, data_id = None, version = None):
             form = DataForm(request.data, request.FILES, instance=db)
             if form.is_valid():
                 form.save()
-            serializer = DataSerializer(db, data={"file_name":os.path.basename(form.instance.file.path)}, partial = True)
+            serializer = DataSerializer(db, data={"file_name":os.path.basename(form.instance.file.path), "current_user": request.user.id}, context={"is_public": db.is_public}, partial = True)
         else:
             return HttpResponseForbidden("user is not logged in")
 
-    if serializer.is_valid():
+    if serializer.is_valid(raise_exception=True):
         serializer.save()
         #TODO get warnings/errors later
     return_data = {"current_user":request.user.username, "authenticated" : request.user.is_authenticated, "file_id" : db.id, "file_alternative_name":serializer.data["file_name"],"is_public" : serializer.data["is_public"]}
