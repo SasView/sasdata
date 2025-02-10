@@ -1,3 +1,5 @@
+import os
+
 from rest_framework import serializers
 
 from .models import Data
@@ -8,7 +10,6 @@ class DataSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     def validate(self, data):
-        print(data)
-        if not data['is_public'] and not data['current_user']:
+        if not self.context['is_public'] and not data['current_user']:
             raise serializers.ValidationError('private data must have an owner')
         return data
