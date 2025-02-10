@@ -74,13 +74,13 @@ class TestingDatabase(APITestCase):
     def test_is_data_being_created_no_user(self):
         file = open(find("cyl_400_40.txt"), 'rb')
         data = {
-            "is_public":False,
+            "is_public":True,
             "file":file
         }
         request = self.client2.post('/v1/data/upload/', data=data)
         self.assertEqual(request.status_code, status.HTTP_200_OK)
         self.assertEqual(request.data, {"current_user":'', "authenticated" : False,
-            "file_id" : 3, "file_alternative_name":"cyl_400_40.txt","is_public" : False})
+            "file_id" : 3, "file_alternative_name":"cyl_400_40.txt","is_public" : True})
         Data.objects.get(id = 3).delete()
 
     # Test updating file
