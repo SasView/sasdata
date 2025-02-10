@@ -88,7 +88,7 @@ class AuthTests(TestCase):
     # Test user info inaccessible when unauthenticated
     def test_user_unauthenticated(self):
         response = self.client.get('/auth/user/')
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertEqual(response.content,
             b'{"detail":"Authentication credentials were not provided."}')
 
@@ -100,7 +100,7 @@ class AuthTests(TestCase):
         response2 = self.client.get('/auth/user/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.content, b'{"detail":"Successfully logged out."}')
-        self.assertEqual(response2.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response2.status_code, status.HTTP_401_UNAUTHORIZED)
 
     # Test logout is successful after registration
     def test_register_logout(self):
@@ -109,7 +109,7 @@ class AuthTests(TestCase):
         response2 = self.client.get('/auth/user/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.content, b'{"detail":"Successfully logged out."}')
-        self.assertEqual(response2.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response2.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_multiple_logout(self):
         User.objects.create_user(username="testUser", password="sasview!", email="email@domain.org")
