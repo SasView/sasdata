@@ -1,12 +1,10 @@
-import os
-
 from rest_framework import serializers
 
-from .models import Data
+from data.models import DataFile
 
-class DataSerializer(serializers.ModelSerializer):
+class DataFileSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Data
+        model = DataFile
         fields = "__all__"
 
     def validate(self, data):

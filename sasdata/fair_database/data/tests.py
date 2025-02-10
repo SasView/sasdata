@@ -7,18 +7,18 @@ from django.contrib.auth.models import User
 from rest_framework.test import APIClient, APITestCase
 from rest_framework import status
 
-from data.models import Data
+from data.models import DataFile
 
 def find(filename):
     return os.path.join(os.path.dirname(__file__), "../../example_data/1d_data", filename)
 
 class TestLists(TestCase):
     def setUp(self):
-        public_test_data = Data.objects.create(id = 1, file_name = "cyl_400_40.txt",
+        public_test_data = DataFile.objects.create(id = 1, file_name = "cyl_400_40.txt",
             is_public = True)
         public_test_data.file.save("cyl_400_40.txt", open(find("cyl_400_40.txt"), 'rb'))
         self.user = User.objects.create_user(username="testUser", password="secret", id = 2)
-        private_test_data = Data.objects.create(id = 3, current_user = self.user,
+        private_test_data = DataFile.objects.create(id = 3, current_user = self.user,
             file_name = "cyl_400_20.txt", is_public = False)
         private_test_data.file.save("cyl_400_20.txt", open(find("cyl_400_20.txt"), 'rb'))
         self.client = APIClient()
@@ -50,7 +50,7 @@ class TestLists(TestCase):
 class TestingDatabase(APITestCase):
     def setUp(self):
         self.user = User.objects.create_user(username="testUser", password="secret", id = 1)
-        self.data = Data.objects.create(id = 2, current_user = self.user,
+        self.data = DataFile.objects.create(id = 2, current_user = self.user,
             file_name = "cyl_400_20.txt", is_public = False)
         self.data.file.save("cyl_400_20.txt", open(find("cyl_400_20.txt"), 'rb'))
         self.client = APIClient()
@@ -68,7 +68,7 @@ class TestingDatabase(APITestCase):
         self.assertEqual(request.status_code, status.HTTP_200_OK)
         self.assertEqual(request.data, {"current_user":'testUser', "authenticated" : True,
             "file_id" : 3, "file_alternative_name":"cyl_400_40.txt","is_public" : False})
-        Data.objects.get(id = 3).delete()
+        DataFile.objects.get(id = 3).delete()
 
     # Test data upload w/out authenticated user
     def test_is_data_being_created_no_user(self):
@@ -81,7 +81,7 @@ class TestingDatabase(APITestCase):
         self.assertEqual(request.status_code, status.HTTP_200_OK)
         self.assertEqual(request.data, {"current_user":'', "authenticated" : False,
             "file_id" : 3, "file_alternative_name":"cyl_400_40.txt","is_public" : True})
-        Data.objects.get(id = 3).delete()
+        DataFile.objects.get(id = 3).delete()
 
     # Test updating file
     def test_does_file_upload_update(self):
@@ -93,10 +93,10 @@ class TestingDatabase(APITestCase):
         request = self.client.put('/v1/data/upload/2/', data = data)
         self.assertEqual(request.data, {"current_user":'testUser', "authenticated" : True,
             "file_id" : 2, "file_alternative_name":"cyl_400_40.txt","is_public" : False})
-        Data.objects.get(id = 2).delete()
+        DataFile.objects.get(id = 2).delete()
 
     def test_public_file_upload_update(self):
-        data_object = Data.objects.create(id=3, current_user=self.user,
+        data_object = DataFile.objects.create(id=3, current_user=self.user,
                                         file_name="cyl_testdata.txt", is_public=True)
         data_object.file.save("cyl_testdata.txt", open(find("cyl_testdata.txt"), 'rb'))
         file = open(find("cyl_testdata1.txt"))
@@ -107,7 +107,7 @@ class TestingDatabase(APITestCase):
         request = self.client.put('/v1/data/upload/3/', data=data)
         self.assertEqual(request.data, {"current_user": 'testUser', "authenticated": True,
                                         "file_id": 3, "file_alternative_name": "cyl_testdata1.txt", "is_public": True})
-        Data.objects.get(id=3).delete()
+        DataFile.objects.get(id=3).delete()
 
     # Test file upload update fails when unauthorized
     def test_unauthorized_file_upload_update(self):
@@ -118,7 +118,7 @@ class TestingDatabase(APITestCase):
         }
         request = self.client2.put('/v1/data/upload/2/', data=data)
         self.assertEqual(request.status_code, status.HTTP_403_FORBIDDEN)
-        Data.objects.get(id=2).delete()
+        DataFile.objects.get(id=2).delete()
 
     # Test file download
     def test_does_download(self):
