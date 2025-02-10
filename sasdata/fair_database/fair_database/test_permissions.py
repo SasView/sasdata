@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
-from data.models import Data
+from data.models import DataFile
 
 def find(filename):
     return os.path.join(os.path.dirname(__file__), "../../example_data/1d_data", filename)
@@ -19,13 +19,13 @@ class DataListPermissionsTests(APITestCase):
                                              email="email@domain.com")
         self.user2 = User.objects.create_user(username="testUser2", password="secret", id=2,
                                               email="email2@domain.com")
-        unowned_test_data = Data.objects.create(id=1, file_name="cyl_400_40.txt",
+        unowned_test_data = DataFile.objects.create(id=1, file_name="cyl_400_40.txt",
                                                is_public=True)
         unowned_test_data.file.save("cyl_400_40.txt", open(find("cyl_400_40.txt"), 'rb'))
-        private_test_data = Data.objects.create(id=2, current_user=self.user,
+        private_test_data = DataFile.objects.create(id=2, current_user=self.user,
                                                 file_name="cyl_400_20.txt", is_public=False)
         private_test_data.file.save("cyl_400_20.txt", open(find("cyl_400_20.txt"), 'rb'))
-        public_test_data = Data.objects.create(id=3, current_user=self.user,
+        public_test_data = DataFile.objects.create(id=3, current_user=self.user,
                                                file_name="cyl_testdata.txt", is_public=True)
         public_test_data.file.save("cyl_testdata.txt", open(find("cyl_testdata.txt"), 'rb'))
         self.login_data_1 = {
@@ -107,7 +107,7 @@ class DataListPermissionsTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, {"current_user": 'testUser', "authenticated": True,
             "file_id": 4, "file_alternative_name": "cyl_testdata1.txt", "is_public": False})
-        Data.objects.get(id=4).delete()
+        DataFile.objects.get(id=4).delete()
 
     # Unauthenticated user can upload public data only
     def test_upload_unauthenticated(self):
@@ -143,7 +143,7 @@ class DataListPermissionsTests(APITestCase):
         self.assertEqual(response2.data,
             {"current_user": 'testUser', "authenticated": True, "file_id": 3,
              "file_alternative_name": "cyl_testdata.txt", "is_public": False})
-        Data.objects.get(id=3).is_public = True
+        DataFile.objects.get(id=3).is_public = True
 
     # Authenticated user cannot update unowned data
     def test_upload_put_unauthorized(self):
