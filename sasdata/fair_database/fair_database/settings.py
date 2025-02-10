@@ -92,7 +92,13 @@ AUTHENTICATION_BACKENDS = (
 )
 
 REST_FRAMEWORK = {
-    'DEFAULT ATHENTICATION CLASSES': ('knox.auth.TokenAuthentication'),
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'knox.auth.TokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    #'DEFAULT_PERMISSION_CLASSES': [
+    #    'fair_database.permissions.DataPermission',
+    #],
 }
 
 REST_AUTH = {
