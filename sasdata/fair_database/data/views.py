@@ -6,9 +6,9 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 from sasdata.dataloader.loader import Loader
-from .serializers import DataSerializer
-from .models import Data
-from .forms import DataForm
+from data.serializers import DataFileSerializer
+from data.models import DataFile
+from data.forms import DataFileForm
 
 @api_view(['GET'])
 def list_data(request, username = None, version = None):
@@ -16,13 +16,13 @@ def list_data(request, username = None, version = None):
         if username:
             data_list = {"user_data_ids": {}}
             if username == request.user.username and request.user.is_authenticated:
-                private_data = Data.objects.filter(current_user=request.user.id)
+                private_data = DataFile.objects.filter(current_user=request.user.id)
                 for x in private_data:
                     data_list["user_data_ids"][x.id] = x.file_name
             else:
                 return HttpResponseBadRequest("user is not logged in, or username is not same as current user")
         else:
-            public_data = Data.objects.filter(is_public=True)
+            public_data = DataFile.objects.filter(is_public=True)
             data_list = {"public_data_ids": {}}
             for x in public_data:
                 data_list["public_data_ids"][x.id] = x.file_name
@@ -33,7 +33,7 @@ def list_data(request, username = None, version = None):
 def data_info(request, db_id, version = None):
     if request.method == 'GET':
         loader = Loader()
-        data_db = get_object_or_404(Data, id=db_id)
+        data_db = get_object_or_404(DataFile, id=db_id)
         if data_db.is_public:
             data_list = loader.load(data_db.file.path)
             contents = [str(data) for data in data_list]
@@ -52,28 +52,28 @@ def data_info(request, db_id, version = None):
 def upload(request, data_id = None, version = None):
     # saves file
     if request.method in ['POST', 'PUT'] and data_id == None:
-        form = DataForm(request.data, request.FILES)
+        form = DataFileForm(request.data, request.FILES)
         if form.is_valid():
             form.save()
-        db = Data.objects.get(pk = form.instance.pk)
+        db = DataFile.objects.get(pk = form.instance.pk)
 
         if request.user.is_authenticated:
-            serializer = DataSerializer(db,
+            serializer = DataFileSerializer(db,
                 data={"file_name":os.path.basename(form.instance.file.path), "current_user" : request.user.id},
                                         context={"is_public": db.is_public})
         else:
-            serializer = DataSerializer(db,
+            serializer = DataFileSerializer(db,
                 data={"file_name":os.path.basename(form.instance.file.path), "current_user": None},
                 context={"is_public": db.is_public})
 
     # updates file
     elif request.method == 'PUT':
         if request.user.is_authenticated:
-            db = get_object_or_404(Data, current_user = request.user.id, id = data_id)
-            form = DataForm(request.data, request.FILES, instance=db)
+            db = get_object_or_404(DataFile, current_user = request.user.id, id = data_id)
+            form = DataFileForm(request.data, request.FILES, instance=db)
             if form.is_valid():
                 form.save()
-            serializer = DataSerializer(db, data={"file_name":os.path.basename(form.instance.file.path), "current_user": request.user.id}, context={"is_public": db.is_public}, partial = True)
+            serializer = DataFileSerializer(db, data={"file_name":os.path.basename(form.instance.file.path), "current_user": request.user.id}, context={"is_public": db.is_public}, partial = True)
         else:
             return HttpResponseForbidden("user is not logged in")
 
@@ -87,7 +87,7 @@ def upload(request, data_id = None, version = None):
 @api_view(['GET'])
 def download(request, data_id, version = None):
     if request.method == 'GET':
-        data = get_object_or_404(Data, id=data_id)
+        data = get_object_or_404(DataFile, id=data_id)
         if not data.is_public:
             # add session key later
             if not request.user.is_authenticated:

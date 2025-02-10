@@ -1,8 +1,8 @@
 from django import forms
-from .models import Data
+from data.models import DataFile
 
 # Create the form class.
-class DataForm(forms.ModelForm):
+class DataFileForm(forms.ModelForm):
     class Meta:
-        model = Data
+        model = DataFile
         fields = ["file", "is_public"]
