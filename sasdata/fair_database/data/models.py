@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from django.core.files.storage import FileSystemStorage
 
 # Create your models here.
-class Data(models.Model):
+class DataFile(models.Model):
     #username
     current_user = models.ForeignKey(User, blank=True,
                                      null=True, on_delete=models.CASCADE)
