@@ -7,6 +7,7 @@ class KnoxSerializer(serializers.Serializer):
     """
     Serializer for Knox authentication.
     """
+
     token = serializers.SerializerMethodField()
     user = UserDetailsSerializer()
 
