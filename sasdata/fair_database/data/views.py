@@ -121,12 +121,8 @@ def upload(request, data_id=None, version=None):
 def download(request, data_id, version=None):
     if request.method == "GET":
         data = get_object_or_404(DataFile, id=data_id)
-        if not data.is_public:
-            # add session key later
-            if not request.user.is_authenticated:
-                return HttpResponseForbidden("data is private, must log in")
-            if not request.user == data.current_user:
-                return HttpResponseForbidden("data is private")
+        if not permissions.check_permissions(request, data):
+            return HttpResponseForbidden("data is private")
         # TODO add issues later
         try:
             file = open(data.file.path, "rb")
