@@ -2,7 +2,7 @@ from rest_framework.permissions import BasePermission
 
 
 def is_owner(request, obj):
-    return request.user.is_authenticated and request.user.id == obj.current_user
+    return request.user.is_authenticated and request.user == obj.current_user
 
 
 class DataPermission(BasePermission):
