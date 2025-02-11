@@ -1,7 +1,12 @@
 import os
 
 from django.shortcuts import get_object_or_404
-from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, Http404, FileResponse
+from django.http import (
+    HttpResponseBadRequest,
+    HttpResponseForbidden,
+    Http404,
+    FileResponse,
+)
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
@@ -11,19 +16,20 @@ from data.models import DataFile
 from data.forms import DataFileForm
 from fair_database import permissions
 
-@api_view(['GET'])
-def list_data(request, username = None, version = None):
-    if request.method == 'GET':
+
+@api_view(["GET"])
+def list_data(request, username=None, version=None):
+    if request.method == "GET":
         if username:
             data_list = {"user_data_ids": {}}
-            #if username == request.user.username and request.user.is_authenticated:
-            private_data = DataFile.objects.filter(current_user=request.user.id)
-            for x in private_data:
-                if not permissions.check_permissions(request, x):
-                    return HttpResponseForbidden()
-                data_list["user_data_ids"][x.id] = x.file_name
-            #else:
-             #   return HttpResponseBadRequest("user is not logged in, or username is not same as current user")
+            if username == request.user.username and request.user.is_authenticated:
+                private_data = DataFile.objects.filter(current_user=request.user.id)
+                for x in private_data:
+                    data_list["user_data_ids"][x.id] = x.file_name
+            else:
+                return HttpResponseBadRequest(
+                    "user is not logged in, or username is not same as current user"
+                )
         else:
             public_data = DataFile.objects.filter(is_public=True)
             data_list = {"public_data_ids": {}}
@@ -34,9 +40,10 @@ def list_data(request, username = None, version = None):
         return Response(data_list)
     return HttpResponseBadRequest("not get method")
 
-@api_view(['GET'])
-def data_info(request, db_id, version = None):
-    if request.method == 'GET':
+
+@api_view(["GET"])
+def data_info(request, db_id, version=None):
+    if request.method == "GET":
         loader = Loader()
         data_db = get_object_or_404(DataFile, id=db_id)
         if data_db.is_public:
@@ -49,49 +56,77 @@ def data_info(request, db_id, version = None):
             contents = [str(data) for data in data_list]
             return_data = {data_db.file_name: contents}
         else:
-            return HttpResponseBadRequest("Database is either not public or wrong auth token")
+            return HttpResponseBadRequest(
+                "Database is either not public or wrong auth token"
+            )
         return Response(return_data)
     return HttpResponseBadRequest()
 
-@api_view(['POST', 'PUT'])
-def upload(request, data_id = None, version = None):
+
+@api_view(["POST", "PUT"])
+def upload(request, data_id=None, version=None):
     # saves file
-    if request.method in ['POST', 'PUT'] and data_id == None:
+    if request.method in ["POST", "PUT"] and data_id is None:
         form = DataFileForm(request.data, request.FILES)
         if form.is_valid():
             form.save()
-        db = DataFile.objects.get(pk = form.instance.pk)
+        db = DataFile.objects.get(pk=form.instance.pk)
 
         if request.user.is_authenticated:
-            serializer = DataFileSerializer(db,
-                data={"file_name":os.path.basename(form.instance.file.path), "current_user" : request.user.id},
-                                        context={"is_public": db.is_public})
+            serializer = DataFileSerializer(
+                db,
+                data={
+                    "file_name": os.path.basename(form.instance.file.path),
+                    "current_user": request.user.id,
+                },
+                context={"is_public": db.is_public},
+            )
         else:
-            serializer = DataFileSerializer(db,
-                data={"file_name":os.path.basename(form.instance.file.path), "current_user": None},
-                context={"is_public": db.is_public})
+            serializer = DataFileSerializer(
+                db,
+                data={
+                    "file_name": os.path.basename(form.instance.file.path),
+                    "current_user": None,
+                },
+                context={"is_public": db.is_public},
+            )
 
     # updates file
-    elif request.method == 'PUT':
+    elif request.method == "PUT":
         if request.user.is_authenticated:
-            db = get_object_or_404(DataFile, current_user = request.user.id, id = data_id)
+            db = get_object_or_404(DataFile, current_user=request.user.id, id=data_id)
             form = DataFileForm(request.data, request.FILES, instance=db)
             if form.is_valid():
                 form.save()
-            serializer = DataFileSerializer(db, data={"file_name":os.path.basename(form.instance.file.path), "current_user": request.user.id}, context={"is_public": db.is_public}, partial = True)
+            serializer = DataFileSerializer(
+                db,
+                data={
+                    "file_name": os.path.basename(form.instance.file.path),
+                    "current_user": request.user.id,
+                },
+                context={"is_public": db.is_public},
+                partial=True,
+            )
         else:
             return HttpResponseForbidden("user is not logged in")
 
     if serializer.is_valid(raise_exception=True):
         serializer.save()
-        #TODO get warnings/errors later
-    return_data = {"current_user":request.user.username, "authenticated" : request.user.is_authenticated, "file_id" : db.id, "file_alternative_name":serializer.data["file_name"],"is_public" : serializer.data["is_public"]}
+        # TODO get warnings/errors later
+    return_data = {
+        "current_user": request.user.username,
+        "authenticated": request.user.is_authenticated,
+        "file_id": db.id,
+        "file_alternative_name": serializer.data["file_name"],
+        "is_public": serializer.data["is_public"],
+    }
     return Response(return_data)
 
-#downloads a file
-@api_view(['GET'])
-def download(request, data_id, version = None):
-    if request.method == 'GET':
+
+# downloads a file
+@api_view(["GET"])
+def download(request, data_id, version=None):
+    if request.method == "GET":
         data = get_object_or_404(DataFile, id=data_id)
         if not data.is_public:
             # add session key later
@@ -101,7 +136,7 @@ def download(request, data_id, version = None):
                 return HttpResponseForbidden("data is private")
         # TODO add issues later
         try:
-            file = open(data.file.path, 'rb')
+            file = open(data.file.path, "rb")
         except Exception as e:
             return HttpResponseBadRequest(str(e))
         if file is None:
