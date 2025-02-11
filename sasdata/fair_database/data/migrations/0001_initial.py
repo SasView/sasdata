@@ -7,7 +7,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
@@ -16,13 +15,52 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Data',
+            name="Data",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('file_name', models.CharField(blank=True, default=None, help_text='File name', max_length=200, null=True)),
-                ('file', models.FileField(default=None, help_text='This is a file', storage=django.core.files.storage.FileSystemStorage(), upload_to='uploaded_files')),
-                ('is_public', models.BooleanField(default=False, help_text='opt in to submit your data into example pool')),
-                ('current_user', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "file_name",
+                    models.CharField(
+                        blank=True,
+                        default=None,
+                        help_text="File name",
+                        max_length=200,
+                        null=True,
+                    ),
+                ),
+                (
+                    "file",
+                    models.FileField(
+                        default=None,
+                        help_text="This is a file",
+                        storage=django.core.files.storage.FileSystemStorage(),
+                        upload_to="uploaded_files",
+                    ),
+                ),
+                (
+                    "is_public",
+                    models.BooleanField(
+                        default=False,
+                        help_text="opt in to submit your data into example pool",
+                    ),
+                ),
+                (
+                    "current_user",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
     ]
