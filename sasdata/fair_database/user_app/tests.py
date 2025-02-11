@@ -1,5 +1,3 @@
-import requests
-
 from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -23,11 +21,14 @@ class AuthTests(TestCase):
             "password": "sasview!"
         }
 
+    def auth_header(self, response):
+        return {'Authorization': 'Token ' + response.data['token']}
+
     # Test if registration successfully creates a new user and logs in
     def test_register(self):
         response = self.client.post('/auth/register/',data=self.register_data)
         user = User.objects.get(username="testUser")
-        response2 = self.client.get('/auth/user/')
+        response2 = self.client.get('/auth/user/', headers=self.auth_header(response))
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(user.email, self.register_data["email"])
         self.assertEqual(response2.status_code, status.HTTP_200_OK)
@@ -36,7 +37,7 @@ class AuthTests(TestCase):
     def test_login(self):
         User.objects.create_user(username="testUser", password="sasview!", email="email@domain.org")
         response = self.client.post('/auth/login/', data=self.login_data)
-        response2 = self.client.get('/auth/user/')
+        response2 = self.client.get('/auth/user/', headers=self.auth_header(response))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response2.status_code, status.HTTP_200_OK)
 
@@ -115,9 +116,9 @@ class AuthTests(TestCase):
         User.objects.create_user(username="testUser", password="sasview!", email="email@domain.org")
         client2 = APIClient()
         self.client.post('/auth/login/', data=self.login_data)
-        client2.post('/auth/login/', data=self.login_data)
+        token = client2.post('/auth/login/', data=self.login_data)
         response = self.client.post('/auth/logout/')
-        response2 = client2.get('/auth/user/')
+        response2 = client2.get('/auth/user/', headers=self.auth_header(token))
         response3 = client2.post('/auth/logout/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response2.status_code, status.HTTP_200_OK)
@@ -134,7 +135,7 @@ class AuthTests(TestCase):
 
     # Test password is successfully changed
     def test_password_change(self):
-        self.client.post('/auth/register/', data=self.register_data)
+        token = self.client.post('/auth/register/', data=self.register_data)
         data = {
             "new_password1": "sasview?",
             "new_password2": "sasview?",
@@ -142,7 +143,7 @@ class AuthTests(TestCase):
         }
         l_data = self.login_data
         l_data["password"] = "sasview?"
-        response = self.client.post('/auth/password/change/', data=data)
+        response = self.client.post('/auth/password/change/', data=data, headers=self.auth_header(token))
         logout_response = self.client.post('/auth/logout/')
         login_response = self.client.post('/auth/login/', data=l_data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
