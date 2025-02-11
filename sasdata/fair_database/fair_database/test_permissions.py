@@ -11,6 +11,9 @@ from data.models import DataFile
 def find(filename):
     return os.path.join(os.path.dirname(__file__), "../../example_data/1d_data", filename)
 
+def auth_header(response):
+    return {'Authorization': 'Token ' + response.data['token']}
+
 class DataListPermissionsTests(APITestCase):
     ''' Test permissions of data views using user_app for authentication. '''
 
@@ -42,9 +45,9 @@ class DataListPermissionsTests(APITestCase):
     # Authenticated user can view list of data
     # TODO: change to reflect inclusion of owned private data
     def test_list_authenticated(self):
-        self.client.post('/auth/login/', data=self.login_data_1)
-        response = self.client.get('/v1/data/list/')
-        response2 = self.client.get('/v1/data/list/testUser/')
+        token = self.client.post('/auth/login/', data=self.login_data_1)
+        response = self.client.get('/v1/data/list/', headers=auth_header(token))
+        response2 = self.client.get('/v1/data/list/testUser/', headers=auth_header(token))
         self.assertEqual(response.data,
                          {"public_data_ids": {1: "cyl_400_40.txt", 3: "cyl_testdata.txt"}})
         self.assertEqual(response2.data,
@@ -53,10 +56,10 @@ class DataListPermissionsTests(APITestCase):
     # Authenticated user cannot view other users' private data on list
     # TODO: Change response codes
     def test_list_authenticated_2(self):
-        self.client.post('/auth/login/', data=self.login_data_2)
-        response = self.client.get('/v1/data/list/')
-        response2 = self.client.get('/v1/data/list/testUser/')
-        response3 = self.client.get('/v1/data/list/testUser2/')
+        token = self.client.post('/auth/login/', data=self.login_data_2)
+        response = self.client.get('/v1/data/list/', headers=auth_header(token))
+        response2 = self.client.get('/v1/data/list/testUser/', headers=auth_header(token))
+        response3 = self.client.get('/v1/data/list/testUser2/', headers=auth_header(token))
         self.assertEqual(response.data,
                          {"public_data_ids": {1: "cyl_400_40.txt", 3: "cyl_testdata.txt"}})
         self.assertEqual(response2.status_code, status.HTTP_400_BAD_REQUEST)
@@ -72,17 +75,17 @@ class DataListPermissionsTests(APITestCase):
 
     # Authenticated user can load public data and owned private data
     def test_load_authenticated(self):
-        self.client.post('/auth/login/', data=self.login_data_1)
-        response = self.client.get('/v1/data/load/1/')
-        response2 = self.client.get('/v1/data/load/2/')
+        token = self.client.post('/auth/login/', data=self.login_data_1)
+        response = self.client.get('/v1/data/load/1/', headers=auth_header(token))
+        response2 = self.client.get('/v1/data/load/2/', headers=auth_header(token))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response2.status_code, status.HTTP_200_OK)
 
     # Authenticated user cannot load others' private data
     def test_load_unauthorized(self):
-        self.client.post('/auth/login/', data=self.login_data_2)
-        response = self.client.get('/v1/data/load/2/')
-        response2 = self.client.get('/v1/data/load/3/')
+        token = self.client.post('/auth/login/', data=self.login_data_2)
+        response = self.client.get('/v1/data/load/2/', headers=auth_header(token))
+        response2 = self.client.get('/v1/data/load/3/', headers=auth_header(token))
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response2.status_code, status.HTTP_200_OK)
 
@@ -97,13 +100,13 @@ class DataListPermissionsTests(APITestCase):
 
     # Authenticated user can upload data
     def test_upload_authenticated(self):
-        self.client.post('/auth/login/', data=self.login_data_1)
+        token = self.client.post('/auth/login/', data=self.login_data_1)
         file = open(find('cyl_testdata1.txt'), 'rb')
         data = {
             'file': file,
             'is_public': False
         }
-        response = self.client.post('/v1/data/upload/', data=data)
+        response = self.client.post('/v1/data/upload/', data=data, headers=auth_header(token))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, {"current_user": 'testUser', "authenticated": True,
             "file_id": 4, "file_alternative_name": "cyl_testdata1.txt", "is_public": False})
@@ -131,12 +134,12 @@ class DataListPermissionsTests(APITestCase):
 
     # Authenticated user can update own data
     def test_upload_put_authenticated(self):
-        self.client.post('/auth/login/', data=self.login_data_1)
+        token = self.client.post('/auth/login/', data=self.login_data_1)
         data = {
             "is_public": False
         }
-        response = self.client.put('/v1/data/upload/2/', data=data)
-        response2 = self.client.put('/v1/data/upload/3/', data=data)
+        response = self.client.put('/v1/data/upload/2/', data=data, headers=auth_header(token))
+        response2 = self.client.put('/v1/data/upload/3/', data=data, headers=auth_header(token))
         self.assertEqual(response.data,
             {"current_user": 'testUser', "authenticated": True, "file_id": 2,
              "file_alternative_name": "cyl_400_20.txt", "is_public": False})
@@ -147,15 +150,15 @@ class DataListPermissionsTests(APITestCase):
 
     # Authenticated user cannot update unowned data
     def test_upload_put_unauthorized(self):
-        self.client.post('/auth/login/', data=self.login_data_2)
+        token = self.client.post('/auth/login/', data=self.login_data_2)
         file = open(find("cyl_400_40.txt"))
         data = {
             "file": file,
             "is_public": False
         }
-        response = self.client.put('/v1/data/upload/1/', data=data)
-        response2 = self.client.put('/v1/data/upload/2/', data=data)
-        response3 = self.client.put('/v1/data/upload/3/', data=data)
+        response = self.client.put('/v1/data/upload/1/', data=data, headers=auth_header(token))
+        response2 = self.client.put('/v1/data/upload/2/', data=data, headers=auth_header(token))
+        response3 = self.client.put('/v1/data/upload/3/', data=data, headers=auth_header(token))
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         self.assertEqual(response2.status_code, status.HTTP_404_NOT_FOUND)
         self.assertEqual(response3.status_code, status.HTTP_404_NOT_FOUND)
@@ -176,19 +179,19 @@ class DataListPermissionsTests(APITestCase):
 
     # Authenticated user can download public and own data
     def test_download_authenticated(self):
-        self.client.post('/auth/login/', data=self.login_data_1)
-        response = self.client.get('/v1/data/1/download/')
-        response2 = self.client.get('/v1/data/2/download/')
-        response3 = self.client.get('/v1/data/3/download/')
+        token = self.client.post('/auth/login/', data=self.login_data_1)
+        response = self.client.get('/v1/data/1/download/', headers=auth_header(token))
+        response2 = self.client.get('/v1/data/2/download/', headers=auth_header(token))
+        response3 = self.client.get('/v1/data/3/download/', headers=auth_header(token))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response2.status_code, status.HTTP_200_OK)
         self.assertEqual(response3.status_code, status.HTTP_200_OK)
 
     # Authenticated user cannot download others' data
     def test_download_unauthorized(self):
-        self.client.post('/auth/login/', data=self.login_data_2)
-        response = self.client.get('/v1/data/2/download/')
-        response2 = self.client.get('/v1/data/3/download/')
+        token = self.client.post('/auth/login/', data=self.login_data_2)
+        response = self.client.get('/v1/data/2/download/', headers=auth_header(token))
+        response2 = self.client.get('/v1/data/3/download/', headers=auth_header(token))
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(response2.status_code, status.HTTP_200_OK)
 
