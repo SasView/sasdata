@@ -5,15 +5,14 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('data', '0001_initial'),
+        ("data", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.RenameModel(
-            old_name='Data',
-            new_name='DataFile',
+            old_name="Data",
+            new_name="DataFile",
         ),
     ]
