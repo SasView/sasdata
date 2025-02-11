@@ -44,6 +44,11 @@ class TestLists(TestCase):
         request = self.client.get("/v1/data/list/testUser/", user=self.user)
         self.assertEqual(request.data, {"user_data_ids": {3: "cyl_400_20.txt"}})
 
+    # Test list a nonexistent user's data
+    def test_list_other_user(self):
+        request = self.client.get("/v1/data/list/fakeUser/")
+        self.assertEqual(request.status_code, status.HTTP_400_BAD_REQUEST)
+
     # Test loading a public data file
     def test_does_load_data_info_public(self):
         request = self.client.get("/v1/data/load/1/")
@@ -53,6 +58,11 @@ class TestLists(TestCase):
     def test_does_load_data_info_private(self):
         request = self.client.get("/v1/data/load/3/")
         self.assertEqual(request.status_code, status.HTTP_200_OK)
+
+    # Test loading data that does not exist
+    def test_load_data_info_nonexistent(self):
+        request = self.client.get("/v1/data/load/5/")
+        self.assertEqual(request.status_code, status.HTTP_404_NOT_FOUND)
 
     def tearDown(self):
         shutil.rmtree(settings.MEDIA_ROOT)
@@ -124,6 +134,7 @@ class TestingDatabase(APITestCase):
         )
         DataFile.objects.get(id=2).delete()
 
+    # Test updating a public file
     def test_public_file_upload_update(self):
         data_object = DataFile.objects.create(
             id=3, current_user=self.user, file_name="cyl_testdata.txt", is_public=True
@@ -152,6 +163,13 @@ class TestingDatabase(APITestCase):
         self.assertEqual(request.status_code, status.HTTP_403_FORBIDDEN)
         DataFile.objects.get(id=2).delete()
 
+    # Test update nonexistent file fails
+    def test_file_upload_update_not_found(self):
+        file = open(find("cyl_400_40.txt"))
+        data = {"file": file, "is_public": False}
+        request = self.client2.put("/v1/data/upload/5/", data=data)
+        self.assertEqual(request.status_code, status.HTTP_404_NOT_FOUND)
+
     # Test file download
     def test_does_download(self):
         request = self.client.get("/v1/data/2/download/")
@@ -164,6 +182,11 @@ class TestingDatabase(APITestCase):
     def test_unauthorized_download(self):
         request2 = self.client2.get("/v1/data/2/download/")
         self.assertEqual(request2.status_code, status.HTTP_403_FORBIDDEN)
+
+    # Test download nonexistent file
+    def test_download_nonexistent(self):
+        request = self.client.get("/v1/data/5/download/")
+        self.assertEqual(request.status_code, status.HTTP_404_NOT_FOUND)
 
     def tearDown(self):
         shutil.rmtree(settings.MEDIA_ROOT)
