@@ -102,6 +102,8 @@ def upload(request, data_id=None, version=None):
             context={"is_public": db.is_public},
             partial=True,
         )
+    else:
+        return HttpResponseBadRequest()
 
     if serializer.is_valid(raise_exception=True):
         serializer.save()
