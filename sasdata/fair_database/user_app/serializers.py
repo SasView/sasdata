@@ -7,8 +7,8 @@ class KnoxSerializer(serializers.Serializer):
     """
     Serializer for Knox authentication.
     """
-    token = serializers.CharField()
+    token = serializers.SerializerMethodField()
     user = UserDetailsSerializer()
 
     def get_token(self, obj):
-      return obj["token"][1]
+        return obj["token"][1]
