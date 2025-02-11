@@ -46,19 +46,13 @@ def data_info(request, db_id, version=None):
     if request.method == "GET":
         loader = Loader()
         data_db = get_object_or_404(DataFile, id=db_id)
-        if data_db.is_public:
-            data_list = loader.load(data_db.file.path)
-            contents = [str(data) for data in data_list]
-            return_data = {data_db.file_name: contents}
-        # rewrite with "user.is_authenticated"
-        elif (data_db.current_user == request.user) and request.user.is_authenticated:
-            data_list = loader.load(data_db.file.path)
-            contents = [str(data) for data in data_list]
-            return_data = {data_db.file_name: contents}
-        else:
-            return HttpResponseBadRequest(
-                "Database is either not public or wrong auth token"
+        if not permissions.check_permissions(request, data_db):
+            return HttpResponseForbidden(
+                "Data is either not public or wrong auth token"
             )
+        data_list = loader.load(data_db.file.path)
+        contents = [str(data) for data in data_list]
+        return_data = {data_db.file_name: contents}
         return Response(return_data)
     return HttpResponseBadRequest()
 
@@ -93,22 +87,21 @@ def upload(request, data_id=None, version=None):
 
     # updates file
     elif request.method == "PUT":
-        if request.user.is_authenticated:
-            db = get_object_or_404(DataFile, current_user=request.user.id, id=data_id)
-            form = DataFileForm(request.data, request.FILES, instance=db)
-            if form.is_valid():
-                form.save()
-            serializer = DataFileSerializer(
-                db,
-                data={
-                    "file_name": os.path.basename(form.instance.file.path),
-                    "current_user": request.user.id,
-                },
-                context={"is_public": db.is_public},
-                partial=True,
-            )
-        else:
-            return HttpResponseForbidden("user is not logged in")
+        db = get_object_or_404(DataFile, id=data_id)
+        if not permissions.check_permissions(request, db):
+            return HttpResponseForbidden("must be the data owner to modify")
+        form = DataFileForm(request.data, request.FILES, instance=db)
+        if form.is_valid():
+            form.save()
+        serializer = DataFileSerializer(
+            db,
+            data={
+                "file_name": os.path.basename(form.instance.file.path),
+                "current_user": request.user.id,
+            },
+            context={"is_public": db.is_public},
+            partial=True,
+        )
 
     if serializer.is_valid(raise_exception=True):
         serializer.save()

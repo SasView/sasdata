@@ -108,15 +108,17 @@ class DataListPermissionsTests(APITestCase):
         token = self.client.post("/auth/login/", data=self.login_data_1)
         response = self.client.get("/v1/data/load/1/", headers=auth_header(token))
         response2 = self.client.get("/v1/data/load/2/", headers=auth_header(token))
+        response3 = self.client.get("/v1/data/load/3/", headers=auth_header(token))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response2.status_code, status.HTTP_200_OK)
+        self.assertEqual(response3.status_code, status.HTTP_200_OK)
 
     # Authenticated user cannot load others' private data
     def test_load_unauthorized(self):
         token = self.client.post("/auth/login/", data=self.login_data_2)
         response = self.client.get("/v1/data/load/2/", headers=auth_header(token))
         response2 = self.client.get("/v1/data/load/3/", headers=auth_header(token))
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(response2.status_code, status.HTTP_200_OK)
 
     # Unauthenticated user can load public data only
@@ -125,7 +127,7 @@ class DataListPermissionsTests(APITestCase):
         response2 = self.client.get("/v1/data/load/2/")
         response3 = self.client.get("/v1/data/load/3/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response2.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response2.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(response3.status_code, status.HTTP_200_OK)
 
     # Authenticated user can upload data
@@ -216,9 +218,9 @@ class DataListPermissionsTests(APITestCase):
         response3 = self.client.put(
             "/v1/data/upload/3/", data=data, headers=auth_header(token)
         )
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual(response2.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual(response3.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response2.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response3.status_code, status.HTTP_403_FORBIDDEN)
 
     # Unauthenticated user cannot update data
     def test_upload_put_unauthenticated(self):
