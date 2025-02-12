@@ -57,7 +57,7 @@ def guess_params_from_filename(filename: str, dataset_type: DatasetType) -> Asci
         colcount = guess_column_count(lines_split, startpos)
         columns = guess_columns(colcount, dataset_type)
         params = AsciiReaderParams([filename], columns, starting_line=startpos, separator_dict=separator_dict)
-
+        return params
 
 def split_line(separator_dict: dict[str, bool], line: str) -> list[str]:
     """Split a line in a CSV file based on which seperators the user has
