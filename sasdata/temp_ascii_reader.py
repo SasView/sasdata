@@ -29,7 +29,8 @@ def initialise_separator_dict(initial_value: bool = False) -> dict[str, bool]:
 @dataclass
 class AsciiReaderParams:
     filenames: list[str] # These will be the FULL file path. Will need to convert to basenames for some functions.
-    columns: list[tuple[str, NamedUnit]]
+    # The unit object for the column should only be None if the column is <ignore>!
+    columns: list[tuple[str, NamedUnit | None]]
     metadata: AsciiReaderMetadata = field(default_factory=AsciiReaderMetadata)
     starting_line: int = 0
     excluded_lines: set[int] = field(default_factory=set)
