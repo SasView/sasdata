@@ -90,7 +90,7 @@ def load_quantities(params: AsciiReaderParams, filename: str) -> list[NamedQuant
     with open(filename) as ascii_file:
         lines = ascii_file.readlines()
         arrays: list[np.ndarray] = []
-        for _ in params.columns:
+        for _ in params.columns_included:
             arrays.append(np.zeros(len(lines) - params.starting_line))
         for i, current_line in enumerate(lines):
             if i < params.starting_line or current_line in params.excluded_lines:
@@ -100,7 +100,7 @@ def load_quantities(params: AsciiReaderParams, filename: str) -> list[NamedQuant
                 for j, token in enumerate(line_split):
                     # Sometimes in the split, there might be an extra column that doesn't need to be there (e.g. an empty
                     # string.) This won't convert to a float so we need to ignore it.
-                    if j >= len(params.columns):
+                    if j >= len(params.columns_included):
                         continue
                     # TODO: Data might not be floats. Maybe don't hard code this.
                     arrays[j][i - params.starting_line] = float(token)
@@ -109,7 +109,7 @@ def load_quantities(params: AsciiReaderParams, filename: str) -> list[NamedQuant
                 # should be ignored entirely.
                 print(f'Line {i + 1} skipped.')
                 continue
-    file_quantities = [NamedQuantity(name, arrays[i], unit) for i, (name, unit) in enumerate(params.columns)]
+    file_quantities = [NamedQuantity(name, arrays[i], unit) for i, (name, unit) in enumerate(params.columns_included)]
     return file_quantities
 
 def metadata_to_data_backing(metadata: dict[str, AsciiMetadataCategory[str]]) -> Group:
