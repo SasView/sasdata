@@ -261,7 +261,7 @@ class DataListPermissionsTests(APITestCase):
         response2 = self.client.get("/v1/data/2/download/")
         response3 = self.client.get("/v1/data/3/download/")
         b"".join(response.streaming_content)
-        b"".join(response2.streaming_content)
+        b"".join(response3.streaming_content)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response2.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(response3.status_code, status.HTTP_200_OK)
