@@ -2,6 +2,8 @@
 
 from sasdata.ascii_reader_metadata import AsciiMetadataCategory, AsciiReaderMetadata, pairings, bidirectional_pairings
 from sasdata.data import SasData
+from sasdata.dataset_types import DatasetType
+from sasdata.guess import guess_column_count, guess_columns, guess_starting_position
 from sasdata.quantities.units import NamedUnit
 from sasdata.quantities.quantity import NamedQuantity
 from sasdata.quantities.accessors import AccessorTarget, Group
@@ -42,6 +44,20 @@ class AsciiReaderParams:
             if basename not in self.metadata.filename_separator:
                 self.metadata.filename_separator[basename] = '_'
                 self.metadata.filename_specific_metadata[basename] = {}
+
+# TODO: Should I make this work on a list of filenames as well?
+def guess_params_from_filename(filename: str, dataset_type: DatasetType) -> AsciiReaderParams:
+    # Lets assume that all the separators are to be enabled.
+    # Lets just assume we want all of the seaprators on. This seems to work for most files.
+    separator_dict = initialise_separator_dict(True)
+    with open(filename) as file:
+        lines = file.readlines()
+        lines_split = [split_line(separator_dict, line) for line in lines]
+        startpos = guess_starting_position(lines_split)
+        colcount = guess_column_count(lines_split, startpos)
+        columns = guess_columns(colcount, dataset_type)
+        params = AsciiReaderParams([filename], columns, starting_line=startpos, separator_dict=separator_dict)
+
 
 def split_line(separator_dict: dict[str, bool], line: str) -> list[str]:
     """Split a line in a CSV file based on which seperators the user has
