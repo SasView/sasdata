@@ -19,10 +19,10 @@ class AsciiSeparator(Enum):
     Tab = 2
 
 # TODO: Turn them all of for now so the caller can turn one of them on. But is this the desired behaviour?
-def initialise_separator_dict() -> dict[str, bool]:
-    return {'Whitespace': False,
-            'Comma': False,
-            'Tab': False}
+def initialise_separator_dict(initial_value: bool = False) -> dict[str, bool]:
+    return {'Whitespace': initial_value,
+            'Comma': initial_value,
+            'Tab': initial_value}
 
 @dataclass
 class AsciiReaderParams:
