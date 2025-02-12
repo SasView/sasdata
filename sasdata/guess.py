@@ -14,8 +14,13 @@ def guess_columns(col_count: int, dataset_type: DatasetType) -> list[str]:
     # Ideally we want an exact match but if the ordering is bigger than the col
     # count then we can accept that as well.
     for order_list in dataset_type.expected_orders:
-        if len(order_list) >= col_count:
-            return order_list
+        if len(order_list) >= col_count or order_list == dataset_type.expected_orders[-1]:
+            return_value = order_list[:]
+            # If we have any extra columns than expected, then we'll just ignore them.
+            excess = col_count - len(order_list)
+            for _ in range(excess):
+                return_value.append('<ignore>')
+            return return_value
 
     return dataset_type.expected_orders[-1]
 
