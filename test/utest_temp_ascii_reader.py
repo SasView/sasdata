@@ -16,7 +16,7 @@ def find(filename: str) -> str:
     return os.path.join(os.path.dirname(__file__), 'sasdataloader', 'data', filename)
 
 def test_ascii_1():
-    filename = 'ascii_test_1.txt'
+    filename = find(filename)
     params = guess_params_from_filename(filename, one_dim)
     # Need to change the columns as they won't be right.
     # TODO: <ignore> unitless
