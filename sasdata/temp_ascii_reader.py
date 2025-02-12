@@ -50,7 +50,7 @@ class AsciiReaderParams:
                 self.metadata.filename_specific_metadata[basename] = {}
 
     @property
-    def params_included(self) -> list[tuple[str, NamedUnit]]:
+    def columns_included(self) -> list[tuple[str, NamedUnit]]:
         return [column for column in self.columns if column[0] == '<ignore>' and isinstance(column[1], NamedUnit)]
 
 # TODO: Should I make this work on a list of filenames as well?
