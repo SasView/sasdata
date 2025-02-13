@@ -12,11 +12,14 @@ from sasdata.quantities.units import per_angstrom, per_centimeter
 # TODO: Look into parameterizing this, although its not trivial due to the setup, and tests being a bit different.
 
 
-def find(filename: str) -> str:
-    return os.path.join(os.path.dirname(__file__), 'sasdataloader', 'data', filename)
+def find(filename: str, locations: Literal['sasdataloader']) -> str:
+    # This match statement is here in case we want to pull data out of other locations.
+    match locations:
+        case 'sasdataloader':
+            return os.path.join(os.path.dirname(__file__), 'sasdataloader', 'data', filename)
 
 def test_ascii_1():
-    filename = find('ascii_test_1.txt')
+    filename = find('ascii_test_1.txt', 'sasdataloader')
     params = guess_params_from_filename(filename, one_dim)
     # Need to change the columns as they won't be right.
     # TODO: <ignore> unitless
