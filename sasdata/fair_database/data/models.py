@@ -3,8 +3,9 @@ from django.contrib.auth.models import User
 from django.core.files.storage import FileSystemStorage
 
 
-# Create your models here.
 class DataFile(models.Model):
+    """Database model for file contents."""
+
     # username
     current_user = models.ForeignKey(
         User, blank=True, null=True, on_delete=models.CASCADE
@@ -29,3 +30,12 @@ class DataFile(models.Model):
     is_public = models.BooleanField(
         default=False, help_text="opt in to submit your data into example pool"
     )
+
+
+"""Database model for a set of data and associated metadata."""
+
+"""Database model for group of DataSets associated by a varying parameter."""
+
+"""Database model for tree of operations performed on a DataSet."""
+
+"""Database model for a project save state."""
