@@ -3,13 +3,25 @@ from django.contrib.auth.models import User
 from django.core.files.storage import FileSystemStorage
 
 
-class DataFile(models.Model):
-    """Database model for file contents."""
+class Data(models.Model):
+    """Base model for data."""
 
     # username
     current_user = models.ForeignKey(
         User, blank=True, null=True, on_delete=models.CASCADE
     )
+
+    # is the data public?
+    is_public = models.BooleanField(
+        default=False, help_text="opt in to make your data public"
+    )
+
+    class Meta:
+        abstract = True
+
+
+class DataFile(Data):
+    """Database model for file contents."""
 
     # file name
     file_name = models.CharField(
@@ -24,11 +36,6 @@ class DataFile(models.Model):
         help_text="This is a file",
         upload_to="uploaded_files",
         storage=FileSystemStorage(),
-    )
-
-    # is the data public?
-    is_public = models.BooleanField(
-        default=False, help_text="opt in to submit your data into example pool"
     )
 
 
