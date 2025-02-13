@@ -38,3 +38,20 @@ def test_ascii_1():
             case 'dI':
                 assert datum.value[0] == pytest.approx(0.002704)
                 assert datum.value[-1] == pytest.approx(0.191)
+
+def test_ascii_2():
+    filename = find('test_3_columns.txt', 'sasdataloader')
+    params = guess_params_from_filename(filename, one_dim)
+    loaded_data = load_data(params)[0]
+
+    for datum in loaded_data._data_contents:
+        match datum.name:
+            case 'Q':
+                assert datum.value[0] == pytest.approx(0)
+                assert datum.value[-1] == pytest.approx(1.22449)
+            case 'I':
+                assert datum.value[0] == pytest.approx(2.83954)
+                assert datum.value[-1] == pytest.approx(7.47487)
+            case 'dI':
+                assert datum.value[0] == pytest.approx(0.6)
+                assert datum.value[-1] == pytest.approx(1.05918)
