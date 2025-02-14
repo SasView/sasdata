@@ -90,7 +90,8 @@ class DataListPermissionsTests(APITestCase):
             response.data,
             {"public_data_ids": {1: "cyl_400_40.txt", 3: "cyl_testdata.txt"}},
         )
-        self.assertEqual(response2.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response2.status_code, status.HTTP_200_OK)
+        self.assertEqual(response2.data, {"user_data_ids": {3: "cyl_testdata.txt"}})
         self.assertEqual(response3.data, {"user_data_ids": {}})
 
     # Unauthenticated user can view list of public data
@@ -101,7 +102,8 @@ class DataListPermissionsTests(APITestCase):
             response.data,
             {"public_data_ids": {1: "cyl_400_40.txt", 3: "cyl_testdata.txt"}},
         )
-        self.assertEqual(response2.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response2.status_code, status.HTTP_200_OK)
+        self.assertEqual(response2.data, {"user_data_ids": {3: "cyl_testdata.txt"}})
 
     # Authenticated user can load public data and owned private data
     def test_load_authenticated(self):
