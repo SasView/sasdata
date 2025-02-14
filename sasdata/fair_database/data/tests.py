@@ -44,10 +44,16 @@ class TestLists(TestCase):
         request = self.client.get("/v1/data/list/testUser/", user=self.user)
         self.assertEqual(request.data, {"user_data_ids": {3: "cyl_400_20.txt"}})
 
-    # Test list a nonexistent user's data
+    # Test list another user's public data
     def test_list_other_user(self):
+        client2 = APIClient()
+        request = client2.get("/v1/data/list/testUser/", user=self.user)
+        self.assertEqual(request.data, {"user_data_ids": {}})
+
+    # Test list a nonexistent user's data
+    def test_list_nonexistent_user(self):
         request = self.client.get("/v1/data/list/fakeUser/")
-        self.assertEqual(request.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(request.status_code, status.HTTP_404_NOT_FOUND)
 
     # Test loading a public data file
     def test_does_load_data_info_public(self):
