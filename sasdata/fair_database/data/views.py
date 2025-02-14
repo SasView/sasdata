@@ -22,9 +22,9 @@ from fair_database import permissions
 def list_data(request, username=None, version=None):
     if request.method == "GET":
         if username:
-            get_object_or_404(User, username=username)
+            search_user = get_object_or_404(User, username=username)
             data_list = {"user_data_ids": {}}
-            private_data = DataFile.objects.filter(current_user=request.user.id)
+            private_data = DataFile.objects.filter(current_user=search_user)
             for x in private_data:
                 if permissions.check_permissions(request, x):
                     data_list["user_data_ids"][x.id] = x.file_name
