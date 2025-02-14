@@ -1,5 +1,6 @@
 import os
 
+from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
 from django.http import (
     HttpResponseBadRequest,
@@ -21,6 +22,7 @@ from fair_database import permissions
 def list_data(request, username=None, version=None):
     if request.method == "GET":
         if username:
+            get_object_or_404(User, username=username)
             data_list = {"user_data_ids": {}}
             private_data = DataFile.objects.filter(current_user=request.user.id)
             for x in private_data:
