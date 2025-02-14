@@ -22,14 +22,10 @@ def list_data(request, username=None, version=None):
     if request.method == "GET":
         if username:
             data_list = {"user_data_ids": {}}
-            if username == request.user.username and request.user.is_authenticated:
-                private_data = DataFile.objects.filter(current_user=request.user.id)
-                for x in private_data:
+            private_data = DataFile.objects.filter(current_user=request.user.id)
+            for x in private_data:
+                if permissions.check_permissions(request, x):
                     data_list["user_data_ids"][x.id] = x.file_name
-            else:
-                return HttpResponseBadRequest(
-                    "user is not logged in, or username is not same as current user"
-                )
         else:
             public_data = DataFile.objects.filter(is_public=True)
             data_list = {"public_data_ids": {}}
