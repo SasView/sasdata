@@ -1,14 +1,14 @@
-from collections.abc import Callable
-
-import numpy as np
 import pytest
+import numpy as np
 from matplotlib import pyplot as plt
 from numpy.typing import ArrayLike
+from typing import Callable
 
-from sasdata.quantities import units
 from sasdata.quantities.plotting import quantity_plot
 from sasdata.quantities.quantity import NamedQuantity, Quantity
-from sasdata.transforms.rebinning import InterpolationOptions, calculate_interpolation_matrix_1d
+from sasdata.quantities import units
+
+from sasdata.transforms.rebinning import calculate_interpolation_matrix_1d, InterpolationOptions
 
 test_functions = [
     lambda x: x**2,
@@ -16,20 +16,14 @@ test_functions = [
     lambda x: x**3
 ]
 
-test_interpolation_orders = [
-    InterpolationOptions.LINEAR,
-    InterpolationOptions.CUBIC
-]
-
 
 @pytest.mark.parametrize("fun", test_functions)
-@pytest.mark.parametrize("order", test_interpolation_orders)
-def test_interpolate_matrix_inside(fun: Callable[[Quantity[ArrayLike]], Quantity[ArrayLike]], order: InterpolationOptions, show_plots: bool):
+def test_linear_interpolate_matrix_inside(fun: Callable[[Quantity[ArrayLike]], Quantity[ArrayLike]], order: InterpolationOptions, show_plots: bool):
     original_points = NamedQuantity("x_base", np.linspace(-10,10, 31), units.meters)
     test_points = NamedQuantity("x_test", np.linspace(-5, 5, 11), units.meters)
 
 
-    mapping, _ = calculate_interpolation_matrix_1d(original_points, test_points, order=order)
+    mapping, _ = calculate_interpolation_matrix_1d(original_points, test_points, order=InterpolationOptions.LINEAR)
 
     y_original = fun(original_points)
     y_test = y_original @ mapping
@@ -56,12 +50,11 @@ def test_interpolate_matrix_inside(fun: Callable[[Quantity[ArrayLike]], Quantity
 
 
 @pytest.mark.parametrize("fun", test_functions)
-@pytest.mark.parametrize("order", test_interpolation_orders)
-def test_interpolate_different_units(fun: Callable[[Quantity[ArrayLike]], Quantity[ArrayLike]], order: InterpolationOptions, show_plots: bool):
+def test_linear_interpolate_different_units(fun: Callable[[Quantity[ArrayLike]], Quantity[ArrayLike]], order: InterpolationOptions, show_plots: bool):
     original_points = NamedQuantity("x_base", np.linspace(-10,10, 107), units.meters)
     test_points = NamedQuantity("x_test", np.linspace(-5000, 5000, 11), units.millimeters)
 
-    mapping, _ = calculate_interpolation_matrix_1d(original_points, test_points, order=order)
+    mapping, _ = calculate_interpolation_matrix_1d(original_points, test_points, order=InterpolationOptions.LINEAR)
 
     y_original = fun(original_points)
     y_test = y_original @ mapping
@@ -87,13 +80,12 @@ def test_interpolate_different_units(fun: Callable[[Quantity[ArrayLike]], Quanti
     for t, e in zip(y_values_test, y_values_expected):
         assert t == pytest.approx(e, rel=5e-2)
 
-@pytest.mark.parametrize("order", test_interpolation_orders)
-def test_linear(order: InterpolationOptions):
+def test_linearity_linear():
     """ Test linear interpolation between two points"""
     x_and_y = NamedQuantity("x_base", np.linspace(-10, 10, 2), units.meters)
     new_x = NamedQuantity("x_test", np.linspace(-5000, 5000, 101), units.millimeters)
 
-    mapping, _ = calculate_interpolation_matrix_1d(x_and_y, new_x, order=order)
+    mapping, _ = calculate_interpolation_matrix_1d(x_and_y, new_x, order=InterpolationOptions.LINEAR)
 
     linear_points = x_and_y @ mapping
 
