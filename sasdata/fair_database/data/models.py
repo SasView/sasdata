@@ -39,7 +39,27 @@ class DataFile(Data):
     )
 
 
-"""Database model for a set of data and associated metadata."""
+class DataSet(Data):
+    """Database model for a set of data and associated metadata."""
+
+    # dataset name
+    name = models.CharField()
+
+    # associated files
+    files = models.ManyToManyField(DataFile)
+
+    # ordinate
+    ordinate = models.JSONField()
+
+    # abscissae
+    abscissae = models.JSONField()
+
+    # data contents
+    data_contents = models.JSONField()
+
+    # metadata
+    raw_metadata = models.JSONField()
+
 
 """Database model for group of DataSets associated by a varying parameter."""
 
