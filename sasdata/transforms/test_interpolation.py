@@ -18,7 +18,7 @@ test_functions = [
 
 
 @pytest.mark.parametrize("fun", test_functions)
-def test_linear_interpolate_matrix_inside(fun: Callable[[Quantity[ArrayLike]], Quantity[ArrayLike]]):
+def test_linear_interpolate_matrix_inside(fun: Callable[[Quantity[ArrayLike]], Quantity[ArrayLike]], order: InterpolationOptions, show_plots: bool):
     original_points = NamedQuantity("x_base", np.linspace(-10,10, 31), units.meters)
     test_points = NamedQuantity("x_test", np.linspace(-5, 5, 11), units.meters)
 
@@ -34,13 +34,14 @@ def test_linear_interpolate_matrix_inside(fun: Callable[[Quantity[ArrayLike]], Q
     y_values_test = y_test.in_units_of(test_units)
     y_values_expected = y_expected.in_units_of(test_units)
 
-    # print(y_values_test)
-    # print(y_values_expected)
-    #
-    # quantity_plot(original_points, y_original)
-    # quantity_plot(test_points, y_test)
-    # quantity_plot(test_points, y_expected)
-    # plt.show()
+    if show_plots:
+        print(y_values_test)
+        print(y_values_expected)
+
+        quantity_plot(original_points, y_original)
+        quantity_plot(test_points, y_test)
+        quantity_plot(test_points, y_expected)
+        plt.show()
 
     assert len(y_values_test) == len(y_values_expected)
 
@@ -49,7 +50,7 @@ def test_linear_interpolate_matrix_inside(fun: Callable[[Quantity[ArrayLike]], Q
 
 
 @pytest.mark.parametrize("fun", test_functions)
-def test_linear_interpolate_different_units(fun: Callable[[Quantity[ArrayLike]], Quantity[ArrayLike]]):
+def test_linear_interpolate_different_units(fun: Callable[[Quantity[ArrayLike]], Quantity[ArrayLike]], order: InterpolationOptions, show_plots: bool):
     original_points = NamedQuantity("x_base", np.linspace(-10,10, 107), units.meters)
     test_points = NamedQuantity("x_test", np.linspace(-5000, 5000, 11), units.millimeters)
 
@@ -63,15 +64,16 @@ def test_linear_interpolate_different_units(fun: Callable[[Quantity[ArrayLike]],
 
     y_values_test = y_test.in_units_of(test_units)
     y_values_expected = y_expected.in_units_of(test_units)
-    #
-    # print(y_values_test)
-    # print(y_test.in_si())
-    # print(y_values_expected)
-    #
-    # plt.plot(original_points.in_si(), y_original.in_si())
-    # plt.plot(test_points.in_si(), y_test.in_si(), "x")
-    # plt.plot(test_points.in_si(), y_expected.in_si(), "o")
-    # plt.show()
+
+    if show_plots:
+        print(y_values_test)
+        print(y_test.in_si())
+        print(y_values_expected)
+
+        plt.plot(original_points.in_si(), y_original.in_si())
+        plt.plot(test_points.in_si(), y_test.in_si(), "x")
+        plt.plot(test_points.in_si(), y_expected.in_si(), "o")
+        plt.show()
 
     assert len(y_values_test) == len(y_values_expected)
 
