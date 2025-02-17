@@ -1,14 +1,14 @@
-from collections.abc import Callable
-
-import numpy as np
 import pytest
+import numpy as np
 from matplotlib import pyplot as plt
 from numpy.typing import ArrayLike
+from typing import Callable
 
-from sasdata.quantities import units
 from sasdata.quantities.plotting import quantity_plot
 from sasdata.quantities.quantity import NamedQuantity, Quantity
-from sasdata.transforms.rebinning import InterpolationOptions, calculate_interpolation_matrix_1d
+from sasdata.quantities import units
+
+from sasdata.transforms.rebinning import calculate_interpolation_matrix_1d, InterpolationOptions
 
 test_functions = [
     lambda x: x**2,
