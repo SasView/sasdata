@@ -63,6 +63,16 @@ class DataSet(Data):
 
 """Database model for group of DataSets associated by a varying parameter."""
 
-"""Database model for tree of operations performed on a DataSet."""
+
+class OperationTree(Data):
+    """Database model for tree of operations performed on a DataSet."""
+
+    # Dataset the operation tree is performed on
+    dataset = models.ForeignKey(DataSet)
+
+    # operation
+
+    # previous operation
+
 
 """Database model for a project save state."""
