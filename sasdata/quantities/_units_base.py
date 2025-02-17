@@ -4,7 +4,7 @@ from fractions import Fraction
 
 import numpy as np
 
-from sasdata.quantities.unicode_superscript import int_as_unicode_superscript
+from unicode_superscript import int_as_unicode_superscript
 
 class DimensionError(Exception):
     pass
