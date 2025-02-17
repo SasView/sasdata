@@ -75,4 +75,11 @@ class OperationTree(Data):
     # previous operation
 
 
-"""Database model for a project save state."""
+class Session(Data):
+    """Database model for a project save state."""
+
+    # dataset
+    dataset = models.ForeignKey(DataSet)
+
+    # operation tree
+    operations = models.ForeignKey(OperationTree)
