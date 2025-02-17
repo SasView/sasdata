@@ -131,7 +131,14 @@ with open("units.py", 'w', encoding=encoding) as fid:
 
     with open("_units_base.py", 'r') as base:
         for line in base:
-            fid.write(line)
+            # unicode_superscript is a local module when called from
+            # _unit_tables.py but a submodule of sasdata.quantities
+            # when called from units.py.  This condition patches the
+            # line when the copy is made.
+            if line.startswith("from unicode_superscript"):
+                fid.write(line.replace("from unicode_superscript", "from sasdata.quantities.unicode_superscript"))
+            else:
+                fid.write(line)
 
     # Write in unit definitions
     fid.write("\n\n"
