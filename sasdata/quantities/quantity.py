@@ -1435,6 +1435,10 @@ class NamedQuantity[QuantityType](Quantity[QuantityType]):
             raise UnitError(f"Standard error units ({standard_error.units}) "
                             f"are not compatible with value units ({self.units})")
 
+    def _serialise_json(self):
+        quantity = super()._serialise_json()
+        quantity["name"] = self.name
+        return quantity
 
     @property
     def string_repr(self):
