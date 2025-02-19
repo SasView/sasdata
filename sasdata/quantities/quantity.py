@@ -1187,6 +1187,16 @@ class Quantity[QuantityType]:
         else:
             return self.in_si(), None
 
+    # TODO: fill out actual values
+    def _serialise_json(self):
+        return {
+            "value": "", # figure out QuantityType serialisation
+            "units": "", # Unit serialisation
+            "standard_error": "", # also QuantityType serialisation
+            "hash_seed": self._hash_seed, # is this just a string?
+            "history": {}   # QuantityHistory serializer
+        }
+
     def __mul__(self: Self, other: ArrayLike | Self ) -> Self:
         if isinstance(other, Quantity):
             return DerivedQuantity(
