@@ -1,3 +1,4 @@
+import json
 from enum import Enum
 from typing import TypeVar, Any, Self
 from dataclasses import dataclass
@@ -68,3 +69,19 @@ class SasData:
             s += key_tree(self._raw_metadata)
 
         return s
+
+    def serialise(self) -> str:
+        return json.dumps(self._serialise_json())
+
+    def _serialise_json(self) -> dict[str, Any]:
+        return {
+            "name": self.name,
+            "data_contents": [],
+            "raw_metadata": {},
+            "verbose": self._verbose,
+            "metadata": {},
+            "ordinate": {},
+            "abscissae": [],
+            "mask": {},
+            "model_requirements": {}
+        }
