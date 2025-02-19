@@ -48,6 +48,9 @@ class DataSet(Data):
     # associated files
     files = models.ManyToManyField(DataFile)
 
+    # metadata
+    metadata = models.ForeignKey("MetaData")
+
     # ordinate
     ordinate = models.JSONField()
 
@@ -59,6 +62,13 @@ class DataSet(Data):
 
     # metadata
     raw_metadata = models.JSONField()
+
+
+class MetaData:
+    """Database model for scattering metadata"""
+
+    # Associated data set
+    dataset = models.ForeignKey(DataSet)
 
 
 """Database model for group of DataSets associated by a varying parameter."""
