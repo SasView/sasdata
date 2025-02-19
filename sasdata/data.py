@@ -79,15 +79,16 @@ class SasData:
     def serialise(self) -> str:
         return json.dumps(self._serialise_json())
 
+    # TODO: replace with serialization methods when written
     def _serialise_json(self) -> dict[str, Any]:
         return {
             "name": self.name,
-            "data_contents": [],
-            "raw_metadata": {},
+            "data_contents": [q._serialise_json() for q in self._data_contents],
+            "raw_metadata": {}, # serialization for Groups and DataSets
             "verbose": self._verbose,
-            "metadata": {},
-            "ordinate": {},
-            "abscissae": [],
+            "metadata": {}, # serialization for MetaData
+            "ordinate": self.ordinate._serialise_json(),
+            "abscissae": [q._serialise_json() for q in self.abscissae],
             "mask": {},
             "model_requirements": {}
         }
