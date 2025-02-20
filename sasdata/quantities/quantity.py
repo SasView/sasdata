@@ -1085,6 +1085,15 @@ class QuantityHistory:
 
         return s
 
+    def _serialise_json(self):
+        return {
+            "operation_tree": self.operation_tree.serialise(),
+            "references": {
+                key: self.references[key]._serialise_json() for key in self.references
+            }
+
+        }
+
 
 class Quantity[QuantityType]:
 
@@ -1194,7 +1203,7 @@ class Quantity[QuantityType]:
             "units": self.units._serialise_json(), # Unit serialisation
             "standard_error": "", # also QuantityType serialisation
             "hash_seed": self._hash_seed, # is this just a string?
-            "history": {}   # QuantityHistory serializer
+            "history": self.history._serialise_json()
         }
 
     def __mul__(self: Self, other: ArrayLike | Self ) -> Self:
