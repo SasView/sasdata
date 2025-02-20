@@ -39,17 +39,18 @@ class DataFile(Data):
     )
 
 
+'''
 class DataSet(Data):
     """Database model for a set of data and associated metadata."""
 
     # dataset name
-    name = models.CharField()
+    name = models.CharField(max_length=200)
 
     # associated files
     files = models.ManyToManyField(DataFile)
 
     # metadata
-    metadata = models.ForeignKey("MetaData")
+    # metadata = models.ForeignKey("MetaData", on_delete=models.CASCADE)
 
     # ordinate
     ordinate = models.JSONField()
@@ -68,7 +69,7 @@ class MetaData:
     """Database model for scattering metadata"""
 
     # Associated data set
-    dataset = models.ForeignKey(DataSet)
+    # dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE)
 
 
 """Database model for group of DataSets associated by a varying parameter."""
@@ -78,7 +79,7 @@ class OperationTree(Data):
     """Database model for tree of operations performed on a DataSet."""
 
     # Dataset the operation tree is performed on
-    dataset = models.ForeignKey(DataSet)
+    # dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE)
 
     # operation
 
@@ -89,7 +90,8 @@ class Session(Data):
     """Database model for a project save state."""
 
     # dataset
-    dataset = models.ForeignKey(DataSet)
+    # dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE)
 
     # operation tree
-    operations = models.ForeignKey(OperationTree)
+    # operations = models.ForeignKey(OperationTree, on_delete=models.CASCADE)
+'''
