@@ -84,7 +84,7 @@ class SasData:
         return {
             "name": self.name,
             "data_contents": [q._serialise_json() for q in self._data_contents],
-            "raw_metadata": {}, # serialization for Groups and DataSets
+            "raw_metadata": self._raw_metadata._serialise_json(),
             "verbose": self._verbose,
             "metadata": {}, # serialization for MetaData
             "ordinate": self.ordinate._serialise_json(),
