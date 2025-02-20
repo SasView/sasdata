@@ -1191,7 +1191,7 @@ class Quantity[QuantityType]:
     def _serialise_json(self):
         return {
             "value": "", # figure out QuantityType serialisation
-            "units": "", # Unit serialisation
+            "units": self.units._serialise_json(), # Unit serialisation
             "standard_error": "", # also QuantityType serialisation
             "hash_seed": self._hash_seed, # is this just a string?
             "history": {}   # QuantityHistory serializer
