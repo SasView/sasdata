@@ -86,7 +86,7 @@ class SasData:
             "data_contents": [q._serialise_json() for q in self._data_contents],
             "raw_metadata": self._raw_metadata._serialise_json(),
             "verbose": self._verbose,
-            "metadata": {}, # serialization for MetaData
+            "metadata": self.metadata._serialise_json(),
             "ordinate": self.ordinate._serialise_json(),
             "abscissae": [q._serialise_json() for q in self.abscissae],
             "mask": {},

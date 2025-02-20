@@ -132,6 +132,18 @@ class Sample:
                 f"   Position:     {self.position}\n"
                 f"   Orientation:  {self.orientation}\n")
 
+    def _serialise_json(self):
+        return {
+            "name": "",
+            "sample_id": "",
+            "thickness": "",
+            "transmission": "",
+            "temperature": "",
+            "position": "",
+            "orientation": "",
+            "details": ""
+        }
+
 
 @dataclass(kw_only=True)
 class Process:
@@ -157,6 +169,42 @@ class Process:
                 f"    Description: {self.description}\n"
                 f"    Term: {self.term}\n"
                 )
+
+    def _serialise_json(self):
+        return {
+            "name": "",
+            "date": "",
+            "description": "",
+            "term": "",
+            "notes": ""
+        }
+
+class TransmissionSpectrum:
+    """
+    Class that holds information about transmission spectrum
+    for white beams and spallation sources.
+    """
+    def __init__(self, target_object: AccessorTarget):
+        # TODO: Needs to be multiple instances
+        self.name = StringAccessor(target_object, "name")
+        self.timestamp = StringAccessor(target_object, "timestamp")
+
+        # Wavelength (float) [A]
+        self.wavelength = LengthAccessor[ArrayLike](target_object,
+                                                    "wavelength",
+                                                    "wavelength.units")
+
+        # Transmission (float) [unit less]
+        self.transmission = DimensionlessAccessor[ArrayLike](target_object,
+                                                             "transmission",
+                                                             "units",
+                                                             default_unit=units.none)
+
+        # Transmission Deviation (float) [unit less]
+        self.transmission_deviation = DimensionlessAccessor[ArrayLike](target_object,
+                                                                       "transmission_deviation",
+                                                                       "transmission_deviation.units",
+                                                                       default_unit=units.none)
 
 
 @dataclass
@@ -191,3 +239,14 @@ class Metadata:
             "".join([p.summary() for p in self.process]) +
             self.sample.summary() +
             (self.instrument.summary() if self.instrument else ""))
+
+    def _serialise_json(self):
+        return {
+            "instrument": self.instrument._serialise_json(),
+            "process": self.process._serialise_json(),
+            "sample": self.sample._serialise_json(),
+            "transmission_spectrum": self.transmission_spectrum._serialise_json(),
+            "title": self.title,
+            "run": self.run,
+            "definition": self.definition
+        }
