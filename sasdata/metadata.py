@@ -51,6 +51,17 @@ class Detector:
                 f"   Pixel size:   {self.pixel_size}\n"
                 f"   Slit length:  {self.slit_length}\n")
 
+    def _serialise_json(self):
+        return {
+            "name": "",
+            "distance": "",
+            "offset": "",
+            "orientation": "",
+            "beam_center": "",
+            "pixel_size": "",
+            "slit_length": ""
+        }
+
 
 @dataclass(kw_only=True)
 class Aperture:
@@ -177,34 +188,8 @@ class Process:
             "description": "",
             "term": "",
             "notes": ""
-        }
+        }                                                                    default_unit=units.none)
 
-class TransmissionSpectrum:
-    """
-    Class that holds information about transmission spectrum
-    for white beams and spallation sources.
-    """
-    def __init__(self, target_object: AccessorTarget):
-        # TODO: Needs to be multiple instances
-        self.name = StringAccessor(target_object, "name")
-        self.timestamp = StringAccessor(target_object, "timestamp")
-
-        # Wavelength (float) [A]
-        self.wavelength = LengthAccessor[ArrayLike](target_object,
-                                                    "wavelength",
-                                                    "wavelength.units")
-
-        # Transmission (float) [unit less]
-        self.transmission = DimensionlessAccessor[ArrayLike](target_object,
-                                                             "transmission",
-                                                             "units",
-                                                             default_unit=units.none)
-
-        # Transmission Deviation (float) [unit less]
-        self.transmission_deviation = DimensionlessAccessor[ArrayLike](target_object,
-                                                                       "transmission_deviation",
-                                                                       "transmission_deviation.units",
-                                                                       default_unit=units.none)
 
 
 @dataclass
