@@ -53,13 +53,13 @@ class Detector:
 
     def _serialise_json(self):
         return {
-            "name": "",
-            "distance": "",
-            "offset": "",
-            "orientation": "",
-            "beam_center": "",
-            "pixel_size": "",
-            "slit_length": ""
+            "name": self.name.value,
+            "distance": self.distance.value._serialise_json(),
+            "offset": self.offset.value._serialise_json(),
+            "orientation": self.orientation.value._serialise_json(),
+            "beam_center": self.beam_center.value._serialise_json(),
+            "pixel_size": self.pixel_size.value._serialise_json(),
+            "slit_length": self.slit_length.value._serialise_json()
         }
 
 
@@ -145,14 +145,14 @@ class Sample:
 
     def _serialise_json(self):
         return {
-            "name": "",
-            "sample_id": "",
-            "thickness": "",
-            "transmission": "",
-            "temperature": "",
-            "position": "",
-            "orientation": "",
-            "details": ""
+            "name": self.name.value,
+            "sample_id": self.sample_id.value,
+            "thickness": self.thickness.value._serialise_json(),
+            "transmission": self.transmission.value,
+            "temperature": self.temperature.value._serialise_json(),
+            "position": self.position.value._serialise_json(),
+            "orientation": self.orientation.value._serialise_json(),
+            "details": self.details.value
         }
 
 
