@@ -64,6 +64,20 @@ class DataSet(Data):
     # metadata
     raw_metadata = models.JSONField()
 
+class Quantity():
+
+    # data value
+    value = models.JSONField()
+
+    # variance of the data
+    variance = models.JSONField()
+
+    # units
+    units = models.CharField(max_length=200)
+
+    hash = IntegerField() # this might change
+
+
 
 class MetaData:
     """Database model for scattering metadata"""
@@ -84,8 +98,10 @@ class OperationTree(Data):
     # operation
 
     # previous operation
+    parent_operation = models.ForeignKey("self", blank=True, null=True)
+'''
 
-
+'''
 class Session(Data):
     """Database model for a project save state."""
 
