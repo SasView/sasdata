@@ -70,6 +70,7 @@ def upload(request, data_id=None, version=None):
                 data={
                     "file_name": os.path.basename(form.instance.file.path),
                     "current_user": request.user.id,
+                    "users": [request.user.id],
                 },
                 context={"is_public": db.is_public},
             )
@@ -79,6 +80,7 @@ def upload(request, data_id=None, version=None):
                 data={
                     "file_name": os.path.basename(form.instance.file.path),
                     "current_user": None,
+                    "users": [],
                 },
                 context={"is_public": db.is_public},
             )
