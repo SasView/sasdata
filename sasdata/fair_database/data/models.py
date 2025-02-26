@@ -49,7 +49,9 @@ class DataSet(Data):
     files = models.ManyToManyField(DataFile)
 
     # metadata
-    metadata = models.ForeignKey("MetaData", on_delete=models.CASCADE)
+    metadata = models.OneToOneField(
+        "MetaData", on_delete=models.CASCADE, related_name="associated_metadata"
+    )
 
     # ordinate
     # ordinate = models.JSONField()
@@ -64,7 +66,7 @@ class DataSet(Data):
     # raw_metadata = models.JSONField()
 
 
-class Quantity:
+class Quantity(models.Model):
     """Database model for data quantities such as the ordinate and abscissae."""
 
     # data value
@@ -80,17 +82,19 @@ class Quantity:
     hash = models.IntegerField()
 
 
-class MetaData:
+class MetaData(models.Model):
     """Database model for scattering metadata"""
 
     # Associated data set
-    dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE)
+    dataset = models.OneToOneField(
+        "DataSet", on_delete=models.CASCADE, related_name="associated_data"
+    )
 
 
 """Database model for group of DataSets associated by a varying parameter."""
 
 
-class OperationTree:
+class OperationTree(models.Model):
     """Database model for tree of operations performed on a DataSet."""
 
     # Dataset the operation tree is performed on
@@ -99,7 +103,9 @@ class OperationTree:
     # operation
 
     # previous operation
-    parent_operation = models.ForeignKey("self", blank=True, null=True)
+    parent_operation = models.ForeignKey(
+        "self", blank=True, null=True, on_delete=models.CASCADE
+    )
 
 
 '''
