@@ -8,8 +8,10 @@ class Data(models.Model):
 
     #  owner of the data
     current_user = models.ForeignKey(
-        User, blank=True, null=True, on_delete=models.CASCADE
+        User, blank=True, null=True, on_delete=models.CASCADE, related_name="+"
     )
+
+    users = models.ManyToManyField(User, related_name="+")
 
     # is the data public?
     is_public = models.BooleanField(
@@ -49,9 +51,7 @@ class DataSet(Data):
     files = models.ManyToManyField(DataFile)
 
     # metadata
-    metadata = models.OneToOneField(
-        "MetaData", on_delete=models.CASCADE, related_name="associated_metadata"
-    )
+    metadata = models.OneToOneField("MetaData", on_delete=models.CASCADE)
 
     # ordinate
     # ordinate = models.JSONField()
@@ -86,9 +86,9 @@ class MetaData(models.Model):
     """Database model for scattering metadata"""
 
     # Associated data set
-    dataset = models.OneToOneField(
-        "DataSet", on_delete=models.CASCADE, related_name="associated_data"
-    )
+    # dataset = models.OneToOneField(
+    #    "DataSet", on_delete=models.CASCADE, related_name="associated_data"
+    # )
 
 
 """Database model for group of DataSets associated by a varying parameter."""
