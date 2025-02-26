@@ -5,10 +5,14 @@ def is_owner(request, obj):
     return request.user.is_authenticated and request.user == obj.current_user
 
 
+def has_access(request, obj):
+    return request.user.is_authenticated and request.user in obj.users.all()
+
+
 class DataPermission(BasePermission):
     def has_object_permission(self, request, view, obj):
         if request.method == "GET":
-            if obj.is_public or is_owner(request, obj):
+            if obj.is_public or has_access(request, obj):
                 return True
         elif request.method == "DELETE":
             if obj.is_private and is_owner(request, obj):
@@ -19,7 +23,7 @@ class DataPermission(BasePermission):
 
 def check_permissions(request, obj):
     if request.method == "GET":
-        if obj.is_public or is_owner(request, obj):
+        if obj.is_public or has_access(request, obj):
             return True
     elif request.method == "DELETE":
         if obj.is_private and is_owner(request, obj):
