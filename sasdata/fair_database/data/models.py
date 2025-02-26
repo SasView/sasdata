@@ -6,7 +6,7 @@ from django.core.files.storage import FileSystemStorage
 class Data(models.Model):
     """Base model for data."""
 
-    # username
+    #  owner of the data
     current_user = models.ForeignKey(
         User, blank=True, null=True, on_delete=models.CASCADE
     )
@@ -39,7 +39,6 @@ class DataFile(Data):
     )
 
 
-'''
 class DataSet(Data):
     """Database model for a set of data and associated metadata."""
 
@@ -50,21 +49,23 @@ class DataSet(Data):
     files = models.ManyToManyField(DataFile)
 
     # metadata
-    # metadata = models.ForeignKey("MetaData", on_delete=models.CASCADE)
+    metadata = models.ForeignKey("MetaData", on_delete=models.CASCADE)
 
     # ordinate
-    ordinate = models.JSONField()
+    # ordinate = models.JSONField()
 
     # abscissae
-    abscissae = models.JSONField()
+    # abscissae = models.JSONField()
 
     # data contents
-    data_contents = models.JSONField()
+    # data_contents = models.JSONField()
 
     # metadata
-    raw_metadata = models.JSONField()
+    # raw_metadata = models.JSONField()
 
-class Quantity():
+
+class Quantity:
+    """Database model for data quantities such as the ordinate and abscissae."""
 
     # data value
     value = models.JSONField()
@@ -75,31 +76,31 @@ class Quantity():
     # units
     units = models.CharField(max_length=200)
 
-    hash = IntegerField() # this might change
-
+    # hash value
+    hash = models.IntegerField()
 
 
 class MetaData:
     """Database model for scattering metadata"""
 
     # Associated data set
-    # dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE)
+    dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE)
 
 
 """Database model for group of DataSets associated by a varying parameter."""
 
 
-class OperationTree(Data):
+class OperationTree:
     """Database model for tree of operations performed on a DataSet."""
 
     # Dataset the operation tree is performed on
-    # dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE)
+    dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE)
 
     # operation
 
     # previous operation
     parent_operation = models.ForeignKey("self", blank=True, null=True)
-'''
+
 
 '''
 class Session(Data):
