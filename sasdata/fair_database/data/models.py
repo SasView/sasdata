@@ -11,7 +11,7 @@ class Data(models.Model):
         User, blank=True, null=True, on_delete=models.CASCADE, related_name="+"
     )
 
-    users = models.ManyToManyField(User, related_name="+")
+    users = models.ManyToManyField(User, blank=True, related_name="+")
 
     # is the data public?
     is_public = models.BooleanField(

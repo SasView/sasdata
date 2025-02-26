@@ -6,7 +6,11 @@ def is_owner(request, obj):
 
 
 def has_access(request, obj):
-    return request.user.is_authenticated and request.user in obj.users.all()
+    return (
+        is_owner(request, obj)
+        or request.user.is_authenticated
+        and request.user in obj.users.all()
+    )
 
 
 class DataPermission(BasePermission):
