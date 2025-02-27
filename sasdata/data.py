@@ -76,6 +76,17 @@ class SasData:
 
         return s
 
+    def deserialise(self, data: str) -> "SasData":
+        json_data = json.loads(data)
+        return self.deserialise_json(json_data)
+
+    def deserialise_json(self, json_data: dict) -> "SasData":
+        name = json_data["name"]
+        data_contents = [] # deserialise Quantity
+        raw_metadata = None # deserialise Group
+        verbose = json_data["verbose"]
+        return SasData(name, data_contents, raw_metadata, verbose)
+
     def serialise(self) -> str:
         return json.dumps(self._serialise_json())
 
@@ -83,12 +94,12 @@ class SasData:
     def _serialise_json(self) -> dict[str, Any]:
         return {
             "name": self.name,
-            "data_contents": [q._serialise_json() for q in self._data_contents],
-            "raw_metadata": self._raw_metadata._serialise_json(),
+            "data_contents": [q.serialise_json() for q in self._data_contents],
+            "raw_metadata": self._raw_metadata.serialise_json(),
             "verbose": self._verbose,
-            "metadata": self.metadata._serialise_json(),
-            "ordinate": self.ordinate._serialise_json(),
-            "abscissae": [q._serialise_json() for q in self.abscissae],
+            "metadata": self.metadata.serialise_json(),
+            "ordinate": self.ordinate.serialise_json(),
+            "abscissae": [q.serialise_json() for q in self.abscissae],
             "mask": {},
             "model_requirements": {}
         }
