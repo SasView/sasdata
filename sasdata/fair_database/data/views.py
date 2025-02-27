@@ -120,10 +120,10 @@ def upload(request, data_id=None, version=None):
 
 @api_view(["PUT"])
 def manage_access(request, data_id, version=None):
-    serializer = AccessManagementSerializer(request)
+    serializer = AccessManagementSerializer(data=request.data)
     serializer.is_valid()
     db = get_object_or_404(DataFile, id=data_id)
-    user = User.get_object_or_404(username=serializer.data["username"])
+    user = get_object_or_404(User, username=serializer.data["username"])
     if serializer.data["access"]:
         db.users.add(user)
     else:
