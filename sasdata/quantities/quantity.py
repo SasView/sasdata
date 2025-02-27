@@ -1085,6 +1085,13 @@ class QuantityHistory:
 
         return s
 
+    @staticmethod
+    def deserialise_json(json_data: dict) -> "QuantityHistory":
+        # TODO: figure out if this should be deserialise_json
+        operation_tree = Operation.deserialise(json_data["operation_tree"])
+        references = {} # TODO: figure out QuantityType
+        return QuantityHistory(operation_tree, references)
+
     def serialise_json(self):
         return {
             "operation_tree": self.operation_tree.serialise(),
@@ -1195,6 +1202,17 @@ class Quantity[QuantityType]:
             return self.in_units_of_with_standard_error(self.units.si_equivalent())
         else:
             return self.in_si(), None
+
+    @staticmethod
+    def deserialise_json(json_data: dict) -> "Quantity":
+        value = None
+        units = Unit.deserialise_json(json_data["units"])
+        standard_error = None
+        hash_seed = json_data["hash_seed"]
+        history = QuantityHistory.deserialise_json(json_data["history"])
+        quantity = Quantity(value, units, standard_error, hash_seed)
+        quantity.history = history
+        return quantity
 
     # TODO: fill out actual values
     def serialise_json(self):
@@ -1444,8 +1462,19 @@ class NamedQuantity[QuantityType](Quantity[QuantityType]):
             raise UnitError(f"Standard error units ({standard_error.units}) "
                             f"are not compatible with value units ({self.units})")
 
+    @staticmethod
+    def deserialise_json(json_data: dict) -> "NamedQuantity":
+        name = json_data["name"]
+        value = None
+        units = Unit.deserialise_json(json_data["units"])
+        standard_error = None
+        history = QuantityHistory.deserialise_json(json_data["history"])
+        quantity = NamedQuantity(name, value, units, standard_error)
+        quantity.history = history
+        return quantity
+
     def serialise_json(self):
-        quantity = super()._serialise_json()
+        quantity = super().serialise_json()
         quantity["name"] = self.name
         return quantity
 
@@ -1479,3 +1508,12 @@ class DerivedQuantity[QuantityType](Quantity[QuantityType]):
             self._variance_cache = self.history.variance_propagate(self.units)
 
         return self._variance_cache
+
+
+    @staticmethod
+    def deserialise_json(json_data: dict) -> "DerivedQuantity":
+        value = None # TODO: figure out QuantityType
+        units = Unit.deserialise_json(json_data["units"])
+        history = QuantityHistory.deserialise_json(json_data["history"])
+        quantity = DerivedQuantity(value, units, history)
+        return quantity
