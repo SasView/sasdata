@@ -76,14 +76,16 @@ class SasData:
 
         return s
 
-    def deserialise(self, data: str) -> "SasData":
+    @staticmethod
+    def deserialise(data: str) -> "SasData":
         json_data = json.loads(data)
-        return self.deserialise_json(json_data)
+        return SasData.deserialise_json(json_data)
 
-    def deserialise_json(self, json_data: dict) -> "SasData":
+    @staticmethod
+    def deserialise_json(json_data: dict) -> "SasData":
         name = json_data["name"]
-        data_contents = [] # deserialise Quantity
-        raw_metadata = None # deserialise Group
+        data_contents = [] # deserialize Quantity
+        raw_metadata = Group.deserialise_json(json_data["raw_metadata"])
         verbose = json_data["verbose"]
         return SasData(name, data_contents, raw_metadata, verbose)
 
