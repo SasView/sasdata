@@ -128,6 +128,12 @@ def manage_access(request, data_id, version=None):
         db.users.add(user)
     else:
         db.users.remove(user)
+    response_data = {
+        "user": user.username,
+        "file": db.pk,
+        "access": serializer.data["access"],
+    }
+    return Response(response_data)
 
 
 # downloads a file
