@@ -12,7 +12,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 from sasdata.dataloader.loader import Loader
-from data.serializers import DataFileSerializer
+from data.serializers import DataFileSerializer, AccessManagementSerializer
 from data.models import DataFile
 from data.forms import DataFileForm
 from fair_database import permissions
@@ -116,6 +116,18 @@ def upload(request, data_id=None, version=None):
         "is_public": serializer.data["is_public"],
     }
     return Response(return_data)
+
+
+@api_view(["PUT"])
+def manage_access(request, data_id, version=None):
+    serializer = AccessManagementSerializer(request)
+    serializer.is_valid()
+    db = get_object_or_404(DataFile, id=data_id)
+    user = User.get_object_or_404(username=serializer.data["username"])
+    if serializer.data["access"]:
+        db.users.add(user)
+    else:
+        db.users.remove(user)
 
 
 # downloads a file

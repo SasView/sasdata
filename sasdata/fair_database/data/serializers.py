@@ -14,6 +14,11 @@ class DataFileSerializer(serializers.ModelSerializer):
         return data
 
 
+class AccessManagementSerializer(serializers.Serializer):
+    username = serializers.CharField(max_length=200, required=False)
+    access = serializers.BooleanField()
+
+
 class DataSetSerializer(serializers.ModelSerializer):
     class Meta:
         model = DataSet
