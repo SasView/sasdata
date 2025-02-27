@@ -36,7 +36,7 @@ class Dataset[DataType]:
 
         return s
 
-    def _serialise_json(self):
+    def serialise_json(self):
         content = {
             {
                 "name": self.name,
@@ -47,7 +47,7 @@ class Dataset[DataType]:
         for key in self.attributes:
             value = self.attributes[key]
             if isinstance(value, (Group, Dataset)):
-                content["attributes"]["key"] = value._serialise_json()
+                content["attributes"]["key"] = value.serialise_json()
             else:
                 content["attributes"]["key"] = value
         return content
@@ -64,12 +64,12 @@ class Group:
 
         return s
 
-    def _serialise_json(self):
+    def serialise_json(self):
         return {
             {
                 "name": self.name,
                 "children": {
-                    key: self.children[key]._serialise_json() for key in self.children
+                    key: self.children[key].serialise_json() for key in self.children
                 }
             }
         }

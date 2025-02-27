@@ -200,7 +200,7 @@ class Dimensions:
 
         return ''.join(tokens)
 
-    def _serialise_json(self):
+    def serialise_json(self):
         return {
             "length": self.length,
             "time": self.time,
@@ -276,10 +276,10 @@ class Unit:
     def parse(unit_string: str) -> "Unit":
         pass
 
-    def _serialise_json(self):
+    def serialise_json(self):
         return {
             "scale": self.scale,
-            "dimensions": self.dimensions._serialise_json()
+            "dimensions": self.dimensions.serialise_json()
         }
 
 class NamedUnit(Unit):

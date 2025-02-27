@@ -51,15 +51,15 @@ class Detector:
                 f"   Pixel size:   {self.pixel_size}\n"
                 f"   Slit length:  {self.slit_length}\n")
 
-    def _serialise_json(self):
+    def serialise_json(self):
         return {
             "name": self.name.value,
-            "distance": self.distance.value._serialise_json(),
-            "offset": self.offset.value._serialise_json(),
-            "orientation": self.orientation.value._serialise_json(),
-            "beam_center": self.beam_center.value._serialise_json(),
-            "pixel_size": self.pixel_size.value._serialise_json(),
-            "slit_length": self.slit_length.value._serialise_json()
+            "distance": self.distance.value.serialise_json(),
+            "offset": self.offset.value.serialise_json(),
+            "orientation": self.orientation.value.serialise_json(),
+            "beam_center": self.beam_center.value.serialise_json(),
+            "pixel_size": self.pixel_size.value.serialise_json(),
+            "slit_length": self.slit_length.value.serialise_json()
         }
 
 
@@ -92,6 +92,12 @@ class Collimation:
         return (
             f"Collimation:\n"
             f"   Length: {self.length}\n")
+
+    def serialise_json(self):
+        return {
+            "name": self.name.value,
+            "length": self.length.value.serialise_json()
+        }
 
 @dataclass(kw_only=True)
 class BeamSize:
@@ -143,15 +149,15 @@ class Sample:
                 f"   Position:     {self.position}\n"
                 f"   Orientation:  {self.orientation}\n")
 
-    def _serialise_json(self):
+    def serialise_json(self):
         return {
             "name": self.name.value,
             "sample_id": self.sample_id.value,
-            "thickness": self.thickness.value._serialise_json(),
+            "thickness": self.thickness.value.serialise_json(),
             "transmission": self.transmission.value,
-            "temperature": self.temperature.value._serialise_json(),
-            "position": self.position.value._serialise_json(),
-            "orientation": self.orientation.value._serialise_json(),
+            "temperature": self.temperature.value.serialise_json(),
+            "position": self.position.value.serialise_json(),
+            "orientation": self.orientation.value.serialise_json(),
             "details": self.details.value
         }
 
@@ -181,15 +187,14 @@ class Process:
                 f"    Term: {self.term}\n"
                 )
 
-    def _serialise_json(self):
+    def serialise_json(self):
         return {
             "name": "",
             "date": "",
             "description": "",
             "term": "",
             "notes": ""
-        }                                                                    default_unit=units.none)
-
+        }
 
 
 @dataclass
@@ -225,12 +230,12 @@ class Metadata:
             self.sample.summary() +
             (self.instrument.summary() if self.instrument else ""))
 
-    def _serialise_json(self):
+    def serialise_json(self):
         return {
-            "instrument": self.instrument._serialise_json(),
-            "process": self.process._serialise_json(),
-            "sample": self.sample._serialise_json(),
-            "transmission_spectrum": self.transmission_spectrum._serialise_json(),
+            "instrument": self.instrument.serialise_json(),
+            "process": self.process.serialise_json(),
+            "sample": self.sample.serialise_json(),
+            "transmission_spectrum": self.transmission_spectrum.serialise_json(),
             "title": self.title,
             "run": self.run,
             "definition": self.definition
