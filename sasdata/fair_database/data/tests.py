@@ -202,17 +202,19 @@ class TestAccessManagement(TestCase):
     def setUp(self):
         self.user1 = User.objects.create_user(username="testUser", password="secret")
         self.user2 = User.objects.create_user(username="testUser2", password="secret2")
-        private_test_data = DataFile.objects.create(
+        self.private_test_data = DataFile.objects.create(
             id=1, current_user=self.user1, file_name="cyl_400_40.txt", is_public=False
         )
-        private_test_data.file.save(
+        self.private_test_data.file.save(
             "cyl_400_40.txt", open(find("cyl_400_40.txt"), "rb")
         )
-        shared_test_data = DataFile.objects.create(
+        self.shared_test_data = DataFile.objects.create(
             id=2, current_user=self.user1, file_name="cyl_400_20.txt", is_public=False
         )
-        shared_test_data.file.save("cyl_400_20.txt", open(find("cyl_400_20.txt"), "rb"))
-        shared_test_data.users.add(self.user2)
+        self.shared_test_data.file.save(
+            "cyl_400_20.txt", open(find("cyl_400_20.txt"), "rb")
+        )
+        self.shared_test_data.users.add(self.user2)
         self.client1 = APIClient()
         self.client1.force_authenticate(self.user1)
         self.client2 = APIClient()
@@ -235,3 +237,37 @@ class TestAccessManagement(TestCase):
         self.assertEqual(request1.status_code, status.HTTP_200_OK)
         self.assertEqual(request2.status_code, status.HTTP_200_OK)
         self.assertEqual(request3.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_remove_no_access(self):
+        data = {"username": "testUser2", "access": False}
+        request1 = self.client2.get("/v1/data/load/1/")
+        request2 = self.client1.put("/v1/data/manage/1/", data=data)
+        request3 = self.client2.get("/v1/data/load/1/")
+        self.assertEqual(request1.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(request2.status_code, status.HTTP_200_OK)
+        self.assertEqual(request3.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_cant_revoke_own_access(self):
+        data = {"username": "testUser", "access": False}
+        request1 = self.client1.put("/v1/data/manage/1/", data=data)
+        request2 = self.client1.get("/v1/data/load/1/")
+        self.assertEqual(request1.status_code, status.HTTP_200_OK)
+        self.assertEqual(request2.status_code, status.HTTP_200_OK)
+
+    def test_grant_existing_access(self):
+        data = {"username": "testUser2", "access": True}
+        request1 = self.client2.get("/v1/data/load/2/")
+        request2 = self.client1.put("/v1/data/manage/2/", data=data)
+        request3 = self.client2.get("/v1/data/load/2/")
+        self.assertEqual(request1.status_code, status.HTTP_200_OK)
+        self.assertEqual(request2.status_code, status.HTTP_200_OK)
+        self.assertEqual(request3.status_code, status.HTTP_200_OK)
+
+    def test_no_edit_access(self):
+        data = {"is_public": True}
+        request = self.client2.put("/v1/data/upload/2/", data=data)
+        self.assertEqual(request.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertFalse(self.shared_test_data.is_public)
+
+    def tearDown(self):
+        shutil.rmtree(settings.MEDIA_ROOT)
