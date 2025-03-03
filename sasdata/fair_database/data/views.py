@@ -128,7 +128,7 @@ def manage_access(request, data_id, version=None):
         response_data = {
             "file": db.pk,
             "file_name": db.file_name,
-            "users": [user.username for user in db.users],
+            "users": [user.username for user in db.users.all()],
         }
         return Response(response_data)
     elif request.method == "PUT":

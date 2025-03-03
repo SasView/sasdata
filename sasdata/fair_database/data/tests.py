@@ -220,6 +220,20 @@ class TestAccessManagement(TestCase):
         self.client2 = APIClient()
         self.client2.force_authenticate(self.user2)
 
+    # test viewing no one with access
+    def test_view_no_access(self):
+        request = self.client1.get("/v1/data/manage/1/")
+        data = {"file": 1, "file_name": "cyl_400_40.txt", "users": []}
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertEqual(request.data, data)
+
+    # test viewing list of users with access
+    def test_view_access(self):
+        request = self.client1.get("/v1/data/manage/2/")
+        data = {"file": 2, "file_name": "cyl_400_20.txt", "users": ["testUser2"]}
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertEqual(request.data, data)
+
     # test granting another user access to private data
     def test_grant_access(self):
         data = {"username": "testUser2", "access": True}
