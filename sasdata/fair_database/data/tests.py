@@ -283,5 +283,23 @@ class TestAccessManagement(TestCase):
         self.assertEqual(request.status_code, status.HTTP_403_FORBIDDEN)
         self.assertFalse(self.shared_test_data.is_public)
 
+    def test_only_view_access_to_owned_file(self):
+        request1 = self.client2.get("/v1/data/manage/1/")
+        request2 = self.client2.get("/v1/data/manage/2/")
+        self.assertEqual(request1.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(request2.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_only_edit_access_to_owned_file(self):
+        data1 = {"username": "testUser2", "access": True}
+        data2 = {"username": "testUser1", "access": False}
+        request1 = self.client2.put("/v1/data/manage/1/", data=data1)
+        request2 = self.client2.put("/v1/data/manage/2/", data=data2)
+        request3 = self.client2.get("/v1/data/load/1/")
+        request4 = self.client1.get("/v1/data/load/2/")
+        self.assertEqual(request1.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(request2.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(request3.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(request4.status_code, status.HTTP_200_OK)
+
     def tearDown(self):
         shutil.rmtree(settings.MEDIA_ROOT)
