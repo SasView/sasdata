@@ -118,22 +118,35 @@ def upload(request, data_id=None, version=None):
     return Response(return_data)
 
 
-@api_view(["PUT"])
+# view or control who has access to a file
+@api_view(["GET", "PUT"])
 def manage_access(request, data_id, version=None):
-    serializer = AccessManagementSerializer(data=request.data)
-    serializer.is_valid()
     db = get_object_or_404(DataFile, id=data_id)
-    user = get_object_or_404(User, username=serializer.data["username"])
-    if serializer.data["access"]:
-        db.users.add(user)
-    else:
-        db.users.remove(user)
-    response_data = {
-        "user": user.username,
-        "file": db.pk,
-        "access": serializer.data["access"],
-    }
-    return Response(response_data)
+    if not permissions.is_owner(request, db):
+        return HttpResponseForbidden("Must be the data owner to manage access")
+    if request.method == "GET":
+        response_data = {
+            "file": db.pk,
+            "file_name": db.file_name,
+            "users": [user.username for user in db.users],
+        }
+        return Response(response_data)
+    elif request.method == "PUT":
+        serializer = AccessManagementSerializer(data=request.data)
+        serializer.is_valid()
+        user = get_object_or_404(User, username=serializer.data["username"])
+        if serializer.data["access"]:
+            db.users.add(user)
+        else:
+            db.users.remove(user)
+        response_data = {
+            "user": user.username,
+            "file": db.pk,
+            "file_name": db.file_name,
+            "access": serializer.data["access"],
+        }
+        return Response(response_data)
+    return HttpResponseBadRequest()
 
 
 # downloads a file
