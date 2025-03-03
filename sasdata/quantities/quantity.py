@@ -3,6 +3,7 @@
 from typing import Self
 
 import numpy as np
+from docutils.frontend import validate_ternary
 from numpy._typing import ArrayLike
 
 from sasdata.quantities import units
@@ -997,6 +998,12 @@ def hash_data_via_numpy(*data: ArrayLike):
 
 QuantityType = TypeVar("QuantityType")
 
+# TODO: figure out how to handle np.ndarray serialization (save as file or otherwise)
+def quantity_type_serialisation(var):
+    if isinstance(var, (str, int, float)):
+        return var
+    return None
+
 
 class QuantityHistory:
     """ Class that holds the information for keeping track of operations done on quantities """
@@ -1089,9 +1096,11 @@ class QuantityHistory:
 
     @staticmethod
     def deserialise_json(json_data: dict) -> "QuantityHistory":
-        # TODO: figure out if this should be deserialise_json
         operation_tree = Operation.deserialise(json_data["operation_tree"])
-        references = {} # TODO: figure out QuantityType
+        references = {
+            key: Quantity.deserialise_json(json_data["references"][key])
+            for key in json_data["references"]
+        }
         return QuantityHistory(operation_tree, references)
 
     def serialise_json(self):
@@ -1207,9 +1216,9 @@ class Quantity[QuantityType]:
 
     @staticmethod
     def deserialise_json(json_data: dict) -> "Quantity":
-        value = None
+        value = None # TODO QuantityType deserialisation
         units = Unit.deserialise_json(json_data["units"])
-        standard_error = None
+        standard_error = None #TODO QuantityType deserialisation
         hash_seed = json_data["hash_seed"]
         history = QuantityHistory.deserialise_json(json_data["history"])
         quantity = Quantity(value, units, standard_error, hash_seed)
@@ -1219,9 +1228,9 @@ class Quantity[QuantityType]:
     # TODO: fill out actual values
     def serialise_json(self):
         return {
-            "value": "", # figure out QuantityType serialisation
+            "value": quantity_type_serialisation(self.value),
             "units": self.units.serialise_json(), # Unit serialisation
-            "standard_error": "", # also QuantityType serialisation
+            "standard_error": quantity_type_serialisation(self._variance ** 0.5),
             "hash_seed": self._hash_seed, # is this just a string?
             "history": self.history.serialise_json()
         }
@@ -1467,9 +1476,9 @@ class NamedQuantity[QuantityType](Quantity[QuantityType]):
     @staticmethod
     def deserialise_json(json_data: dict) -> "NamedQuantity":
         name = json_data["name"]
-        value = None
+        value = None # TODO: figure out QuantityType deserialization
         units = Unit.deserialise_json(json_data["units"])
-        standard_error = None
+        standard_error = None # TODO: QuantityType deserialization
         history = QuantityHistory.deserialise_json(json_data["history"])
         quantity = NamedQuantity(name, value, units, standard_error)
         quantity.history = history
