@@ -35,7 +35,6 @@ class SasData:
         self.mask = None # TODO: fill out
         self.model_requirements = None # TODO: fill out
 
-    #TODO: This seems oriented around 1D I vs Q data. What about 2D data?
     @property
     def ordinate(self) -> Quantity:
         raise NotImplementedError()
