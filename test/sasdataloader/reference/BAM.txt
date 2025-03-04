@@ -1,10 +1,13 @@
 sasentry01
+  [FILE_ID_HERE/sasentry01/data/I] [[-4132.585671758142 ... -4139.954861346877]] ± [[1000000000.0 ... 1000000000.0]] m⁻¹
+  [FILE_ID_HERE/sasentry01/data/Imask] [[True ... True]] m⁻¹
+  [FILE_ID_HERE/sasentry01/data/Q] [[[-0.10733919639695527 ... 0.0]]] Å⁻¹
 Metadata:
 
-  , Run: 
-  =======
+  Qais oriented iron test 1, Run: 12345
+  =====================================
 
-Definition: 
+Definition: Qais oriented iron test 1
 Process:
     Name: None
     Date: None
@@ -33,7 +36,7 @@ Detector:
    Pixel size:   None
    Slit length:  None
 Source:
-    Radiation:         neutron
+    Radiation:         None
     Shape:             None
     Wavelength:        None
     Min. Wavelength:   None
@@ -45,3 +48,4 @@ Transmission Spectrum:
     Timestamp:        None
     Wavelengths:      None
     Transmission:     None
+
