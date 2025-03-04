@@ -1,7 +1,4 @@
 sasentry01
-  Qy
-  Qx
-  I
 Metadata:
 
   MH4_5deg_16T_SLOW, Run: 33837
@@ -9,29 +6,27 @@ Metadata:
 
 Definition: MH4_5deg_16T_SLOW
 Process:
-    Name: Mantid generated CanSAS1D XML
-    Date: 11-May-2016 12:15:34
+    Name: None
+    Date: None
     Description: None
+    Term: None
+    Notes: None
 Sample:
-   ID:           
+   ID:           None
    Transmission: None
    Thickness:    None
    Temperature:  None
    Position:     None
    Orientation:  None
+Aperture:
+  Name: None
+  Aperture size: None
+  Aperture distance: None
 Collimation:
    Length: None
 Detector:
-   Name:         front-detector
-   Distance:     2845.260009765625 mm
-   Offset:       None
-   Orientation:  None
-   Beam center:  None
-   Pixel size:   None
-   Slit length:  None
-Detector:
-   Name:         rear-detector
-   Distance:     4385.27978515625 mm
+   Name:         None
+   Distance:     None
    Offset:       None
    Orientation:  None
    Beam center:  None
@@ -45,3 +40,8 @@ Source:
     Max. Wavelength:   None
     Wavelength Spread: None
     Beam Size:         None
+Transmission Spectrum:
+    Name:             None
+    Timestamp:        None
+    Wavelengths:      None
+    Transmission:     None
