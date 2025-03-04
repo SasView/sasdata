@@ -1,24 +1,31 @@
 sasentry01
-  Qy
-  Qx
-  I
 Metadata:
 
   MAR07232_rest_out.dat, Run: 2
   =============================
 
 Definition: MAR07232_rest_out.dat
+Process:
+    Name: None
+    Date: None
+    Description: None
+    Term: None
+    Notes: None
 Sample:
-   ID:           
-   Transmission: 0.84357
+   ID:           None
+   Transmission: [0.84357]
    Thickness:    None
    Temperature:  None
    Position:     None
    Orientation:  None
+Aperture:
+  Name: None
+  Aperture size: None
+  Aperture distance: None
 Collimation:
    Length: None
 Detector:
-   Name:         
+   Name:         None
    Distance:     None
    Offset:       None
    Orientation:  None
@@ -33,3 +40,8 @@ Source:
     Max. Wavelength:   None
     Wavelength Spread: None
     Beam Size:         None
+Transmission Spectrum:
+    Name:             None
+    Timestamp:        None
+    Wavelengths:      None
+    Transmission:     None
