@@ -1,13 +1,16 @@
 sasentry01
+  [FILE_ID_HERE/sasentry01/sasdata/I] [[0.0 ... 0.0]] ± [[0.0 ... 0.0]] cm⁻¹
+  [FILE_ID_HERE/sasentry01/sasdata/Qx] [[-0.11925 ... 0.11925000000000001]] Å⁻¹
+  [FILE_ID_HERE/sasentry01/sasdata/Qy] [[-0.11925 ... 0.11925000000000001]] Å⁻¹
 Metadata:
 
-  , Run: 
-  =======
+  High C high V 63, 900oC, 10h 1.65T_SANS, Run: 14250
+  ===================================================
 
-Definition: 
+Definition: High C high V 63, 900oC, 10h 1.65T_SANS
 Process:
-    Name: None
-    Date: None
+    Name: Mantid_generated_NXcanSAS
+    Date: 2016-12-06T17:15:48
     Description: None
     Term: None
     Notes: None
@@ -33,7 +36,7 @@ Detector:
    Pixel size:   None
    Slit length:  None
 Source:
-    Radiation:         neutron
+    Radiation:         Spallation Neutron Source
     Shape:             None
     Wavelength:        None
     Min. Wavelength:   None
@@ -45,3 +48,4 @@ Transmission Spectrum:
     Timestamp:        None
     Wavelengths:      None
     Transmission:     None
+

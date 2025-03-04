@@ -147,8 +147,8 @@ def load_data(filename) -> list[SasData]:
 
 
 
+if __name__ == "__main__":
+    data = load_data(test_file)
 
-data = load_data(test_file)
-
-for dataset in data:
-    print(dataset.summary(include_raw=False))
+    for dataset in data:
+        print(dataset.summary(include_raw=False))
