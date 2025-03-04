@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from sasdata.dataset_types import DatasetType
+from sasdata.dataset_types import DatasetType, one_dim
 from sasdata.quantities.quantity import NamedQuantity, Quantity
 from sasdata.metadata import Metadata
 from sasdata.quantities.accessors import AccessorTarget
@@ -35,13 +35,22 @@ class SasData:
         self.mask = None # TODO: fill out
         self.model_requirements = None # TODO: fill out
 
+    # TODO: Handle the other data types.
     @property
     def ordinate(self) -> Quantity:
-        raise NotImplementedError()
+        match self.dataset_type:
+            case one_dim:
+                return self._data_contents['Q']
+            # TODO: idk the other ones.
+        # Let's ignore in the type hinting that this can happen for now.
+        return None
 
     @property
-    def abscissae(self) -> list[Quantity]:
-        raise NotImplementedError()
+    def abscissae(self) -> Quantity:
+        match self.dataset_type:
+            case one_dim:
+                return self._data_contents['I']
+        return None
 
     def __getitem__(self, item: str):
         return self._data_contents[item]
