@@ -1,0 +1,47 @@
+sasentry01
+Metadata:
+
+  MAR07232_rest_out.dat, Run: 2
+  =============================
+
+Definition: MAR07232_rest_out.dat
+Process:
+    Name: None
+    Date: None
+    Description: None
+    Term: None
+    Notes: None
+Sample:
+   ID:           None
+   Transmission: [0.84357]
+   Thickness:    None
+   Temperature:  None
+   Position:     None
+   Orientation:  None
+Aperture:
+  Name: None
+  Aperture size: None
+  Aperture distance: None
+Collimation:
+   Length: None
+Detector:
+   Name:         None
+   Distance:     None
+   Offset:       None
+   Orientation:  None
+   Beam center:  None
+   Pixel size:   None
+   Slit length:  None
+Source:
+    Radiation:         neutron
+    Shape:             None
+    Wavelength:        None
+    Min. Wavelength:   None
+    Max. Wavelength:   None
+    Wavelength Spread: None
+    Beam Size:         None
+Transmission Spectrum:
+    Name:             None
+    Timestamp:        None
+    Wavelengths:      None
+    Transmission:     None
