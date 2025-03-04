@@ -22,6 +22,8 @@ Aperture:
   Name: None
   Aperture size: None
   Aperture distance: None
+Collimation:
+   Length: None
 Detector:
    Name:         None
    Distance:     None
@@ -38,3 +40,9 @@ Source:
     Max. Wavelength:   None
     Wavelength Spread: None
     Beam Size:         None
+Transmission Spectrum:
+    Name:             None
+    Timestamp:        None
+    Wavelengths:      None
+    Transmission:     None
+

@@ -22,6 +22,8 @@ Aperture:
   Name: None
   Aperture size: None
   Aperture distance: None
+Collimation:
+   Length: None
 Detector:
    Name:         None
    Distance:     None
