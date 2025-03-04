@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 from dataclasses import dataclass
 from typing import Self
 from sasdata.data import SasData
