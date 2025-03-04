@@ -10,7 +10,6 @@ initial_metadata = {
     'process': ['name', 'date', 'description', 'term', 'notes'],
     'sample': ['name', 'sample_id', 'thickness', 'transmission', 'temperature', 'position', 'orientation', 'details'],
     'transmission_spectrum': ['name', 'timestamp', 'transmission', 'transmission_deviation'],
-    # TODO: These will be elsewhere but just putting them into one category for now.
     'magnetic': ['demagnetizing_field', 'saturation_magnetization', 'applied_magnetic_field', 'counting_index'],
     'other': ['title', 'run', 'definition']
 }
