@@ -1,0 +1,47 @@
+sasentry01
+Metadata:
+
+  MH4_5deg_16T_SLOW, Run: 33837
+  =============================
+
+Definition: MH4_5deg_16T_SLOW
+Process:
+    Name: None
+    Date: None
+    Description: None
+    Term: None
+    Notes: None
+Sample:
+   ID:           None
+   Transmission: None
+   Thickness:    None
+   Temperature:  None
+   Position:     None
+   Orientation:  None
+Aperture:
+  Name: None
+  Aperture size: None
+  Aperture distance: None
+Collimation:
+   Length: None
+Detector:
+   Name:         None
+   Distance:     None
+   Offset:       None
+   Orientation:  None
+   Beam center:  None
+   Pixel size:   None
+   Slit length:  None
+Source:
+    Radiation:         Spallation Neutron Source
+    Shape:             None
+    Wavelength:        None
+    Min. Wavelength:   None
+    Max. Wavelength:   None
+    Wavelength Spread: None
+    Beam Size:         None
+Transmission Spectrum:
+    Name:             None
+    Timestamp:        None
+    Wavelengths:      None
+    Transmission:     None
