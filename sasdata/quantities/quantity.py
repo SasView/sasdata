@@ -1228,7 +1228,7 @@ class Quantity[QuantityType]:
         return {
             "value": quantity_type_serialisation(self.value),
             "units": self.units.serialise_json(), # Unit serialisation
-            "standard_error": quantity_type_serialisation(self._variance ** 0.5),
+            "variance": quantity_type_serialisation(self._variance),
             "hash_seed": self._hash_seed, # is this just a string?
             "history": self.history.serialise_json()
         }
