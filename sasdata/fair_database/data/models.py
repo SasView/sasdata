@@ -44,26 +44,25 @@ class DataFile(Data):
 class DataSet(Data):
     """Database model for a set of data and associated metadata."""
 
+    # TODO: Update when plan for this is finished.
+
     # dataset name
     name = models.CharField(max_length=200)
 
     # associated files
     files = models.ManyToManyField(DataFile)
 
-    # metadata
+    # metadata - maybe a foreign key?
     metadata = models.OneToOneField("MetaData", on_delete=models.CASCADE)
 
     # ordinate
-    # ordinate = models.JSONField()
+    # ordinate = models.ForeignKey("Quantity", on_delete=models.CASCADE)
 
     # abscissae
-    # abscissae = models.JSONField()
+    # abscissae = models.ManyToManyField("Quantity", on_delete=models.CASCADE)
 
-    # data contents
+    # data contents - maybe ManyToManyField
     # data_contents = models.JSONField()
-
-    # metadata
-    # raw_metadata = models.JSONField()
 
 
 class Quantity(models.Model):
@@ -85,13 +84,30 @@ class Quantity(models.Model):
 class MetaData(models.Model):
     """Database model for scattering metadata"""
 
-    # Associated data set
-    # dataset = models.OneToOneField(
-    #    "DataSet", on_delete=models.CASCADE, related_name="associated_data"
-    # )
+    # title
+    title = models.CharField(max_length=500, default="Title")
 
+    # run
+    # TODO: find out if this is expected to be long
+    run = models.CharField(max_length=500, blank=True, null=True)
 
-"""Database model for group of DataSets associated by a varying parameter."""
+    # definition
+    definition = models.TextField(blank=True, null=True)
+
+    # instrument
+    instrument = models.JSONField(blank=True, null=True)
+
+    # process
+    process = models.JSONField(blank=True, null=True)
+
+    # sample
+    sample = models.JSONField(blank=True, null=True)
+
+    # transmission spectrum
+    transmission_spectrum = models.JSONField(blank=True, null=True)
+
+    # raw metadata (for recreating in SasView only)
+    raw_metadata = models.JSONField(default=dict)
 
 
 class OperationTree(models.Model):
@@ -117,4 +133,15 @@ class Session(Data):
 
     # operation tree
     # operations = models.ForeignKey(OperationTree, on_delete=models.CASCADE)
+
+class PublishedState():
+    """Database model for a project published state."""
+
+    # published
+    published = models.BooleanField(default=False)
+
+    # doi
+    doi = models.URLField()
+
+
 '''
