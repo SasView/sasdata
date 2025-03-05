@@ -21,8 +21,8 @@ def test_1d():
 
     data = SasData('TestData', data_contents, one_dim, Group('root', {}), True)
 
-    assert all(data.abscissae.value == np.array(q_quantity))
-    assert all(data.ordinate.value == np.array(i_quantity))
+    assert all(data.abscissae.value == np.array(q))
+    assert all(data.ordinate.value == np.array(i))
 
 
 def test_2d():
