@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from sasdata.quantities.quantity import NamedQuantity, Quantity
-from sasdata.metadata import Metadata
+from sasdata.metadata import Metadata, Instrument
 from sasdata.quantities.accessors import AccessorTarget
 from sasdata.data_backing import Group, key_tree
 
@@ -14,6 +14,7 @@ class SasData:
     def __init__(self, name: str,
                  data_contents: list[Quantity],
                  raw_metadata: Group,
+                 instrument: Instrument,
                  verbose: bool=False):
 
         self.name = name
@@ -21,7 +22,7 @@ class SasData:
         self._raw_metadata = raw_metadata
         self._verbose = verbose
 
-        self.metadata = Metadata(AccessorTarget(raw_metadata, verbose=verbose))
+        self.metadata = Metadata(AccessorTarget(raw_metadata, verbose=verbose), instrument)
 
         # Components that need to be organised after creation
         self.mask = None # TODO: fill out
