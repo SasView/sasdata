@@ -140,7 +140,7 @@ class DataListPermissionsTests(APITestCase):
         response = self.client.post(
             "/v1/data/upload/", data=data, headers=auth_header(token)
         )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(
             response.data,
             {
@@ -161,7 +161,7 @@ class DataListPermissionsTests(APITestCase):
         data2 = {"file": file2, "is_public": False}
         response = self.client.post("/v1/data/upload/", data=data)
         response2 = self.client.post("/v1/data/upload/", data=data2)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(
             response.data,
             {

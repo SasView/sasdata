@@ -10,6 +10,7 @@ from django.http import (
 )
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework import status
 
 from sasdata.dataloader.loader import Loader
 from data.serializers import DataFileSerializer, AccessManagementSerializer
@@ -58,7 +59,9 @@ def data_info(request, db_id, version=None):
 @api_view(["POST", "PUT"])
 def upload(request, data_id=None, version=None):
     # saves file
+    response_status = status.HTTP_200_OK
     if request.method in ["POST", "PUT"] and data_id is None:
+        response_status = status.HTTP_201_CREATED
         form = DataFileForm(request.data, request.FILES)
         if form.is_valid():
             form.save()
@@ -115,7 +118,7 @@ def upload(request, data_id=None, version=None):
         "file_alternative_name": serializer.data["file_name"],
         "is_public": serializer.data["is_public"],
     }
-    return Response(return_data)
+    return Response(return_data, status=response_status)
 
 
 # view or control who has access to a file

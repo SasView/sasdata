@@ -92,7 +92,7 @@ class TestingDatabase(APITestCase):
         file = open(find("cyl_400_40.txt"), "rb")
         data = {"is_public": False, "file": file}
         request = self.client.post("/v1/data/upload/", data=data)
-        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertEqual(request.status_code, status.HTTP_201_CREATED)
         self.assertEqual(
             request.data,
             {
@@ -110,7 +110,7 @@ class TestingDatabase(APITestCase):
         file = open(find("cyl_400_40.txt"), "rb")
         data = {"is_public": True, "file": file}
         request = self.client2.post("/v1/data/upload/", data=data)
-        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertEqual(request.status_code, status.HTTP_201_CREATED)
         self.assertEqual(
             request.data,
             {
