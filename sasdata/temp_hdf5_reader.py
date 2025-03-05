@@ -110,16 +110,14 @@ def connected_data(node: SASDataGroup, name_prefix="") -> list[NamedQuantity]:
 
 
 def parse_collimations(node) -> list[Collimation]:
-    if "sasinstrument" not in node["sasentry01"]:
-        return []
     return [
         Collimation(name=None, length=x)
-        for x in node["sasentry01"]["sasinstrument"]["sascollimation01"]
+        for x in node if "collimation" in x
     ]
 
 
 def parse_instrument(raw, node) -> Instrument:
-    collimations = parse_collimations(node)
+    collimations = parse_collimations(node["sasinstrument"])
     return Instrument(raw, collimations=collimations)
 
 
@@ -155,7 +153,7 @@ def load_data(filename) -> list[SasData]:
                     data_contents=data_contents,
                     raw_metadata=SASDataGroup("root", raw_metadata),
                     instrument=parse_instrument(
-                        AccessorTarget(SASDataGroup("root", raw_metadata)).with_path_prefix("sasinstrument|instrument"), f
+                        AccessorTarget(SASDataGroup("root", raw_metadata)).with_path_prefix("sasinstrument|instrument"), f["sasentry01"]
                     ),
                     verbose=False,
                 )
