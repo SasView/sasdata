@@ -1,8 +1,10 @@
 from tokenize import String
+from typing import Optional
 
 import numpy as np
 from numpy.typing import ArrayLike
 
+from sasdata.quantities.quantity import Quantity
 import sasdata.quantities.units as units
 from sasdata.quantities.absolute_temperature import AbsoluteTemperatureAccessor
 from sasdata.quantities.accessors import StringAccessor, LengthAccessor, AngleAccessor, QuantityAccessor, \
@@ -67,48 +69,41 @@ class Detector:
 
 class Aperture:
 
-    def __init__(self, target_object: AccessorTarget):
+    def __init__(self, distance: Optional[Quantity[float]], size: Optional[tuple[ Optional[Quantity[float]], Optional[Quantity[float]], Optional[Quantity[float]] ]], size_name: Optional[str], name: Optional[str], apType: Optional[str]):
 
         # Name
-        self.name = StringAccessor(target_object, "name")
+        self.name = name
 
         # Type
-        self.type = StringAccessor(target_object, "type")
+        self.type = apType
 
         # Size name - TODO: What is the name of a size
-        self.size_name = StringAccessor(target_object, "size_name")
+        self.size_name = size_name
 
         # Aperture size [Vector] # TODO: Wat!?!
-        self.size = QuantityAccessor[ArrayLike](target_object,
-                                "size",
-                                "size.units",
-                                default_unit=units.millimeters)
+        self.size = size
 
         # Aperture distance [float]
-        self.distance = LengthAccessor[float](target_object,
-                                    "distance",
-                                    "distance.units",
-                                    default_unit=units.millimeters)
+        self.distance = distance
 
 
     def summary(self):
         return (f"Aperture:\n"
-                f"  Name: {self.name.value}\n"
-                f"  Aperture size: {self.size.value}\n"
-                f"  Aperture distance: {self.distance.value}\n")
+                f"  Name: {self.name}\n"
+                f"  Aperture size: {self.size}\n"
+                f"  Aperture distance: {self.distance}\n")
 
 class Collimation:
     """
     Class to hold collimation information
     """
 
-    def __init__(self, name, length):
+    def __init__(self, length: Quantity[float], apertures: list[Aperture]):
 
-        # Name
-        self.name = name
         # Length [float] [mm]
         self.length = length
         # TODO - parse units properly
+        self.apertures = apertures
 
     def summary(self):
 
@@ -332,15 +327,13 @@ class TransmissionSpectrum:
 
 class Instrument:
     def __init__(self, target: AccessorTarget, collimations: list[Collimation]):
-        self.aperture = Aperture(target.with_path_prefix("sasaperture|aperture"))
         self.collimations = collimations
         self.detector = Detector(target.with_path_prefix("sasdetector|detector"))
         self.source = Source(target.with_path_prefix("sassource|source"))
 
     def summary(self):
         return (
-            self.aperture.summary() +
-            "\n".join([c.summary for c in self.collimations]) +
+            "\n".join([c.summary() for c in self.collimations]) +
             self.detector.summary() +
             self.source.summary())
 
