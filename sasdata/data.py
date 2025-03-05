@@ -50,7 +50,7 @@ class SasData:
             return self._data_contents['Q']
         elif self.dataset_type == two_dim:
             # Type hinting is a bit lacking. Assume each part of the zip is a scalar value.
-            data_contents = zip(self._data_contents['Qx'].value, self._data_contents['Qy'].value)
+            data_contents = np.array(list(zip(self._data_contents['Qx'].value, self._data_contents['Qy'].value)))
             # Use this value to extract units etc. Assume they will be the same for Qy.
             reference_data_content = self._data_contents['Qx']
             # TODO: If this is a derived quantity then we are going to lose that
