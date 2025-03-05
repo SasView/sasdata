@@ -13,7 +13,7 @@ from h5py._hl.group import Group as HDF5Group
 
 from sasdata.data import SasData
 from sasdata.data_backing import Dataset as SASDataDataset, Group as SASDataGroup
-from sasdata.metadata import Instrument, Collimation
+from sasdata.metadata import Instrument, Collimation, Aperture
 from sasdata.quantities.accessors import AccessorTarget
 
 from sasdata.quantities.quantity import NamedQuantity
@@ -22,8 +22,8 @@ from sasdata.quantities.unit_parser import parse
 
 # test_file = "./example_data/1d_data/33837rear_1D_1.75_16.5_NXcanSAS_v3.h5"
 # test_file = "./example_data/1d_data/33837rear_1D_1.75_16.5_NXcanSAS.h5"
-# test_file = "./example_data/2d_data/BAM_2D.h5"
-test_file = "./example_data/2d_data/14250_2D_NoDetInfo_NXcanSAS_v3.h5"
+test_file = "./example_data/2d_data/BAM_2D.h5"
+# test_file = "./example_data/2d_data/14250_2D_NoDetInfo_NXcanSAS_v3.h5"
 # test_file = "./example_data/2d_data/33837rear_2D_1.75_16.5_NXcanSAS_v3.h5"
 
 logger = logging.getLogger(__name__)
@@ -108,16 +108,41 @@ def connected_data(node: SASDataGroup, name_prefix="") -> list[NamedQuantity]:
 
     return output
 
+def parse_apertures(node) -> list[Aperture]:
+    result = []
+    aps = [a for a in node if "aperture" in a]
+    for ap in aps:
+        distance = None
+        size = None
+        if "distance" in node[ap]:
+            distance = node[ap]["distance"]
+        if "size" in node[ap]:
+            x = y = z = None
+            if "x" in node[ap]:
+                x = node[ap]["size"]["x"]
+            if "y" in node[ap]:
+                y = node[ap]["size"]["y"]
+            if "z" in node[ap]:
+                z = node[ap]["size"]["z"]
+            if x is not None or y is not None or z is not None:
+                size = (x, y, z)
+        result.append(Aperture(distance=distance, size=size, size_name=size_name, name=name, apType=apType))
+    return result
 
-def parse_collimations(node) -> list[Collimation]:
-    return [
-        Collimation(name=None, length=x)
-        for x in node if "collimation" in x
-    ]
+
+def parse_collimation(node) -> Collimation:
+    if "length" in node:
+        length = node["length"]
+    else:
+        length = None
+    return Collimation(length=length, apertures=parse_apertures(node))
 
 
 def parse_instrument(raw, node) -> Instrument:
-    collimations = parse_collimations(node["sasinstrument"])
+    if "sasinstrument" in node:
+        collimations = [parse_collimation(node["sasinstrument"][x]) for x in node["sasinstrument"] if "collimation" in x]
+    else:
+        collimations=[]
     return Instrument(raw, collimations=collimations)
 
 
