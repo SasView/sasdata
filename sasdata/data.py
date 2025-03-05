@@ -40,7 +40,7 @@ class SasData:
     def ordinate(self) -> Quantity:
         match self.dataset_type:
             case one_dim:
-                return self._data_contents['Q']
+                return self._data_contents['I']
             # TODO: idk the other ones.
         # Let's ignore in the type hinting that this can happen for now.
         return None
@@ -49,7 +49,7 @@ class SasData:
     def abscissae(self) -> Quantity:
         match self.dataset_type:
             case one_dim:
-                return self._data_contents['I']
+                return self._data_contents['Q']
         return None
 
     def __getitem__(self, item: str):
