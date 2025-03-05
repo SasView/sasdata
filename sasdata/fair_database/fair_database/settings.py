@@ -113,6 +113,8 @@ HEADLESS_ONLY = True
 ACCOUNT_EMAIL_VERIFICATION = "none"
 
 # to enable ORCID, register for credentials through ORCID and fill out client_id and secret
+# https://info.orcid.org/documentation/integration-guide/
+# https://docs.allauth.org/en/latest/socialaccount/index.html
 SOCIALACCOUNT_PROVIDERS = {
     "orcid": {
         "APPS": [
