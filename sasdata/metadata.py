@@ -102,26 +102,20 @@ class Collimation:
     Class to hold collimation information
     """
 
-    def __init__(self, target_object: AccessorTarget):
+    def __init__(self, name, length):
 
         # Name
-        self.name = StringAccessor(target_object, "name")
+        self.name = name
         # Length [float] [mm]
-        self.length = LengthAccessor[float](target_object,
-                                              "length",
-                                              "length.units",
-                                              default_unit=units.millimeters)
-
-
-        # Todo - how do we handle this
-        # self.collimator = Collimation(target_object)
+        self.length = length
+        # TODO - parse units properly
 
     def summary(self):
 
         #TODO collimation stuff
         return (
             f"Collimation:\n"
-            f"   Length: {self.length.value}\n")
+            f"   Length: {self.length}\n")
 
 
 
@@ -337,16 +331,16 @@ class TransmissionSpectrum:
 
 
 class Instrument:
-    def __init__(self, target: AccessorTarget):
+    def __init__(self, target: AccessorTarget, collimations: list[Collimation]):
         self.aperture = Aperture(target.with_path_prefix("sasaperture|aperture"))
-        self.collimation = Collimation(target.with_path_prefix("sascollimation|collimation"))
+        self.collimations = collimations
         self.detector = Detector(target.with_path_prefix("sasdetector|detector"))
         self.source = Source(target.with_path_prefix("sassource|source"))
 
     def summary(self):
         return (
             self.aperture.summary() +
-            self.collimation.summary() +
+            "\n".join([c.summary for c in self.collimations]) +
             self.detector.summary() +
             self.source.summary())
 
@@ -375,10 +369,10 @@ def decode_string(data):
         return str(data)
 
 class Metadata:
-    def __init__(self, target: AccessorTarget):
+    def __init__(self, target: AccessorTarget, instrument: Instrument):
         self._target = target
 
-        self.instrument = Instrument(target.with_path_prefix("sasinstrument|instrument"))
+        self.instrument = instrument
         self.process = Process(target.with_path_prefix("sasprocess|process"))
         self.sample = Sample(target.with_path_prefix("sassample|sample"))
         self.transmission_spectrum = TransmissionSpectrum(target.with_path_prefix("sastransmission_spectrum|transmission_spectrum"))
