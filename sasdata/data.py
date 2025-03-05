@@ -6,7 +6,7 @@ import numpy as np
 
 from sasdata.dataset_types import DatasetType, one_dim, two_dim
 from sasdata.quantities.quantity import NamedQuantity, Quantity
-from sasdata.metadata import Metadata
+from sasdata.metadata import Metadata, Instrument
 from sasdata.quantities.accessors import AccessorTarget
 from sasdata.data_backing import Group, key_tree
 
@@ -16,6 +16,7 @@ class SasData:
                  data_contents: dict[str, Quantity],
                  dataset_type: DatasetType,
                  raw_metadata: Group,
+                 instrument: Instrument,
                  verbose: bool=False):
 
         self.name = name
@@ -26,7 +27,7 @@ class SasData:
         self._raw_metadata = raw_metadata
         self._verbose = verbose
 
-        self.metadata = Metadata(AccessorTarget(raw_metadata, verbose=verbose))
+        self.metadata = Metadata(AccessorTarget(raw_metadata, verbose=verbose), instrument)
 
         # TODO: Could this be optional?
         self.dataset_type: DatasetType = dataset_type
