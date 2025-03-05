@@ -18,10 +18,6 @@ Sample:
    Temperature:  None
    Position:     None
    Orientation:  None
-Aperture:
-  Name: None
-  Aperture size: None
-  Aperture distance: None
 Detector:
    Name:         None
    Distance:     None
