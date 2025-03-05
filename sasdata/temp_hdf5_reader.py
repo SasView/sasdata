@@ -13,6 +13,8 @@ from h5py._hl.group import Group as HDF5Group
 
 from sasdata.data import SasData
 from sasdata.data_backing import Dataset as SASDataDataset, Group as SASDataGroup
+from sasdata.metadata import Instrument, Collimation
+from sasdata.quantities.accessors import AccessorTarget
 
 from sasdata.quantities.quantity import NamedQuantity
 from sasdata.quantities import units
@@ -107,13 +109,25 @@ def connected_data(node: SASDataGroup, name_prefix="") -> list[NamedQuantity]:
     return output
 
 
-def load_data(filename) -> list[SasData]:
-    with h5py.File(filename, 'r') as f:
+def parse_collimations(node) -> list[Collimation]:
+    if "sasinstrument" not in node["sasentry01"]:
+        return []
+    return [
+        Collimation(name=None, length=x)
+        for x in node["sasentry01"]["sasinstrument"]["sascollimation01"]
+    ]
 
+
+def parse_instrument(raw, node) -> Instrument:
+    collimations = parse_collimations(node)
+    return Instrument(raw, collimations=collimations)
+
+
+def load_data(filename) -> list[SasData]:
+    with h5py.File(filename, "r") as f:
         loaded_data: list[SasData] = []
 
         for root_key in f.keys():
-
             entry = f[root_key]
 
             data_contents = []
@@ -135,16 +149,19 @@ def load_data(filename) -> list[SasData]:
                 else:
                     raw_metadata[key] = recurse_hdf5(component)
 
-
             loaded_data.append(
                 SasData(
                     name=root_key,
                     data_contents=data_contents,
                     raw_metadata=SASDataGroup("root", raw_metadata),
-                    verbose=False))
+                    instrument=parse_instrument(
+                        AccessorTarget(SASDataGroup("root", raw_metadata)).with_path_prefix("sasinstrument|instrument"), f
+                    ),
+                    verbose=False,
+                )
+            )
 
         return loaded_data
-
 
 
 if __name__ == "__main__":
