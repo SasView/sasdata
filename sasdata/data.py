@@ -58,7 +58,7 @@ class SasData:
             # TODO: Won't work when there's errors involved. On reflection, we
             # probably want to avoid creating a new Quantity but at the moment I
             # can't see a way around it.
-            return Quantity(data_contents, reference_data_content.Units)
+            return Quantity(data_contents, reference_data_content.units)
         return None
 
     def __getitem__(self, item: str):
