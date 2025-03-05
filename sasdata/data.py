@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from sasdata.dataset_types import DatasetType, one_dim
+from sasdata.dataset_types import DatasetType, one_dim, two_dim
 from sasdata.quantities.quantity import NamedQuantity, Quantity
 from sasdata.metadata import Metadata
 from sasdata.quantities.accessors import AccessorTarget
@@ -38,18 +38,16 @@ class SasData:
     # TODO: Handle the other data types.
     @property
     def ordinate(self) -> Quantity:
-        match self.dataset_type:
-            case one_dim:
-                return self._data_contents['I']
-            # TODO: idk the other ones.
-        # Let's ignore in the type hinting that this can happen for now.
+        if self.dataset_type == one_dim or self.dataset_type == two_dim:
+            return self._data_contents['I']
+        # TODO: seesans
+        # Let's ignore that this method can return None for now.
         return None
 
     @property
     def abscissae(self) -> Quantity:
-        match self.dataset_type:
-            case one_dim:
-                return self._data_contents['Q']
+        if self.dataset_type == one_dim:
+            return self._data_contents['Q']
         return None
 
     def __getitem__(self, item: str):
