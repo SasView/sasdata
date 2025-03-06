@@ -207,6 +207,20 @@ class TestingDatabase(APITestCase):
         request = self.client1.get("/v1/data/5/download/")
         self.assertEqual(request.status_code, status.HTTP_404_NOT_FOUND)
 
+    # Test deleting a file
+    def test_delete(self):
+        DataFile.objects.create(
+            id=6, current_user=self.user, file_name="test.txt", is_public=False
+        )
+        request = self.client1.delete("/v1/data/delete/6/")
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertFalse(DataFile.objects.filter(pk=6).exists())
+
+    # Test deleting a file fails when unauthorized
+    def test_delete_unauthorized(self):
+        request = self.client2.delete("/v1/data/delete/1/")
+        self.assertEqual(request.status_code, status.HTTP_403_FORBIDDEN)
+
     @classmethod
     def tearDownClass(cls):
         cls.user.delete()
