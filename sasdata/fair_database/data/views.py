@@ -152,6 +152,16 @@ def manage_access(request, data_id, version=None):
     return HttpResponseBadRequest()
 
 
+# delete a file
+@api_view(["DELETE"])
+def delete(request, data_id, version=None):
+    db = get_object_or_404(DataFile, id=data_id)
+    if not permissions.is_owner(request, db):
+        return HttpResponseForbidden("Must be the data owner to delete")
+    db.delete()
+    return Response(data={"success": True})
+
+
 # downloads a file
 @api_view(["GET"])
 def download(request, data_id, version=None):
