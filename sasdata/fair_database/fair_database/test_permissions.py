@@ -22,37 +22,38 @@ def auth_header(response):
 class DataListPermissionsTests(APITestCase):
     """Test permissions of data views using user_app for authentication."""
 
-    def setUp(self):
-        self.user = User.objects.create_user(
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create_user(
             username="testUser", password="secret", id=1, email="email@domain.com"
         )
-        self.user2 = User.objects.create_user(
+        cls.user2 = User.objects.create_user(
             username="testUser2", password="secret", id=2, email="email2@domain.com"
         )
-        unowned_test_data = DataFile.objects.create(
+        cls.unowned_test_data = DataFile.objects.create(
             id=1, file_name="cyl_400_40.txt", is_public=True
         )
-        unowned_test_data.file.save(
+        cls.unowned_test_data.file.save(
             "cyl_400_40.txt", open(find("cyl_400_40.txt"), "rb")
         )
-        private_test_data = DataFile.objects.create(
-            id=2, current_user=self.user, file_name="cyl_400_20.txt", is_public=False
+        cls.private_test_data = DataFile.objects.create(
+            id=2, current_user=cls.user, file_name="cyl_400_20.txt", is_public=False
         )
-        private_test_data.file.save(
+        cls.private_test_data.file.save(
             "cyl_400_20.txt", open(find("cyl_400_20.txt"), "rb")
         )
-        public_test_data = DataFile.objects.create(
-            id=3, current_user=self.user, file_name="cyl_testdata.txt", is_public=True
+        cls.public_test_data = DataFile.objects.create(
+            id=3, current_user=cls.user, file_name="cyl_testdata.txt", is_public=True
         )
-        public_test_data.file.save(
+        cls.public_test_data.file.save(
             "cyl_testdata.txt", open(find("cyl_testdata.txt"), "rb")
         )
-        self.login_data_1 = {
+        cls.login_data_1 = {
             "username": "testUser",
             "password": "secret",
             "email": "email@domain.com",
         }
-        self.login_data_2 = {
+        cls.login_data_2 = {
             "username": "testUser2",
             "password": "secret",
             "email": "email2@domain.com",
@@ -268,5 +269,11 @@ class DataListPermissionsTests(APITestCase):
         self.assertEqual(response2.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(response3.status_code, status.HTTP_200_OK)
 
-    def tearDown(self):
+    @classmethod
+    def tearDownClass(cls):
+        cls.user.delete()
+        cls.user2.delete()
+        cls.public_test_data.delete()
+        cls.private_test_data.delete()
+        cls.unowned_test_data.delete()
         shutil.rmtree(settings.MEDIA_ROOT)
