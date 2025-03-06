@@ -10,6 +10,7 @@ class AuthTests(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.client1 = APIClient()
+        cls.client2 = APIClient()
         cls.register_data = {
             "email": "email@domain.org",
             "username": "testUser",
@@ -29,6 +30,8 @@ class AuthTests(TestCase):
         cls.user = User.objects.create_user(
             id=1, username="testUser2", password="sasview!", email="email2@domain.org"
         )
+        cls.client3 = APIClient()
+        cls.client3.force_authenticate(user=cls.user)
 
     def auth_header(self, response):
         return {"Authorization": "Token " + response.data["token"]}
@@ -52,17 +55,15 @@ class AuthTests(TestCase):
 
     # Test simultaneous login by multiple clients
     def test_multiple_login(self):
-        client2 = APIClient()
         response = self.client1.post("/auth/login/", data=self.login_data_2)
-        response2 = client2.post("/auth/login/", data=self.login_data_2)
+        response2 = self.client2.post("/auth/login/", data=self.login_data_2)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response2.status_code, status.HTTP_200_OK)
         self.assertNotEqual(response.content, response2.content)
 
     # Test get user information
     def test_user_get(self):
-        self.client1.force_authenticate(user=self.user)
-        response = self.client1.get("/auth/user/")
+        response = self.client3.get("/auth/user/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
             response.content,
@@ -71,9 +72,8 @@ class AuthTests(TestCase):
 
     # Test changing username
     def test_user_put_username(self):
-        self.client1.force_authenticate(user=self.user)
         data = {"username": "newName"}
-        response = self.client1.put("/auth/user/", data=data)
+        response = self.client3.put("/auth/user/", data=data)
         self.user.username = "testUser2"
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
@@ -83,9 +83,8 @@ class AuthTests(TestCase):
 
     # Test changing username and first and last name
     def test_user_put_name(self):
-        self.client1.force_authenticate(user=self.user)
         data = {"username": "newName", "first_name": "Clark", "last_name": "Kent"}
-        response = self.client1.put("/auth/user/", data=data)
+        response = self.client3.put("/auth/user/", data=data)
         self.user.first_name = ""
         self.user.last_name = ""
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -123,12 +122,11 @@ class AuthTests(TestCase):
         self.assertEqual(response2.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_multiple_logout(self):
-        client2 = APIClient()
         self.client1.post("/auth/login/", data=self.login_data_2)
-        token = client2.post("/auth/login/", data=self.login_data_2)
+        token = self.client2.post("/auth/login/", data=self.login_data_2)
         response = self.client1.post("/auth/logout/")
-        response2 = client2.get("/auth/user/", headers=self.auth_header(token))
-        response3 = client2.post("/auth/logout/")
+        response2 = self.client2.get("/auth/user/", headers=self.auth_header(token))
+        response3 = self.client2.post("/auth/logout/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response2.status_code, status.HTTP_200_OK)
         self.assertEqual(response3.status_code, status.HTTP_200_OK)
@@ -147,23 +145,16 @@ class AuthTests(TestCase):
 
     # Test password is successfully changed
     def test_password_change(self):
-        token = self.client1.post("/auth/register/", data=self.register_data)
         data = {
             "new_password1": "sasview?",
             "new_password2": "sasview?",
             "old_password": "sasview!",
         }
-        l_data = self.login_data
-        l_data["password"] = "sasview?"
-        response = self.client1.post(
-            "/auth/password/change/", data=data, headers=self.auth_header(token)
-        )
-        logout_response = self.client1.post("/auth/logout/")
-        login_response = self.client1.post("/auth/login/", data=l_data)
-        l_data["password"] = "sasview!"
-        User.objects.get(username="testUser").delete()
+        self.login_data_2["password"] = "sasview?"
+        response = self.client3.post("/auth/password/change/", data=data)
+        login_response = self.client1.post("/auth/login/", data=self.login_data_2)
+        self.login_data_2["password"] = "sasview!"
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(logout_response.status_code, status.HTTP_200_OK)
         self.assertEqual(login_response.status_code, status.HTTP_200_OK)
 
 
