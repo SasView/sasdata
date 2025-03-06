@@ -10,4 +10,5 @@ urlpatterns = [
     path("upload/<data_id>/", views.upload, name="update file in data"),
     path("<int:data_id>/download/", views.download, name="download data from db"),
     path("manage/<int:data_id>/", views.manage_access, name="manage access to files"),
+    path("delete/<int:data_id>/", views.delete, name="delete file"),
 ]
