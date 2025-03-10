@@ -11,4 +11,6 @@ urlpatterns = [
     path("<int:data_id>/download/", views.download, name="download data from db"),
     path("manage/<int:data_id>/", views.manage_access, name="manage access to files"),
     path("delete/<int:data_id>/", views.delete, name="delete file"),
+    path("set/", views.DataSetView.as_view(), name="view, create, modify datasets"),
+    # path("set/<int:data_id>/", views.DataSetView.as_view()),
 ]
