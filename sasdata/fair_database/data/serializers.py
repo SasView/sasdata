@@ -20,6 +20,8 @@ class AccessManagementSerializer(serializers.Serializer):
 
 
 class DataSetSerializer(serializers.ModelSerializer):
+    # TODO: custom validation, maybe custom serialization handling of current_user
+    # TODO: account for nested serialization
     class Meta:
         model = DataSet
         fields = "__all__"

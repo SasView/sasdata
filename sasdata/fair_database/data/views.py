@@ -187,25 +187,32 @@ def download(request, data_id, version=None):
 
 
 class DataSetView(APIView):
+    """View associated with the DataSet model. Functionality for viewing a list of datasets and creating a dataset."""
+
     permission_classes = [DataPermission]
 
+    # get a list of accessible datasets
     def get(self, request, version=None):
-        # TODO: filter based on access
-        data = DataSet.objects.all()
         data_list = {"dataset_ids": {}}
-        for set in data:
-            data_list["dataset_ids"][set.id] = set.name
+        for dataset in DataSet.objects.all():
+            if permissions.check_permissions(request, dataset):
+                data_list["dataset_ids"][dataset.id] = dataset.name
         return Response(data=data_list)
 
+    # create a dataset
     def post(self, request, version=None):
         # TODO: JSON deserialization probably
+        # TODO: revisit request data format
         serializer = DataSetSerializer(data=request.data)
         db = None
-        None
         if serializer.is_valid():
             db = serializer.save()
         response = {"dataset_id": db.id, "name": db.name}
-        return Response(data=response)
+        return Response(data=response, status=status.HTTP_201_CREATED)
+
+    # create a dataset
+    def put(self, request, version=None):
+        return self.post(request, version)
 
 
 class SingleDataSetView(APIView):
