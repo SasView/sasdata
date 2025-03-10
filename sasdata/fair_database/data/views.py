@@ -199,7 +199,10 @@ class DataSetView(APIView):
     def get(self, request, version=None):
         # TODO: add filtering by at minimum the user
         data_list = {"dataset_ids": {}}
-        for dataset in DataSet.objects.all():
+        data = DataSet.objects.all()
+        if "username" in request.data:
+            data = DataSet.objects.filter(username=request.data["username"])
+        for dataset in data:
             if permissions.check_permissions(request, dataset):
                 data_list["dataset_ids"][dataset.id] = dataset.name
         return Response(data=data_list)
