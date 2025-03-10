@@ -187,12 +187,17 @@ def download(request, data_id, version=None):
 
 
 class DataSetView(APIView):
-    """View associated with the DataSet model. Functionality for viewing a list of datasets and creating a dataset."""
+    """
+    View associated with the DataSet model.
+
+    Functionality for viewing a list of datasets and creating a dataset.
+    """
 
     permission_classes = [DataPermission]
 
     # get a list of accessible datasets
     def get(self, request, version=None):
+        # TODO: add filtering by at minimum the user
         data_list = {"dataset_ids": {}}
         for dataset in DataSet.objects.all():
             if permissions.check_permissions(request, dataset):
@@ -216,16 +221,43 @@ class DataSetView(APIView):
 
 
 class SingleDataSetView(APIView):
+    """
+    View associated with single datasets.
+
+    Functionality for accessing a dataset in a format intended to be loaded
+    into SasView, modifying a dataset, or deleting a dataset.
+    """
+
     permission_classes = [DataPermission]
 
+    # get a specific dataset
     def get(self, request, data_id, version=None):
-        pass
+        db = get_object_or_404(DataSet, id=data_id)
+        if not permissions.check_permissions(request, db):
+            return HttpResponseForbidden(
+                "You do not have permission to view this dataset."
+            )
+        serializer = DataSetSerializer(db)
+        return Response(serializer.data)
 
+    # edit a specific dataset
     def put(self, request, data_id, version=None):
-        pass
+        db = get_object_or_404(DataSet, id=data_id)
+        if not permissions.check_permissions(request, db):
+            return HttpResponseForbidden("Cannot modify a dataset you do not own")
+        serializer = DataSetSerializer(db, request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+        data = {"data_id": db.id, "name": db.name, "is_public": db.is_public}
+        return Response(data)
 
+    # delete a dataset
     def delete(self, request, data_id, version=None):
-        pass
+        db = get_object_or_404(DataSet, id=data_id)
+        if not permissions.check_permissions(request, db):
+            return HttpResponseForbidden("Not authorized to delete")
+        db.delete()
+        return Response({"success": True})
 
 
 class DataSetUsersView(APIView):
