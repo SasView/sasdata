@@ -15,11 +15,11 @@ urlpatterns = [
     path(
         "set/<int:data_id>/",
         views.SingleDataSetView.as_view(),
-        "load, modify, delete datasets",
+        name="load, modify, delete datasets",
     ),
     path(
         "set/<int:data_id>/users/",
         views.DataSetUsersView.as_view(),
-        "manage access to datasets",
+        name="manage access to datasets",
     ),
 ]
