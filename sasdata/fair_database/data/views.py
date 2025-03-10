@@ -11,12 +11,18 @@ from django.http import (
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.views import APIView
 
 from sasdata.dataloader.loader import Loader
-from data.serializers import DataFileSerializer, AccessManagementSerializer
-from data.models import DataFile
+from data.serializers import (
+    DataFileSerializer,
+    DataSetSerializer,
+    AccessManagementSerializer,
+)
+from data.models import DataFile, DataSet
 from data.forms import DataFileForm
 from fair_database import permissions
+from fair_database.permissions import DataPermission
 
 
 @api_view(["GET"])
@@ -178,3 +184,25 @@ def download(request, data_id, version=None):
             raise Http404("File not found.")
         return FileResponse(file, as_attachment=True)
     return HttpResponseBadRequest()
+
+
+class DataSetView(APIView):
+    permission_classes = [DataPermission]
+
+    def get(self, request, version=None):
+        # TODO: filter based on access
+        data = DataSet.objects.all()
+        data_list = {"dataset_ids": {}}
+        for set in data:
+            data_list["dataset_ids"][set.id] = set.name
+        return Response(data=data_list)
+
+    def post(self, request):
+        # TODO: JSON deserialization probably
+        serializer = DataSetSerializer(data=request.data)
+        db = None
+        None
+        if serializer.is_valid():
+            db = serializer.save()
+        response = {"dataset_id": db.id, "name": db.name}
+        return Response(data=response)
