@@ -261,10 +261,43 @@ class SingleDataSetView(APIView):
 
 
 class DataSetUsersView(APIView):
+    """
+    View for the users that have access to a dataset.
+
+    Functionality for accessing a list of users with access and granting or
+    revoking access.
+    """
+
     permission_classes = [DataPermission]
 
+    # get a list of users with access to dataset data_id
     def get(self, request, data_id, version=None):
-        pass
+        db = get_object_or_404(data_id)
+        if not permissions.check_permissions(request, db):
+            return HttpResponseForbidden("Must be the dataset owner to view access")
+        response_data = {
+            "data_id": db.id,
+            "name": db.name,
+            "users": [user.username for user in db.users.all()],
+        }
+        return Response(response_data)
 
+    # grant or revoke a user's access to dataset data_id
     def put(self, request, data_id, version=None):
-        pass
+        db = get_object_or_404(data_id)
+        if not permissions.check_permissions(request, db):
+            return HttpResponseForbidden("Must be the dataset owner to manage access")
+        serializer = AccessManagementSerializer(data=request.data)
+        serializer.is_valid()
+        user = get_object_or_404(User, username=serializer.data["username"])
+        if serializer.data["access"]:
+            db.users.add(user)
+        else:
+            db.users.remove(user)
+        response_data = {
+            "user": user.username,
+            "data_id": db.id,
+            "name": db.name,
+            "access": serializer.data["access"],
+        }
+        return Response(response_data)
