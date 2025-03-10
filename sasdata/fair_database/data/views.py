@@ -197,7 +197,6 @@ class DataSetView(APIView):
 
     # get a list of accessible datasets
     def get(self, request, version=None):
-        # TODO: add filtering by at minimum the user
         data_list = {"dataset_ids": {}}
         data = DataSet.objects.all()
         if "username" in request.data:
