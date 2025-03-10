@@ -197,7 +197,7 @@ class DataSetView(APIView):
             data_list["dataset_ids"][set.id] = set.name
         return Response(data=data_list)
 
-    def post(self, request):
+    def post(self, request, version=None):
         # TODO: JSON deserialization probably
         serializer = DataSetSerializer(data=request.data)
         db = None
@@ -206,3 +206,26 @@ class DataSetView(APIView):
             db = serializer.save()
         response = {"dataset_id": db.id, "name": db.name}
         return Response(data=response)
+
+
+class SingleDataSetView(APIView):
+    permission_classes = [DataPermission]
+
+    def get(self, request, data_id, version=None):
+        pass
+
+    def put(self, request, data_id, version=None):
+        pass
+
+    def delete(self, request, data_id, version=None):
+        pass
+
+
+class DataSetUsersView(APIView):
+    permission_classes = [DataPermission]
+
+    def get(self, request, data_id, version=None):
+        pass
+
+    def put(self, request, data_id, version=None):
+        pass
