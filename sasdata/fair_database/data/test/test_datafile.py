@@ -13,7 +13,7 @@ from data.models import DataFile
 
 def find(filename):
     return os.path.join(
-        os.path.dirname(__file__), "../../example_data/1d_data", filename
+        os.path.dirname(__file__), "../../../example_data/1d_data", filename
     )
 
 
