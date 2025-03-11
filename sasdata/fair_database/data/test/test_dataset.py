@@ -53,6 +53,9 @@ SingleDataSetView:
         same as get I think
     delete"""
 
+# TODO: test unauthorized requests
+# TODO: test permissions for users w/ access granted
+
 
 class TestDataSet(APITestCase):
     @classmethod
@@ -102,8 +105,6 @@ class TestDataSet(APITestCase):
         self.assertEqual(
             request.data, {"dataset_ids": {1: "Dataset 1", 3: "Dataset 3"}}
         )
-
-    # TODO: test unauthorized gets
 
     def test_list_username(self):
         request = self.auth_client1.get("/v1/data/set/", data={"username": "testUser1"})
@@ -279,6 +280,22 @@ class TestDataSetAccessManagement(APITestCase):
         cls.client2 = APIClient()
         cls.client1.force_authenticate(cls.user1)
         cls.client2.force_authenticate(cls.user2)
+
+    def test_list_access_private(self):
+        request = self.client1.get("/v1/data/set/1/users/")
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertEqual(request.data, {"data_id": 1, "name": "Dataset 1", "users": []})
+
+    def test_list_access_shared(self):
+        request = self.client1.get("/v1/data/set/2/users/")
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            request.data, {"data_id": 2, "name": "Dataset 2", "users": ["testUser2"]}
+        )
+
+    def test_list_access_unauthorized(self):
+        request = self.client2.get("/v1/data/set/2/users/")
+        self.assertEqual(request.status_code, status.HTTP_403_FORBIDDEN)
 
     @classmethod
     def tearDownClass(cls):
