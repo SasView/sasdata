@@ -231,6 +231,14 @@ class TestSingleDataSet(APITestCase):
         self.assertEqual(request1.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(request2.status_code, status.HTTP_403_FORBIDDEN)
 
+    def test_delete_dataset(self):
+        request = self.auth_client1.delete("/v1/data/set/2/")
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertRaises(DataSet.DoesNotExist, DataSet.objects.get, id=2)
+        self.private_dataset = DataSet.objects.create(
+            id=2, current_user=self.user1, name="Dataset 2", metadata=None
+        )
+
     @classmethod
     def tearDownClass(cls):
         cls.public_dataset.delete()
