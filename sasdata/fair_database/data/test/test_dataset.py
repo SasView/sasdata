@@ -297,6 +297,17 @@ class TestDataSetAccessManagement(APITestCase):
         request = self.client2.get("/v1/data/set/2/users/")
         self.assertEqual(request.status_code, status.HTTP_403_FORBIDDEN)
 
+    def test_grant_access(self):
+        request1 = self.client1.put(
+            "/v1/data/set/1/users/", data={"username": "testUser2", "access": True}
+        )
+        request2 = self.client2.get("/v1/data/set/1/")
+        self.assertEqual(request1.status_code, status.HTTP_200_OK)
+        self.assertEqual(request2.status_code, status.HTTP_200_OK)
+        self.assertIn(  # codespell:ignore
+            self.user2, DataSet.objects.get(id=1).users.all()
+        )
+
     @classmethod
     def tearDownClass(cls):
         cls.private_dataset.delete()
