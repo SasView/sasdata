@@ -53,7 +53,10 @@ class DataSet(Data):
     files = models.ManyToManyField(DataFile)
 
     # metadata - maybe a foreign key?
-    metadata = models.OneToOneField("MetaData", on_delete=models.CASCADE)
+    # TODO: when MetaData is finished, set blank/null false
+    metadata = models.OneToOneField(
+        "MetaData", blank=True, null=True, on_delete=models.CASCADE
+    )
 
     # ordinate
     # ordinate = models.ForeignKey("Quantity", on_delete=models.CASCADE)
