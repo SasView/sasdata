@@ -19,7 +19,7 @@ class DataPermission(BasePermission):
             if obj.is_public or has_access(request, obj):
                 return True
         elif request.method == "DELETE":
-            if obj.is_private and is_owner(request, obj):
+            if not obj.is_public and is_owner(request, obj):
                 return True
         else:
             return is_owner(request, obj)
