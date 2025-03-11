@@ -199,8 +199,9 @@ class DataSetView(APIView):
     def get(self, request, version=None):
         data_list = {"dataset_ids": {}}
         data = DataSet.objects.all()
-        if "username" in request.data:
-            data = DataSet.objects.filter(username=request.data["username"])
+        if "username" in request.GET:
+            user = get_object_or_404(User, username=request.GET["username"])
+            data = DataSet.objects.filter(current_user=user)
         for dataset in data:
             if permissions.check_permissions(request, dataset):
                 data_list["dataset_ids"][dataset.id] = dataset.name
