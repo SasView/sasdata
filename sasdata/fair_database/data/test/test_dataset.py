@@ -144,7 +144,6 @@ class TestDataSet(APITestCase):
         cls.user2.delete()
 
 
-# TODO: decide whether to just combine this w/ above
 class TestSingleDataSet(APITestCase):
     @classmethod
     def setUpTestData(cls):
@@ -230,6 +229,22 @@ class TestSingleDataSet(APITestCase):
         request2 = self.client.get("/v1/data/set/2/")
         self.assertEqual(request1.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(request2.status_code, status.HTTP_403_FORBIDDEN)
+
+    # TODO: check put return data
+    def test_update_private_dataset(self):
+        request = self.auth_client1.put("/v1/data/set/2/", data={"is_public": True})
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertTrue(DataSet.objects.get(id=2).is_public)
+        self.private_dataset.save()
+        self.assertFalse(DataSet.objects.get(id=2).is_public)
+
+    def test_update_public_dataset(self):
+        request = self.auth_client1.put(
+            "/v1/data/set/1/", data={"name": "Different name"}
+        )
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertEqual(DataSet.objects.get(id=1).name, "Different name")
+        self.public_dataset.save()
 
     def test_delete_dataset(self):
         request = self.auth_client1.delete("/v1/data/set/2/")
