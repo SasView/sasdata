@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
 from rest_framework.test import APIClient, APITestCase
+from rest_framework import status
 
 from data.models import DataSet
 
@@ -66,7 +67,7 @@ class TestDataSet(APITestCase):
             metadata=None,
         )
         cls.private_dataset = DataSet.objects.create(
-            id=2, current_user=cls.user1, name="Dataset 1", metadata=None
+            id=2, current_user=cls.user1, name="Dataset 2", metadata=None
         )
         cls.unowned_dataset = DataSet.objects.create(
             id=3, is_public=True, name="Dataset 3", metadata=None
@@ -75,6 +76,45 @@ class TestDataSet(APITestCase):
         cls.auth_client2 = APIClient()
         cls.auth_client1.force_authenticate(cls.user1)
         cls.auth_client2.force_authenticate(cls.user2)
+
+    def test_list_private(self):
+        request = self.auth_client1.get("/v1/data/set/")
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            request.data,
+            {"dataset_ids": {1: "Dataset 1", 2: "Dataset 2", 3: "Dataset 3"}},
+        )
+
+    def test_list_public(self):
+        request = self.auth_client2.get("/v1/data/set/")
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            request.data, {"dataset_ids": {1: "Dataset 1", 3: "Dataset 3"}}
+        )
+
+    def test_list_unauthenticated(self):
+        request = self.client.get("/v1/data/set/")
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            request.data, {"dataset_ids": {1: "Dataset 1", 3: "Dataset 3"}}
+        )
+
+    def test_list_username(self):
+        request = self.auth_client1.get("/v1/data/set/", data={"username": "testUser1"})
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            request.data, {"dataset_ids": {1: "Dataset 1", 2: "Dataset 2"}}
+        )
+
+    def test_list_username_2(self):
+        request = self.auth_client1.get("/v1/data/set/", {"username": "testUser2"})
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertEqual(request.data, {"dataset_ids": {}})
+
+    def test_list_username_unauthenticated(self):
+        request = self.client.get("/v1/data/set/", {"username": "testUser1"})
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertEqual(request.data, {"dataset_ids": {1: "Dataset 1"}})
 
     @classmethod
     def tearDownClass(cls):
