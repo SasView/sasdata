@@ -57,8 +57,12 @@ SingleDataSetView:
 class TestDataSet(APITestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.user1 = User.objects.create_user(username="testUser1", password="secret")
-        cls.user2 = User.objects.create_user(username="testUser2", password="secret")
+        cls.user1 = User.objects.create_user(
+            id=1, username="testUser1", password="secret"
+        )
+        cls.user2 = User.objects.create_user(
+            id=2, username="testUser2", password="secret"
+        )
         cls.public_dataset = DataSet.objects.create(
             id=1,
             current_user=cls.user1,
@@ -99,6 +103,8 @@ class TestDataSet(APITestCase):
             request.data, {"dataset_ids": {1: "Dataset 1", 3: "Dataset 3"}}
         )
 
+    # TODO: test unauthorized gets
+
     def test_list_username(self):
         request = self.auth_client1.get("/v1/data/set/", data={"username": "testUser1"})
         self.assertEqual(request.status_code, status.HTTP_200_OK)
@@ -116,6 +122,19 @@ class TestDataSet(APITestCase):
         self.assertEqual(request.status_code, status.HTTP_200_OK)
         self.assertEqual(request.data, {"dataset_ids": {1: "Dataset 1"}})
 
+    # TODO: test listing by user that doesn't exist
+    # TODO: test listing by other parameters if functionality is added for that
+
+    # TODO: write test for post - probably will need to change post method to account for owner
+    def test_dataset_created(self):
+        pass
+
+    def test_dataset_created_unauthenticated(self):
+        pass
+
+    def test_no_private_unowned_dataset(self):
+        pass
+
     @classmethod
     def tearDownClass(cls):
         cls.public_dataset.delete()
@@ -129,8 +148,12 @@ class TestDataSet(APITestCase):
 class TestSingleDataSet(APITestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.user1 = User.objects.create_user(username="testUser1", password="secret")
-        cls.user2 = User.objects.create_user(username="testUser2", password="secret")
+        cls.user1 = User.objects.create_user(
+            id=1, username="testUser1", password="secret"
+        )
+        cls.user2 = User.objects.create_user(
+            id=2, username="testUser2", password="secret"
+        )
         cls.public_dataset = DataSet.objects.create(
             id=1,
             current_user=cls.user1,
@@ -148,6 +171,65 @@ class TestSingleDataSet(APITestCase):
         cls.auth_client2 = APIClient()
         cls.auth_client1.force_authenticate(cls.user1)
         cls.auth_client2.force_authenticate(cls.user2)
+
+    # TODO: change load return data
+    def test_load_private_dataset(self):
+        request = self.auth_client1.get("/v1/data/set/2/")
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertDictEqual(
+            request.data,
+            {
+                "id": 2,
+                "current_user": 1,
+                "users": [],
+                "is_public": False,
+                "name": "Dataset 2",
+                "files": [],
+                "metadata": None,
+            },
+        )
+
+    def test_load_public_dataset(self):
+        request1 = self.client.get("/v1/data/set/1/")
+        request2 = self.auth_client2.get("/v1/data/set/1/")
+        self.assertEqual(request1.status_code, status.HTTP_200_OK)
+        self.assertEqual(request2.status_code, status.HTTP_200_OK)
+        self.assertDictEqual(
+            request1.data,
+            {
+                "id": 1,
+                "current_user": 1,
+                "users": [],
+                "is_public": True,
+                "name": "Dataset 1",
+                "files": [],
+                "metadata": None,
+            },
+        )
+
+    def test_load_unowned_dataset(self):
+        request1 = self.auth_client1.get("/v1/data/set/3/")
+        request2 = self.client.get("/v1/data/set/3/")
+        self.assertEqual(request1.status_code, status.HTTP_200_OK)
+        self.assertEqual(request2.status_code, status.HTTP_200_OK)
+        self.assertDictEqual(
+            request1.data,
+            {
+                "id": 3,
+                "current_user": None,
+                "users": [],
+                "is_public": True,
+                "name": "Dataset 3",
+                "files": [],
+                "metadata": None,
+            },
+        )
+
+    def test_load_private_dataset_unauthorized(self):
+        request1 = self.auth_client2.get("/v1/data/set/2/")
+        request2 = self.client.get("/v1/data/set/2/")
+        self.assertEqual(request1.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(request2.status_code, status.HTTP_403_FORBIDDEN)
 
     @classmethod
     def tearDownClass(cls):
