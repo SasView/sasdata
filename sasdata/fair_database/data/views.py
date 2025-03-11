@@ -275,8 +275,8 @@ class DataSetUsersView(APIView):
 
     # get a list of users with access to dataset data_id
     def get(self, request, data_id, version=None):
-        db = get_object_or_404(data_id)
-        if not permissions.check_permissions(request, db):
+        db = get_object_or_404(DataSet, id=data_id)
+        if not permissions.is_owner(request, db):
             return HttpResponseForbidden("Must be the dataset owner to view access")
         response_data = {
             "data_id": db.id,
@@ -287,8 +287,8 @@ class DataSetUsersView(APIView):
 
     # grant or revoke a user's access to dataset data_id
     def put(self, request, data_id, version=None):
-        db = get_object_or_404(data_id)
-        if not permissions.check_permissions(request, db):
+        db = get_object_or_404(DataSet, id=data_id)
+        if not permissions.is_owner(request, db):
             return HttpResponseForbidden("Must be the dataset owner to manage access")
         serializer = AccessManagementSerializer(data=request.data)
         serializer.is_valid()
