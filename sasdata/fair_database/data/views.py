@@ -211,7 +211,7 @@ class DataSetView(APIView):
     def post(self, request, version=None):
         # TODO: JSON deserialization probably
         # TODO: revisit request data format
-        serializer = DataSetSerializer(data=request.data)
+        serializer = DataSetSerializer(data=request.data, context=request)
         if serializer.is_valid():
             serializer.save()
             db = serializer.instance
