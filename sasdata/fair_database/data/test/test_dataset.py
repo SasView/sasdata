@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User
+from django.db.models import Max
 from rest_framework.test import APIClient, APITestCase
 from rest_framework import status
 
@@ -60,11 +61,24 @@ SingleDataSetView:
 class TestDataSet(APITestCase):
     @classmethod
     def setUpTestData(cls):
+        cls.empty_metadata = {
+            "title": "New Metadata",
+            "run": "X",
+            "description": "test",
+            "instrument": {},
+            "process": {},
+            "sample": {},
+            "transmission_spectrum": {},
+            "raw_metadata": {},
+        }
         cls.user1 = User.objects.create_user(
             id=1, username="testUser1", password="secret"
         )
         cls.user2 = User.objects.create_user(
             id=2, username="testUser2", password="secret"
+        )
+        cls.user3 = User.objects.create_user(
+            id=3, username="testUser3", password="secret"
         )
         cls.public_dataset = DataSet.objects.create(
             id=1,
@@ -79,10 +93,13 @@ class TestDataSet(APITestCase):
         cls.unowned_dataset = DataSet.objects.create(
             id=3, is_public=True, name="Dataset 3", metadata=None
         )
+        cls.private_dataset.users.add(cls.user3)
         cls.auth_client1 = APIClient()
         cls.auth_client2 = APIClient()
+        cls.auth_client3 = APIClient()
         cls.auth_client1.force_authenticate(cls.user1)
         cls.auth_client2.force_authenticate(cls.user2)
+        cls.auth_client3.force_authenticate(cls.user3)
 
     def test_list_private(self):
         request = self.auth_client1.get("/v1/data/set/")
@@ -97,6 +114,14 @@ class TestDataSet(APITestCase):
         self.assertEqual(request.status_code, status.HTTP_200_OK)
         self.assertEqual(
             request.data, {"dataset_ids": {1: "Dataset 1", 3: "Dataset 3"}}
+        )
+
+    def test_list_granted_access(self):
+        request = self.auth_client3.get("/v1/data/set/")
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            request.data,
+            {"dataset_ids": {1: "Dataset 1", 2: "Dataset 2", 3: "Dataset 3"}},
         )
 
     def test_list_unauthenticated(self):
@@ -123,18 +148,57 @@ class TestDataSet(APITestCase):
         self.assertEqual(request.status_code, status.HTTP_200_OK)
         self.assertEqual(request.data, {"dataset_ids": {1: "Dataset 1"}})
 
-    # TODO: test listing by user that doesn't exist
+    def test_list_wrong_username(self):
+        request = self.auth_client1.get("/v1/data/set/", {"username": "fakeUser1"})
+        self.assertEqual(request.status_code, status.HTTP_404_NOT_FOUND)
+
     # TODO: test listing by other parameters if functionality is added for that
 
-    # TODO: write test for post - probably will need to change post method to account for owner
     def test_dataset_created(self):
-        pass
+        dataset = {"name": "New Dataset", "metadata": self.empty_metadata}
+        request = self.auth_client1.post("/v1/data/set/", data=dataset, format="json")
+        max_id = DataSet.objects.aggregate(Max("id"))["id__max"]
+        new_dataset = DataSet.objects.get(id=max_id)
+        new_metadata = new_dataset.metadata
+        self.assertEqual(request.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(
+            request.data,
+            {"dataset_id": max_id, "name": "New Dataset", "is_public": False},
+        )
+        self.assertEqual(new_dataset.name, "New Dataset")
+        self.assertEqual(new_metadata.title, "New Metadata")
+        self.assertEqual(new_dataset.current_user.username, "testUser1")
+        new_dataset.delete()
+        new_metadata.delete()
 
     def test_dataset_created_unauthenticated(self):
-        pass
+        dataset = {
+            "name": "New Dataset",
+            "metadata": self.empty_metadata,
+            "is_public": True,
+        }
+        request = self.client.post("/v1/data/set/", data=dataset, format="json")
+        max_id = DataSet.objects.aggregate(Max("id"))["id__max"]
+        new_dataset = DataSet.objects.get(id=max_id)
+        new_metadata = new_dataset.metadata
+        self.assertEqual(request.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(
+            request.data,
+            {"dataset_id": max_id, "name": "New Dataset", "is_public": True},
+        )
+        self.assertEqual(new_dataset.name, "New Dataset")
+        self.assertIsNone(new_dataset.current_user)
+        new_dataset.delete()
+        new_metadata.delete()
 
     def test_no_private_unowned_dataset(self):
-        pass
+        dataset = {
+            "name": "Disallowed Dataset",
+            "metadata": self.empty_metadata,
+            "is_public": False,
+        }
+        request = self.client.post("/v1/data/set/", data=dataset, format="json")
+        self.assertEqual(request.status_code, status.HTTP_400_BAD_REQUEST)
 
     @classmethod
     def tearDownClass(cls):
@@ -143,6 +207,7 @@ class TestDataSet(APITestCase):
         cls.unowned_dataset.delete()
         cls.user1.delete()
         cls.user2.delete()
+        cls.user3.delete()
 
 
 class TestSingleDataSet(APITestCase):
@@ -246,6 +311,8 @@ class TestSingleDataSet(APITestCase):
         self.assertEqual(request.status_code, status.HTTP_200_OK)
         self.assertEqual(DataSet.objects.get(id=1).name, "Different name")
         self.public_dataset.save()
+
+    # TODO: test updating metadata
 
     def test_delete_dataset(self):
         request = self.auth_client1.delete("/v1/data/set/2/")
