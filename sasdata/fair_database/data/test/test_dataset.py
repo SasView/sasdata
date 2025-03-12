@@ -380,15 +380,17 @@ class TestDataSetAccessManagement(APITestCase):
         cls.client2.force_authenticate(cls.user2)
 
     def test_list_access_private(self):
-        request = self.client1.get("/v1/data/set/1/users/")
-        self.assertEqual(request.status_code, status.HTTP_200_OK)
-        self.assertEqual(request.data, {"data_id": 1, "name": "Dataset 1", "users": []})
+        request1 = self.client1.get("/v1/data/set/1/users/")
+        self.assertEqual(request1.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            request1.data, {"data_id": 1, "name": "Dataset 1", "users": []}
+        )
 
     def test_list_access_shared(self):
-        request = self.client1.get("/v1/data/set/2/users/")
-        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        request1 = self.client1.get("/v1/data/set/2/users/")
+        self.assertEqual(request1.status_code, status.HTTP_200_OK)
         self.assertEqual(
-            request.data, {"data_id": 2, "name": "Dataset 2", "users": ["testUser2"]}
+            request1.data, {"data_id": 2, "name": "Dataset 2", "users": ["testUser2"]}
         )
 
     def test_list_access_unauthorized(self):
@@ -405,6 +407,23 @@ class TestDataSetAccessManagement(APITestCase):
         self.assertIn(  # codespell:ignore
             self.user2, DataSet.objects.get(id=1).users.all()
         )
+        self.private_dataset.users.remove(self.user2)
+
+    def test_revoke_access(self):
+        request1 = self.client1.put(
+            "/v1/data/set/2/users/", data={"username": "testUser2", "access": False}
+        )
+        request2 = self.client2.get("/v1/data/set/2/")
+        self.assertEqual(request1.status_code, status.HTTP_200_OK)
+        self.assertEqual(request2.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertNotIn(self.user2, DataSet.objects.get(id=2).users.all())
+        self.shared_dataset.users.add(self.user2)
+
+    def test_revoke_access_unauthorized(self):
+        request1 = self.client2.put(
+            "/v1/data/set/2/users/", data={"username": "testUser2", "access": False}
+        )
+        self.assertEqual(request1.status_code, status.HTTP_403_FORBIDDEN)
 
     @classmethod
     def tearDownClass(cls):
