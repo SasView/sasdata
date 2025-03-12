@@ -212,11 +212,12 @@ class DataSetView(APIView):
         # TODO: JSON deserialization probably
         # TODO: revisit request data format
         serializer = DataSetSerializer(data=request.data)
-        db = None
         if serializer.is_valid():
-            db = serializer.save()
-        response = {"dataset_id": db.id, "name": db.name}
-        return Response(data=response, status=status.HTTP_201_CREATED)
+            serializer.save()
+            db = serializer.instance
+            response = {"dataset_id": db.id, "name": db.name, "is_public": db.is_public}
+            return Response(data=response, status=status.HTTP_201_CREATED)
+        return HttpResponseBadRequest()
 
     # create a dataset
     def put(self, request, version=None):
