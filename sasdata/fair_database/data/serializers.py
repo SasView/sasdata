@@ -37,7 +37,7 @@ class DataSetSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         if (
-            not self.context.user.is_authenticated
+            not self.context["request"].user.is_authenticated
             and "is_public" in data
             and not data["is_public"]
         ):
@@ -52,8 +52,8 @@ class DataSetSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
-        if self.context.user.is_authenticated:
-            validated_data["current_user"] = self.context.user
+        if self.context["request"].user.is_authenticated:
+            validated_data["current_user"] = self.context["request"].user
         metadata_raw = validated_data.pop("metadata")
         metadata = MetaDataSerializer.create(
             MetaDataSerializer(), validated_data=metadata_raw
