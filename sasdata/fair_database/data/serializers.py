@@ -28,7 +28,10 @@ class MetaDataSerializer(serializers.ModelSerializer):
 class DataSetSerializer(serializers.ModelSerializer):
     # TODO: custom validation, maybe custom serialization handling of current_user
     # TODO: account for nested serialization
-    metadata = MetaDataSerializer()
+    metadata = MetaDataSerializer(read_only=False)
+    files = serializers.PrimaryKeyRelatedField(
+        required=False, many=True, allow_null=True, queryset=DataFile
+    )
 
     class Meta:
         model = DataSet
@@ -39,8 +42,23 @@ class DataSetSerializer(serializers.ModelSerializer):
         metadata = MetaDataSerializer.create(
             MetaDataSerializer(), validated_data=metadata_raw
         )
-        dataset = DataSet.objects.update_or_create(**validated_data, metadata=metadata)
+        dataset = DataSet.objects.create(metadata=metadata, **validated_data)
         return dataset
+
+    # TODO: account for updating other attributes
+    # TODO: account for metadata potentially being null
+    def update(self, instance, validated_data):
+        if "metadata" in validated_data:
+            metadata_raw = validated_data.pop("metadata")
+            new_metadata = MetaDataSerializer.update(
+                MetaDataSerializer(), instance.metadata, validated_data=metadata_raw
+            )
+            instance.metadata = new_metadata
+            instance.save()
+        instance.is_public = validated_data.get("is_public", instance.is_public)
+        instance.name = validated_data.get("name", instance.name)
+        instance.save()
+        return instance
 
 
 class QuantitySerializer(serializers.ModelSerializer):
