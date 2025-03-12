@@ -38,6 +38,8 @@ class DataSetSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     def create(self, validated_data):
+        if self.context.user.is_authenticated:
+            validated_data["current_user"] = self.context.user
         metadata_raw = validated_data.pop("metadata")
         metadata = MetaDataSerializer.create(
             MetaDataSerializer(), validated_data=metadata_raw
