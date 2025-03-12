@@ -211,7 +211,7 @@ class DataSetView(APIView):
     def post(self, request, version=None):
         # TODO: JSON deserialization probably
         # TODO: revisit request data format
-        serializer = DataSetSerializer(data=request.data, context=request)
+        serializer = DataSetSerializer(data=request.data, context={"request": request})
         if serializer.is_valid():
             serializer.save()
             db = serializer.instance
@@ -249,7 +249,9 @@ class SingleDataSetView(APIView):
         db = get_object_or_404(DataSet, id=data_id)
         if not permissions.check_permissions(request, db):
             return HttpResponseForbidden("Cannot modify a dataset you do not own")
-        serializer = DataSetSerializer(db, request.data, partial=True)
+        serializer = DataSetSerializer(
+            db, request.data, context={"request": request}, partial=True
+        )
         if serializer.is_valid():
             serializer.save()
         data = {"data_id": db.id, "name": db.name, "is_public": db.is_public}
