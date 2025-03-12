@@ -26,8 +26,6 @@ class MetaDataSerializer(serializers.ModelSerializer):
 
 
 class DataSetSerializer(serializers.ModelSerializer):
-    # TODO: custom validation, maybe custom serialization handling of current_user
-    # TODO: account for nested serialization
     metadata = MetaDataSerializer(read_only=False)
     files = serializers.PrimaryKeyRelatedField(
         required=False, many=True, allow_null=True, queryset=DataFile
@@ -36,6 +34,22 @@ class DataSetSerializer(serializers.ModelSerializer):
     class Meta:
         model = DataSet
         fields = "__all__"
+
+    def validate(self, data):
+        if (
+            not self.context.user.is_authenticated
+            and "is_public" in data
+            and not data["is_public"]
+        ):
+            raise serializers.ValidationError("private data must have an owner")
+        if "current_user" in data:
+            if "is_public" in data:
+                if not "is_public":
+                    raise serializers.ValidationError("private data must have an owner")
+            else:
+                if not self.instance.is_public:
+                    raise serializers.ValidationError("private data must have an owner")
+        return data
 
     def create(self, validated_data):
         if self.context.user.is_authenticated:
