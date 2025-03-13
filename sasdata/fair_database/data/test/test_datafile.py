@@ -138,6 +138,26 @@ class TestingDatabase(APITestCase):
         )
         DataFile.objects.get(id=max_id).delete()
 
+    # Test whether a user can overwrite data by specifying an in-use id
+    def test_no_data_overwrite(self):
+        file = open(find("apoferritin.txt"))
+        data = {"is_public": True, "file": file, id: 1}
+        request = self.client1.post("/v1/data/upload/", data=data)
+        self.assertEqual(request.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(DataFile.objects.get(id=1).file_name, "cyl_400_20.txt")
+        max_id = DataFile.objects.aggregate(Max("id"))["id__max"]
+        self.assertEqual(
+            request.data,
+            {
+                "current_user": "testUser",
+                "authenticated": True,
+                "file_id": max_id,
+                "file_alternative_name": "apoferritin.txt",
+                "is_public": True,
+            },
+        )
+        DataFile.objects.get(id=max_id).delete()
+
     # Test updating file
     def test_does_file_upload_update(self):
         file = open(find("cyl_testdata1.txt"))

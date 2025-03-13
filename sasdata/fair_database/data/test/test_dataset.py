@@ -161,6 +161,24 @@ class TestDataSet(APITestCase):
         request = self.client.post("/v1/data/set/", data=dataset, format="json")
         self.assertEqual(request.status_code, status.HTTP_400_BAD_REQUEST)
 
+    # Test whether a user can overwrite data by specifying an in-use id
+    def test_no_data_overwrite(self):
+        dataset = {
+            "id": 2,
+            "name": "Overwrite Dataset",
+            "metadata": self.empty_metadata,
+            "is_public": True,
+        }
+        request = self.auth_client2.post("/v1/data/set/", data=dataset, format="json")
+        max_id = DataSet.objects.aggregate(Max("id"))["id__max"]
+        self.assertEqual(request.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(DataSet.objects.get(id=2).name, "Dataset 2")
+        self.assertEqual(
+            request.data,
+            {"dataset_id": max_id, "name": "Overwrite Dataset", "is_public": True},
+        )
+        DataSet.objects.get(id=max_id).delete()
+
     @classmethod
     def tearDownClass(cls):
         cls.public_dataset.delete()
