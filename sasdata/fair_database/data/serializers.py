@@ -42,7 +42,7 @@ class DataSetSerializer(serializers.ModelSerializer):
             and not data["is_public"]
         ):
             raise serializers.ValidationError("private data must have an owner")
-        if "current_user" in data:
+        if "current_user" in data and data["current_user"] is None:
             if "is_public" in data:
                 if not "is_public":
                     raise serializers.ValidationError("private data must have an owner")
