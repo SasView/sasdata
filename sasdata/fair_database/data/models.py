@@ -84,6 +84,7 @@ class Quantity(models.Model):
     hash = models.IntegerField()
 
 
+# TODO: revisit metadata when sasdata metadata is rewritten
 class MetaData(models.Model):
     """Database model for scattering metadata"""
 
