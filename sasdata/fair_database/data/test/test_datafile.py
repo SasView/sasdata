@@ -18,6 +18,8 @@ def find(filename):
 
 
 class TestLists(TestCase):
+    """Test get methods for DataFile."""
+
     @classmethod
     def setUpTestData(cls):
         cls.public_test_data = DataFile.objects.create(
@@ -83,6 +85,8 @@ class TestLists(TestCase):
 
 
 class TestingDatabase(APITestCase):
+    """Test non-get methods for DataFile."""
+
     @classmethod
     def setUpTestData(cls):
         cls.user = User.objects.create_user(
@@ -229,6 +233,8 @@ class TestingDatabase(APITestCase):
 
 
 class TestAccessManagement(TestCase):
+    """Test viewing and managing access for a file."""
+
     @classmethod
     def setUpTestData(cls):
         cls.user1 = User.objects.create_user(username="testUser", password="secret")
@@ -283,6 +289,7 @@ class TestAccessManagement(TestCase):
         self.assertEqual(request2.status_code, status.HTTP_200_OK)
         self.assertEqual(request3.status_code, status.HTTP_403_FORBIDDEN)
 
+    # test removing access from a user that already lacks access
     def test_remove_no_access(self):
         data = {"username": "testUser2", "access": False}
         request1 = self.client2.get("/v1/data/load/1/")
@@ -292,6 +299,7 @@ class TestAccessManagement(TestCase):
         self.assertEqual(request2.status_code, status.HTTP_200_OK)
         self.assertEqual(request3.status_code, status.HTTP_403_FORBIDDEN)
 
+    # test owner's access cannot be removed
     def test_cant_revoke_own_access(self):
         data = {"username": "testUser", "access": False}
         request1 = self.client1.put("/v1/data/manage/1/", data=data)
@@ -299,6 +307,7 @@ class TestAccessManagement(TestCase):
         self.assertEqual(request1.status_code, status.HTTP_200_OK)
         self.assertEqual(request2.status_code, status.HTTP_200_OK)
 
+    # test giving access to a user that already has access
     def test_grant_existing_access(self):
         data = {"username": "testUser2", "access": True}
         request1 = self.client2.get("/v1/data/load/2/")
@@ -308,18 +317,21 @@ class TestAccessManagement(TestCase):
         self.assertEqual(request2.status_code, status.HTTP_200_OK)
         self.assertEqual(request3.status_code, status.HTTP_200_OK)
 
+    # test that access is read-only for the file
     def test_no_edit_access(self):
         data = {"is_public": True}
         request = self.client2.put("/v1/data/upload/2/", data=data)
         self.assertEqual(request.status_code, status.HTTP_403_FORBIDDEN)
         self.assertFalse(self.shared_test_data.is_public)
 
+    # test that only the owner can view who has access
     def test_only_view_access_to_owned_file(self):
         request1 = self.client2.get("/v1/data/manage/1/")
         request2 = self.client2.get("/v1/data/manage/2/")
         self.assertEqual(request1.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(request2.status_code, status.HTTP_403_FORBIDDEN)
 
+    # test that only the owner can change access
     def test_only_edit_access_to_owned_file(self):
         data1 = {"username": "testUser2", "access": True}
         data2 = {"username": "testUser1", "access": False}
