@@ -5,60 +5,10 @@ from rest_framework import status
 
 from data.models import DataSet
 
-# test GET
-# list datasets - include public and owned, disinclude private unowned
-# get one dataset - succeeds if public or owned, fails if private and unowned
-# get list of people with access to dataset (owner)
-# fail to get list of people with access to dataset (not owner)
-
-# test POST
-# create a public dataset
-# create a private dataset
-# can't create an unowned private dataset
-
-# test PUT
-# edit an owned dataset
-# can't edit an unowned dataset
-# change access to a dataset
-
-# test DELETE
-# delete an owned private dataset
-# can't delete an unowned dataset
-# can't delete a public dataset
-
-"""
-DataSetView:
-    get
-    - requires 3 users, private data, public data, probably unowned data
-        for authenticated user (can see public data and own private data)
-        - can't see someone else's private data (may or may not be a separate test)
-        for unauthenticated user (can see public data)
-        with username specified
-        with nonexistent username specified
-    post
-    - requires 2 users, no data
-        for authenticated user
-        for unauthenticated user, public
-        for unauthenticated, private (fails)
-    put
-    - probably 1 user, no data
-        should be same as post
-
-SingleDataSetView:
-    get
-        for owned private data
-        for unowned private data authenticated
-        for private data unauthenticated
-        for public data
-    put
-        same as get I think
-    delete"""
-
-# TODO: test unauthorized requests
-# TODO: test permissions for users w/ access granted
-
 
 class TestDataSet(APITestCase):
+    """Test HTTP methods of DataSetView."""
+
     @classmethod
     def setUpTestData(cls):
         cls.empty_metadata = {
@@ -101,6 +51,7 @@ class TestDataSet(APITestCase):
         cls.auth_client2.force_authenticate(cls.user2)
         cls.auth_client3.force_authenticate(cls.user3)
 
+    # Test a user can list their own private data
     def test_list_private(self):
         request = self.auth_client1.get("/v1/data/set/")
         self.assertEqual(request.status_code, status.HTTP_200_OK)
@@ -109,6 +60,7 @@ class TestDataSet(APITestCase):
             {"dataset_ids": {1: "Dataset 1", 2: "Dataset 2", 3: "Dataset 3"}},
         )
 
+    # Test a user can see others' public but not private data in list
     def test_list_public(self):
         request = self.auth_client2.get("/v1/data/set/")
         self.assertEqual(request.status_code, status.HTTP_200_OK)
@@ -116,6 +68,7 @@ class TestDataSet(APITestCase):
             request.data, {"dataset_ids": {1: "Dataset 1", 3: "Dataset 3"}}
         )
 
+    # Test a user can see private data they have been granted access to
     def test_list_granted_access(self):
         request = self.auth_client3.get("/v1/data/set/")
         self.assertEqual(request.status_code, status.HTTP_200_OK)
@@ -124,6 +77,7 @@ class TestDataSet(APITestCase):
             {"dataset_ids": {1: "Dataset 1", 2: "Dataset 2", 3: "Dataset 3"}},
         )
 
+    # Test an unauthenticated user can list public data
     def test_list_unauthenticated(self):
         request = self.client.get("/v1/data/set/")
         self.assertEqual(request.status_code, status.HTTP_200_OK)
@@ -131,6 +85,7 @@ class TestDataSet(APITestCase):
             request.data, {"dataset_ids": {1: "Dataset 1", 3: "Dataset 3"}}
         )
 
+    # Test a user can see all data listed by their username
     def test_list_username(self):
         request = self.auth_client1.get("/v1/data/set/", data={"username": "testUser1"})
         self.assertEqual(request.status_code, status.HTTP_200_OK)
@@ -138,22 +93,26 @@ class TestDataSet(APITestCase):
             request.data, {"dataset_ids": {1: "Dataset 1", 2: "Dataset 2"}}
         )
 
+    # Test a user can list public data by another user's username
     def test_list_username_2(self):
         request = self.auth_client1.get("/v1/data/set/", {"username": "testUser2"})
         self.assertEqual(request.status_code, status.HTTP_200_OK)
         self.assertEqual(request.data, {"dataset_ids": {}})
 
+    # Test an unauthenticated user can list public data by a username
     def test_list_username_unauthenticated(self):
         request = self.client.get("/v1/data/set/", {"username": "testUser1"})
         self.assertEqual(request.status_code, status.HTTP_200_OK)
         self.assertEqual(request.data, {"dataset_ids": {1: "Dataset 1"}})
 
+    # Test listing by a username that doesn't exist
     def test_list_wrong_username(self):
         request = self.auth_client1.get("/v1/data/set/", {"username": "fakeUser1"})
         self.assertEqual(request.status_code, status.HTTP_404_NOT_FOUND)
 
     # TODO: test listing by other parameters if functionality is added for that
 
+    # Test creating a dataset with associated metadata
     def test_dataset_created(self):
         dataset = {"name": "New Dataset", "metadata": self.empty_metadata}
         request = self.auth_client1.post("/v1/data/set/", data=dataset, format="json")
@@ -171,6 +130,7 @@ class TestDataSet(APITestCase):
         new_dataset.delete()
         new_metadata.delete()
 
+    # Test creating a dataset while unauthenticated
     def test_dataset_created_unauthenticated(self):
         dataset = {
             "name": "New Dataset",
@@ -191,6 +151,7 @@ class TestDataSet(APITestCase):
         new_dataset.delete()
         new_metadata.delete()
 
+    # Test that a private dataset cannot be created without an owner
     def test_no_private_unowned_dataset(self):
         dataset = {
             "name": "Disallowed Dataset",
@@ -211,6 +172,8 @@ class TestDataSet(APITestCase):
 
 
 class TestSingleDataSet(APITestCase):
+    """Tests for HTTP methods of SingleDataSetView."""
+
     @classmethod
     def setUpTestData(cls):
         cls.user1 = User.objects.create_user(
@@ -244,6 +207,7 @@ class TestSingleDataSet(APITestCase):
         cls.auth_client3.force_authenticate(cls.user3)
 
     # TODO: change load return data
+    # Test successfully accessing a private dataset
     def test_load_private_dataset(self):
         request1 = self.auth_client1.get("/v1/data/set/2/")
         request2 = self.auth_client3.get("/v1/data/set/2/")
@@ -262,6 +226,7 @@ class TestSingleDataSet(APITestCase):
             },
         )
 
+    # Test successfully accessing a public dataset
     def test_load_public_dataset(self):
         request1 = self.client.get("/v1/data/set/1/")
         request2 = self.auth_client2.get("/v1/data/set/1/")
@@ -280,6 +245,7 @@ class TestSingleDataSet(APITestCase):
             },
         )
 
+    # Test successfully accessing an unowned public dataset
     def test_load_unowned_dataset(self):
         request1 = self.auth_client1.get("/v1/data/set/3/")
         request2 = self.client.get("/v1/data/set/3/")
@@ -298,12 +264,14 @@ class TestSingleDataSet(APITestCase):
             },
         )
 
+    # Test unsuccessfully accessing a private dataset
     def test_load_private_dataset_unauthorized(self):
         request1 = self.auth_client2.get("/v1/data/set/2/")
         request2 = self.client.get("/v1/data/set/2/")
         self.assertEqual(request1.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(request2.status_code, status.HTTP_403_FORBIDDEN)
 
+    # Test only owner can change a private dataset
     def test_update_private_dataset(self):
         request1 = self.auth_client1.put("/v1/data/set/2/", data={"is_public": True})
         request2 = self.auth_client3.put("/v1/data/set/2/", data={"is_public": False})
@@ -316,19 +284,31 @@ class TestSingleDataSet(APITestCase):
         self.private_dataset.save()
         self.assertFalse(DataSet.objects.get(id=2).is_public)
 
+    # Test changing a public dataset
     def test_update_public_dataset(self):
-        request = self.auth_client1.put(
+        request1 = self.auth_client1.put(
             "/v1/data/set/1/", data={"name": "Different name"}
         )
-        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        request2 = self.auth_client2.put("/v1/data/set/1/", data={"is_public": False})
+        self.assertEqual(request1.status_code, status.HTTP_200_OK)
+        self.assertEqual(request2.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(
-            request.data, {"data_id": 1, "name": "Different name", "is_public": True}
+            request1.data, {"data_id": 1, "name": "Different name", "is_public": True}
         )
         self.assertEqual(DataSet.objects.get(id=1).name, "Different name")
         self.public_dataset.save()
 
     # TODO: test updating metadata once metadata is figured out
+    # TODO: test invalid updates if and when those are figured out
 
+    # Test changing an unowned dataset
+    def test_update_unowned_dataset(self):
+        request1 = self.auth_client1.put("/v1/data/set/3/", data={"current_user": 1})
+        request2 = self.client.put("/v1/data/set/3/", data={"name": "Different name"})
+        self.assertEqual(request1.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(request2.status_code, status.HTTP_403_FORBIDDEN)
+
+    # Test deleting a dataset
     def test_delete_dataset(self):
         request = self.auth_client1.delete("/v1/data/set/2/")
         self.assertEqual(request.status_code, status.HTTP_200_OK)
@@ -338,14 +318,17 @@ class TestSingleDataSet(APITestCase):
             id=2, current_user=self.user1, name="Dataset 2", metadata=None
         )
 
+    # Test cannot delete a public dataset
     def test_delete_public_dataset(self):
         request = self.auth_client1.delete("/v1/data/set/1/")
         self.assertEqual(request.status_code, status.HTTP_403_FORBIDDEN)
 
+    # Test cannot delete an unowned dataset
     def test_delete_unowned_dataset(self):
         request = self.auth_client1.delete("/v1/data/set/3/")
         self.assertEqual(request.status_code, status.HTTP_403_FORBIDDEN)
 
+    # Test cannot delete another user's dataset
     def test_delete_dataset_unauthorized(self):
         request1 = self.auth_client2.delete("/v1/data/set/1/")
         request2 = self.auth_client3.delete("/v1/data/set/2/")
@@ -363,6 +346,8 @@ class TestSingleDataSet(APITestCase):
 
 
 class TestDataSetAccessManagement(APITestCase):
+    """Tests for HTTP methods of DataSetUsersView."""
+
     @classmethod
     def setUpTestData(cls):
         cls.user1 = User.objects.create_user(username="testUser1", password="secret")
@@ -379,6 +364,7 @@ class TestDataSetAccessManagement(APITestCase):
         cls.client1.force_authenticate(cls.user1)
         cls.client2.force_authenticate(cls.user2)
 
+    # Test listing no users with access
     def test_list_access_private(self):
         request1 = self.client1.get("/v1/data/set/1/users/")
         self.assertEqual(request1.status_code, status.HTTP_200_OK)
@@ -386,6 +372,7 @@ class TestDataSetAccessManagement(APITestCase):
             request1.data, {"data_id": 1, "name": "Dataset 1", "users": []}
         )
 
+    # Test listing users with access
     def test_list_access_shared(self):
         request1 = self.client1.get("/v1/data/set/2/users/")
         self.assertEqual(request1.status_code, status.HTTP_200_OK)
@@ -393,10 +380,12 @@ class TestDataSetAccessManagement(APITestCase):
             request1.data, {"data_id": 2, "name": "Dataset 2", "users": ["testUser2"]}
         )
 
+    # Test only owner can view access
     def test_list_access_unauthorized(self):
         request = self.client2.get("/v1/data/set/2/users/")
         self.assertEqual(request.status_code, status.HTTP_403_FORBIDDEN)
 
+    # Test granting access to a dataset
     def test_grant_access(self):
         request1 = self.client1.put(
             "/v1/data/set/1/users/", data={"username": "testUser2", "access": True}
@@ -409,6 +398,7 @@ class TestDataSetAccessManagement(APITestCase):
         )
         self.private_dataset.users.remove(self.user2)
 
+    # Test revoking access to a dataset
     def test_revoke_access(self):
         request1 = self.client1.put(
             "/v1/data/set/2/users/", data={"username": "testUser2", "access": False}
@@ -419,6 +409,7 @@ class TestDataSetAccessManagement(APITestCase):
         self.assertNotIn(self.user2, DataSet.objects.get(id=2).users.all())
         self.shared_dataset.users.add(self.user2)
 
+    # Test only the owner can change access
     def test_revoke_access_unauthorized(self):
         request1 = self.client2.put(
             "/v1/data/set/2/users/", data={"username": "testUser2", "access": False}
