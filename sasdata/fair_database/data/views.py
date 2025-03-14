@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404
 from django.http import (
     HttpResponseBadRequest,
     HttpResponseForbidden,
+    HttpResponse,
     Http404,
     FileResponse,
 )
@@ -40,6 +41,8 @@ def list_data(request, username=None, version=None):
             data_list = {"public_data_ids": {}}
             for x in public_data:
                 if not permissions.check_permissions(request, x):
+                    if not request.user.is_authenticated:
+                        return HttpResponse("Unauthorized", status=401)
                     return HttpResponseForbidden()
                 data_list["public_data_ids"][x.id] = x.file_name
         return Response(data_list)
@@ -52,6 +55,8 @@ def data_info(request, db_id, version=None):
         loader = Loader()
         data_db = get_object_or_404(DataFile, id=db_id)
         if not permissions.check_permissions(request, data_db):
+            if not request.user.is_authenticated:
+                return HttpResponse("Must be authenticated to view", status=401)
             return HttpResponseForbidden(
                 "Data is either not public or wrong auth token"
             )
@@ -98,6 +103,8 @@ def upload(request, data_id=None, version=None):
     elif request.method == "PUT":
         db = get_object_or_404(DataFile, id=data_id)
         if not permissions.check_permissions(request, db):
+            if not request.user.is_authenticated:
+                return HttpResponse("must be authenticated to modify", status=401)
             return HttpResponseForbidden("must be the data owner to modify")
         form = DataFileForm(request.data, request.FILES, instance=db)
         if form.is_valid():
@@ -132,6 +139,8 @@ def upload(request, data_id=None, version=None):
 def manage_access(request, data_id, version=None):
     db = get_object_or_404(DataFile, id=data_id)
     if not permissions.is_owner(request, db):
+        if not request.user.is_authenticated:
+            return HttpResponse("Must be authenticated to manage access", status=401)
         return HttpResponseForbidden("Must be the data owner to manage access")
     if request.method == "GET":
         response_data = {
@@ -163,6 +172,8 @@ def manage_access(request, data_id, version=None):
 def delete(request, data_id, version=None):
     db = get_object_or_404(DataFile, id=data_id)
     if not permissions.is_owner(request, db):
+        if not request.user.is_authenticated:
+            return HttpResponse("Must be authenticated to delete", status=401)
         return HttpResponseForbidden("Must be the data owner to delete")
     db.delete()
     return Response(data={"success": True})
@@ -174,6 +185,8 @@ def download(request, data_id, version=None):
     if request.method == "GET":
         data = get_object_or_404(DataFile, id=data_id)
         if not permissions.check_permissions(request, data):
+            if not request.user.is_authenticated:
+                return HttpResponse("Must be authenticated to download", status=401)
             return HttpResponseForbidden("data is private")
         # TODO add issues later
         try:
@@ -238,6 +251,8 @@ class SingleDataSetView(APIView):
     def get(self, request, data_id, version=None):
         db = get_object_or_404(DataSet, id=data_id)
         if not permissions.check_permissions(request, db):
+            if not request.user.is_authenticated:
+                return HttpResponse("Must be authenticated to view dataset", status=401)
             return HttpResponseForbidden(
                 "You do not have permission to view this dataset."
             )
@@ -248,6 +263,10 @@ class SingleDataSetView(APIView):
     def put(self, request, data_id, version=None):
         db = get_object_or_404(DataSet, id=data_id)
         if not permissions.check_permissions(request, db):
+            if not request.user.is_authenticated:
+                return HttpResponse(
+                    "Must be authenticated to modify dataset", status=401
+                )
             return HttpResponseForbidden("Cannot modify a dataset you do not own")
         serializer = DataSetSerializer(
             db, request.data, context={"request": request}, partial=True
@@ -261,6 +280,10 @@ class SingleDataSetView(APIView):
     def delete(self, request, data_id, version=None):
         db = get_object_or_404(DataSet, id=data_id)
         if not permissions.check_permissions(request, db):
+            if not request.user.is_authenticated:
+                return HttpResponse(
+                    "Must be authenticated to delete a dataset", status=401
+                )
             return HttpResponseForbidden("Not authorized to delete")
         db.delete()
         return Response({"success": True})
@@ -280,6 +303,8 @@ class DataSetUsersView(APIView):
     def get(self, request, data_id, version=None):
         db = get_object_or_404(DataSet, id=data_id)
         if not permissions.is_owner(request, db):
+            if not request.user.is_authenticated:
+                return HttpResponse("Must be authenticated to view access", status=401)
             return HttpResponseForbidden("Must be the dataset owner to view access")
         response_data = {
             "data_id": db.id,
@@ -292,6 +317,10 @@ class DataSetUsersView(APIView):
     def put(self, request, data_id, version=None):
         db = get_object_or_404(DataSet, id=data_id)
         if not permissions.is_owner(request, db):
+            if not request.user.is_authenticated:
+                return HttpResponse(
+                    "Must be authenticated to manage access", status=401
+                )
             return HttpResponseForbidden("Must be the dataset owner to manage access")
         serializer = AccessManagementSerializer(data=request.data)
         serializer.is_valid()
