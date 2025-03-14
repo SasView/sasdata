@@ -204,7 +204,7 @@ class TestingDatabase(APITestCase):
         file = open(find("cyl_400_40.txt"))
         data = {"file": file, "is_public": False}
         request = self.client2.put("/v1/data/upload/1/", data=data)
-        self.assertEqual(request.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(request.status_code, status.HTTP_401_UNAUTHORIZED)
 
     # Test update nonexistent file fails
     def test_file_upload_update_not_found(self):
@@ -224,7 +224,7 @@ class TestingDatabase(APITestCase):
     # Test file download fails when unauthorized
     def test_unauthorized_download(self):
         request2 = self.client2.get("/v1/data/1/download/")
-        self.assertEqual(request2.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(request2.status_code, status.HTTP_401_UNAUTHORIZED)
 
     # Test download nonexistent file
     def test_download_nonexistent(self):
@@ -243,7 +243,7 @@ class TestingDatabase(APITestCase):
     # Test deleting a file fails when unauthorized
     def test_delete_unauthorized(self):
         request = self.client2.delete("/v1/data/delete/1/")
-        self.assertEqual(request.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(request.status_code, status.HTTP_401_UNAUTHORIZED)
 
     @classmethod
     def tearDownClass(cls):
