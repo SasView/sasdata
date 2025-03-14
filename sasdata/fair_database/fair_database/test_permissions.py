@@ -77,7 +77,6 @@ class DataListPermissionsTests(APITestCase):
         )
 
     # Authenticated user cannot view other users' private data on list
-    # TODO: Change response codes
     def test_list_authenticated_2(self):
         token = self.client.post("/auth/login/", data=self.login_data_2)
         response = self.client.get("/v1/data/list/", headers=auth_header(token))
@@ -130,7 +129,7 @@ class DataListPermissionsTests(APITestCase):
         response2 = self.client.get("/v1/data/load/2/")
         response3 = self.client.get("/v1/data/load/3/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response2.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response2.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertEqual(response3.status_code, status.HTTP_200_OK)
 
     # Authenticated user can upload data
@@ -232,9 +231,9 @@ class DataListPermissionsTests(APITestCase):
         response = self.client.put("/v1/data/upload/1/", data=data)
         response2 = self.client.put("/v1/data/upload/2/", data=data)
         response3 = self.client.put("/v1/data/upload/3/", data=data)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response2.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(response3.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response2.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response3.status_code, status.HTTP_401_UNAUTHORIZED)
 
     # Authenticated user can download public and own data
     def test_download_authenticated(self):
@@ -266,7 +265,7 @@ class DataListPermissionsTests(APITestCase):
         b"".join(response.streaming_content)
         b"".join(response3.streaming_content)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response2.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response2.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertEqual(response3.status_code, status.HTTP_200_OK)
 
     @classmethod
