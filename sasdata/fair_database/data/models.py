@@ -121,6 +121,10 @@ class OperationTree(models.Model):
     dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE)
 
     # operation
+    operation = models.CharField(max_length=10)
+
+    # parameters
+    parameters = models.JSONField(default=dict)
 
     # previous operation
     parent_operation = models.ForeignKey(
