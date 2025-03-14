@@ -287,7 +287,7 @@ class TestSingleDataSet(APITestCase):
         request1 = self.auth_client2.get("/v1/data/set/2/")
         request2 = self.client.get("/v1/data/set/2/")
         self.assertEqual(request1.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(request2.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(request2.status_code, status.HTTP_401_UNAUTHORIZED)
 
     # Test only owner can change a private dataset
     def test_update_private_dataset(self):
@@ -324,7 +324,7 @@ class TestSingleDataSet(APITestCase):
         request1 = self.auth_client1.put("/v1/data/set/3/", data={"current_user": 1})
         request2 = self.client.put("/v1/data/set/3/", data={"name": "Different name"})
         self.assertEqual(request1.status_code, status.HTTP_403_FORBIDDEN)
-        self.assertEqual(request2.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(request2.status_code, status.HTTP_401_UNAUTHORIZED)
 
     # Test deleting a dataset
     def test_delete_dataset(self):
