@@ -13,7 +13,7 @@ from h5py._hl.group import Group as HDF5Group
 
 from sasdata.data import SasData
 from sasdata.data_backing import Dataset as SASDataDataset, Group as SASDataGroup
-from sasdata.metadata import Instrument, Collimation, Aperture
+from sasdata.metadata import Instrument, Collimation, Aperture, Source
 from sasdata.quantities.accessors import AccessorTarget
 
 from sasdata.quantities.quantity import NamedQuantity
@@ -41,29 +41,33 @@ def recurse_hdf5(hdf5_entry):
             data = hdf5_entry[()][0].decode("utf-8")
 
             return SASDataDataset[str](
-                name=hdf5_entry.name,
-                data=data,
-                attributes=attributes)
+                name=hdf5_entry.name, data=data, attributes=attributes
+            )
 
         else:
             data = np.array(hdf5_entry, dtype=hdf5_entry.dtype)
 
             return SASDataDataset[np.ndarray](
-                name=hdf5_entry.name,
-                data=data,
-                attributes=attributes)
+                name=hdf5_entry.name, data=data, attributes=attributes
+            )
 
     elif isinstance(hdf5_entry, HDF5Group):
         return SASDataGroup(
             name=hdf5_entry.name,
-            children={key: recurse_hdf5(hdf5_entry[key]) for key in hdf5_entry.keys()})
+            children={key: recurse_hdf5(hdf5_entry[key]) for key in hdf5_entry.keys()},
+        )
 
     else:
-        raise TypeError(f"Unknown type found during HDF5 parsing: {type(hdf5_entry)} ({hdf5_entry})")
+        raise TypeError(
+            f"Unknown type found during HDF5 parsing: {type(hdf5_entry)} ({hdf5_entry})"
+        )
+
 
 GET_UNITS_FROM_ELSEWHERE = units.meters
+
+
 def connected_data(node: SASDataGroup, name_prefix="") -> list[NamedQuantity]:
-    """ In the context of NeXus files, load a group of data entries that are organised together
+    """In the context of NeXus files, load a group of data entries that are organised together
     match up the units and errors with their values"""
     # Gather together data with its error terms
 
@@ -72,7 +76,6 @@ def connected_data(node: SASDataGroup, name_prefix="") -> list[NamedQuantity]:
     entries = {}
 
     for name in node.children:
-
         child = node.children[name]
 
         if "units" in child.attributes:
@@ -80,9 +83,9 @@ def connected_data(node: SASDataGroup, name_prefix="") -> list[NamedQuantity]:
         else:
             units = GET_UNITS_FROM_ELSEWHERE
 
-        quantity = NamedQuantity(name=name_prefix+child.name,
-                                 value=child.data,
-                                 units=units)
+        quantity = NamedQuantity(
+            name=name_prefix + child.name, value=child.data, units=units
+        )
 
         # Turns out people can't be trusted to use the same keys here
         if "uncertainty" in child.attributes or "uncertainties" in child.attributes:
@@ -108,6 +111,7 @@ def connected_data(node: SASDataGroup, name_prefix="") -> list[NamedQuantity]:
 
     return output
 
+
 def parse_apertures(node) -> list[Aperture]:
     result = []
     aps = [a for a in node if "aperture" in a]
@@ -130,6 +134,34 @@ def parse_apertures(node) -> list[Aperture]:
     return result
 
 
+def parse_source(node) -> Source:
+    beam_shape = None
+    beam_size = None
+    wavelength = None
+    wavelength_min = None
+    wavelength_max = None
+    wavelength_spread = None
+    if "beam_shape" in node:
+        beam_shape = node["beam_shape"]
+    if "wavelength" in node:
+        wavelength = node["wavelength"]
+    if "wavelength_min" in node:
+        wavelength = node["wavelength_min"]
+    if "wavelength_max" in node:
+        wavelength = node["wavelength_max"]
+    if "wavelength_spread" in node:
+        wavelength = node["wavelength_spread"]
+    return Source(
+        radiation=node["radiation"].asstr()[0],
+        beam_shape=beam_shape,
+        beam_size=beam_size,
+        wavelength=wavelength,
+        wavelength_min=wavelength_min,
+        wavelength_max=wavelength_max,
+        wavelength_spread=wavelength_spread,
+    )
+
+
 def parse_collimation(node) -> Collimation:
     if "length" in node:
         length = node["length"]
@@ -139,11 +171,16 @@ def parse_collimation(node) -> Collimation:
 
 
 def parse_instrument(raw, node) -> Instrument:
-    if "sasinstrument" in node:
-        collimations = [parse_collimation(node["sasinstrument"][x]) for x in node["sasinstrument"] if "collimation" in x]
-    else:
-        collimations=[]
-    return Instrument(raw, collimations=collimations)
+    collimations = [
+        parse_collimation(node[x])
+        for x in node
+        if "collimation" in x
+    ]
+    return Instrument(
+        raw,
+        collimations=collimations,
+        source=parse_source(node["sassource"]),
+    )
 
 
 def load_data(filename) -> list[SasData]:
@@ -172,14 +209,21 @@ def load_data(filename) -> list[SasData]:
                 else:
                     raw_metadata[key] = recurse_hdf5(component)
 
+            instrument = None
+            if "sasinstrument" in f["sasentry01"]:
+                instrument = parse_instrument(
+                    AccessorTarget(SASDataGroup("root", raw_metadata)).with_path_prefix(
+                        "sasinstrument|instrument"
+                    ),
+                    f["sasentry01"]["sasinstrument"],
+                )
+
             loaded_data.append(
                 SasData(
                     name=root_key,
                     data_contents=data_contents,
                     raw_metadata=SASDataGroup("root", raw_metadata),
-                    instrument=parse_instrument(
-                        AccessorTarget(SASDataGroup("root", raw_metadata)).with_path_prefix("sasinstrument|instrument"), f["sasentry01"]
-                    ),
+                    instrument=instrument,
                     verbose=False,
                 )
             )
