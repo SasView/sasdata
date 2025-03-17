@@ -11,6 +11,19 @@ from sasdata.quantities.absolute_temperature import AbsoluteTemperatureAccessor
 from sasdata.quantities.accessors import StringAccessor, LengthAccessor, AngleAccessor, QuantityAccessor, \
     DimensionlessAccessor, FloatAccessor, TemperatureAccessor, AccessorTarget
 
+@dataclass
+class Vec3:
+    """A three-vector of measured quantities"""
+    x : Optional[Quantity[float]]
+    y : Optional[Quantity[float]]
+    z : Optional[Quantity[float]]
+
+@dataclass
+class Rot3:
+    """A measured rotation in 3-space"""
+    roll : Optional[Quantity[float]]
+    pitch : Optional[Quantity[float]]
+    yaw : Optional[Quantity[float]]
 
 @dataclass
 class Detector:
@@ -19,10 +32,10 @@ class Detector:
     """
     name : Optional[str]
     distance : Optional[Quantity[float]]
-    offset : Optional[Quantity[float]]
+    offset : Optional[Vec3]
     orientation : Optional[Quantity[float]]
-    beam_center : Optional[Quantity[float]]
-    pixel_size : Optional[Quantity[float]]
+    beam_center : Optional[Vec3]
+    pixel_size : Optional[Vec3]
     slit_length : Optional[Quantity[float]]
 
 
