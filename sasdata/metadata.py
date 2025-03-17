@@ -258,11 +258,11 @@ class TransmissionSpectrum:
                 f"    Transmission:     {self.transmission.value}\n")
 
 
+@dataclass
 class Instrument:
-    def __init__(self, target: AccessorTarget, collimations: list[Collimation], source: Source, detector: list[Detector]):
-        self.collimations = collimations
-        self.detector = detector
-        self.source = source
+    collimations : list[Collimation]
+    source : Source
+    detector : list[Detector]
 
     def summary(self):
         return (
