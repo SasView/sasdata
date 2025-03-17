@@ -33,14 +33,52 @@ class DataFileView(APIView):
     Functionality for viewing a list of files and uploading a new file.
     """
 
-    def get(self):
-        pass
+    def get(self, request, version=None):
+        if "username" in request.GET:
+            search_user = get_object_or_404(User, username=request.GET["username"])
+            data_list = {"user_data_ids": {}}
+            private_data = DataFile.objects.filter(current_user=search_user)
+            for x in private_data:
+                if permissions.check_permissions(request, x):
+                    data_list["user_data_ids"][x.id] = x.file_name
+        else:
+            public_data = DataFile.objects.all()
+            data_list = {"public_data_ids": {}}
+            for x in public_data:
+                if permissions.check_permissions(request, x):
+                    data_list["public_data_ids"][x.id] = x.file_name
+        return Response(data_list)
 
-    def post(self):
-        pass
+    def post(self, request, version=None):
+        form = DataFileForm(request.data, request.FILES)
+        if form.is_valid():
+            form.save()
+        db = DataFile.objects.get(pk=form.instance.pk)
+        serializer = DataFileSerializer(
+            db,
+            data={
+                "file_name": os.path.basename(form.instance.file.path),
+                "current_user": None,
+                "users": [],
+            },
+            context={"is_public": db.is_public},
+        )
+        if request.user.is_authenticated:
+            serializer.data["current_user"] = request.user.id
 
-    def put(self):
-        pass
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+        return_data = {
+            "current_user": request.user.username,
+            "authenticated": request.user.is_authenticated,
+            "file_id": db.id,
+            "file_alternative_name": serializer.data["file_name"],
+            "is_public": serializer.data["is_public"],
+        }
+        return Response(return_data, status=status.HTTP_201_CREATED)
+
+    def put(self, request, version=None):
+        return self.post(request, version)
 
 
 class SingleDataFileView(APIView):
