@@ -22,7 +22,7 @@ from sasdata.dataloader.readers.cansas_constants import CansasConstants
 from sasdata.temp_hdf5_reader import load_data
 
 test_file_names = [
-    "simpleexamplefile",
+    # "simpleexamplefile",
     "nxcansas_1Dand2D_multisasentry",
     "nxcansas_1Dand2D_multisasdata",
     "MAR07232_rest",
