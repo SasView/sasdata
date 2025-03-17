@@ -168,11 +168,45 @@ class DataFileUsersView(APIView):
     revoking access.
     """
 
-    def get(self):
-        pass
+    # View users with access to a datafile
+    def get(self, request, data_id, version=None):
+        db = get_object_or_404(DataFile, id=data_id)
+        if not permissions.is_owner(request, db):
+            if not request.user.is_authenticated:
+                return HttpResponse(
+                    "Must be authenticated to manage access", status=401
+                )
+            return HttpResponseForbidden("Must be the data owner to manage access")
+        response_data = {
+            "file": db.pk,
+            "file_name": db.file_name,
+            "users": [user.username for user in db.users.all()],
+        }
+        return Response(response_data)
 
-    def put(self):
-        pass
+    # Grant or revoke access to a datafile
+    def put(self, request, data_id, version=None):
+        db = get_object_or_404(DataFile, id=data_id)
+        if not permissions.is_owner(request, db):
+            if not request.user.is_authenticated:
+                return HttpResponse(
+                    "Must be authenticated to manage access", status=401
+                )
+            return HttpResponseForbidden("Must be the data owner to manage access")
+        serializer = AccessManagementSerializer(data=request.data)
+        serializer.is_valid()
+        user = get_object_or_404(User, username=serializer.data["username"])
+        if serializer.data["access"]:
+            db.users.add(user)
+        else:
+            db.users.remove(user)
+        response_data = {
+            "user": user.username,
+            "file": db.pk,
+            "file_name": db.file_name,
+            "access": serializer.data["access"],
+        }
+        return Response(response_data)
 
 
 @api_view(["GET"])
