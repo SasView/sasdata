@@ -1,5 +1,6 @@
 from tokenize import String
 from typing import Optional
+from dataclasses import dataclass
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -67,25 +68,13 @@ class Detector:
                 f"   Slit length:  {self.slit_length.value}\n")
 
 
+@dataclass
 class Aperture:
-
-    def __init__(self, distance: Optional[Quantity[float]], size: Optional[tuple[ Optional[Quantity[float]], Optional[Quantity[float]], Optional[Quantity[float]] ]], size_name: Optional[str], name: Optional[str], apType: Optional[str]):
-
-        # Name
-        self.name = name
-
-        # Type
-        self.type = apType
-
-        # Size name - TODO: What is the name of a size
-        self.size_name = size_name
-
-        # Aperture size [Vector] # TODO: Wat!?!
-        self.size = size
-
-        # Aperture distance [float]
-        self.distance = distance
-
+    distance: Optional[Quantity[float]]
+    size: Optional[tuple[ Optional[Quantity[float]],Optional[Quantity[float]], Optional[Quantity[float]] ]]
+    size_name: Optional[str]
+    name: Optional[str]
+    apType: Optional[str]
 
     def summary(self):
         return (f"Aperture:\n"
@@ -93,17 +82,14 @@ class Aperture:
                 f"  Aperture size: {self.size}\n"
                 f"  Aperture distance: {self.distance}\n")
 
+@dataclass
 class Collimation:
     """
     Class to hold collimation information
     """
 
-    def __init__(self, length: Quantity[float], apertures: list[Aperture]):
-
-        # Length [float] [mm]
-        self.length = length
-        # TODO - parse units properly
-        self.apertures = apertures
+    length: Quantity[float]
+    apertures: list[Aperture]
 
     def summary(self):
 
