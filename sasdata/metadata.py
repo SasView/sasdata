@@ -25,12 +25,6 @@ class Rot3:
     pitch : Optional[Quantity[float]]
     yaw : Optional[Quantity[float]]
 
-def parse_length(node) -> Quantity[float]:
-    """Pull a single quantity with length units out of an HDF5 node"""
-    magnitude = node.astype(float)[0]
-    unit = node.attrs["units"]
-    return Quantity(magnitude, units.symbol_lookup[unit])
-
 @dataclass(kw_only=True)
 class Detector:
     """
@@ -113,29 +107,6 @@ class Source:
             f"    Beam Size:         {self.beam_size}\n"
         )
 
-
-"""
-Definitions of radiation types
-"""
-NEUTRON = 'neutron'
-XRAY = 'x-ray'
-MUON = 'muon'
-ELECTRON = 'electron'
-
-    def serialise_json(self):
-        data = {
-            "roll": None,
-            "pitch": None,
-            "yaw": None
-        }
-        if self.roll is not None:
-            data["roll"] = self.roll.serialise_json()
-        if self.pitch is not None:
-            data["pitch"] = self.pitch.serialise_json()
-        if self.yaw is not None:
-            data["yaw"] = self.yaw.serialise_json()
-        return data
-
 @dataclass(kw_only=True)
 class Sample:
     """
@@ -158,12 +129,6 @@ class Sample:
                 f"   Temperature:  {self.temperature}\n"
                 f"   Position:     {self.position}\n"
                 f"   Orientation:  {self.orientation}\n")
-        #
-        # _str += "   Details:\n"
-        # for item in self.details:
-        #     _str += "      %s\n" % item
-        #
-        # return _str
 
 
 @dataclass(kw_only=True)
@@ -203,30 +168,6 @@ class Instrument:
             "\n".join([c.summary() for c in self.collimations]) +
             "".join([d.summary() for d in self.detector]) +
             self.source.summary())
-
-def decode_string(data):
-    """ This is some crazy stuff"""
-
-    if isinstance(data, str):
-        return data
-
-    elif isinstance(data, np.ndarray):
-
-        if data.dtype == object:
-
-            data = data.reshape(-1)
-            data = data[0]
-
-            if isinstance(data, bytes):
-                return data.decode("utf-8")
-
-            return str(data)
-
-        else:
-            return data.tobytes().decode("utf-8")
-
-    else:
-        return str(data)
 
 @dataclass(kw_only=True)
 class Metadata:
