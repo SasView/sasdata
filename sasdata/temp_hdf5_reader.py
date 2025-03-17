@@ -13,7 +13,7 @@ from h5py._hl.group import Group as HDF5Group
 
 from sasdata.data import SasData
 from sasdata.data_backing import Dataset as SASDataDataset, Group as SASDataGroup
-from sasdata.metadata import Instrument, Collimation, Aperture, Source, BeamSize, Detector
+from sasdata.metadata import Instrument, Collimation, Aperture, Source, BeamSize, Detector, Vec3, Rot3
 from sasdata.quantities.accessors import AccessorTarget
 
 from sasdata.quantities.quantity import NamedQuantity, Quantity
@@ -111,7 +111,8 @@ def connected_data(node: SASDataGroup, name_prefix="") -> list[NamedQuantity]:
 
     return output
 
-def parse_length(node) -> Quantity[float]:
+def parse_quantity(node) -> Quantity[float]:
+    """Pull a single quantity with length units out of an HDF5 node"""
     magnitude = node.astype(float)[0]
     unit = node.attrs["units"]
     return Quantity(magnitude, units.symbol_lookup[unit])
@@ -124,15 +125,15 @@ def parse_apertures(node) -> list[Aperture]:
         distance = None
         size = None
         if "distance" in node[ap]:
-            distance = parse_length(node[ap]["distance"])
+            distance = parse_quantity(node[ap]["distance"])
         if "size" in node[ap]:
             x = y = z = None
             if "x" in node[ap]:
-                x = parse_length(node[ap]["size"]["x"])
+                x = parse_quantity(node[ap]["size"]["x"])
             if "y" in node[ap]:
-                y = parse_length(node[ap]["size"]["y"])
+                y = parse_quantity(node[ap]["size"]["y"])
             if "z" in node[ap]:
-                z = parse_length(node[ap]["size"]["z"])
+                z = parse_quantity(node[ap]["size"]["z"])
             if x is not None or y is not None or z is not None:
                 size = (x, y, z)
         result.append(Aperture(distance=distance, size=size, size_name=size_name, name=name, apType=apType))
@@ -146,11 +147,11 @@ def parse_beam_size(node) -> BeamSize:
     if "name" in node.attrs:
         name = node.atrs["name"].asstr()[0]
     if "x" in node:
-        x = parse_length(node["x"])
+        x = parse_quantity(node["x"])
     if "y" in node:
-        y = parse_length(node["y"])
+        y = parse_quantity(node["y"])
     if "z" in node:
-        z = parse_length(node["z"])
+        z = parse_quantity(node["z"])
     return BeamSize(name=name, x=x, y=y, z=z)
 
 def parse_source(node) -> Source:
@@ -163,13 +164,13 @@ def parse_source(node) -> Source:
     if "beam_shape" in node:
         beam_shape = node["beam_shape"]
     if "wavelength" in node:
-        wavelength = parse_length(node["wavelength"])
+        wavelength = parse_quantity(node["wavelength"])
     if "wavelength_min" in node:
-        wavelength = parse_length(node["wavelength_min"])
+        wavelength = parse_quantity(node["wavelength_min"])
     if "wavelength_max" in node:
-        wavelength = parse_length(node["wavelength_max"])
+        wavelength = parse_quantity(node["wavelength_max"])
     if "wavelength_spread" in node:
-        wavelength = parse_length(node["wavelength_spread"])
+        wavelength = parse_quantity(node["wavelength_spread"])
     if "beam_size" in node:
         beam_size = parse_beam_size(node["beam_size"])
     return Source(
@@ -182,6 +183,28 @@ def parse_source(node) -> Source:
         wavelength_spread=wavelength_spread,
     )
 
+def parse_vec3(node) -> Vec3:
+    """Parse a measured 3-vector"""
+    x = y = z = None
+    if "x" in node:
+        x = parse_quantity(node["x"])
+    if "y" in node:
+        y = parse_quantity(node["y"])
+    if "z" in node:
+        z = parse_quantity(node["z"])
+    return Vec3(x=x, y=y, z=z)
+
+def parse_rot3(node) -> Rot3:
+    """Parse a measured rotation"""
+    roll = pitch = yaw = None
+    if "roll" in node:
+        roll = parse_angle(node["roll"])
+    if "pitch" in node:
+        pitch = parse_angle(node["pitch"])
+    if "yaw" in node:
+        yaw = parse_angle(node["yaw"])
+    return Rot3(roll=roll, pitch=pitch, yaw=yaw)
+
 def parse_detector(node) -> Detector:
     name = None
     distance = None
@@ -193,9 +216,17 @@ def parse_detector(node) -> Detector:
     if "name" in node:
         name = node["name"].asstr()[0]
     if "SDD" in node:
-        distance = parse_length(node["SDD"])
+        distance = parse_quantity(node["SDD"])
     if "slit_length" in node:
-        slit_length = parse_length(node["slit_length"])
+        slit_length = parse_quantity(node["slit_length"])
+    if "offset" in node:
+        offset = parse_vec3(node["offset"])
+    if "beam_center" in node:
+        beam_center = parse_vec3(node["beam_center"])
+    if "pixel_size" in node:
+        pixel_size = parse_vec3(node["pixel_size"])
+    if "orientation" in node:
+        orientation = parse_rot3(node["orientation"])
 
     return Detector(name=name, distance=distance, offset=offset, orientation=orientation, beam_center=beam_center, pixel_size=pixel_size, slit_length=slit_length)
 
