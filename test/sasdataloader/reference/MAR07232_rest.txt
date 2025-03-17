@@ -12,8 +12,8 @@ Process:
     Term: None
     Notes: None
 Sample:
-   ID:           None
-   Transmission: [0.84357]
+   ID:           
+   Transmission: 0.84357
    Thickness:    None
    Temperature:  None
    Position:     None
