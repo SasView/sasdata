@@ -13,7 +13,7 @@ from sasdata.data_backing import Group, key_tree
 
 class SasData:
     def __init__(self, name: str,
-                 data_contents: dict[str, Quantity],
+                 data_contents: list[NamedQuantity],
                  dataset_type: DatasetType,
                  raw_metadata: Group,
                  metadata: Metadata,
@@ -24,7 +24,6 @@ class SasData:
         if not all([key in dataset_type.optional or key in dataset_type.required for key in data_contents.keys()]):
             raise ValueError("Columns don't match the dataset type")
         self._data_contents = data_contents
-        self._raw_metadata = raw_metadata
         self._verbose = verbose
 
         self.metadata = metadata
@@ -66,7 +65,7 @@ class SasData:
     def __getitem__(self, item: str):
         return self._data_contents[item]
 
-    def summary(self, indent = "  ", include_raw=False):
+    def summary(self, indent = "  "):
         s = f"{self.name}\n"
 
         for data in self._data_contents:
@@ -75,8 +74,5 @@ class SasData:
         s += f"Metadata:\n"
         s += "\n"
         s += self.metadata.summary()
-
-        if include_raw:
-            s += key_tree(self._raw_metadata)
 
         return s
