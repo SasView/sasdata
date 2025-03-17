@@ -1,3 +1,14 @@
+"""
+Contains classes describing the metadata for a scattering run
+
+The metadata is structures around the CANSas format version 1.1, found at
+https://www.cansas.org/formats/canSAS1d/1.1/doc/specification.html
+
+Metadata from other file formats should be massaged to fit into the data classes presented here.
+Any useful metadata which cannot be included in these classes represent a bug in the CANSas format.
+
+"""
+
 from tokenize import String
 from typing import Optional
 from dataclasses import dataclass
@@ -174,7 +185,7 @@ class Metadata:
     title: Optional[str]
     run: list[str]
     definition: Optional[str]
-    process: list[str]
+    process: list[Process]
     sample: Optional[Sample]
     instrument: Optional[Instrument]
 

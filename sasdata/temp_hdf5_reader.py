@@ -111,6 +111,8 @@ def connected_data(node: SASDataGroup, name_prefix="") -> list[NamedQuantity]:
 
     return output
 
+### Begin metadata parsing code
+
 def parse_quantity(node) -> Quantity[float]:
     """Pull a single quantity with length units out of an HDF5 node"""
     magnitude = node.astype(float)[0]
@@ -234,8 +236,9 @@ def parse_metadata(node) -> Metadata:
     title = opt_parse(node, "title", parse_string)
     run = [parse_string(node[r]) for r in node if "run" in r]
     definition = opt_parse(node, "definition", parse_string)
-
     return Metadata(process=process, instrument=instrument, sample=sample, title=title, run=run, definition=definition)
+
+### End Metadata parsing code
 
 
 def load_data(filename) -> list[SasData]:
