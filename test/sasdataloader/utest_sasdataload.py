@@ -42,4 +42,4 @@ def test_load_file(f):
 
     with open(local_load(f"reference/{f}.txt")) as infile:
         expected = "".join(infile.readlines())
-    assert data[0].summary() == expected
+    assert "".join(d.summary() for d in data) == expected
