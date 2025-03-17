@@ -60,16 +60,21 @@ class DataListPermissionsTests(APITestCase):
         }
 
     # Authenticated user can view list of data
-    # TODO: change to reflect inclusion of owned private data
     def test_list_authenticated(self):
         token = self.client.post("/auth/login/", data=self.login_data_1)
-        response = self.client.get("/v1/data/list/", headers=auth_header(token))
+        response = self.client.get("/v1/data/file/", headers=auth_header(token))
         response2 = self.client.get(
-            "/v1/data/list/testUser/", headers=auth_header(token)
+            "/v1/data/file/", data={"username": "testUser"}, headers=auth_header(token)
         )
         self.assertEqual(
             response.data,
-            {"public_data_ids": {1: "cyl_400_40.txt", 3: "cyl_testdata.txt"}},
+            {
+                "public_data_ids": {
+                    1: "cyl_400_40.txt",
+                    2: "cyl_400_20.txt",
+                    3: "cyl_testdata.txt",
+                }
+            },
         )
         self.assertEqual(
             response2.data,
@@ -79,12 +84,12 @@ class DataListPermissionsTests(APITestCase):
     # Authenticated user cannot view other users' private data on list
     def test_list_authenticated_2(self):
         token = self.client.post("/auth/login/", data=self.login_data_2)
-        response = self.client.get("/v1/data/list/", headers=auth_header(token))
+        response = self.client.get("/v1/data/file/", headers=auth_header(token))
         response2 = self.client.get(
-            "/v1/data/list/testUser/", headers=auth_header(token)
+            "/v1/data/file/", data={"username": "testUser"}, headers=auth_header(token)
         )
         response3 = self.client.get(
-            "/v1/data/list/testUser2/", headers=auth_header(token)
+            "/v1/data/file/", data={"username": "testUser2"}, headers=auth_header(token)
         )
         self.assertEqual(
             response.data,
@@ -96,8 +101,8 @@ class DataListPermissionsTests(APITestCase):
 
     # Unauthenticated user can view list of public data
     def test_list_unauthenticated(self):
-        response = self.client.get("/v1/data/list/")
-        response2 = self.client.get("/v1/data/list/testUser/")
+        response = self.client.get("/v1/data/file/")
+        response2 = self.client.get("/v1/data/file/", data={"username": "testUser"})
         self.assertEqual(
             response.data,
             {"public_data_ids": {1: "cyl_400_40.txt", 3: "cyl_testdata.txt"}},
@@ -108,9 +113,9 @@ class DataListPermissionsTests(APITestCase):
     # Authenticated user can load public data and owned private data
     def test_load_authenticated(self):
         token = self.client.post("/auth/login/", data=self.login_data_1)
-        response = self.client.get("/v1/data/load/1/", headers=auth_header(token))
-        response2 = self.client.get("/v1/data/load/2/", headers=auth_header(token))
-        response3 = self.client.get("/v1/data/load/3/", headers=auth_header(token))
+        response = self.client.get("/v1/data/file/1/", headers=auth_header(token))
+        response2 = self.client.get("/v1/data/file/2/", headers=auth_header(token))
+        response3 = self.client.get("/v1/data/file/3/", headers=auth_header(token))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response2.status_code, status.HTTP_200_OK)
         self.assertEqual(response3.status_code, status.HTTP_200_OK)
@@ -118,16 +123,16 @@ class DataListPermissionsTests(APITestCase):
     # Authenticated user cannot load others' private data
     def test_load_unauthorized(self):
         token = self.client.post("/auth/login/", data=self.login_data_2)
-        response = self.client.get("/v1/data/load/2/", headers=auth_header(token))
-        response2 = self.client.get("/v1/data/load/3/", headers=auth_header(token))
+        response = self.client.get("/v1/data/file/2/", headers=auth_header(token))
+        response2 = self.client.get("/v1/data/file/3/", headers=auth_header(token))
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(response2.status_code, status.HTTP_200_OK)
 
     # Unauthenticated user can load public data only
     def test_load_unauthenticated(self):
-        response = self.client.get("/v1/data/load/1/")
-        response2 = self.client.get("/v1/data/load/2/")
-        response3 = self.client.get("/v1/data/load/3/")
+        response = self.client.get("/v1/data/file/1/")
+        response2 = self.client.get("/v1/data/file/2/")
+        response3 = self.client.get("/v1/data/file/3/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response2.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertEqual(response3.status_code, status.HTTP_200_OK)
@@ -138,7 +143,7 @@ class DataListPermissionsTests(APITestCase):
         file = open(find("cyl_testdata1.txt"), "rb")
         data = {"file": file, "is_public": False}
         response = self.client.post(
-            "/v1/data/upload/", data=data, headers=auth_header(token)
+            "/v1/data/file/", data=data, headers=auth_header(token)
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(
@@ -159,8 +164,8 @@ class DataListPermissionsTests(APITestCase):
         file2 = open(find("cyl_testdata2.txt"), "rb")
         data = {"file": file, "is_public": True}
         data2 = {"file": file2, "is_public": False}
-        response = self.client.post("/v1/data/upload/", data=data)
-        response2 = self.client.post("/v1/data/upload/", data=data2)
+        response = self.client.post("/v1/data/file/", data=data)
+        response2 = self.client.post("/v1/data/file/", data=data2)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(
             response.data,
@@ -179,10 +184,10 @@ class DataListPermissionsTests(APITestCase):
         token = self.client.post("/auth/login/", data=self.login_data_1)
         data = {"is_public": False}
         response = self.client.put(
-            "/v1/data/upload/2/", data=data, headers=auth_header(token)
+            "/v1/data/file/2/", data=data, headers=auth_header(token)
         )
         response2 = self.client.put(
-            "/v1/data/upload/3/", data=data, headers=auth_header(token)
+            "/v1/data/file/3/", data=data, headers=auth_header(token)
         )
         self.assertEqual(
             response.data,
@@ -212,13 +217,13 @@ class DataListPermissionsTests(APITestCase):
         file = open(find("cyl_400_40.txt"))
         data = {"file": file, "is_public": False}
         response = self.client.put(
-            "/v1/data/upload/1/", data=data, headers=auth_header(token)
+            "/v1/data/file/1/", data=data, headers=auth_header(token)
         )
         response2 = self.client.put(
-            "/v1/data/upload/2/", data=data, headers=auth_header(token)
+            "/v1/data/file/2/", data=data, headers=auth_header(token)
         )
         response3 = self.client.put(
-            "/v1/data/upload/3/", data=data, headers=auth_header(token)
+            "/v1/data/file/3/", data=data, headers=auth_header(token)
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(response2.status_code, status.HTTP_403_FORBIDDEN)
@@ -228,9 +233,9 @@ class DataListPermissionsTests(APITestCase):
     def test_upload_put_unauthenticated(self):
         file = open(find("cyl_400_40.txt"))
         data = {"file": file, "is_public": False}
-        response = self.client.put("/v1/data/upload/1/", data=data)
-        response2 = self.client.put("/v1/data/upload/2/", data=data)
-        response3 = self.client.put("/v1/data/upload/3/", data=data)
+        response = self.client.put("/v1/data/file/1/", data=data)
+        response2 = self.client.put("/v1/data/file/2/", data=data)
+        response3 = self.client.put("/v1/data/file/3/", data=data)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertEqual(response2.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertEqual(response3.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -238,9 +243,15 @@ class DataListPermissionsTests(APITestCase):
     # Authenticated user can download public and own data
     def test_download_authenticated(self):
         token = self.client.post("/auth/login/", data=self.login_data_1)
-        response = self.client.get("/v1/data/1/download/", headers=auth_header(token))
-        response2 = self.client.get("/v1/data/2/download/", headers=auth_header(token))
-        response3 = self.client.get("/v1/data/3/download/", headers=auth_header(token))
+        response = self.client.get(
+            "/v1/data/file/1/", data={"download": True}, headers=auth_header(token)
+        )
+        response2 = self.client.get(
+            "/v1/data/file/2/", data={"download": True}, headers=auth_header(token)
+        )
+        response3 = self.client.get(
+            "/v1/data/file/3/", data={"download": True}, headers=auth_header(token)
+        )
         b"".join(response.streaming_content)
         b"".join(response2.streaming_content)
         b"".join(response3.streaming_content)
@@ -251,17 +262,21 @@ class DataListPermissionsTests(APITestCase):
     # Authenticated user cannot download others' data
     def test_download_unauthorized(self):
         token = self.client.post("/auth/login/", data=self.login_data_2)
-        response = self.client.get("/v1/data/2/download/", headers=auth_header(token))
-        response2 = self.client.get("/v1/data/3/download/", headers=auth_header(token))
+        response = self.client.get(
+            "/v1/data/file/2/", data={"download": True}, headers=auth_header(token)
+        )
+        response2 = self.client.get(
+            "/v1/data/file/3/", data={"download": True}, headers=auth_header(token)
+        )
         b"".join(response2.streaming_content)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(response2.status_code, status.HTTP_200_OK)
 
     # Unauthenticated user cannot download private data
     def test_download_unauthenticated(self):
-        response = self.client.get("/v1/data/1/download/")
-        response2 = self.client.get("/v1/data/2/download/")
-        response3 = self.client.get("/v1/data/3/download/")
+        response = self.client.get("/v1/data/file/1/", data={"download": True})
+        response2 = self.client.get("/v1/data/file/2/", data={"download": True})
+        response3 = self.client.get("/v1/data/file/3/", data={"download": True})
         b"".join(response.streaming_content)
         b"".join(response3.streaming_content)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
