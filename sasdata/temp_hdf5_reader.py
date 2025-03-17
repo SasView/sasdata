@@ -168,14 +168,8 @@ def parse_collimation(node) -> Collimation:
 
 
 def parse_instrument(raw, node) -> Instrument:
-    collimations = [
-        parse_collimation(node[x])
-        for x in node
-        if "collimation" in x
-    ]
     return Instrument(
-        raw,
-        collimations=collimations,
+        collimations= [parse_collimation(node[x]) for x in node if "collimation" in x],
         source=parse_source(node["sassource"]),
     )
 
