@@ -251,28 +251,23 @@ def decode_string(data):
         return str(data)
 
 class Metadata:
-    def __init__(self, target: AccessorTarget, process: list[Process], sample: Optional[Sample], instrument: Optional[Instrument]):
-        self._target = target
-
+    def __init__(self, target: AccessorTarget, title: Optional[str], run: list[str], definition: Optional[str], process: list[Process], sample: Optional[Sample], instrument: Optional[Instrument]):
         self.instrument = instrument
         self.process = process
         self.sample = sample
         self.transmission_spectrum = TransmissionSpectrum(target.with_path_prefix("sastransmission_spectrum|transmission_spectrum"))
 
-        self._title = StringAccessor(target, "title")
-        self._run = StringAccessor(target, "run")
-        self._definition = StringAccessor(target, "definition")
-
-        self.title: str = decode_string(self._title.value)
-        self.run: str = decode_string(self._run.value)
-        self.definition: str = decode_string(self._definition.value)
+        self.title = title
+        self.run = run
+        self.definition = definition
 
     def summary(self):
+        run_string = self.run[0] if len(self.run) == 1 else self.run
         return (
-            f"  {self.title}, Run: {self.run}\n" +
+            f"  {self.title}, Run: {run_string}\n" +
             "  " + "="*len(self.title) +
                            "=======" +
-            "="*len(self.run) + "\n\n" +
+            "="*len(run_string) + "\n\n" +
             f"Definition: {self.title}\n" +
             "".join([p.summary() for p in self.process]) +
             self.sample.summary() +
