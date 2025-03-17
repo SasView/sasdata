@@ -117,52 +117,51 @@ def parse_quantity(node) -> Quantity[float]:
     unit = node.attrs["units"]
     return Quantity(magnitude, units.symbol_lookup[unit])
 
+def parse_string(node) -> str:
+    """Access string data from a node"""
+    return node.asstr()[0]
+
+def opt_parse(node, key, subparser):
+    """Parse a subnode if it is present"""
+    if key in node:
+        return subparser(node[key])
+    return None
+
+def attr_parse(node, key, subparser):
+    """Parse an attribute if it is present"""
+    if key in node.attrs:
+        return subparser(node.attrs[key])
+    return None
+
 
 def parse_apterture(node) -> Aperture:
-    distance = None
-    size = None
+    distance = opt_parse(node, "distance", parse_quantity)
+    name = attr_parse(node, "name", parse_string)
+    size = opt_parse(node, "size", parse_vec3)
     size_name = None
-    apType = None
-    if "name" in node.atrs:
-        name = node.attrs["name"].asstr()[0]
-    if "type" in node.atrs:
-        apType = node.attrs["type"].asstr()[0]
-    if "distance" in node:
-        distance = parse_quantity(node["distance"])
-    if "size" in node:
-        size = parse_vec3(node["size"])
-        if "name" in node.attrs:
-            size_name = node.attrs["name"].asstr()[0]
-    return Aperture(distance=distance, size=size, size_name=size_name, name=name, apType=apType)
+    type_ = attr_parse(node, "type", parse_string)
+    if size:
+        size_name = attr_parse(node["size"], "name", parse_string)
+    else:
+        size_name = None
+    return Aperture(distance=distance, size=size, size_name=size_name, name=name, type_=type_)
 
 def parse_beam_size(node) -> BeamSize:
     name = None
-    if "name" in node.attrs:
-        name = node.atrs["name"].asstr()[0]
+    name = attr_parse(node, "name", parse_string)
     size = parse_vec3(node)
     return BeamSize(name=name, size=size)
 
 def parse_source(node) -> Source:
-    beam_shape = None
-    beam_size = None
-    wavelength = None
-    wavelength_min = None
-    wavelength_max = None
-    wavelength_spread = None
-    if "beam_shape" in node:
-        beam_shape = node["beam_shape"]
-    if "wavelength" in node:
-        wavelength = parse_quantity(node["wavelength"])
-    if "wavelength_min" in node:
-        wavelength = parse_quantity(node["wavelength_min"])
-    if "wavelength_max" in node:
-        wavelength = parse_quantity(node["wavelength_max"])
-    if "wavelength_spread" in node:
-        wavelength = parse_quantity(node["wavelength_spread"])
-    if "beam_size" in node:
-        beam_size = parse_beam_size(node["beam_size"])
+    radiation = opt_parse(node, "radiation", parse_string)
+    beam_shape = opt_parse(node, "beam_shape", parse_string)
+    beam_size = opt_parse(node, "beam_size", parse_beam_size)
+    wavelength = opt_parse(node, "wavelength", parse_quantity)
+    wavelength_min = opt_parse(node, "wavelength_min", parse_quantity)
+    wavelength_max = opt_parse(node, "wavelength_max", parse_quantity)
+    wavelength_spread = opt_parse(node, "wavelength_spread", parse_quantity)
     return Source(
-        radiation=node["radiation"].asstr()[0],
+        radiation=radiation,
         beam_shape=beam_shape,
         beam_size=beam_size,
         wavelength=wavelength,
@@ -173,58 +172,33 @@ def parse_source(node) -> Source:
 
 def parse_vec3(node) -> Vec3:
     """Parse a measured 3-vector"""
-    x = y = z = None
-    if "x" in node:
-        x = parse_quantity(node["x"])
-    if "y" in node:
-        y = parse_quantity(node["y"])
-    if "z" in node:
-        z = parse_quantity(node["z"])
+    x = opt_parse(node, "x", parse_quantity)
+    y = opt_parse(node, "y", parse_quantity)
+    z = opt_parse(node, "z", parse_quantity)
     return Vec3(x=x, y=y, z=z)
 
 def parse_rot3(node) -> Rot3:
     """Parse a measured rotation"""
-    roll = pitch = yaw = None
-    if "roll" in node:
-        roll = parse_quantity(node["roll"])
-    if "pitch" in node:
-        pitch = parse_quantity(node["pitch"])
-    if "yaw" in node:
-        yaw = parse_quantity(node["yaw"])
+    roll = opt_parse(node, "roll", parse_quantity)
+    pitch = opt_parse(node, "pitch", parse_quantity)
+    yaw = opt_parse(node, "yaw", parse_quantity)
     return Rot3(roll=roll, pitch=pitch, yaw=yaw)
 
 def parse_detector(node) -> Detector:
-    name = None
-    distance = None
-    offset = None
-    orientation = None
-    beam_center = None
-    pixel_size = None
-    slit_length = None
-    if "name" in node:
-        name = node["name"].asstr()[0]
-    if "SDD" in node:
-        distance = parse_quantity(node["SDD"])
-    if "slit_length" in node:
-        slit_length = parse_quantity(node["slit_length"])
-    if "offset" in node:
-        offset = parse_vec3(node["offset"])
-    if "beam_center" in node:
-        beam_center = parse_vec3(node["beam_center"])
-    if "pixel_size" in node:
-        pixel_size = parse_vec3(node["pixel_size"])
-    if "orientation" in node:
-        orientation = parse_rot3(node["orientation"])
+    name = opt_parse(node, "name", parse_string)
+    distance = opt_parse(node, "SDD", parse_quantity)
+    offset = opt_parse(node, "offset", parse_vec3)
+    orientation = opt_parse(node, "orientation", parse_rot3)
+    beam_center = opt_parse(node, "beam_center", parse_vec3)
+    pixel_size = opt_parse(node, "pixel_size", parse_vec3)
+    slit_length = opt_parse(node, "slit_length", parse_quantity)
 
     return Detector(name=name, distance=distance, offset=offset, orientation=orientation, beam_center=beam_center, pixel_size=pixel_size, slit_length=slit_length)
 
 
 
 def parse_collimation(node) -> Collimation:
-    if "length" in node:
-        length = node["length"]
-    else:
-        length = None
+    length = opt_parse(node, "length", parse_quantity)
     return Collimation(length=length, apertures=[parse_apterture(node[ap]) for ap in node if "aperture" in ap])
 
 
@@ -236,28 +210,14 @@ def parse_instrument(node) -> Instrument:
     )
 
 def parse_sample(node) -> Sample:
-    name = None
-    sample_id = None
-    thickness = None
-    transmission = None
-    temperature = None
-    position = None
-    orientation = None
+    name = attr_parse(node, "name", parse_string)
+    sample_id = opt_parse(node, "ID", parse_string)
+    thickness = opt_parse(node, "thickness", parse_quantity)
+    transmission = opt_parse(node, "transmission", lambda n: float(n[0].astype(str)))
+    temperature = opt_parse(node, "temperature", parse_quantity)
+    position = opt_parse(node, "position", parse_vec3)
+    orientation = opt_parse(node, "orientation", parse_rot3)
     details : list[str] = [node[d].asstr()[0] for d in node if "details" in d]
-    if "name" in node.attrs:
-        name = node.attrs["name"].asstr()[0]
-    if "ID" in node:
-        sample_id = node["ID"].asstr()[0]
-    if "thickness" in node:
-        thickness = parse_quantity(node["thickness"])
-    if "transmission" in node:
-        transmission = float(node["transmission"][0].astype(str))
-    if "temperature" in node:
-        temperature = parse_quantity(node["temperature"])
-    if "position" in node:
-        position = parse_vec3(node["position"])
-    if "orientation" in node:
-        orientation = parse_rot3(node["orientation"])
     return Sample(name=name, sample_id=sample_id, thickness=thickness, transmission=transmission, temperature=temperature, position=position, orientation=orientation, details=details)
 
 
@@ -287,12 +247,8 @@ def load_data(filename) -> list[SasData]:
                 else:
                     raw_metadata[key] = recurse_hdf5(component)
 
-            instrument = None
-            if "sasinstrument" in f["sasentry01"]:
-                instrument = parse_instrument(f["sasentry01"]["sasinstrument"])
-            sample = None
-            if "sassample" in f["sasentry01"]:
-                sample = parse_sample(f["sasentry01"]["sassample"])
+            instrument = opt_parse(f["sasentry01"], "sasinstrument", parse_instrument)
+            sample = opt_parse(f["sasentry01"], "sassample", parse_sample)
 
             loaded_data.append(
                 SasData(
