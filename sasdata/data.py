@@ -6,7 +6,7 @@ import numpy as np
 
 from sasdata.dataset_types import DatasetType, one_dim, two_dim
 from sasdata.quantities.quantity import NamedQuantity, Quantity
-from sasdata.metadata import Metadata, Instrument, Process, Sample
+from sasdata.metadata import Metadata
 from sasdata.quantities.accessors import AccessorTarget
 from sasdata.data_backing import Group, key_tree
 
