@@ -66,7 +66,7 @@ class DataFileView(APIView):
             context={"is_public": db.is_public},
         )
         if request.user.is_authenticated:
-            serializer.data["current_user"] = request.user.id
+            serializer.initial_data["current_user"] = request.user.id
 
         if serializer.is_valid(raise_exception=True):
             serializer.save()
