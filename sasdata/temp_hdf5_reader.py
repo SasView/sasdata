@@ -168,45 +168,16 @@ def parse_collimation(node) -> Collimation:
 
 
 def parse_instrument(raw, node) -> Instrument:
-<<<<<<< HEAD
-<<<<<<< HEAD
-    collimations = parse_collimations(node)
-    return Instrument(raw, collimations=collimations)
-||||||| parent of a1a66a4a (Parse source)
-    if "sasinstrument" in node:
-        collimations = [parse_collimation(node["sasinstrument"][x]) for x in node["sasinstrument"] if "collimation" in x]
-    else:
-        collimations=[]
-    return Instrument(raw, collimations=collimations)
-=======
     collimations = [
         parse_collimation(node[x])
         for x in node
         if "collimation" in x
     ]
-||||||| parent of aedb35f2 (Instrument is a data class)
-    collimations = [
-        parse_collimation(node[x])
-        for x in node
-        if "collimation" in x
-    ]
-=======
->>>>>>> aedb35f2 (Instrument is a data class)
     return Instrument(
-<<<<<<< HEAD
-        raw,
-        collimations=collimations,
-||||||| parent of aedb35f2 (Instrument is a data class)
-        raw,
-        collimations=collimations,
-        detector=[parse_detector(node[d]) for d in node if "detector" in d],
-=======
         collimations= [parse_collimation(node[x]) for x in node if "collimation" in x],
         detector=[parse_detector(node[d]) for d in node if "detector" in d],
->>>>>>> aedb35f2 (Instrument is a data class)
         source=parse_source(node["sassource"]),
     )
->>>>>>> a1a66a4a (Parse source)
 
 
 def load_data(filename) -> list[SasData]:
@@ -235,31 +206,21 @@ def load_data(filename) -> list[SasData]:
                 else:
                     raw_metadata[key] = recurse_hdf5(component)
 
-            instrument = None
-            if "sasinstrument" in f["sasentry01"]:
-                instrument = parse_instrument(
-                    AccessorTarget(SASDataGroup("root", raw_metadata)).with_path_prefix(
-                        "sasinstrument|instrument"
-                    ),
-                    f["sasentry01"]["sasinstrument"],
-                )
+            instrument = opt_parse(f["sasentry01"], "sasinstrument", parse_instrument)
+            sample = opt_parse(f["sasentry01"], "sassample", parse_sample)
+            process = [parse_process(f["sasentry01"][p]) for p in f["sasentry01"] if "sasprocess" in p]
+            title = opt_parse(f["sasentry01"], "title", parse_string)
+            run = [parse_string(f["sasentry01"][r]) for r in f["sasentry01"] if "run" in r]
+            definition = opt_parse(f["sasentry01"], "definition", parse_string)
+
+            metadata = Metadata(process=process, instrument=instrument, sample=sample, title=title, run=run, definition=definition)
 
             loaded_data.append(
                 SasData(
                     name=root_key,
                     data_contents=data_contents,
                     raw_metadata=SASDataGroup("root", raw_metadata),
-<<<<<<< HEAD
-                    instrument=parse_instrument(
-                        AccessorTarget(SASDataGroup("root", raw_metadata)).with_path_prefix("sasinstrument|instrument"), f
-                    ),
-||||||| parent of a1a66a4a (Parse source)
-                    instrument=parse_instrument(
-                        AccessorTarget(SASDataGroup("root", raw_metadata)).with_path_prefix("sasinstrument|instrument"), f["sasentry01"]
-                    ),
-=======
                     instrument=instrument,
->>>>>>> a1a66a4a (Parse source)
                     verbose=False,
                 )
             )
