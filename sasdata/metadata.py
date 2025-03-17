@@ -62,7 +62,7 @@ class Aperture:
     size: Optional[Vec3]
     size_name: Optional[str]
     name: Optional[str]
-    apType: Optional[str]
+    type_: Optional[str]
 
     def summary(self):
         return (f"Aperture:\n"
