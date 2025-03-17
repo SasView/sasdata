@@ -12,7 +12,7 @@ Process:
     Term: None
     Notes: None
 Sample:
-   ID:           None
+   ID:           
    Transmission: None
    Thickness:    None
    Temperature:  None
