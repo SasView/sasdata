@@ -12,9 +12,8 @@ from sasdata.data_backing import Group, key_tree
 
 class SasData:
     def __init__(self, name: str,
-                 data_contents: list[NamedQuantity],
+                 data_contents: dict[str, Quantity],
                  dataset_type: DatasetType,
-                 raw_metadata: Group,
                  metadata: Metadata,
                  verbose: bool=False):
 
