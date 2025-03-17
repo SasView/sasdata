@@ -102,14 +102,9 @@ class Source:
     wavelength_spread : Optional[Quantity[float]]
 
     def summary(self) -> str:
-        if self.radiation is None and self.type.value and self.probe_particle.value:
-            radiation = f"{self.type.value} {self.probe_particle.value}"
-        else:
-            radiation = f"{self.radiation}"
-
         return (
             f"Source:\n"
-            f"    Radiation:         {radiation}\n"
+            f"    Radiation:         {self.radiation}\n"
             f"    Shape:             {self.beam_shape}\n"
             f"    Wavelength:        {self.wavelength}\n"
             f"    Min. Wavelength:   {self.wavelength_min}\n"
