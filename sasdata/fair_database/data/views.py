@@ -33,6 +33,7 @@ class DataFileView(APIView):
     Functionality for viewing a list of files and uploading a new file.
     """
 
+    # List of datafiles
     def get(self, request, version=None):
         if "username" in request.GET:
             search_user = get_object_or_404(User, username=request.GET["username"])
@@ -49,6 +50,7 @@ class DataFileView(APIView):
                     data_list["public_data_ids"][x.id] = x.file_name
         return Response(data_list)
 
+    # Create a datafile
     def post(self, request, version=None):
         form = DataFileForm(request.data, request.FILES)
         if form.is_valid():
@@ -77,6 +79,7 @@ class DataFileView(APIView):
         }
         return Response(return_data, status=status.HTTP_201_CREATED)
 
+    # Create a datafile
     def put(self, request, version=None):
         return self.post(request, version)
 
@@ -88,14 +91,73 @@ class SingleDataFileView(APIView):
     Functionality for viewing, modifying, or deleting a DataFile.
     """
 
-    def get(self):
-        pass
+    # Load the contents of a datafile or download the file to a device
+    def get(self, request, data_id, version=None):
+        data = get_object_or_404(DataFile, id=data_id)
+        if "download" in request.data and request.data["download"]:
+            if not permissions.check_permissions(request, data):
+                if not request.user.is_authenticated:
+                    return HttpResponse("Must be authenticated to download", status=401)
+                return HttpResponseForbidden("data is private")
+            try:
+                file = open(data.file.path, "rb")
+            except Exception as e:
+                return HttpResponseBadRequest(str(e))
+            if file is None:
+                raise Http404("File not found.")
+            return FileResponse(file, as_attachment=True)
+        else:
+            loader = Loader()
+            if not permissions.check_permissions(request, data):
+                if not request.user.is_authenticated:
+                    return HttpResponse("Must be authenticated to view", status=401)
+                return HttpResponseForbidden(
+                    "Data is either not public or wrong auth token"
+                )
+            data_list = loader.load(data.file.path)
+            contents = [str(data) for data in data_list]
+            return_data = {data.file_name: contents}
+            return Response(return_data)
 
-    def put(self):
-        pass
+    # Modify a datafile
+    def put(self, request, data_id, version=None):
+        db = get_object_or_404(DataFile, id=data_id)
+        if not permissions.check_permissions(request, db):
+            if not request.user.is_authenticated:
+                return HttpResponse("must be authenticated to modify", status=401)
+            return HttpResponseForbidden("must be the data owner to modify")
+        form = DataFileForm(request.data, request.FILES, instance=db)
+        if form.is_valid():
+            form.save()
+        serializer = DataFileSerializer(
+            db,
+            data={
+                "file_name": os.path.basename(form.instance.file.path),
+                "current_user": request.user.id,
+            },
+            context={"is_public": db.is_public},
+            partial=True,
+        )
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+        return_data = {
+            "current_user": request.user.username,
+            "authenticated": request.user.is_authenticated,
+            "file_id": db.id,
+            "file_alternative_name": serializer.data["file_name"],
+            "is_public": serializer.data["is_public"],
+        }
+        return Response(return_data)
 
-    def delete(self):
-        pass
+    # Delete a datafile
+    def delete(self, request, data_id, version=None):
+        db = get_object_or_404(DataFile, id=data_id)
+        if not permissions.is_owner(request, db):
+            if not request.user.is_authenticated:
+                return HttpResponse("Must be authenticated to delete", status=401)
+            return HttpResponseForbidden("Must be the data owner to delete")
+        db.delete()
+        return Response(data={"success": True})
 
 
 class DataFileUsersView(APIView):
