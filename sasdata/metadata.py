@@ -25,6 +25,12 @@ class Rot3:
     pitch : Optional[Quantity[float]]
     yaw : Optional[Quantity[float]]
 
+def parse_length(node) -> Quantity[float]:
+    """Pull a single quantity with length units out of an HDF5 node"""
+    magnitude = node.astype(float)[0]
+    unit = node.attrs["units"]
+    return Quantity(magnitude, units.symbol_lookup[unit])
+
 @dataclass
 class Detector:
     """
@@ -33,7 +39,7 @@ class Detector:
     name : Optional[str]
     distance : Optional[Quantity[float]]
     offset : Optional[Vec3]
-    orientation : Optional[Quantity[float]]
+    orientation : Optional[Rot3]
     beam_center : Optional[Vec3]
     pixel_size : Optional[Vec3]
     slit_length : Optional[Quantity[float]]
@@ -53,7 +59,7 @@ class Detector:
 @dataclass
 class Aperture:
     distance: Optional[Quantity[float]]
-    size: Optional[tuple[ Optional[Quantity[float]],Optional[Quantity[float]], Optional[Quantity[float]] ]]
+    size: Optional[Vec3]
     size_name: Optional[str]
     name: Optional[str]
     apType: Optional[str]
