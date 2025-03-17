@@ -13,7 +13,7 @@ from h5py._hl.group import Group as HDF5Group
 
 from sasdata.data import SasData
 from sasdata.data_backing import Dataset as SASDataDataset, Group as SASDataGroup
-from sasdata.metadata import Instrument, Collimation, Aperture, Source, BeamSize, Detector, Vec3, Rot3, Sample
+from sasdata.metadata import Instrument, Collimation, Aperture, Source, BeamSize, Detector, Vec3, Rot3, Sample, Process
 from sasdata.quantities.accessors import AccessorTarget
 
 from sasdata.quantities.quantity import NamedQuantity, Quantity
@@ -220,6 +220,13 @@ def parse_sample(node) -> Sample:
     details : list[str] = [node[d].asstr()[0] for d in node if "details" in d]
     return Sample(name=name, sample_id=sample_id, thickness=thickness, transmission=transmission, temperature=temperature, position=position, orientation=orientation, details=details)
 
+def parse_process(node) -> Process:
+    name = opt_parse(node, "name", parse_string)
+    date = opt_parse(node, "date", parse_string)
+    description = opt_parse(node, "description", parse_string)
+    term = opt_parse(node, "term", parse_string)
+    return Process(name=name, date=date, description=description, term=term)
+
 
 def load_data(filename) -> list[SasData]:
     with h5py.File(filename, "r") as f:
@@ -249,12 +256,14 @@ def load_data(filename) -> list[SasData]:
 
             instrument = opt_parse(f["sasentry01"], "sasinstrument", parse_instrument)
             sample = opt_parse(f["sasentry01"], "sassample", parse_sample)
+            process = [parse_process(f["sasentry01"][p]) for p in f["sasentry01"] if "sasprocess" in p]
 
             loaded_data.append(
                 SasData(
                     name=root_key,
                     data_contents=data_contents,
                     raw_metadata=SASDataGroup("root", raw_metadata),
+                    process=process,
                     sample=sample,
                     instrument=instrument,
                     verbose=False,
