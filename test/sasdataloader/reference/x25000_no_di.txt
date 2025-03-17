@@ -5,12 +5,6 @@ Metadata:
   =======
 
 Definition: 
-Process:
-    Name: None
-    Date: None
-    Description: None
-    Term: None
-    Notes: None
 Sample:
    ID:           
    Transmission: None
