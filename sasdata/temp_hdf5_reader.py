@@ -16,7 +16,7 @@ from sasdata.data_backing import Dataset as SASDataDataset, Group as SASDataGrou
 from sasdata.metadata import Instrument, Collimation, Aperture, Source, BeamSize, Detector
 from sasdata.quantities.accessors import AccessorTarget
 
-from sasdata.quantities.quantity import NamedQuantity
+from sasdata.quantities.quantity import NamedQuantity, Quantity
 from sasdata.quantities import units
 from sasdata.quantities.unit_parser import parse
 
@@ -180,7 +180,13 @@ def parse_source(node) -> Source:
 
 def parse_detector(node) -> Detector:
     name = None
+    if "name" in node:
+        name = node["name"].asstr()[0]
     distance = None
+    if "SDD" in node:
+        magnitude = node["SDD"].astype(float)[0]
+        unit = node["SDD"].attrs["units"]
+        distance = Quantity(magnitude, units.symbol_lookup[unit])
     offset = None
     orientation = None
     beam_center = None
