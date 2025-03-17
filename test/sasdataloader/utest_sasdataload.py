@@ -35,7 +35,7 @@ def local_load(path: str):
     return os.path.join(os.path.dirname(__file__), path)
 
 
-@pytest.mark.current
+@pytest.mark.sasdata
 @pytest.mark.parametrize("f", test_file_names)
 def test_load_file(f):
     data = load_data(local_load(f"data/{f}.h5"))
