@@ -178,41 +178,6 @@ class Process:
                 f"    Term: {self.term}\n"
                 )
 
-class TransmissionSpectrum:
-    """
-    Class that holds information about transmission spectrum
-    for white beams and spallation sources.
-    """
-    def __init__(self, target_object: AccessorTarget):
-        # TODO: Needs to be multiple instances
-        self.name = StringAccessor(target_object, "name")
-        self.timestamp = StringAccessor(target_object, "timestamp")
-
-        # Wavelength (float) [A]
-        self.wavelength = LengthAccessor[ArrayLike](target_object,
-                                                    "wavelength",
-                                                    "wavelength.units")
-
-        # Transmission (float) [unit less]
-        self.transmission = DimensionlessAccessor[ArrayLike](target_object,
-                                                             "transmission",
-                                                             "units",
-                                                             default_unit=units.none)
-
-        # Transmission Deviation (float) [unit less]
-        self.transmission_deviation = DimensionlessAccessor[ArrayLike](target_object,
-                                                                       "transmission_deviation",
-                                                                       "transmission_deviation.units",
-                                                                       default_unit=units.none)
-
-
-    def summary(self) -> str:
-        return (f"Transmission Spectrum:\n"
-                f"    Name:             {self.name.value}\n"
-                f"    Timestamp:        {self.timestamp.value}\n"
-                f"    Wavelengths:      {self.wavelength.value}\n"
-                f"    Transmission:     {self.transmission.value}\n")
-
 
 @dataclass
 class Instrument:
@@ -250,16 +215,14 @@ def decode_string(data):
     else:
         return str(data)
 
+@dataclass(kw_only=True)
 class Metadata:
-    def __init__(self, target: AccessorTarget, title: Optional[str], run: list[str], definition: Optional[str], process: list[Process], sample: Optional[Sample], instrument: Optional[Instrument]):
-        self.instrument = instrument
-        self.process = process
-        self.sample = sample
-        self.transmission_spectrum = TransmissionSpectrum(target.with_path_prefix("sastransmission_spectrum|transmission_spectrum"))
-
-        self.title = title
-        self.run = run
-        self.definition = definition
+    title: Optional[str]
+    run: list[str]
+    definition: Optional[str]
+    process: list[str]
+    sample: Optional[Sample]
+    instrument: Optional[Instrument]
 
     def summary(self):
         run_string = self.run[0] if len(self.run) == 1 else self.run
@@ -271,5 +234,4 @@ class Metadata:
             f"Definition: {self.title}\n" +
             "".join([p.summary() for p in self.process]) +
             self.sample.summary() +
-            (self.instrument.summary() if self.instrument else "") +
-            self.transmission_spectrum.summary())
+            (self.instrument.summary() if self.instrument else ""))
