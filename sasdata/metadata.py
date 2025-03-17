@@ -11,14 +11,14 @@ from sasdata.quantities.absolute_temperature import AbsoluteTemperatureAccessor
 from sasdata.quantities.accessors import StringAccessor, LengthAccessor, AngleAccessor, QuantityAccessor, \
     DimensionlessAccessor, FloatAccessor, TemperatureAccessor, AccessorTarget
 
-@dataclass
+@dataclass(kw_only=True)
 class Vec3:
     """A three-vector of measured quantities"""
     x : Optional[Quantity[float]]
     y : Optional[Quantity[float]]
     z : Optional[Quantity[float]]
 
-@dataclass
+@dataclass(kw_only=True)
 class Rot3:
     """A measured rotation in 3-space"""
     roll : Optional[Quantity[float]]
@@ -31,7 +31,7 @@ def parse_length(node) -> Quantity[float]:
     unit = node.attrs["units"]
     return Quantity(magnitude, units.symbol_lookup[unit])
 
-@dataclass
+@dataclass(kw_only=True)
 class Detector:
     """
     Detector information
@@ -56,7 +56,7 @@ class Detector:
                 f"   Slit length:  {self.slit_length}\n")
 
 
-@dataclass
+@dataclass(kw_only=True)
 class Aperture:
     distance: Optional[Quantity[float]]
     size: Optional[Vec3]
@@ -70,7 +70,7 @@ class Aperture:
                 f"  Aperture size: {self.size}\n"
                 f"  Aperture distance: {self.distance}\n")
 
-@dataclass
+@dataclass(kw_only=True)
 class Collimation:
     """
     Class to hold collimation information
@@ -86,14 +86,12 @@ class Collimation:
             f"Collimation:\n"
             f"   Length: {self.length}\n")
 
-@dataclass
+@dataclass(kw_only=True)
 class BeamSize:
     name: Optional[str]
-    x: Optional[Quantity[float]]
-    y: Optional[Quantity[float]]
-    z: Optional[Quantity[float]]
+    size: Optional[Vec3]
 
-@dataclass
+@dataclass(kw_only=True)
 class Source:
     radiation: str
     beam_shape: Optional[str]
