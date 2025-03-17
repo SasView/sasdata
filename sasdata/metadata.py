@@ -105,7 +105,6 @@ class BeamSize:
     y: Optional[Quantity[float]]
     z: Optional[Quantity[float]]
 
-
 @dataclass
 class Source:
     radiation: str
