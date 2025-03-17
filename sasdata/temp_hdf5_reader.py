@@ -13,7 +13,7 @@ from h5py._hl.group import Group as HDF5Group
 
 from sasdata.data import SasData
 from sasdata.data_backing import Dataset as SASDataDataset, Group as SASDataGroup
-from sasdata.metadata import Instrument, Collimation, Aperture, Source, BeamSize, Detector, Vec3, Rot3
+from sasdata.metadata import Instrument, Collimation, Aperture, Source, BeamSize, Detector, Vec3, Rot3, Sample
 from sasdata.quantities.accessors import AccessorTarget
 
 from sasdata.quantities.quantity import NamedQuantity, Quantity
@@ -228,12 +228,37 @@ def parse_collimation(node) -> Collimation:
     return Collimation(length=length, apertures=[parse_apterture(node[ap]) for ap in node if "aperture" in ap])
 
 
-def parse_instrument(raw, node) -> Instrument:
+def parse_instrument(node) -> Instrument:
     return Instrument(
         collimations= [parse_collimation(node[x]) for x in node if "collimation" in x],
         detector=[parse_detector(node[d]) for d in node if "detector" in d],
         source=parse_source(node["sassource"]),
     )
+
+def parse_sample(node) -> Sample:
+    name = None
+    sample_id = None
+    thickness = None
+    transmission = None
+    temperature = None
+    position = None
+    orientation = None
+    details : list[str] = [node[d].asstr()[0] for d in node if "details" in d]
+    if "name" in node.attrs:
+        name = node.attrs["name"].asstr()[0]
+    if "ID" in node:
+        sample_id = node["ID"].asstr()[0]
+    if "thickness" in node:
+        thickness = parse_quantity(node["thickness"])
+    if "transmission" in node:
+        transmission = float(node["transmission"][0].astype(str))
+    if "temperature" in node:
+        temperature = parse_quantity(node["temperature"])
+    if "position" in node:
+        position = parse_vec3(node["position"])
+    if "orientation" in node:
+        orientation = parse_rot3(node["orientation"])
+    return Sample(name=name, sample_id=sample_id, thickness=thickness, transmission=transmission, temperature=temperature, position=position, orientation=orientation, details=details)
 
 
 def load_data(filename) -> list[SasData]:
@@ -264,18 +289,17 @@ def load_data(filename) -> list[SasData]:
 
             instrument = None
             if "sasinstrument" in f["sasentry01"]:
-                instrument = parse_instrument(
-                    AccessorTarget(SASDataGroup("root", raw_metadata)).with_path_prefix(
-                        "sasinstrument|instrument"
-                    ),
-                    f["sasentry01"]["sasinstrument"],
-                )
+                instrument = parse_instrument(f["sasentry01"]["sasinstrument"])
+            sample = None
+            if "sassample" in f["sasentry01"]:
+                sample = parse_sample(f["sasentry01"]["sassample"])
 
             loaded_data.append(
                 SasData(
                     name=root_key,
                     data_contents=data_contents,
                     raw_metadata=SASDataGroup("root", raw_metadata),
+                    sample=sample,
                     instrument=instrument,
                     verbose=False,
                 )
