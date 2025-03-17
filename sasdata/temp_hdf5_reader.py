@@ -113,13 +113,13 @@ def connected_data(node: SASDataGroup, name_prefix="") -> list[NamedQuantity]:
 
 ### Begin metadata parsing code
 
-def parse_quantity(node) -> Quantity[float]:
+def parse_quantity(node : HDF5Group) -> Quantity[float]:
     """Pull a single quantity with length units out of an HDF5 node"""
     magnitude = node.astype(float)[0]
     unit = node.attrs["units"]
     return Quantity(magnitude, units.symbol_lookup[unit])
 
-def parse_string(node) -> str:
+def parse_string(node : HDF5Group) -> str:
     """Access string data from a node"""
     return node.asstr()[0]
 
@@ -136,7 +136,7 @@ def attr_parse(node, key, subparser):
     return None
 
 
-def parse_apterture(node) -> Aperture:
+def parse_apterture(node : HDF5Group) -> Aperture:
     distance = opt_parse(node, "distance", parse_quantity)
     name = attr_parse(node, "name", parse_string)
     size = opt_parse(node, "size", parse_vec3)
@@ -148,13 +148,13 @@ def parse_apterture(node) -> Aperture:
         size_name = None
     return Aperture(distance=distance, size=size, size_name=size_name, name=name, type_=type_)
 
-def parse_beam_size(node) -> BeamSize:
+def parse_beam_size(node : HDF5Group) -> BeamSize:
     name = None
     name = attr_parse(node, "name", parse_string)
     size = parse_vec3(node)
     return BeamSize(name=name, size=size)
 
-def parse_source(node) -> Source:
+def parse_source(node : HDF5Group) -> Source:
     radiation = opt_parse(node, "radiation", parse_string)
     beam_shape = opt_parse(node, "beam_shape", parse_string)
     beam_size = opt_parse(node, "beam_size", parse_beam_size)
@@ -172,21 +172,21 @@ def parse_source(node) -> Source:
         wavelength_spread=wavelength_spread,
     )
 
-def parse_vec3(node) -> Vec3:
+def parse_vec3(node : HDF5Group) -> Vec3:
     """Parse a measured 3-vector"""
     x = opt_parse(node, "x", parse_quantity)
     y = opt_parse(node, "y", parse_quantity)
     z = opt_parse(node, "z", parse_quantity)
     return Vec3(x=x, y=y, z=z)
 
-def parse_rot3(node) -> Rot3:
+def parse_rot3(node : HDF5Group) -> Rot3:
     """Parse a measured rotation"""
     roll = opt_parse(node, "roll", parse_quantity)
     pitch = opt_parse(node, "pitch", parse_quantity)
     yaw = opt_parse(node, "yaw", parse_quantity)
     return Rot3(roll=roll, pitch=pitch, yaw=yaw)
 
-def parse_detector(node) -> Detector:
+def parse_detector(node : HDF5Group) -> Detector:
     name = opt_parse(node, "name", parse_string)
     distance = opt_parse(node, "SDD", parse_quantity)
     offset = opt_parse(node, "offset", parse_vec3)
@@ -199,19 +199,19 @@ def parse_detector(node) -> Detector:
 
 
 
-def parse_collimation(node) -> Collimation:
+def parse_collimation(node : HDF5Group) -> Collimation:
     length = opt_parse(node, "length", parse_quantity)
     return Collimation(length=length, apertures=[parse_apterture(node[ap]) for ap in node if "aperture" in ap])
 
 
-def parse_instrument(node) -> Instrument:
+def parse_instrument(node : HDF5Group) -> Instrument:
     return Instrument(
         collimations= [parse_collimation(node[x]) for x in node if "collimation" in x],
         detector=[parse_detector(node[d]) for d in node if "detector" in d],
         source=parse_source(node["sassource"]),
     )
 
-def parse_sample(node) -> Sample:
+def parse_sample(node : HDF5Group) -> Sample:
     name = attr_parse(node, "name", parse_string)
     sample_id = opt_parse(node, "ID", parse_string)
     thickness = opt_parse(node, "thickness", parse_quantity)
@@ -222,14 +222,14 @@ def parse_sample(node) -> Sample:
     details : list[str] = [node[d].asstr()[0] for d in node if "details" in d]
     return Sample(name=name, sample_id=sample_id, thickness=thickness, transmission=transmission, temperature=temperature, position=position, orientation=orientation, details=details)
 
-def parse_process(node) -> Process:
+def parse_process(node : HDF5Group) -> Process:
     name = opt_parse(node, "name", parse_string)
     date = opt_parse(node, "date", parse_string)
     description = opt_parse(node, "description", parse_string)
     term = opt_parse(node, "term", parse_string)
     return Process(name=name, date=date, description=description, term=term)
 
-def parse_metadata(node) -> Metadata:
+def parse_metadata(node : HDF5Group) -> Metadata:
     instrument = opt_parse(node, "sasinstrument", parse_instrument)
     sample = opt_parse(node, "sassample", parse_sample)
     process = [parse_process(node[p]) for p in node if "sasprocess" in p]
