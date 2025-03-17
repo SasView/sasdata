@@ -111,6 +111,11 @@ def connected_data(node: SASDataGroup, name_prefix="") -> list[NamedQuantity]:
 
     return output
 
+def parse_length(node) -> Quantity[float]:
+    magnitude = node.astype(float)[0]
+    unit = node.attrs["units"]
+    return Quantity(magnitude, units.symbol_lookup[unit])
+
 
 def parse_apertures(node) -> list[Aperture]:
     result = []
@@ -119,15 +124,15 @@ def parse_apertures(node) -> list[Aperture]:
         distance = None
         size = None
         if "distance" in node[ap]:
-            distance = node[ap]["distance"]
+            distance = parse_length(node[ap]["distance"])
         if "size" in node[ap]:
             x = y = z = None
             if "x" in node[ap]:
-                x = node[ap]["size"]["x"]
+                x = parse_length(node[ap]["size"]["x"])
             if "y" in node[ap]:
-                y = node[ap]["size"]["y"]
+                y = parse_length(node[ap]["size"]["y"])
             if "z" in node[ap]:
-                z = node[ap]["size"]["z"]
+                z = parse_length(node[ap]["size"]["z"])
             if x is not None or y is not None or z is not None:
                 size = (x, y, z)
         result.append(Aperture(distance=distance, size=size, size_name=size_name, name=name, apType=apType))
@@ -139,15 +144,14 @@ def parse_beam_size(node) -> BeamSize:
     y = None
     z = None
     if "name" in node.attrs:
-        name = node.atrs["keys"]
+        name = node.atrs["name"].asstr()[0]
     if "x" in node:
-        x = node["x"]
+        x = parse_length(node["x"])
     if "y" in node:
-        y = node["y"]
+        y = parse_length(node["y"])
     if "z" in node:
-        z = node["z"]
+        z = parse_length(node["z"])
     return BeamSize(name=name, x=x, y=y, z=z)
-
 
 def parse_source(node) -> Source:
     beam_shape = None
@@ -159,13 +163,13 @@ def parse_source(node) -> Source:
     if "beam_shape" in node:
         beam_shape = node["beam_shape"]
     if "wavelength" in node:
-        wavelength = node["wavelength"]
+        wavelength = parse_length(node["wavelength"])
     if "wavelength_min" in node:
-        wavelength = node["wavelength_min"]
+        wavelength = parse_length(node["wavelength_min"])
     if "wavelength_max" in node:
-        wavelength = node["wavelength_max"]
+        wavelength = parse_length(node["wavelength_max"])
     if "wavelength_spread" in node:
-        wavelength = node["wavelength_spread"]
+        wavelength = parse_length(node["wavelength_spread"])
     if "beam_size" in node:
         beam_size = parse_beam_size(node["beam_size"])
     return Source(
@@ -180,18 +184,18 @@ def parse_source(node) -> Source:
 
 def parse_detector(node) -> Detector:
     name = None
-    if "name" in node:
-        name = node["name"].asstr()[0]
     distance = None
-    if "SDD" in node:
-        magnitude = node["SDD"].astype(float)[0]
-        unit = node["SDD"].attrs["units"]
-        distance = Quantity(magnitude, units.symbol_lookup[unit])
     offset = None
     orientation = None
     beam_center = None
     pixel_size = None
     slit_length = None
+    if "name" in node:
+        name = node["name"].asstr()[0]
+    if "SDD" in node:
+        distance = parse_length(node["SDD"])
+    if "slit_length" in node:
+        slit_length = parse_length(node["slit_length"])
 
     return Detector(name=name, distance=distance, offset=offset, orientation=orientation, beam_center=beam_center, pixel_size=pixel_size, slit_length=slit_length)
 
