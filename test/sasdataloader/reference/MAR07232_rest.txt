@@ -5,12 +5,6 @@ Metadata:
   =============================
 
 Definition: MAR07232_rest_out.dat
-Process:
-    Name: None
-    Date: None
-    Description: None
-    Term: None
-    Notes: None
 Sample:
    ID:           
    Transmission: 0.84357
