@@ -312,12 +312,11 @@ class DataSetView(APIView):
         # TODO: JSON deserialization probably
         # TODO: revisit request data format
         serializer = DataSetSerializer(data=request.data, context={"request": request})
-        if serializer.is_valid():
+        if serializer.is_valid(raise_exception=True):
             serializer.save()
-            db = serializer.instance
-            response = {"dataset_id": db.id, "name": db.name, "is_public": db.is_public}
-            return Response(data=response, status=status.HTTP_201_CREATED)
-        return HttpResponseBadRequest()
+        db = serializer.instance
+        response = {"dataset_id": db.id, "name": db.name, "is_public": db.is_public}
+        return Response(data=response, status=status.HTTP_201_CREATED)
 
     # create a dataset
     def put(self, request, version=None):
@@ -358,7 +357,7 @@ class SingleDataSetView(APIView):
         serializer = DataSetSerializer(
             db, request.data, context={"request": request}, partial=True
         )
-        if serializer.is_valid():
+        if serializer.is_valid(raise_exception=True):
             serializer.save()
         data = {"data_id": db.id, "name": db.name, "is_public": db.is_public}
         return Response(data)
@@ -410,7 +409,7 @@ class DataSetUsersView(APIView):
                 )
             return HttpResponseForbidden("Must be the dataset owner to manage access")
         serializer = AccessManagementSerializer(data=request.data)
-        serializer.is_valid()
+        serializer.is_valid(raise_exception=True)
         user = get_object_or_404(User, username=serializer.data["username"])
         if serializer.data["access"]:
             db.users.add(user)
