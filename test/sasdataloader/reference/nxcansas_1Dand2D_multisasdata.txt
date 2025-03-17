@@ -6,11 +6,10 @@ Metadata:
 
 Definition: MH4_5deg_16T_SLOW
 Process:
-    Name: None
-    Date: None
+    Name: Mantid generated CanSAS1D XML
+    Date: 11-May-2016 12:15:34
     Description: None
     Term: None
-    Notes: None
 Sample:
    ID:           
    Transmission: None
