@@ -26,6 +26,55 @@ from fair_database import permissions
 from fair_database.permissions import DataPermission
 
 
+class DataFileView(APIView):
+    """
+    View associated with the DataFile model.
+
+    Functionality for viewing a list of files and uploading a new file.
+    """
+
+    def get(self):
+        pass
+
+    def post(self):
+        pass
+
+    def put(self):
+        pass
+
+
+class SingleDataFileView(APIView):
+    """
+    View associated with a single DataFile.
+
+    Functionality for viewing, modifying, or deleting a DataFile.
+    """
+
+    def get(self):
+        pass
+
+    def put(self):
+        pass
+
+    def delete(self):
+        pass
+
+
+class DataFileUsersView(APIView):
+    """
+    View for the users that have access to a dataset.
+
+    Functionality for accessing a list of users with access and granting or
+    revoking access.
+    """
+
+    def get(self):
+        pass
+
+    def put(self):
+        pass
+
+
 @api_view(["GET"])
 def list_data(request, username=None, version=None):
     if request.method == "GET":
