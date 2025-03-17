@@ -94,7 +94,7 @@ class SingleDataFileView(APIView):
     # Load the contents of a datafile or download the file to a device
     def get(self, request, data_id, version=None):
         data = get_object_or_404(DataFile, id=data_id)
-        if "download" in request.data and request.data["download"]:
+        if "download" in request.GET and request.GET["download"]:
             if not permissions.check_permissions(request, data):
                 if not request.user.is_authenticated:
                     return HttpResponse("Must be authenticated to download", status=401)
