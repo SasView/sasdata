@@ -261,7 +261,7 @@ def load_data(filename) -> list[SasData]:
             run = [parse_string(f["sasentry01"][r]) for r in f["sasentry01"] if "run" in r]
             definition = opt_parse(f["sasentry01"], "definition", parse_string)
 
-            metadata = Metadata(AccessorTarget(SASDataGroup("root", raw_metadata),verbose=False), process=process, instrument=instrument, sample=sample, title=title, run=run, definition=definition)
+            metadata = Metadata(process=process, instrument=instrument, sample=sample, title=title, run=run, definition=definition)
 
             loaded_data.append(
                 SasData(
