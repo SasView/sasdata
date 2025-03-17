@@ -158,20 +158,16 @@ class Sample:
         # return _str
 
 
+@dataclass(kw_only=True)
 class Process:
     """
     Class that holds information about the processes
     performed on the data.
     """
-    def __init__(self, target_object: AccessorTarget):
-        self.name = StringAccessor(target_object, "name")
-        self.date = StringAccessor(target_object, "date")
-        self.description = StringAccessor(target_object, "description")
-
-        #TODO: It seems like these might be lists of strings, this should be checked
-
-        self.term = StringAccessor(target_object, "term")
-        self.notes = StringAccessor(target_object, "notes")
+    name : Optional[ str ]
+    date : Optional[ str ]
+    description : Optional[ str ]
+    term : Optional[ str ]
 
     def single_line_desc(self):
         """
@@ -181,11 +177,10 @@ class Process:
 
     def summary(self):
         return (f"Process:\n"
-                f"    Name: {self.name.value}\n"
-                f"    Date: {self.date.value}\n"
-                f"    Description: {self.description.value}\n"
-                f"    Term: {self.term.value}\n"
-                f"    Notes: {self.notes.value}\n"
+                f"    Name: {self.name}\n"
+                f"    Date: {self.date}\n"
+                f"    Description: {self.description}\n"
+                f"    Term: {self.term}\n"
                 )
 
 class TransmissionSpectrum:
@@ -261,11 +256,11 @@ def decode_string(data):
         return str(data)
 
 class Metadata:
-    def __init__(self, target: AccessorTarget, sample: Optional[Sample], instrument: Optional[Instrument]):
+    def __init__(self, target: AccessorTarget, process: list[Process], sample: Optional[Sample], instrument: Optional[Instrument]):
         self._target = target
 
         self.instrument = instrument
-        self.process = Process(target.with_path_prefix("sasprocess|process"))
+        self.process = process
         self.sample = sample
         self.transmission_spectrum = TransmissionSpectrum(target.with_path_prefix("sastransmission_spectrum|transmission_spectrum"))
 
@@ -284,7 +279,7 @@ class Metadata:
                            "=======" +
             "="*len(self.run) + "\n\n" +
             f"Definition: {self.title}\n" +
-            self.process.summary() +
+            "".join([p.summary() for p in self.process]) +
             self.sample.summary() +
             (self.instrument.summary() if self.instrument else "") +
             self.transmission_spectrum.summary())
