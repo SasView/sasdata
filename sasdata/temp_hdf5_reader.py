@@ -108,29 +108,6 @@ def connected_data(node: SASDataGroup, name_prefix="") -> list[NamedQuantity]:
 
     return output
 
-<<<<<<< HEAD
-||||||| parent of a1a66a4a (Parse source)
-def parse_apertures(node) -> list[Aperture]:
-    result = []
-    aps = [a for a in node if "aperture" in a]
-    for ap in aps:
-        distance = None
-        size = None
-        if "distance" in node[ap]:
-            distance = node[ap]["distance"]
-        if "size" in node[ap]:
-            x = y = z = None
-            if "x" in node[ap]:
-                x = node[ap]["size"]["x"]
-            if "y" in node[ap]:
-                y = node[ap]["size"]["y"]
-            if "z" in node[ap]:
-                z = node[ap]["size"]["z"]
-            if x is not None or y is not None or z is not None:
-                size = (x, y, z)
-        result.append(Aperture(distance=distance, size=size, size_name=size_name, name=name, apType=apType))
-    return result
-=======
 
 def parse_apertures(node) -> list[Aperture]:
     result = []
@@ -152,25 +129,7 @@ def parse_apertures(node) -> list[Aperture]:
                 size = (x, y, z)
         result.append(Aperture(distance=distance, size=size, size_name=size_name, name=name, apType=apType))
     return result
->>>>>>> a1a66a4a (Parse source)
 
-<<<<<<< HEAD
-def parse_collimations(node) -> list[Collimation]:
-    if "sasinstrument" not in node["sasentry01"]:
-        return []
-    return [
-        Collimation(name=None, length=x)
-        for x in node["sasentry01"]["sasinstrument"]["sascollimation01"]
-    ]
-||||||| parent of a1a66a4a (Parse source)
-
-def parse_collimation(node) -> Collimation:
-    if "length" in node:
-        length = node["length"]
-    else:
-        length = None
-    return Collimation(length=length, apertures=parse_apertures(node))
-=======
 
 def parse_source(node) -> Source:
     beam_shape = None
@@ -206,10 +165,10 @@ def parse_collimation(node) -> Collimation:
     else:
         length = None
     return Collimation(length=length, apertures=parse_apertures(node))
->>>>>>> a1a66a4a (Parse source)
 
 
 def parse_instrument(raw, node) -> Instrument:
+<<<<<<< HEAD
 <<<<<<< HEAD
     collimations = parse_collimations(node)
     return Instrument(raw, collimations=collimations)
@@ -225,9 +184,26 @@ def parse_instrument(raw, node) -> Instrument:
         for x in node
         if "collimation" in x
     ]
+||||||| parent of aedb35f2 (Instrument is a data class)
+    collimations = [
+        parse_collimation(node[x])
+        for x in node
+        if "collimation" in x
+    ]
+=======
+>>>>>>> aedb35f2 (Instrument is a data class)
     return Instrument(
+<<<<<<< HEAD
         raw,
         collimations=collimations,
+||||||| parent of aedb35f2 (Instrument is a data class)
+        raw,
+        collimations=collimations,
+        detector=[parse_detector(node[d]) for d in node if "detector" in d],
+=======
+        collimations= [parse_collimation(node[x]) for x in node if "collimation" in x],
+        detector=[parse_detector(node[d]) for d in node if "detector" in d],
+>>>>>>> aedb35f2 (Instrument is a data class)
         source=parse_source(node["sassource"]),
     )
 >>>>>>> a1a66a4a (Parse source)

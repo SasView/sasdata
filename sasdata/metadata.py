@@ -290,12 +290,12 @@ class TransmissionSpectrum:
                 f"    Transmission:     {self.transmission.value}\n")
 
 
+@dataclass
 class Instrument:
-    def __init__(self, target: AccessorTarget, collimations: list[Collimation], source: Source):
-        self.aperture = Aperture(target.with_path_prefix("sasaperture|aperture"))
-        self.collimations = collimations
-        self.detector = Detector(target.with_path_prefix("sasdetector|detector"))
-        self.source = source
+    collimations : list[Collimation]
+    source : Source
+    detector : list[Detector]
+
     def summary(self):
         return (
             self.aperture.summary() +
