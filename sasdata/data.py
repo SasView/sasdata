@@ -15,9 +15,7 @@ class SasData:
                  data_contents: dict[str, Quantity],
                  dataset_type: DatasetType,
                  raw_metadata: Group,
-                 process: list[Process],
-                 sample: Optional[Sample],
-                 instrument: Optional[Instrument],
+                 metadata: Metadata,
                  verbose: bool=False):
 
         self.name = name
@@ -28,7 +26,7 @@ class SasData:
         self._raw_metadata = raw_metadata
         self._verbose = verbose
 
-        self.metadata = Metadata(AccessorTarget(raw_metadata, verbose=verbose), process=process, instrument=instrument, sample=sample)
+        self.metadata = metadata
 
         # TODO: Could this be optional?
         self.dataset_type: DatasetType = dataset_type
