@@ -13,7 +13,7 @@ from h5py._hl.group import Group as HDF5Group
 
 from sasdata.data import SasData
 from sasdata.data_backing import Dataset as SASDataDataset, Group as SASDataGroup
-from sasdata.metadata import Instrument, Collimation, Aperture, Source, BeamSize
+from sasdata.metadata import Instrument, Collimation, Aperture, Source, BeamSize, Detector
 from sasdata.quantities.accessors import AccessorTarget
 
 from sasdata.quantities.quantity import NamedQuantity
@@ -178,6 +178,18 @@ def parse_source(node) -> Source:
         wavelength_spread=wavelength_spread,
     )
 
+def parse_detector(node) -> Detector:
+    name = None
+    distance = None
+    offset = None
+    orientation = None
+    beam_center = None
+    pixel_size = None
+    slit_length = None
+
+    return Detector(name=name, distance=distance, offset=offset, orientation=orientation, beam_center=beam_center, pixel_size=pixel_size, slit_length=slit_length)
+
+
 
 def parse_collimation(node) -> Collimation:
     if "length" in node:
@@ -196,6 +208,7 @@ def parse_instrument(raw, node) -> Instrument:
     return Instrument(
         raw,
         collimations=collimations,
+        detector=[parse_detector(node[d]) for d in node if "detector" in d],
         source=parse_source(node["sassource"]),
     )
 
