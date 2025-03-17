@@ -98,80 +98,40 @@ class Collimation:
             f"Collimation:\n"
             f"   Length: {self.length}\n")
 
+@dataclass
+class BeamSize:
+    name: Optional[str]
+    x: Optional[Quantity[float]]
+    y: Optional[Quantity[float]]
+    z: Optional[Quantity[float]]
 
 
+@dataclass
 class Source:
-    """
-    Class to hold source information
-    """
-
-    def __init__(self, target_object: AccessorTarget):
-        # Name
-        self.name = StringAccessor(target_object, "name")
-
-        # Generic radiation type (Type and probe give more specific info) [string]
-        self.radiation = StringAccessor(target_object, "radiation")
-
-        # Type and probe are only written to by the NXcanSAS reader
-        # Specific radiation type (Synchotron X-ray, Reactor neutron, etc) [string]
-        self.type = StringAccessor(target_object, "type")
-
-        # Radiation probe (generic probe such as neutron, x-ray, muon, etc) [string]
-        self.probe_particle = StringAccessor(target_object, "probe")
-
-        # Beam size name
-        self.beam_size_name = StringAccessor(target_object, "beam_size_name")
-
-        # Beam size [Vector] [mm]
-        self.beam_size = LengthAccessor[ArrayLike](target_object,
-                                                   "beam_size",
-                                                   "beam_size.units",
-                                                   default_unit=units.millimeters)
-
-        # Beam shape [string]
-        self.beam_shape = StringAccessor(target_object, "beam_shape")
-
-        # Wavelength [float] [Angstrom]
-        self.wavelength = LengthAccessor[float](target_object,
-                                                "wavelength",
-                                                "wavelength.units",
-                                                default_unit=units.angstroms)
-
-        # Minimum wavelength [float] [Angstrom]
-        self.wavelength_min = LengthAccessor[float](target_object,
-                                                    "wavelength_min",
-                                                    "wavelength_min.units",
-                                                    default_unit=units.angstroms)
-
-        # Maximum wavelength [float] [Angstrom]
-        self.wavelength_max = LengthAccessor[float](target_object,
-                                                    "wavelength_min",
-                                                    "wavelength_max.units",
-                                                    default_unit=units.angstroms)
-
-        # Wavelength spread [float] [Angstrom]
-        # Quantity because it might have other units, such as percent
-        self.wavelength_spread = QuantityAccessor[float](target_object,
-                                                         "wavelength_spread",
-                                                         "wavelength_spread.units",
-                                                         default_unit=units.angstroms)
+    radiation: str
+    beam_shape: str
+    beam_size: Optional[BeamSize]
+    wavelength : Quantity[float]
+    wavelength_min : Quantity[float]
+    wavelength_max : Quantity[float]
+    wavelength_spread : Quantity[float]
 
     def summary(self) -> str:
-
-        if self.radiation.value is None and self.type.value and self.probe_particle.value:
+        if self.radiation is None and self.type.value and self.probe_particle.value:
             radiation = f"{self.type.value} {self.probe_particle.value}"
         else:
-            radiation = f"{self.radiation.value}"
+            radiation = f"{self.radiation}"
 
-        return (f"Source:\n"
-                f"    Radiation:         {radiation}\n"
-                f"    Shape:             {self.beam_shape.value}\n"
-                f"    Wavelength:        {self.wavelength.value}\n"
-                f"    Min. Wavelength:   {self.wavelength_min.value}\n"
-                f"    Max. Wavelength:   {self.wavelength_max.value}\n"
-                f"    Wavelength Spread: {self.wavelength_spread.value}\n"
-                f"    Beam Size:         {self.beam_size.value}\n")
-
+        return (
+            f"Source:\n"
+            f"    Radiation:         {radiation}\n"
+            f"    Shape:             {self.beam_shape}\n"
+            f"    Wavelength:        {self.wavelength}\n"
+            f"    Min. Wavelength:   {self.wavelength_min}\n"
+            f"    Max. Wavelength:   {self.wavelength_max}\n"
+            f"    Wavelength Spread: {self.wavelength_spread}\n"
+            f"    Beam Size:         {self.beam_size}\n"
+        )
 
 
 """
@@ -312,10 +272,10 @@ class TransmissionSpectrum:
 
 
 class Instrument:
-    def __init__(self, target: AccessorTarget, collimations: list[Collimation]):
+    def __init__(self, target: AccessorTarget, collimations: list[Collimation], source: Source):
         self.collimations = collimations
         self.detector = Detector(target.with_path_prefix("sasdetector|detector"))
-        self.source = Source(target.with_path_prefix("sassource|source"))
+        self.source = source
 
     def summary(self):
         return (
@@ -373,5 +333,5 @@ class Metadata:
             f"Definition: {self.title}\n" +
             self.process.summary() +
             self.sample.summary() +
-            self.instrument.summary() +
+            (self.instrument.summary() if self.instrument else "") +
             self.transmission_spectrum.summary())
