@@ -227,6 +227,16 @@ def parse_process(node) -> Process:
     term = opt_parse(node, "term", parse_string)
     return Process(name=name, date=date, description=description, term=term)
 
+def parse_metadata(node) -> Metadata:
+    instrument = opt_parse(node, "sasinstrument", parse_instrument)
+    sample = opt_parse(node, "sassample", parse_sample)
+    process = [parse_process(node[p]) for p in node if "sasprocess" in p]
+    title = opt_parse(node, "title", parse_string)
+    run = [parse_string(node[r]) for r in node if "run" in r]
+    definition = opt_parse(node, "definition", parse_string)
+
+    return Metadata(process=process, instrument=instrument, sample=sample, title=title, run=run, definition=definition)
+
 
 def load_data(filename) -> list[SasData]:
     with h5py.File(filename, "r") as f:
@@ -236,9 +246,8 @@ def load_data(filename) -> list[SasData]:
             entry = f[root_key]
 
             data_contents = []
-            raw_metadata = {}
 
-            entry_keys = [key for key in entry.keys()]
+            entry_keys = [key for key in entry if "entry" in key]
 
             if "sasdata" not in entry_keys and "data" not in entry_keys:
                 logger.warning("No sasdata or data key")
@@ -251,23 +260,12 @@ def load_data(filename) -> list[SasData]:
                     # TODO: Use named identifier
                     data_contents = connected_data(datum, "FILE_ID_HERE")
 
-                else:
-                    raw_metadata[key] = recurse_hdf5(component)
-
-            instrument = opt_parse(f["sasentry01"], "sasinstrument", parse_instrument)
-            sample = opt_parse(f["sasentry01"], "sassample", parse_sample)
-            process = [parse_process(f["sasentry01"][p]) for p in f["sasentry01"] if "sasprocess" in p]
-            title = opt_parse(f["sasentry01"], "title", parse_string)
-            run = [parse_string(f["sasentry01"][r]) for r in f["sasentry01"] if "run" in r]
-            definition = opt_parse(f["sasentry01"], "definition", parse_string)
-
-            metadata = Metadata(process=process, instrument=instrument, sample=sample, title=title, run=run, definition=definition)
+            metadata = parse_metadata(f[root_key])
 
             loaded_data.append(
                 SasData(
                     name=root_key,
                     data_contents=data_contents,
-                    raw_metadata=SASDataGroup("root", raw_metadata),
                     metadata=metadata,
                     verbose=False,
                 )
