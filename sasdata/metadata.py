@@ -12,60 +12,29 @@ from sasdata.quantities.accessors import StringAccessor, LengthAccessor, AngleAc
     DimensionlessAccessor, FloatAccessor, TemperatureAccessor, AccessorTarget
 
 
+@dataclass
 class Detector:
     """
     Detector information
     """
+    name : str
+    distance : Optional[Quantity[float]]
+    offset : Optional[Quantity[float]]
+    orientation : Optional[Quantity[float]]
+    beam_center : Optional[Quantity[float]]
+    pixel_size : Optional[Quantity[float]]
+    slit_length : Optional[Quantity[float]]
 
-    def __init__(self, target_object: AccessorTarget):
-
-        # Name of the instrument [string]
-        self.name = StringAccessor(target_object, "name")
-
-        # Sample to detector distance [float] [mm]
-        self.distance = LengthAccessor[float](target_object,
-                                              "distance",
-                                              "distance.units",
-                                              default_unit=units.millimeters)
-
-        # Offset of this detector position in X, Y,
-        # (and Z if necessary) [Vector] [mm]
-        self.offset = LengthAccessor[ArrayLike](target_object,
-                                                "offset",
-                                                "offset.units",
-                                                default_unit=units.millimeters)
-
-        self.orientation = AngleAccessor[ArrayLike](target_object,
-                                                    "orientation",
-                                                    "orientation.units",
-                                                    default_unit=units.degrees)
-
-        self.beam_center = LengthAccessor[ArrayLike](target_object,
-                                                     "beam_center",
-                                                     "beam_center.units",
-                                                     default_unit=units.millimeters)
-
-        # Pixel size in X, Y, (and Z if necessary) [Vector] [mm]
-        self.pixel_size = LengthAccessor[ArrayLike](target_object,
-                                                    "pixel_size",
-                                                    "pixel_size.units",
-                                                    default_unit=units.millimeters)
-
-        # Slit length of the instrument for this detector.[float] [mm]
-        self.slit_length = LengthAccessor[float](target_object,
-                                                 "slit_length",
-                                                 "slit_length.units",
-                                                 default_unit=units.millimeters)
 
     def summary(self):
         return (f"Detector:\n"
-                f"   Name:         {self.name.value}\n"
-                f"   Distance:     {self.distance.value}\n"
-                f"   Offset:       {self.offset.value}\n"
-                f"   Orientation:  {self.orientation.value}\n"
-                f"   Beam center:  {self.beam_center.value}\n"
-                f"   Pixel size:   {self.pixel_size.value}\n"
-                f"   Slit length:  {self.slit_length.value}\n")
+                f"   Name:         {self.name}\n"
+                f"   Distance:     {self.distance}\n"
+                f"   Offset:       {self.offset}\n"
+                f"   Orientation:  {self.orientation}\n"
+                f"   Beam center:  {self.beam_center}\n"
+                f"   Pixel size:   {self.pixel_size}\n"
+                f"   Slit length:  {self.slit_length}\n")
 
 
 @dataclass
@@ -271,15 +240,15 @@ class TransmissionSpectrum:
 
 
 class Instrument:
-    def __init__(self, target: AccessorTarget, collimations: list[Collimation], source: Source):
+    def __init__(self, target: AccessorTarget, collimations: list[Collimation], source: Source, detector: list[Detector]):
         self.collimations = collimations
-        self.detector = Detector(target.with_path_prefix("sasdetector|detector"))
+        self.detector = detector
         self.source = source
 
     def summary(self):
         return (
             "\n".join([c.summary() for c in self.collimations]) +
-            self.detector.summary() +
+            "".join([d.summary() for d in self.detector]) +
             self.source.summary())
 
 def decode_string(data):
