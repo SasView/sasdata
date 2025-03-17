@@ -38,9 +38,21 @@ Source:
     Max. Wavelength:   None
     Wavelength Spread: None
     Beam Size:         None
+<<<<<<< HEAD
 Transmission Spectrum:
     Name:             None
     Timestamp:        None
     Wavelengths:      None
     Transmission:     None
 
+
+||||||| parent of c9f83a89 (Metadata is a dataclass)
+Transmission Spectrum:
+    Name:             None
+    Timestamp:        None
+    Wavelengths:      None
+    Transmission:     None
+
+=======
+
+>>>>>>> c9f83a89 (Metadata is a dataclass)
