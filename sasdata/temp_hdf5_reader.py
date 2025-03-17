@@ -137,18 +137,10 @@ def parse_apterture(node) -> Aperture:
 
 def parse_beam_size(node) -> BeamSize:
     name = None
-    x = None
-    y = None
-    z = None
     if "name" in node.attrs:
         name = node.atrs["name"].asstr()[0]
-    if "x" in node:
-        x = parse_quantity(node["x"])
-    if "y" in node:
-        y = parse_quantity(node["y"])
-    if "z" in node:
-        z = parse_quantity(node["z"])
-    return BeamSize(name=name, x=x, y=y, z=z)
+    size = parse_vec3(node)
+    return BeamSize(name=name, size=size)
 
 def parse_source(node) -> Source:
     beam_shape = None
