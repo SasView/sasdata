@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import TypeVar, Any, Self, Optional
+from typing import TypeVar, Any, Self
 from dataclasses import dataclass
 
 import numpy as np
