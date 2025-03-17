@@ -42,4 +42,5 @@ def test_load_file(f):
 
     with open(local_load(f"reference/{f}.txt")) as infile:
         expected = "".join(infile.readlines())
-    assert "".join(d.summary() for d in data) == expected
+    keys = sorted([d for d in data])
+    assert "".join(data[k].summary() for k in keys) == expected

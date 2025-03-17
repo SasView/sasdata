@@ -67,7 +67,7 @@ def recurse_hdf5(hdf5_entry):
 GET_UNITS_FROM_ELSEWHERE = units.meters
 
 
-def connected_data(node: SASDataGroup, name_prefix="") -> dict[str, NamedQuantity]:
+def connected_data(node: SASDataGroup, name_prefix="") -> dict[str, Quantity]:
     """In the context of NeXus files, load a group of data entries that are organised together
     match up the units and errors with their values"""
     # Gather together data with its error terms
@@ -99,7 +99,7 @@ def connected_data(node: SASDataGroup, name_prefix="") -> dict[str, NamedQuantit
 
         entries[name] = quantity
 
-    output = {}
+    output : dict[str, Quantity] = {}
 
     for name, entry in entries.items():
         if name not in uncertainties:
@@ -244,12 +244,12 @@ def parse_metadata(node : HDF5Group) -> Metadata:
 
 def load_data(filename) -> dict[str, SasData]:
     with h5py.File(filename, "r") as f:
-        loaded_data: list[SasData] = []
+        loaded_data: dict[str, SasData] = {}
 
         for root_key in f.keys():
             entry = f[root_key]
 
-            data_contents : dict[str, NamedQuantity] = {}
+            data_contents : dict[str, Quantity] = {}
 
             entry_keys = [key for key in entry if "entry" in key]
 
@@ -266,15 +266,13 @@ def load_data(filename) -> dict[str, SasData]:
 
             metadata = parse_metadata(f[root_key])
 
-            loaded_data.append(
-                SasData(
+            loaded_data[root_key] = SasData(
                     name=root_key,
                     dataset_type=one_dim,
                     data_contents=data_contents,
                     metadata=metadata,
                     verbose=False,
                 )
-            )
 
         return loaded_data
 
@@ -282,5 +280,5 @@ def load_data(filename) -> dict[str, SasData]:
 if __name__ == "__main__":
     data = load_data(test_file)
 
-    for dataset in data:
-        print(dataset.summary(include_raw=False))
+    for dataset in data.values():
+        print(dataset.summary())
