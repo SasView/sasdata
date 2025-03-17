@@ -28,6 +28,14 @@ Detector:
    Beam center:  None
    Pixel size:   None
    Slit length:  None
+Detector:
+   Name:         None
+   Distance:     None
+   Offset:       None
+   Orientation:  None
+   Beam center:  None
+   Pixel size:   None
+   Slit length:  None
 Source:
     Radiation:         Spallation Neutron Source
     Shape:             None
