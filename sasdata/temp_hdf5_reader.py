@@ -13,7 +13,7 @@ from h5py._hl.group import Group as HDF5Group
 
 from sasdata.data import SasData
 from sasdata.data_backing import Dataset as SASDataDataset, Group as SASDataGroup
-from sasdata.metadata import Instrument, Collimation, Aperture, Source
+from sasdata.metadata import Instrument, Collimation, Aperture, Source, BeamSize
 from sasdata.quantities.accessors import AccessorTarget
 
 from sasdata.quantities.quantity import NamedQuantity
@@ -133,6 +133,21 @@ def parse_apertures(node) -> list[Aperture]:
         result.append(Aperture(distance=distance, size=size, size_name=size_name, name=name, apType=apType))
     return result
 
+def parse_beam_size(node) -> BeamSize:
+    name = None
+    x = None
+    y = None
+    z = None
+    if "name" in node.attrs:
+        name = node.atrs["keys"]
+    if "x" in node:
+        x = node["x"]
+    if "y" in node:
+        y = node["y"]
+    if "z" in node:
+        z = node["z"]
+    return BeamSize(name=name, x=x, y=y, z=z)
+
 
 def parse_source(node) -> Source:
     beam_shape = None
@@ -151,6 +166,8 @@ def parse_source(node) -> Source:
         wavelength = node["wavelength_max"]
     if "wavelength_spread" in node:
         wavelength = node["wavelength_spread"]
+    if "beam_size" in node:
+        beam_size = parse_beam_size(node["beam_size"])
     return Source(
         radiation=node["radiation"].asstr()[0],
         beam_shape=beam_shape,
