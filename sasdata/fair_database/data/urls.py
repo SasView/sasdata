@@ -3,14 +3,17 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path("list/", views.list_data, name="list public file_ids"),
-    path("list/<str:username>/", views.list_data, name="view users file_ids"),
-    path("load/<int:db_id>/", views.data_info, name="views data using file id"),
-    path("upload/", views.upload, name="upload data into db"),
-    path("upload/<data_id>/", views.upload, name="update file in data"),
-    path("<int:data_id>/download/", views.download, name="download data from db"),
-    path("manage/<int:data_id>/", views.manage_access, name="manage access to files"),
-    path("delete/<int:data_id>/", views.delete, name="delete file"),
+    path("file/", views.DataFileView.as_view(), name="view and create files"),
+    path(
+        "file/<int:data_id>/",
+        views.SingleDataFileView.as_view(),
+        name="view, download, modify, delete files",
+    ),
+    path(
+        "file/<int:data_id>/users/",
+        views.DataFileUsersView.as_view(),
+        name="manage access to files",
+    ),
     path("set/", views.DataSetView.as_view(), name="view and create datasets"),
     path(
         "set/<int:data_id>/",
