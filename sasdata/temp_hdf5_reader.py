@@ -118,26 +118,22 @@ def parse_quantity(node) -> Quantity[float]:
     return Quantity(magnitude, units.symbol_lookup[unit])
 
 
-def parse_apertures(node) -> list[Aperture]:
-    result = []
-    aps = [a for a in node if "aperture" in a]
-    for ap in aps:
-        distance = None
-        size = None
-        if "distance" in node[ap]:
-            distance = parse_quantity(node[ap]["distance"])
-        if "size" in node[ap]:
-            x = y = z = None
-            if "x" in node[ap]:
-                x = parse_quantity(node[ap]["size"]["x"])
-            if "y" in node[ap]:
-                y = parse_quantity(node[ap]["size"]["y"])
-            if "z" in node[ap]:
-                z = parse_quantity(node[ap]["size"]["z"])
-            if x is not None or y is not None or z is not None:
-                size = (x, y, z)
-        result.append(Aperture(distance=distance, size=size, size_name=size_name, name=name, apType=apType))
-    return result
+def parse_apterture(node) -> Aperture:
+    distance = None
+    size = None
+    size_name = None
+    apType = None
+    if "name" in node.atrs:
+        name = node.attrs["name"].asstr()[0]
+    if "type" in node.atrs:
+        apType = node.attrs["type"].asstr()[0]
+    if "distance" in node:
+        distance = parse_quantity(node["distance"])
+    if "size" in node:
+        size = parse_vec3(node["size"])
+        if "name" in node.attrs:
+            size_name = node.attrs["name"].asstr()[0]
+    return Aperture(distance=distance, size=size, size_name=size_name, name=name, apType=apType)
 
 def parse_beam_size(node) -> BeamSize:
     name = None
@@ -198,11 +194,11 @@ def parse_rot3(node) -> Rot3:
     """Parse a measured rotation"""
     roll = pitch = yaw = None
     if "roll" in node:
-        roll = parse_angle(node["roll"])
+        roll = parse_quantity(node["roll"])
     if "pitch" in node:
-        pitch = parse_angle(node["pitch"])
+        pitch = parse_quantity(node["pitch"])
     if "yaw" in node:
-        yaw = parse_angle(node["yaw"])
+        yaw = parse_quantity(node["yaw"])
     return Rot3(roll=roll, pitch=pitch, yaw=yaw)
 
 def parse_detector(node) -> Detector:
@@ -237,7 +233,7 @@ def parse_collimation(node) -> Collimation:
         length = node["length"]
     else:
         length = None
-    return Collimation(length=length, apertures=parse_apertures(node))
+    return Collimation(length=length, apertures=[parse_apterture(node[ap]) for ap in node if "aperture" in ap])
 
 
 def parse_instrument(raw, node) -> Instrument:
