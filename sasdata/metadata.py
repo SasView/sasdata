@@ -128,60 +128,28 @@ MUON = 'muon'
 ELECTRON = 'electron'
 
 
+@dataclass(kw_only=True)
 class Sample:
     """
     Class to hold the sample description
     """
-    def __init__(self, target_object: AccessorTarget):
-
-        # Short name for sample
-        self.name = StringAccessor(target_object, "name")
-        # ID
-
-        self.sample_id = StringAccessor(target_object, "id")
-
-        # Thickness [float] [mm]
-        self.thickness = LengthAccessor(target_object,
-                                        "thickness",
-                                        "thickness.units",
-                                        default_unit=units.millimeters)
-
-        # Transmission [float] [fraction]
-        self.transmission = FloatAccessor(target_object,"transmission")
-
-        # Temperature [float] [No Default]
-        self.temperature = AbsoluteTemperatureAccessor(target_object,
-                                                       "temperature",
-                                                       "temperature.unit",
-                                                       default_unit=units.kelvin)
-        # Position [Vector] [mm]
-        self.position = LengthAccessor[ArrayLike](target_object,
-                                                  "position",
-                                                  "position.unit",
-                                                  default_unit=units.millimeters)
-
-        # Orientation [Vector] [degrees]
-        self.orientation = AngleAccessor[ArrayLike](target_object,
-                                                    "orientation",
-                                                    "orientation.unit",
-                                                    default_unit=units.degrees)
-
-        # Details
-        self.details = StringAccessor(target_object, "details")
-
-
-        # SESANS zacceptance
-        zacceptance = (0,"")
-        yacceptance = (0,"")
+    name: Optional[str]
+    sample_id : Optional[str]
+    thickness : Optional[Quantity[float]]
+    transmission: Optional[float]
+    temperature : Optional[Quantity[float]]
+    position : Optional[Vec3]
+    orientation : Optional[Rot3]
+    details : list[str]
 
     def summary(self) -> str:
         return (f"Sample:\n"
-                f"   ID:           {self.sample_id.value}\n"
-                f"   Transmission: {self.transmission.value}\n"
-                f"   Thickness:    {self.thickness.value}\n"
-                f"   Temperature:  {self.temperature.value}\n"
-                f"   Position:     {self.position.value}\n"
-                f"   Orientation:  {self.orientation.value}\n")
+                f"   ID:           {self.sample_id}\n"
+                f"   Transmission: {self.transmission}\n"
+                f"   Thickness:    {self.thickness}\n"
+                f"   Temperature:  {self.temperature}\n"
+                f"   Position:     {self.position}\n"
+                f"   Orientation:  {self.orientation}\n")
         #
         # _str += "   Details:\n"
         # for item in self.details:
@@ -293,12 +261,12 @@ def decode_string(data):
         return str(data)
 
 class Metadata:
-    def __init__(self, target: AccessorTarget, instrument: Optional[Instrument]):
+    def __init__(self, target: AccessorTarget, sample: Optional[Sample], instrument: Optional[Instrument]):
         self._target = target
 
         self.instrument = instrument
         self.process = Process(target.with_path_prefix("sasprocess|process"))
-        self.sample = Sample(target.with_path_prefix("sassample|sample"))
+        self.sample = sample
         self.transmission_spectrum = TransmissionSpectrum(target.with_path_prefix("sastransmission_spectrum|transmission_spectrum"))
 
         self._title = StringAccessor(target, "title")
