@@ -156,15 +156,3 @@ class AuthTests(TestCase):
         self.login_data_2["password"] = "sasview!"
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(login_response.status_code, status.HTTP_200_OK)
-
-
-# logged-in user can create Data, is data's current_user
-
-
-# Permissions
-# Any user can access public data
-# logged-in user can access and modify their own private data
-# unauthenticated user cannot access private data
-# unauthenticated user cannot modify data
-# logged-in user cannot modify data other than their own
-# logged-in user cannot access the private data of others
