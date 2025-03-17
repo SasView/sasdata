@@ -17,7 +17,7 @@ class Detector:
     """
     Detector information
     """
-    name : str
+    name : Optional[str]
     distance : Optional[Quantity[float]]
     offset : Optional[Quantity[float]]
     orientation : Optional[Quantity[float]]
@@ -77,12 +77,12 @@ class BeamSize:
 @dataclass
 class Source:
     radiation: str
-    beam_shape: str
+    beam_shape: Optional[str]
     beam_size: Optional[BeamSize]
-    wavelength : Quantity[float]
-    wavelength_min : Quantity[float]
-    wavelength_max : Quantity[float]
-    wavelength_spread : Quantity[float]
+    wavelength : Optional[Quantity[float]]
+    wavelength_min : Optional[Quantity[float]]
+    wavelength_max : Optional[Quantity[float]]
+    wavelength_spread : Optional[Quantity[float]]
 
     def summary(self) -> str:
         if self.radiation is None and self.type.value and self.probe_particle.value:

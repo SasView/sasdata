@@ -21,7 +21,7 @@ Sample:
 Collimation:
    Length: None
 Detector:
-   Name:         None
+   Name:         
    Distance:     None
    Offset:       None
    Orientation:  None

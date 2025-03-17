@@ -21,16 +21,16 @@ Sample:
 Collimation:
    Length: None
 Detector:
-   Name:         None
-   Distance:     None
+   Name:         front-detector
+   Distance:     2845.260009765625 mm
    Offset:       None
    Orientation:  None
    Beam center:  None
    Pixel size:   None
    Slit length:  None
 Detector:
-   Name:         None
-   Distance:     None
+   Name:         rear-detector
+   Distance:     4385.27978515625 mm
    Offset:       None
    Orientation:  None
    Beam center:  None
