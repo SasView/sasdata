@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import TypeVar, Any, Self
+from typing import TypeVar, Any, Self, Optional
 from dataclasses import dataclass
 
 import numpy as np
@@ -15,7 +15,7 @@ class SasData:
                  data_contents: dict[str, Quantity],
                  dataset_type: DatasetType,
                  raw_metadata: Group,
-                 instrument: Instrument,
+                 instrument: Optional[Instrument],
                  verbose: bool=False):
 
         self.name = name
