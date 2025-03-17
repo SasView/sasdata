@@ -13,7 +13,7 @@ from h5py._hl.group import Group as HDF5Group
 
 from sasdata.data import SasData
 from sasdata.data_backing import Dataset as SASDataDataset, Group as SASDataGroup
-from sasdata.metadata import Instrument, Collimation, Aperture, Source, BeamSize, Detector, Vec3, Rot3, Sample, Process
+from sasdata.metadata import Instrument, Collimation, Aperture, Source, BeamSize, Detector, Vec3, Rot3, Sample, Process, Metadata
 from sasdata.quantities.accessors import AccessorTarget
 
 from sasdata.quantities.quantity import NamedQuantity, Quantity
@@ -257,15 +257,18 @@ def load_data(filename) -> list[SasData]:
             instrument = opt_parse(f["sasentry01"], "sasinstrument", parse_instrument)
             sample = opt_parse(f["sasentry01"], "sassample", parse_sample)
             process = [parse_process(f["sasentry01"][p]) for p in f["sasentry01"] if "sasprocess" in p]
+            title = opt_parse(f["sasentry01"], "title", parse_string)
+            run = [parse_string(f["sasentry01"][r]) for r in f["sasentry01"] if "run" in r]
+            definition = opt_parse(f["sasentry01"], "definition", parse_string)
+
+            metadata = Metadata(AccessorTarget(SASDataGroup("root", raw_metadata),verbose=False), process=process, instrument=instrument, sample=sample, title=title, run=run, definition=definition)
 
             loaded_data.append(
                 SasData(
                     name=root_key,
                     data_contents=data_contents,
                     raw_metadata=SASDataGroup("root", raw_metadata),
-                    process=process,
-                    sample=sample,
-                    instrument=instrument,
+                    metadata=metadata,
                     verbose=False,
                 )
             )
