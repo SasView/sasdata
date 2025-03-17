@@ -293,7 +293,7 @@ def decode_string(data):
         return str(data)
 
 class Metadata:
-    def __init__(self, target: AccessorTarget, instrument: Instrument):
+    def __init__(self, target: AccessorTarget, instrument: Optional[Instrument]):
         self._target = target
 
         self.instrument = instrument
