@@ -40,9 +40,21 @@ Source:
     Max. Wavelength:   None
     Wavelength Spread: None
     Beam Size:         None
+<<<<<<< HEAD
 Transmission Spectrum:
     Name:             None
     Timestamp:        None
     Wavelengths:      None
     Transmission:     None
 
+
+||||||| parent of 0b6ad967 (Metadata is a dataclass)
+Transmission Spectrum:
+    Name:             None
+    Timestamp:        None
+    Wavelengths:      None
+    Transmission:     None
+
+=======
+
+>>>>>>> 0b6ad967 (Metadata is a dataclass)

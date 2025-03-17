@@ -202,14 +202,14 @@ def load_data(filename) -> list[SasData]:
                 else:
                     raw_metadata[key] = recurse_hdf5(component)
 
-            instrument = None
-            if "sasinstrument" in f["sasentry01"]:
-                instrument = parse_instrument(
-                    AccessorTarget(SASDataGroup("root", raw_metadata)).with_path_prefix(
-                        "sasinstrument|instrument"
-                    ),
-                    f["sasentry01"]["sasinstrument"],
-                )
+            instrument = opt_parse(f["sasentry01"], "sasinstrument", parse_instrument)
+            sample = opt_parse(f["sasentry01"], "sassample", parse_sample)
+            process = [parse_process(f["sasentry01"][p]) for p in f["sasentry01"] if "sasprocess" in p]
+            title = opt_parse(f["sasentry01"], "title", parse_string)
+            run = [parse_string(f["sasentry01"][r]) for r in f["sasentry01"] if "run" in r]
+            definition = opt_parse(f["sasentry01"], "definition", parse_string)
+
+            metadata = Metadata(process=process, instrument=instrument, sample=sample, title=title, run=run, definition=definition)
 
             loaded_data.append(
                 SasData(
