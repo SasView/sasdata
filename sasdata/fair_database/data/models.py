@@ -142,10 +142,12 @@ class Session(Data):
     """Database model for a project save state."""
 
     # dataset
-    # dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE)
+    # dataset = models.ManyToManyField(DataSet)
 
     # operation tree
     # operations = models.ForeignKey(OperationTree, on_delete=models.CASCADE)
+
+    published_state = models.ForeignKey("PublishedState", blank=True, null=True, on_delete=SET_NULL)
 
 class PublishedState():
     """Database model for a project published state."""
