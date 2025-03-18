@@ -58,14 +58,11 @@ class DataSet(Data):
         "MetaData", blank=True, null=True, on_delete=models.CASCADE
     )
 
-    # ordinate
-    # ordinate = models.ForeignKey("Quantity", on_delete=models.CASCADE)
-
-    # abscissae
-    # abscissae = models.ManyToManyField("Quantity", on_delete=models.CASCADE)
-
     # data contents - maybe ManyToManyField
-    # data_contents = models.JSONField()
+    # data_contents = models.ManyToManyField("Quantity", through="LabeledQuantity")
+
+    # type of dataset
+    # dataset_type = models.JSONField()
 
 
 class Quantity(models.Model):
@@ -82,6 +79,14 @@ class Quantity(models.Model):
 
     # hash value
     hash = models.IntegerField()
+
+
+"""
+class LabeledQuantity(models.Model):
+    dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE)
+    quantity = models.ForeignKey(Quantity, on_delete=models.CASCADE)
+    label = models.CharField(max_length=20)
+"""
 
 
 # TODO: revisit metadata when sasdata metadata is rewritten
