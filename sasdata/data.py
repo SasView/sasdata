@@ -84,10 +84,11 @@ class SasData:
     @staticmethod
     def deserialise_json(json_data: dict) -> "SasData":
         name = json_data["name"]
-        data_contents = [] # deserialize Quantity
+        data_contents = {} # deserialize Quantity
+        dataset_type = json_data["dataset_type"]
         raw_metadata = Group.deserialise_json(json_data["raw_metadata"])
         verbose = json_data["verbose"]
-        return SasData(name, data_contents, raw_metadata, verbose)
+        return SasData(name, data_contents, dataset_type, raw_metadata, verbose)
 
     def serialise(self) -> str:
         return json.dumps(self._serialise_json())
@@ -96,12 +97,11 @@ class SasData:
     def _serialise_json(self) -> dict[str, Any]:
         return {
             "name": self.name,
-            "data_contents": [q.serialise_json() for q in self._data_contents],
+            "data_contents": {q: self._data_contents[q].serialise_json() for q in self._data_contents},
+            "dataset_type": None, # TODO: update when DatasetType is more finalized
             "raw_metadata": self._raw_metadata.serialise_json(),
             "verbose": self._verbose,
-            "metadata": self.metadata.serialise_json(),
-            "ordinate": self.ordinate.serialise_json(),
-            "abscissae": [q.serialise_json() for q in self.abscissae],
+            "metadata": self.metadata.serialise_json(), # TODO: fix metadata eventually
             "mask": {},
             "model_requirements": {}
         }

@@ -1020,7 +1020,11 @@ class QuantityHistory:
         return [self.operation_tree.derivative(key) for key in self.reference_key_list]
 
     def _recalculate(self):
-        """ Recalculate the value of this object - primary use case is for testing """
+        """ Recalculate the value of this object - primary use case is￼
+￼
+￼
+￼
+ for testing """
         return self.operation_tree.evaluate(self.references)
 
     def variance_propagate(self, quantity_units: Unit, covariances: dict[tuple[int, int]: "Quantity"] = {}):
