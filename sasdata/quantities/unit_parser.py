@@ -35,7 +35,9 @@ def parse_single_unit(unit_str: str, unit_group: UnitGroup | None = None, longes
         lookup_dict = dict([(name, unit) for name, unit in symbol_lookup.items() if unit in unit_group.units])
     for next_char in unit_str:
         potential_unit_str = current_unit + next_char
-        potential_symbols = [symbol for symbol in lookup_dict.keys() if symbol.startswith(potential_unit_str)]
+        potential_symbols = [symbol for symbol, unit in lookup_dict.items()
+                             if symbol.startswith(potential_unit_str)
+                             or unit.startswith(potential_unit_str)]
         if len(potential_symbols) == 0:
             break
         string_pos += 1
@@ -44,8 +46,13 @@ def parse_single_unit(unit_str: str, unit_group: UnitGroup | None = None, longes
             break
     if current_unit == '':
         return None, unit_str
+    matching_types = [unit for symbol, unit in lookup_dict.items()
+                      if symbol == current_unit or unit == current_unit]
+    if not matching_types:
+        raise ValueError(f"No known type matching {current_unit}")
+    final_unit = matching_types[0]
     remaining_str = unit_str[string_pos::]
-    return lookup_dict[current_unit], remaining_str
+    return final_unit, remaining_str
 
 def parse_unit_strs(unit_str: str, current_units: list[Unit] | None=None, longest_unit: bool = True) -> list[Unit]:
     """Recursively parse units from unit_str until no more characters are present."""
@@ -104,7 +111,7 @@ def parse_unit(unit_str: str, longest_unit: bool = True) -> Unit:
             parsed_unit *= unit
         return parsed_unit
     except KeyError:
-        raise ValueError('Unit string contains an unrecognised pattern.')
+        raise ValueError(f'Unit string contains an unrecognised pattern: {unit_str}')
 
 def parse_unit_from_group(unit_str: str, from_group: UnitGroup) -> Unit | None:
     """Tries to use the given unit group to resolve ambiguities. Parse a unit twice with different options, and returns
