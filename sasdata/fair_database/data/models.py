@@ -119,14 +119,28 @@ class OperationTree(models.Model):
     dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE)
 
     # operation
+    # TODO: restrict to list of operations
     operation = models.CharField(max_length=10)
 
     # parameters
     parameters = models.JSONField(default=dict)
 
     # previous operation
-    parent_operation = models.ForeignKey(
-        "self", blank=True, null=True, on_delete=models.CASCADE
+    parent_operation1 = models.ForeignKey(
+        "self",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name="child_operations1",
+    )
+
+    # optional second previous operation for binary operations
+    parent_operation2 = models.ForeignKey(
+        "self",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name="child_operations2",
     )
 
 
