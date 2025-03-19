@@ -9,17 +9,9 @@ Any useful metadata which cannot be included in these classes represent a bug in
 
 """
 
-from tokenize import String
 from dataclasses import dataclass
 
-import numpy as np
-from numpy.typing import ArrayLike
-
 from sasdata.quantities.quantity import Quantity
-import sasdata.quantities.units as units
-from sasdata.quantities.absolute_temperature import AbsoluteTemperatureAccessor
-from sasdata.quantities.accessors import StringAccessor, LengthAccessor, AngleAccessor, QuantityAccessor, \
-    DimensionlessAccessor, FloatAccessor, TemperatureAccessor, AccessorTarget
 
 @dataclass(kw_only=True)
 class Vec3:
