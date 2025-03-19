@@ -97,8 +97,7 @@ class MetaData(models.Model):
     title = models.CharField(max_length=500, default="Title")
 
     # run
-    # TODO: find out if this is expected to be long
-    run = models.CharField(max_length=500, blank=True, null=True)
+    run = models.JSONField(blank=True, null=True)
 
     # definition
     definition = models.TextField(blank=True, null=True)
@@ -111,12 +110,6 @@ class MetaData(models.Model):
 
     # sample
     sample = models.JSONField(blank=True, null=True)
-
-    # transmission spectrum
-    transmission_spectrum = models.JSONField(blank=True, null=True)
-
-    # raw metadata (for recreating in SasView only)
-    raw_metadata = models.JSONField(default=dict)
 
 
 class OperationTree(models.Model):
