@@ -98,7 +98,7 @@ class BeamSize:
 
 @dataclass(kw_only=True)
 class Source:
-    radiation: str
+    radiation: Optional[str]
     beam_shape: Optional[str]
     beam_size: Optional[BeamSize]
     wavelength : Optional[Quantity[float]]
@@ -171,7 +171,7 @@ class Process:
 @dataclass
 class Instrument:
     collimations : list[Collimation]
-    source : Source
+    source : Optional[Source]
     detector : list[Detector]
 
     def summary(self):
