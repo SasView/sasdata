@@ -8,6 +8,7 @@ named_units_for_testing = [
     ('m', units.meters),
     ('A-1', units.per_angstrom),
     ('1/A', units.per_angstrom),
+    ('1/angstroms', units.per_angstrom),
     ('kmh-2', units.kilometers_per_square_hour),
     ('km/h2', units.kilometers_per_square_hour),
     ('kgm/s2', units.newtons),
@@ -25,7 +26,7 @@ unnamed_units_for_testing = [
     ('kW/sr', units.kilowatts/units.stradians)
 ]
 
-
+@pytest.mark.unit
 @pytest.mark.parametrize("string, expected_units", named_units_for_testing)
 def test_name_parse(string: str, expected_units: Unit):
     """ Test basic parsing"""
