@@ -5,6 +5,7 @@ import h5py
 import logging
 
 import numpy as np
+from typing import Optional, Callable
 
 
 from h5py._hl.dataset import Dataset as HDF5Dataset
@@ -124,34 +125,34 @@ def parse_string(node : HDF5Group) -> str:
     """Access string data from a node"""
     return node.asstr()[0]
 
-def opt_parse(node, key, subparser):
+def opt_parse[T](node: HDF5Group, key: str, subparser: Callable[[HDF5Group], T]) -> Optional[T]:
     """Parse a subnode if it is present"""
     if key in node:
         return subparser(node[key])
     return None
 
-def attr_parse(node, key, subparser):
+def attr_parse(node: HDF5Group, key: str) -> Optional[str]:
     """Parse an attribute if it is present"""
     if key in node.attrs:
-        return subparser(node.attrs[key])
+        return node.attrs[key]
     return None
 
 
 def parse_apterture(node : HDF5Group) -> Aperture:
     distance = opt_parse(node, "distance", parse_quantity)
-    name = attr_parse(node, "name", parse_string)
+    name = attr_parse(node, "name")
     size = opt_parse(node, "size", parse_vec3)
     size_name = None
-    type_ = attr_parse(node, "type", parse_string)
+    type_ = attr_parse(node, "type")
     if size:
-        size_name = attr_parse(node["size"], "name", parse_string)
+        size_name = attr_parse(node["size"], "name")
     else:
         size_name = None
     return Aperture(distance=distance, size=size, size_name=size_name, name=name, type_=type_)
 
 def parse_beam_size(node : HDF5Group) -> BeamSize:
     name = None
-    name = attr_parse(node, "name", parse_string)
+    name = attr_parse(node, "name")
     size = parse_vec3(node)
     return BeamSize(name=name, size=size)
 
@@ -196,13 +197,20 @@ def parse_detector(node : HDF5Group) -> Detector:
     pixel_size = opt_parse(node, "pixel_size", parse_vec3)
     slit_length = opt_parse(node, "slit_length", parse_quantity)
 
-    return Detector(name=name, distance=distance, offset=offset, orientation=orientation, beam_center=beam_center, pixel_size=pixel_size, slit_length=slit_length)
+    return Detector(name=name,
+                    distance=distance,
+                    offset=offset,
+                    orientation=orientation,
+                    beam_center=beam_center,
+                    pixel_size=pixel_size,
+                    slit_length=slit_length)
 
 
 
 def parse_collimation(node : HDF5Group) -> Collimation:
     length = opt_parse(node, "length", parse_quantity)
-    return Collimation(length=length, apertures=[parse_apterture(node[ap]) for ap in node if "aperture" in ap])
+    return Collimation(length=length, apertures=[parse_apterture(node[ap])
+                                                 for ap in node if "aperture" in ap])
 
 
 def parse_instrument(node : HDF5Group) -> Instrument:
@@ -213,7 +221,7 @@ def parse_instrument(node : HDF5Group) -> Instrument:
     )
 
 def parse_sample(node : HDF5Group) -> Sample:
-    name = attr_parse(node, "name", parse_string)
+    name = attr_parse(node, "name")
     sample_id = opt_parse(node, "ID", parse_string)
     thickness = opt_parse(node, "thickness", parse_quantity)
     transmission = opt_parse(node, "transmission", lambda n: float(n[0].astype(str)))
@@ -221,7 +229,14 @@ def parse_sample(node : HDF5Group) -> Sample:
     position = opt_parse(node, "position", parse_vec3)
     orientation = opt_parse(node, "orientation", parse_rot3)
     details : list[str] = [node[d].asstr()[0] for d in node if "details" in d]
-    return Sample(name=name, sample_id=sample_id, thickness=thickness, transmission=transmission, temperature=temperature, position=position, orientation=orientation, details=details)
+    return Sample(name=name,
+                  sample_id=sample_id,
+                  thickness=thickness,
+                  transmission=transmission,
+                  temperature=temperature,
+                  position=position,
+                  orientation=orientation,
+                  details=details)
 
 def parse_process(node : HDF5Group) -> Process:
     name = opt_parse(node, "name", parse_string)
@@ -237,7 +252,12 @@ def parse_metadata(node : HDF5Group) -> Metadata:
     title = opt_parse(node, "title", parse_string)
     run = [parse_string(node[r]) for r in node if "run" in r]
     definition = opt_parse(node, "definition", parse_string)
-    return Metadata(process=process, instrument=instrument, sample=sample, title=title, run=run, definition=definition)
+    return Metadata(process=process,
+                    instrument=instrument,
+                    sample=sample,
+                    title=title,
+                    run=run,
+                    definition=definition)
 
 ### End Metadata parsing code
 
