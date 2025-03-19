@@ -26,7 +26,6 @@ unnamed_units_for_testing = [
     ('kW/sr', units.kilowatts/units.stradians)
 ]
 
-@pytest.mark.unit
 @pytest.mark.parametrize("string, expected_units", named_units_for_testing)
 def test_name_parse(string: str, expected_units: Unit):
     """ Test basic parsing"""
