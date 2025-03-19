@@ -391,6 +391,7 @@ class NamedUnit(Unit):
 
 
     def startswith(self, prefix: str) -> bool:
+        """Check if any representation of the unit begins with the prefix string"""
         prefix = prefix.lower()
         return (self.name is not None and self.name.lower().startswith(prefix)) \
                 or (self.ascii_symbol is not None and self.ascii_symbol.lower().startswith(prefix)) \
