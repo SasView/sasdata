@@ -1,0 +1,45 @@
+sasentry01
+Metadata:
+
+  MH4_5deg_16T_SLOW, Run: 33837
+  =============================
+
+Definition: MH4_5deg_16T_SLOW
+Process:
+    Name: Mantid generated CanSAS1D XML
+    Date: 11-May-2016 12:15:34
+    Description: None
+    Term: None
+Sample:
+   ID:           
+   Transmission: None
+   Thickness:    None
+   Temperature:  None
+   Position:     None
+   Orientation:  None
+Collimation:
+   Length: None
+Detector:
+   Name:         front-detector
+   Distance:     2845.260009765625 mm
+   Offset:       None
+   Orientation:  None
+   Beam center:  None
+   Pixel size:   None
+   Slit length:  None
+Detector:
+   Name:         rear-detector
+   Distance:     4385.27978515625 mm
+   Offset:       None
+   Orientation:  None
+   Beam center:  None
+   Pixel size:   None
+   Slit length:  None
+Source:
+    Radiation:         Spallation Neutron Source
+    Shape:             None
+    Wavelength:        None
+    Min. Wavelength:   None
+    Max. Wavelength:   None
+    Wavelength Spread: None
+    Beam Size:         None
