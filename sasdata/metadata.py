@@ -81,7 +81,7 @@ class Collimation:
     Class to hold collimation information
     """
 
-    length: Quantity[float]
+    length: Optional[Quantity[float]]
     apertures: list[Aperture]
 
     def summary(self):
