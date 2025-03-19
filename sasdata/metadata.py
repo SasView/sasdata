@@ -10,7 +10,6 @@ Any useful metadata which cannot be included in these classes represent a bug in
 """
 
 from tokenize import String
-from typing import Optional
 from dataclasses import dataclass
 
 import numpy as np
@@ -25,29 +24,29 @@ from sasdata.quantities.accessors import StringAccessor, LengthAccessor, AngleAc
 @dataclass(kw_only=True)
 class Vec3:
     """A three-vector of measured quantities"""
-    x : Optional[Quantity[float]]
-    y : Optional[Quantity[float]]
-    z : Optional[Quantity[float]]
+    x : Quantity[float] | None
+    y : Quantity[float] | None
+    z : Quantity[float] | None
 
 @dataclass(kw_only=True)
 class Rot3:
     """A measured rotation in 3-space"""
-    roll : Optional[Quantity[float]]
-    pitch : Optional[Quantity[float]]
-    yaw : Optional[Quantity[float]]
+    roll : Quantity[float] | None
+    pitch : Quantity[float] | None
+    yaw : Quantity[float] | None
 
 @dataclass(kw_only=True)
 class Detector:
     """
     Detector information
     """
-    name : Optional[str]
-    distance : Optional[Quantity[float]]
-    offset : Optional[Vec3]
-    orientation : Optional[Rot3]
-    beam_center : Optional[Vec3]
-    pixel_size : Optional[Vec3]
-    slit_length : Optional[Quantity[float]]
+    name : str | None
+    distance : Quantity[float] | None
+    offset : Vec3 | None
+    orientation : Rot3 | None
+    beam_center : Vec3 | None
+    pixel_size : Vec3 | None
+    slit_length : Quantity[float] | None
 
 
     def summary(self):
@@ -63,11 +62,11 @@ class Detector:
 
 @dataclass(kw_only=True)
 class Aperture:
-    distance: Optional[Quantity[float]]
-    size: Optional[Vec3]
-    size_name: Optional[str]
-    name: Optional[str]
-    type_: Optional[str]
+    distance: Quantity[float] | None
+    size: Vec3 | None
+    size_name: str | None
+    name: str | None
+    type_: str | None
 
     def summary(self):
         return (f"Aperture:\n"
@@ -81,7 +80,7 @@ class Collimation:
     Class to hold collimation information
     """
 
-    length: Optional[Quantity[float]]
+    length: Quantity[float] | None
     apertures: list[Aperture]
 
     def summary(self):
@@ -93,18 +92,18 @@ class Collimation:
 
 @dataclass(kw_only=True)
 class BeamSize:
-    name: Optional[str]
-    size: Optional[Vec3]
+    name: str | None
+    size: Vec3 | None
 
 @dataclass(kw_only=True)
 class Source:
-    radiation: Optional[str]
-    beam_shape: Optional[str]
-    beam_size: Optional[BeamSize]
-    wavelength : Optional[Quantity[float]]
-    wavelength_min : Optional[Quantity[float]]
-    wavelength_max : Optional[Quantity[float]]
-    wavelength_spread : Optional[Quantity[float]]
+    radiation: str | None
+    beam_shape: str | None
+    beam_size: BeamSize | None
+    wavelength : Quantity[float] | None
+    wavelength_min : Quantity[float] | None
+    wavelength_max : Quantity[float] | None
+    wavelength_spread : Quantity[float] | None
 
     def summary(self) -> str:
         return (
@@ -123,13 +122,13 @@ class Sample:
     """
     Class to hold the sample description
     """
-    name: Optional[str]
-    sample_id : Optional[str]
-    thickness : Optional[Quantity[float]]
-    transmission: Optional[float]
-    temperature : Optional[Quantity[float]]
-    position : Optional[Vec3]
-    orientation : Optional[Rot3]
+    name: str | None
+    sample_id : str | None
+    thickness : Quantity[float] | None
+    transmission: float | None
+    temperature : Quantity[float] | None
+    position : Vec3 | None
+    orientation : Rot3 | None
     details : list[str]
 
     def summary(self) -> str:
@@ -148,10 +147,10 @@ class Process:
     Class that holds information about the processes
     performed on the data.
     """
-    name : Optional[ str ]
-    date : Optional[ str ]
-    description : Optional[ str ]
-    term : Optional[ str ]
+    name :  str  | None
+    date :  str  | None
+    description :  str  | None
+    term :  str  | None
 
     def single_line_desc(self):
         """
@@ -171,7 +170,7 @@ class Process:
 @dataclass
 class Instrument:
     collimations : list[Collimation]
-    source : Optional[Source]
+    source : Source | None
     detector : list[Detector]
 
     def summary(self):
@@ -182,12 +181,12 @@ class Instrument:
 
 @dataclass(kw_only=True)
 class Metadata:
-    title: Optional[str]
+    title: str | None
     run: list[str]
-    definition: Optional[str]
+    definition: str | None
     process: list[Process]
-    sample: Optional[Sample]
-    instrument: Optional[Instrument]
+    sample: Sample | None
+    instrument: Instrument | None
 
     def summary(self):
         run_string = self.run[0] if len(self.run) == 1 else self.run
