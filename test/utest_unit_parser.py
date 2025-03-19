@@ -8,6 +8,7 @@ named_units_for_testing = [
     ('m', units.meters),
     ('A-1', units.per_angstrom),
     ('1/A', units.per_angstrom),
+    ('1/angstroms', units.per_angstrom),
     ('kmh-2', units.kilometers_per_square_hour),
     ('km/h2', units.kilometers_per_square_hour),
     ('kgm/s2', units.newtons),
@@ -25,16 +26,7 @@ unnamed_units_for_testing = [
     ('kW/sr', units.kilowatts/units.stradians)
 ]
 
-latex_units_for_testing = [
-    (r"\Omega", units.ohms), # Test omega is Ω
-    (r"\AA", units.angstroms), # Test angstrom is Å
-    (r"\%", units.percent), # Test percent is NOT a comment
-    (r"{\mu}A", units.microamperes), # Test µ with an ASCII unit
-    (r"{\mu}\Omega", units.microohms), # Test µ with LaTeX unit
-    (r"mm", units.millimeters) # Test that most units just use ASCII in LaTeX
-]
-
-
+@pytest.mark.unit
 @pytest.mark.parametrize("string, expected_units", named_units_for_testing)
 def test_name_parse(string: str, expected_units: Unit):
     """ Test basic parsing"""
