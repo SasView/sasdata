@@ -13,13 +13,11 @@ class TestDataSet(APITestCase):
     def setUpTestData(cls):
         cls.empty_metadata = {
             "title": "New Metadata",
-            "run": "X",
+            "run": ["X"],
             "description": "test",
             "instrument": {},
             "process": {},
             "sample": {},
-            "transmission_spectrum": {},
-            "raw_metadata": {},
         }
         cls.user1 = User.objects.create_user(
             id=1, username="testUser1", password="secret"
