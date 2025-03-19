@@ -15,8 +15,8 @@ from h5py._hl.group import Group as HDF5Group
 from sasdata.data import SasData
 from sasdata.dataset_types import one_dim
 from sasdata.data_backing import Dataset as SASDataDataset, Group as SASDataGroup
-from sasdata.metadata import Instrument, Collimation, Aperture, Source, BeamSize, Detector, Vec3, Rot3, Sample, Process, Metadata
-from sasdata.quantities.accessors import AccessorTarget
+from sasdata.metadata import Instrument, Collimation, Aperture, Source, BeamSize, Detector, Vec3, \
+    Rot3, Sample, Process, Metadata
 
 from sasdata.quantities.quantity import NamedQuantity, Quantity
 from sasdata.quantities import units
