@@ -5,7 +5,7 @@ import h5py
 import logging
 
 import numpy as np
-from typing import Optional, Callable
+from typing import Callable
 
 
 from h5py._hl.dataset import Dataset as HDF5Dataset
@@ -125,13 +125,13 @@ def parse_string(node : HDF5Group) -> str:
     """Access string data from a node"""
     return node.asstr()[0]
 
-def opt_parse[T](node: HDF5Group, key: str, subparser: Callable[[HDF5Group], T]) -> Optional[T]:
+def opt_parse[T](node: HDF5Group, key: str, subparser: Callable[[HDF5Group], T]) -> T | None:
     """Parse a subnode if it is present"""
     if key in node:
         return subparser(node[key])
     return None
 
-def attr_parse(node: HDF5Group, key: str) -> Optional[str]:
+def attr_parse(node: HDF5Group, key: str) -> str | None:
     """Parse an attribute if it is present"""
     if key in node.attrs:
         return node.attrs[key]
