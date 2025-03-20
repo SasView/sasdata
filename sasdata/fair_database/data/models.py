@@ -89,7 +89,14 @@ class LabeledQuantity(models.Model):
 """
 
 
-# TODO: revisit metadata when sasdata metadata is rewritten
+def empty_list():
+    return []
+
+
+def empty_dict():
+    return {}
+
+
 class MetaData(models.Model):
     """Database model for scattering metadata"""
 
@@ -97,7 +104,7 @@ class MetaData(models.Model):
     title = models.CharField(max_length=500, default="Title")
 
     # run
-    run = models.JSONField(blank=True, null=True)
+    run = models.JSONField(default=empty_list)
 
     # definition
     definition = models.TextField(blank=True, null=True)
@@ -106,7 +113,7 @@ class MetaData(models.Model):
     instrument = models.JSONField(blank=True, null=True)
 
     # process
-    process = models.JSONField(blank=True, null=True)
+    process = models.JSONField(default=empty_list)
 
     # sample
     sample = models.JSONField(blank=True, null=True)
@@ -115,15 +122,32 @@ class MetaData(models.Model):
 class OperationTree(models.Model):
     """Database model for tree of operations performed on a DataSet."""
 
+    OPERATION_CHOICES = {
+        "zero": "0 [Add.Id.]",
+        "one": "1 [Mul.Id.]",
+        "constant": "Constant",
+        "variable": "Variable",
+        "neg": "Neg",
+        "reciprocal": "Inv",
+        "add": "Add",
+        "sub": "Sub",
+        "mul": "Mul",
+        "div": "Div",
+        "pow": "Pow",
+        "transpose": "Transpose",
+        "dot": "Dot",
+        "matmul": "MatMul",
+        "tensor_product": "TensorProduct",
+    }
+
     # Dataset the operation tree is performed on
     dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE)
 
     # operation
-    # TODO: restrict to list of operations
-    operation = models.CharField(max_length=10)
+    operation = models.CharField(max_length=20, choices=OPERATION_CHOICES)
 
     # parameters
-    parameters = models.JSONField(default=dict)
+    parameters = models.JSONField(default=empty_dict)
 
     # previous operation
     parent_operation1 = models.ForeignKey(
