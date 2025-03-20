@@ -25,18 +25,35 @@ class MetaDataSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class QuantitySerializer(serializers.ModelSerializer):
+    label = serializers.CharField(max_length=20)
+
+    class Meta:
+        model = Quantity
+        fields = ["value", "variance", "units", "hash", "label"]
+
+
 class DataSetSerializer(serializers.ModelSerializer):
     metadata = MetaDataSerializer(read_only=False)
     files = serializers.PrimaryKeyRelatedField(
         required=False, many=True, allow_null=True, queryset=DataFile
     )
-    data_contents = serializers.DictField()
+    data_contents = QuantitySerializer(many=True, read_only=False)
     # TODO: handle files better
     # TODO: see if I can find a better way to handle the quantity part
 
     class Meta:
         model = DataSet
-        fields = ["name", "files", "metadata"]
+        fields = [
+            "id",
+            "name",
+            "files",
+            "metadata",
+            "data_contents",
+            "is_public",
+            "current_user",
+            "users",
+        ]
 
     def validate(self, data):
         if (
@@ -64,10 +81,9 @@ class DataSetSerializer(serializers.ModelSerializer):
         data_contents = validated_data.pop("data_contents")
         dataset = DataSet.objects.create(metadata=metadata, **validated_data)
         for d in data_contents:
-            serializer = QuantitySerializer(data=data_contents[d])
-            if serializer.is_valid():
-                quantity = serializer.save()
-                dataset.data_contents.add(quantity, through_defaults={"label": d})
+            label = d.pop("label")
+            quantity = QuantitySerializer.create(QuantitySerializer(), validated_data=d)
+            dataset.data_contents.add(quantity, through_defaults={"label": label})
         return dataset
 
     # TODO: account for updating other attributes
@@ -86,12 +102,6 @@ class DataSetSerializer(serializers.ModelSerializer):
         return instance
 
     # TODO: custom method for database to serializer representation
-
-
-class QuantitySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Quantity
-        fields = "__all__"
 
 
 def constant_or_variable(operation: str):
