@@ -30,10 +30,13 @@ class DataSetSerializer(serializers.ModelSerializer):
     files = serializers.PrimaryKeyRelatedField(
         required=False, many=True, allow_null=True, queryset=DataFile
     )
+    data_contents = serializers.DictField()
+    # TODO: handle files better
+    # TODO: see if I can find a better way to handle the quantity part
 
     class Meta:
         model = DataSet
-        fields = "__all__"
+        fields = ["name", "files", "metadata"]
 
     def validate(self, data):
         if (
@@ -58,7 +61,13 @@ class DataSetSerializer(serializers.ModelSerializer):
         metadata = MetaDataSerializer.create(
             MetaDataSerializer(), validated_data=metadata_raw
         )
+        data_contents = validated_data.pop("data_contents")
         dataset = DataSet.objects.create(metadata=metadata, **validated_data)
+        for d in data_contents:
+            serializer = QuantitySerializer(data=data_contents[d])
+            if serializer.is_valid():
+                quantity = serializer.save()
+                dataset.data_contents.add(quantity, through_defaults={"label": d})
         return dataset
 
     # TODO: account for updating other attributes
@@ -75,6 +84,8 @@ class DataSetSerializer(serializers.ModelSerializer):
         instance.name = validated_data.get("name", instance.name)
         instance.save()
         return instance
+
+    # TODO: custom method for database to serializer representation
 
 
 class QuantitySerializer(serializers.ModelSerializer):

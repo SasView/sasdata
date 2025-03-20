@@ -95,9 +95,14 @@ class SasData:
 
     # TODO: fix serializers eventually
     def _serialise_json(self) -> dict[str, Any]:
+        data = []
+        for d in self._data_contents:
+            quantity = self._data_contents[d]
+            quantity["label"] = d
+            data.append(quantity)
         return {
             "name": self.name,
-            "data_contents": {q: self._data_contents[q].serialise_json() for q in self._data_contents},
+            "data_contents": data,
             "dataset_type": None, # TODO: update when DatasetType is more finalized
             "verbose": self._verbose,
             "metadata": self.metadata.serialise_json(),
