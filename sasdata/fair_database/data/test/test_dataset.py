@@ -19,6 +19,9 @@ class TestDataSet(APITestCase):
             "process": {},
             "sample": {},
         }
+        cls.empty_data = [
+            {"value": 0, "variance": 0, "units": "no", "hash": 0, "label": "test"}
+        ]
         cls.user1 = User.objects.create_user(
             id=1, username="testUser1", password="secret"
         )
@@ -112,7 +115,11 @@ class TestDataSet(APITestCase):
 
     # Test creating a dataset with associated metadata
     def test_dataset_created(self):
-        dataset = {"name": "New Dataset", "metadata": self.empty_metadata}
+        dataset = {
+            "name": "New Dataset",
+            "metadata": self.empty_metadata,
+            "data_contents": self.empty_data,
+        }
         request = self.auth_client1.post("/v1/data/set/", data=dataset, format="json")
         max_id = DataSet.objects.aggregate(Max("id"))["id__max"]
         new_dataset = DataSet.objects.get(id=max_id)
@@ -134,6 +141,7 @@ class TestDataSet(APITestCase):
             "name": "New Dataset",
             "metadata": self.empty_metadata,
             "is_public": True,
+            "data_contents": self.empty_data,
         }
         request = self.client.post("/v1/data/set/", data=dataset, format="json")
         max_id = DataSet.objects.aggregate(Max("id"))["id__max"]
@@ -155,6 +163,7 @@ class TestDataSet(APITestCase):
             "name": "Disallowed Dataset",
             "metadata": self.empty_metadata,
             "is_public": False,
+            "data_contents": self.empty_data,
         }
         request = self.client.post("/v1/data/set/", data=dataset, format="json")
         self.assertEqual(request.status_code, status.HTTP_400_BAD_REQUEST)
@@ -166,6 +175,7 @@ class TestDataSet(APITestCase):
             "name": "Overwrite Dataset",
             "metadata": self.empty_metadata,
             "is_public": True,
+            "data_contents": self.empty_data,
         }
         request = self.auth_client2.post("/v1/data/set/", data=dataset, format="json")
         max_id = DataSet.objects.aggregate(Max("id"))["id__max"]
@@ -239,6 +249,7 @@ class TestSingleDataSet(APITestCase):
                 "name": "Dataset 2",
                 "files": [],
                 "metadata": None,
+                "data_contents": [],
             },
         )
 
@@ -258,6 +269,7 @@ class TestSingleDataSet(APITestCase):
                 "name": "Dataset 1",
                 "files": [],
                 "metadata": None,
+                "data_contents": [],
             },
         )
 
@@ -277,6 +289,7 @@ class TestSingleDataSet(APITestCase):
                 "name": "Dataset 3",
                 "files": [],
                 "metadata": None,
+                "data_contents": [],
             },
         )
 
