@@ -375,6 +375,25 @@ class NamedUnit(Unit):
     def __repr__(self):
         return self.name
 
+    def __eq__(self, other):
+        """Match other units exactly or match strings against ANY of our names"""
+        match other:
+            case str():
+                return self.name == other or self.ascii_symbol == other or self.symbol == other
+            case NamedUnit():
+                return self.name == other.name \
+                    and self.ascii_symbol == other.ascii_symbol and self.symbol == other.symbol
+            case _:
+                return False
+
+
+    def startswith(self, prefix: str) -> bool:
+        """Check if any representation of the unit begins with the prefix string"""
+        prefix = prefix.lower()
+        return (self.name is not None and self.name.lower().startswith(prefix)) \
+                or (self.ascii_symbol is not None and self.ascii_symbol.lower().startswith(prefix)) \
+                or (self.symbol is not None and self.symbol.lower().startswith(prefix))
+
 #
 # Parsing plan:
 #  Require unknown amounts of units to be explicitly positive or negative?

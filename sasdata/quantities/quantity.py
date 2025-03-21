@@ -1118,6 +1118,18 @@ class Quantity[QuantityType]:
 
         self.history = QuantityHistory.variable(self)
 
+    # TODO: Adding this method as a temporary measure but we need a single
+    # method that does this.
+    def with_standard_error(self, standard_error: "Quantity"):
+        if standard_error.units.equivalent(self.units):
+            return Quantity(
+                value=self.value,
+                units=self.units,
+                standard_error=standard_error.in_units_of(self.units),)
+        else:
+            raise UnitError(f"Standard error units ({standard_error.units}) "
+                            f"are not compatible with value units ({self.units})")
+
     @property
     def has_variance(self):
         return self._variance is not None
@@ -1325,6 +1337,9 @@ class Quantity[QuantityType]:
                                        self.history.operation_tree,
                                        other),
                                    self.history.references))
+
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, Quantity) and self.hash_value == other.hash_value
 
     @staticmethod
     def _array_repr_format(arr: np.ndarray):
