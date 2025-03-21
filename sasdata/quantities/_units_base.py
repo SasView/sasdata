@@ -4,7 +4,7 @@ from fractions import Fraction
 
 import numpy as np
 
-from sasdata.quantities.unicode_superscript import int_as_unicode_superscript
+from unicode_superscript import int_as_unicode_superscript
 
 class DimensionError(Exception):
     pass
@@ -279,12 +279,14 @@ class NamedUnit(Unit):
                  dimensions: Dimensions,
                  name: str | None = None,
                  ascii_symbol: str | None = None,
+                 latex_symbol: str | None = None,
                  symbol: str | None = None):
 
         super().__init__(si_scaling_factor, dimensions)
         self.name = name
         self.ascii_symbol = ascii_symbol
         self.symbol = symbol
+        self.latex_symbol = latex_symbol if latex_symbol is not None else ascii_symbol
 
     def __repr__(self):
         return self.name
