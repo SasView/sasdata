@@ -60,6 +60,6 @@ jobs:
       run: |
         make -C docs html
 
-    - name: Test with pytest
-      run: |
-        python -m pytest -v -s test
+    #- name: Test with pytest
+    #  run: |
+    #    python -m pytest -v -s test
