@@ -45,9 +45,7 @@ jobs:
     - name: Build sasdata
       run: |
         # BUILD SASDATA
-        python setup.py clean
-        python setup.py build
-        python -m pip install .
+        python -m pip install -e .
 
     ### Build documentation (if enabled)
 
