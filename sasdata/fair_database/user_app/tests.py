@@ -57,8 +57,12 @@ class AuthTests(TestCase):
     def test_multiple_login(self):
         response = self.client1.post("/auth/login/", data=self.login_data_2)
         response2 = self.client2.post("/auth/login/", data=self.login_data_2)
+        response3 = self.client1.get("/auth/user/", headers=self.auth_header(response))
+        response4 = self.client2.get("/auth/user/", headers=self.auth_header(response2))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response2.status_code, status.HTTP_200_OK)
+        self.assertEqual(response3.status_code, status.HTTP_200_OK)
+        self.assertEqual(response4.status_code, status.HTTP_200_OK)
         self.assertNotEqual(response.content, response2.content)
 
     # Test get user information
