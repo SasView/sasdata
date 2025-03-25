@@ -139,7 +139,7 @@ class OperationTree(models.Model):
     }
 
     # Dataset the operation tree is performed on
-    dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE)
+    quantity = models.ForeignKey(Quantity, on_delete=models.CASCADE)
 
     # operation
     operation = models.CharField(max_length=20, choices=OPERATION_CHOICES)
