@@ -25,12 +25,53 @@ class MetaDataSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class OperationTreeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OperationTree
+        fields = ["quantity", "operation", "parameters"]
+
+    def create(self, validated_data):
+        parent_operation1 = None
+        parent_operation2 = None
+        if not constant_or_variable(validated_data["operation"]):
+            parent1 = validated_data["parameters"].pop("a")
+            parent1["quantity"] = validated_data["quantity"]
+            serializer1 = OperationTreeSerializer(data=parent1)
+            if serializer1.is_valid(raise_exception=True):
+                parent_operation1 = serializer1.save()
+        if binary(validated_data["operation"]):
+            parent2 = validated_data["parameters"].pop("b")
+            parent2["quantity"] = validated_data["quantity"]
+            serializer2 = OperationTreeSerializer(data=parent2)
+            if serializer2.is_valid(raise_exception=True):
+                parent_operation2 = serializer2.save()
+        return OperationTree.objects.create(
+            dataset=validated_data["quantity"],  # TODO: check uuid vs object
+            operation=validated_data["operation"],
+            parameters=validated_data["parameters"],
+            parent_operation1=parent_operation1,
+            parent_operaton2=parent_operation2,
+        )
+
+
 class QuantitySerializer(serializers.ModelSerializer):
     label = serializers.CharField(max_length=20)
+    history = serializers.JSONField()
 
     class Meta:
         model = Quantity
-        fields = ["value", "variance", "units", "hash", "label"]
+        fields = ["value", "variance", "units", "hash", "label", "history"]
+
+    # TODO: validation checks for history
+
+    def create(self, validated_data):
+        operations_raw = validated_data.pop("history")
+        quantity = Quantity.objects.create(**validated_data)
+        operations_tree_raw = operations_raw["operation_tree"]
+        operations_tree_raw["quantity"] = quantity.id
+        serializer = OperationTreeSerializer(data=operations_tree_raw)
+        if serializer.is_valid():
+            serializer.save()
 
 
 class DataSetSerializer(serializers.ModelSerializer):
@@ -110,32 +151,3 @@ def constant_or_variable(operation: str):
 
 def binary(operation: str):
     return str in ["add", "sub", "mul", "div", "dot", "matmul", "tensor_product"]
-
-
-class OperationTreeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = OperationTree
-        fields = ["dataset", "operation", "parameters"]
-
-    def create(self, validated_data):
-        parent_operation1 = None
-        parent_operation2 = None
-        if not constant_or_variable(validated_data["operation"]):
-            parent1 = validated_data["parameters"].pop("a")
-            parent1["dataset"] = validated_data["dataset"]
-            serializer1 = OperationTreeSerializer(data=parent1)
-            if serializer1.is_valid(raise_exception=True):
-                parent_operation1 = serializer1.save()
-        if binary(validated_data["operation"]):
-            parent2 = validated_data["parameters"].pop("b")
-            parent2["dataset"] = validated_data["dataset"]
-            serializer2 = OperationTreeSerializer(data=parent2)
-            if serializer2.is_valid(raise_exception=True):
-                parent_operation2 = serializer2.save()
-        return OperationTree.objects.create(
-            dataset=validated_data["dataset"],  # TODO: check uuid vs object
-            operation=validated_data["operation"],
-            parameters=validated_data["parameters"],
-            parent_operation1=parent_operation1,
-            parent_operaton2=parent_operation2,
-        )
