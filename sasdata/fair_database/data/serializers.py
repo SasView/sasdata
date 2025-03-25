@@ -56,7 +56,7 @@ class OperationTreeSerializer(serializers.ModelSerializer):
 
 class QuantitySerializer(serializers.ModelSerializer):
     label = serializers.CharField(max_length=20)
-    history = serializers.JSONField()
+    history = serializers.JSONField(required=False)  # TODO: is this required?
 
     class Meta:
         model = Quantity
@@ -65,13 +65,17 @@ class QuantitySerializer(serializers.ModelSerializer):
     # TODO: validation checks for history
 
     def create(self, validated_data):
-        operations_raw = validated_data.pop("history")
-        quantity = Quantity.objects.create(**validated_data)
-        operations_tree_raw = operations_raw["operation_tree"]
-        operations_tree_raw["quantity"] = quantity.id
-        serializer = OperationTreeSerializer(data=operations_tree_raw)
-        if serializer.is_valid():
-            serializer.save()
+        if "history" in validated_data:
+            operations_raw = validated_data.pop("history")
+            quantity = Quantity.objects.create(**validated_data)
+            operations_tree_raw = operations_raw["operation_tree"]
+            operations_tree_raw["quantity"] = quantity.id
+            serializer = OperationTreeSerializer(data=operations_tree_raw)
+            if serializer.is_valid():
+                serializer.save()
+            return quantity
+        else:
+            return Quantity.objects.create(**validated_data)
 
 
 class DataSetSerializer(serializers.ModelSerializer):
