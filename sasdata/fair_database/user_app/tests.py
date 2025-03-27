@@ -30,8 +30,8 @@ class AuthTests(TestCase):
         cls.user = User.objects.create_user(
             id=1, username="testUser2", password="sasview!", email="email2@domain.org"
         )
-        cls.client3 = APIClient()
-        cls.client3.force_authenticate(user=cls.user)
+        cls.client_authenticated = APIClient()
+        cls.client_authenticated.force_authenticate(user=cls.user)
 
     def auth_header(self, response):
         return {"Authorization": "Token " + response.data["token"]}
@@ -67,7 +67,7 @@ class AuthTests(TestCase):
 
     # Test get user information
     def test_user_get(self):
-        response = self.client3.get("/auth/user/")
+        response = self.client_authenticated.get("/auth/user/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
             response.content,
@@ -77,7 +77,7 @@ class AuthTests(TestCase):
     # Test changing username
     def test_user_put_username(self):
         data = {"username": "newName"}
-        response = self.client3.put("/auth/user/", data=data)
+        response = self.client_authenticated.put("/auth/user/", data=data)
         self.user.username = "testUser2"
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
@@ -88,7 +88,7 @@ class AuthTests(TestCase):
     # Test changing username and first and last name
     def test_user_put_name(self):
         data = {"username": "newName", "first_name": "Clark", "last_name": "Kent"}
-        response = self.client3.put("/auth/user/", data=data)
+        response = self.client_authenticated.put("/auth/user/", data=data)
         self.user.first_name = ""
         self.user.last_name = ""
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -155,8 +155,12 @@ class AuthTests(TestCase):
             "old_password": "sasview!",
         }
         self.login_data_2["password"] = "sasview?"
-        response = self.client3.post("/auth/password/change/", data=data)
+        response = self.client_authenticated.post("/auth/password/change/", data=data)
         login_response = self.client1.post("/auth/login/", data=self.login_data_2)
         self.login_data_2["password"] = "sasview!"
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(login_response.status_code, status.HTTP_200_OK)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.user.delete()
