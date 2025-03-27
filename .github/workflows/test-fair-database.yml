@@ -51,4 +51,4 @@ jobs:
 
     - name: Test with Django tests
       run: |
-        python sasdata/fair_database/manage.py test
+        python sasdata/fair_database/manage.py test sasdata.fair_database
