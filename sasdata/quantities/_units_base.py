@@ -200,17 +200,6 @@ class Dimensions:
 
         return ''.join(tokens)
 
-    def serialise_json(self):
-        return {
-            "length": self.length,
-            "time": self.time,
-            "mass": self.mass,
-            "current": self.current,
-            "temperature": self.temperature,
-            "amount": self.moles_hint,
-            "angle": self.angle_hint
-        }
-
 
 class Unit:
     def __init__(self,
@@ -275,12 +264,6 @@ class Unit:
     @staticmethod
     def parse(unit_string: str) -> "Unit":
         pass
-
-    def serialise_json(self):
-        return {
-            "scale": self.scale,
-            "dimensions": self.dimensions.serialise_json()
-        }
 class GreedyAbsDimensionUnitFormatProcessor(UnitFormatProcessor):
     """ This processor minimises the dimensionality of the unit by multiplying by as many
     units of the specified type as needed """
