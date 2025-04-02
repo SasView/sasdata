@@ -31,6 +31,14 @@ def _load_text(node: etree.Element, name: str) -> str | None:
     return None
 
 
+def parse_process(node: etree.Element) -> Process:
+    name = _load_text(node, "name")
+    date = _load_text(node, "date")
+    description = _load_text(node, "description")
+    terms = {t.attrib["name"]: t.text for t in node.findall("cansas:term", ns)}
+    return Process(name=name, date=date, description=description, term=terms)
+
+
 def load_data(filename) -> dict[str, SasData]:
     loaded_data: dict[str, SasData] = {}
     tree = etree.parse(filename)
@@ -44,11 +52,16 @@ def load_data(filename) -> dict[str, SasData]:
         run = title = None
         title = _load_text(entry, "Title")
         run = _load_text(entry, "Run")
+
+        processes = [
+            parse_process(node) for node in entry.findall("cansas:SASprocess", ns)
+        ]
+
         metadata = Metadata(
             title=title,
             run=[run] if run is not None else [],
             instrument=None,
-            process=[],
+            process=processes,
             sample=None,
             definition=None,
         )
