@@ -17,6 +17,8 @@ from sasdata.metadata import (
     Process,
     Metadata,
 )
+from sasdata.quantities.quantity import Quantity
+from sasdata.quantities import units
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +37,20 @@ def _load_text(node: etree.Element, name: str) -> str | None:
 def parse_string(node: etree.Element) -> str:
     """Access string data from a node"""
     return node.text
+
+
+def parse_quantity(node: etree.Element) -> Quantity[float]:
+    """Pull a single quantity with length units out of an XML node"""
+    magnitude = float(node.text)
+    unit = node.attrib["unit"]
+    return Quantity(magnitude, units.symbol_lookup[unit])
+
+
+def attr_parse(node: etree.Element, key: str) -> str | None:
+    """Parse an attribute if it is present"""
+    if key in node.attrib:
+        return node.attrib[key]
+    return None
 
 
 def opt_parse[T](
@@ -56,12 +72,108 @@ def all_parse[T](
     return None
 
 
+def parse_vec3(node: etree.Element) -> Vec3:
+    """Parse a measured 3-vector"""
+    x = opt_parse(node, "x", parse_quantity)
+    y = opt_parse(node, "y", parse_quantity)
+    z = opt_parse(node, "z", parse_quantity)
+    return Vec3(x=x, y=y, z=z)
+
+
+def parse_rot3(node: etree.Element) -> Rot3:
+    """Parse a measured rotation"""
+    roll = opt_parse(node, "roll", parse_quantity)
+    pitch = opt_parse(node, "pitch", parse_quantity)
+    yaw = opt_parse(node, "yaw", parse_quantity)
+    return Rot3(roll=roll, pitch=pitch, yaw=yaw)
+
+
 def parse_process(node: etree.Element) -> Process:
     name = _load_text(node, "name")
     date = _load_text(node, "date")
     description = _load_text(node, "description")
     terms = {t.attrib["name"]: t.text for t in node.findall("cansas:term", ns)}
     return Process(name=name, date=date, description=description, term=terms)
+
+
+def parse_beam_size(node: etree.Element) -> BeamSize:
+    return BeamSize(
+        name=opt_parse(node, "name", parse_string),
+        size=opt_parse(node, "size", parse_vec3),
+    )
+
+
+def parse_source(node: etree.Element) -> Source:
+    radiation = opt_parse(node, "radiation", parse_string)
+    beam_shape = opt_parse(node, "beam_shape", parse_string)
+    beam_size = opt_parse(node, "beam_size", parse_beam_size)
+    wavelength = opt_parse(node, "wavelength", parse_quantity)
+    wavelength_min = opt_parse(node, "wavelength_min", parse_quantity)
+    wavelength_max = opt_parse(node, "wavelength_max", parse_quantity)
+    wavelength_spread = opt_parse(node, "wavelength_spread", parse_quantity)
+    return Source(
+        radiation=radiation,
+        beam_size=beam_size,
+        beam_shape=beam_shape,
+        wavelength=wavelength,
+        wavelength_min=wavelength_min,
+        wavelength_max=wavelength_max,
+        wavelength_spread=wavelength_spread,
+    )
+
+
+def parse_detector(node: etree.Element) -> Detector:
+    return Detector(
+        name=opt_parse(node, "name", parse_string),
+        distance=opt_parse(node, "SDD", parse_quantity),
+        offset=opt_parse(node, "offset", parse_vec3),
+        orientation=opt_parse(node, "orientation", parse_rot3),
+        beam_center=opt_parse(node, "beam_center", parse_vec3),
+        pixel_size=opt_parse(node, "pixel_size", parse_vec3),
+        slit_length=opt_parse(node, "slit_length", parse_quantity),
+    )
+
+
+def parse_aperture(node: etree.Element) -> Aperture:
+    size = opt_parse(node, "size", parse_vec3)
+    if size:
+        size_name = attr_parse(node["size"], "name")
+    else:
+        size_name = None
+    return Aperture(
+        distance=opt_parse(node, "distance", parse_quantity),
+        size=size,
+        size_name=size_name,
+        name=attr_parse(node, "name"),
+        type_=attr_parse(node, "type"),
+    )
+
+
+def parse_collimation(node: etree.Element) -> Collimation:
+    return Collimation(
+        length=opt_parse(node, "length", parse_quantity),
+        apertures=all_parse(node, "aperture", parse_aperture),
+    )
+
+
+def parse_instrument(node: etree.Element) -> Instrument:
+    source = opt_parse(node, "SASsource", parse_source)
+    detector = all_parse(node, "SASdetector", parse_detector)
+    collimations = all_parse(node, "SAScollimation", parse_collimation)
+    return Instrument(source=source, detector=detector, collimations=collimations)
+
+
+def parse_sample(node: etree.Element) -> Sample:
+    return Sample(
+        name=attr_parse(node, "name"),
+        sample_id=opt_parse(node, "ID", parse_string),
+        thickness=opt_parse(node, "thickness", parse_quantity),
+        transmission=opt_parse(node, "transmission", lambda n: float(parse_string(n))),
+        temperature=opt_parse(node, "temperature", parse_quantity),
+        position=opt_parse(node, "position", parse_vec3),
+        orientation=opt_parse(node, "orientation", parse_rot3),
+        details=all_parse(node, "details", parse_string),
+    )
 
 
 def load_data(filename) -> dict[str, SasData]:
@@ -74,18 +186,13 @@ def load_data(filename) -> dict[str, SasData]:
     for entry in tree.getroot().findall("cansas:SASentry", ns):
         name = entry.attrib["name"]
 
-        title = _load_text(entry, "Title")
-        runs = all_parse(entry, "Run", parse_string)
-
-        processes = all_parse(entry, "SASprocess", parse_process)
-
         metadata = Metadata(
-            title=title,
-            run=runs,
-            instrument=None,
-            process=processes,
-            sample=None,
-            definition=None,
+            title=opt_parse(entry, "Title", parse_string),
+            run=all_parse(entry, "Run", parse_string),
+            instrument=opt_parse(entry, "SASinstrument", parse_instrument),
+            process=all_parse(entry, "SASprocess", parse_process),
+            sample=opt_parse(entry, "SASsample", parse_sample),
+            definition=opt_parse(entry, "SASdefinition", parse_string),
         )
         loaded_data[name] = SasData(
             name=name,
