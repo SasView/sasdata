@@ -24,6 +24,13 @@ test_file = "./example_data/1d_data/ISIS_Polymer_Blend_TK49.xml"
 ns = {"cansas": "urn:cansas1d:1.1"}
 
 
+# Small helper function to optionally load child text from an element
+def _load_text(node: etree.Element, name: str) -> str | None:
+    if (inner_node := node.find(f"cansas:{name}", ns)) is not None:
+        return inner_node.text
+    return None
+
+
 def load_data(filename) -> dict[str, SasData]:
     loaded_data: dict[str, SasData] = {}
     tree = etree.parse(filename)
@@ -33,9 +40,13 @@ def load_data(filename) -> dict[str, SasData]:
         return loaded_data
     for entry in tree.getroot().findall("cansas:SASentry", ns):
         name = entry.attrib["name"]
+
+        run = title = None
+        title = _load_text(entry, "Title")
+        run = _load_text(entry, "Run")
         metadata = Metadata(
-            title="",
-            run=[],
+            title=title,
+            run=[run] if run is not None else [],
             instrument=None,
             process=[],
             sample=None,
