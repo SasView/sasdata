@@ -247,8 +247,6 @@ def load_data(filename) -> dict[str, SasData]:
             data = data_set
             break
 
-        print(data)
-
         loaded_data[name] = SasData(
             name=name,
             dataset_type=one_dim,
@@ -260,7 +258,18 @@ def load_data(filename) -> dict[str, SasData]:
 
 
 if __name__ == "__main__":
-    data = load_data(test_file)
+    import sys
 
-    for dataset in data.values():
-        print(dataset.summary())
+    if len(sys.argv) > 1:
+        files = sys.argv[1:]
+    else:
+        files = [test_file]
+
+    for f in files:
+        try:
+            data = load_data(f)
+
+            for dataset in data.values():
+                print(dataset.summary())
+        except:
+            print(f)
