@@ -184,10 +184,10 @@ class Metadata:
         run_string = self.run[0] if len(self.run) == 1 else self.run
         return (
             f"  {self.title}, Run: {run_string}\n" +
-            "  " + "="*len(self.title) +
+            "  " + "="*len(self.title if self.title else "") +
                            "=======" +
             "="*len(run_string) + "\n\n" +
             f"Definition: {self.title}\n" +
             "".join([p.summary() for p in self.process]) +
-            self.sample.summary() +
+            (self.sample.summary() if self.sample else "") +
             (self.instrument.summary() if self.instrument else ""))
