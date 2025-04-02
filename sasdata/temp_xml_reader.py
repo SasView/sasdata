@@ -26,22 +26,18 @@ logger = logging.getLogger(__name__)
 
 test_file = "./example_data/1d_data/ISIS_Polymer_Blend_TK49.xml"
 
-ns = {"cansas": "urn:cansas1d:1.1"}
+ns = {
+    "cansas11": "urn:cansas1d:1.1",
+    "cansas10": "urn:cansas1d:1.0",
+}
 
 
-# Small helper function to optionally load child text from an element
-def _load_text(node: etree.Element, name: str) -> str | None:
-    if (inner_node := node.find(f"cansas:{name}", ns)) is not None:
-        return inner_node.text
-    return None
-
-
-def parse_string(node: etree.Element) -> str:
+def parse_string(node: etree.Element, _version: str) -> str:
     """Access string data from a node"""
     return node.text
 
 
-def parse_quantity(node: etree.Element) -> Quantity[float]:
+def parse_quantity(node: etree.Element, _version: str) -> Quantity[float]:
     """Pull a single quantity with length units out of an XML node"""
     magnitude = float(node.text)
     unit = node.attrib["unit"]
@@ -56,63 +52,66 @@ def attr_parse(node: etree.Element, key: str) -> str | None:
 
 
 def opt_parse[T](
-    node: etree.Element, key: str, subparser: Callable[[etree.Element], T]
+    node: etree.Element,
+    key: str,
+    version: str,
+    subparser: Callable[[etree.Element, str], T],
 ) -> T | None:
     """Parse subnode if preset"""
-    if (inner_node := node.find(f"cansas:{key}", ns)) is not None:
-        return subparser(inner_node)
+    if (inner_node := node.find(f"{version}:{key}", ns)) is not None:
+        return subparser(inner_node, version)
     return None
 
 
 def all_parse[T](
-    node: etree.Element, key: str, subparser: Callable[[etree.Element], T]
+    node: etree.Element,
+    key: str,
+    version: str,
+    subparser: Callable[[etree.Element, str], T],
 ) -> list[T]:
     """Parse subnode if preset"""
-    return [subparser(n) for n in node.findall(f"cansas:{key}", ns)]
-    if (inner_node := node.find(f"cansas:{key}", ns)) is not None:
-        return subparser(inner_node)
-    return None
+    return [subparser(n, version) for n in node.findall(f"{version}:{key}", ns)]
 
 
-def parse_vec3(node: etree.Element) -> Vec3:
+def parse_vec3(node: etree.Element, version: str) -> Vec3:
     """Parse a measured 3-vector"""
-    x = opt_parse(node, "x", parse_quantity)
-    y = opt_parse(node, "y", parse_quantity)
-    z = opt_parse(node, "z", parse_quantity)
+    x = opt_parse(node, "x", version, parse_quantity)
+    y = opt_parse(node, "y", version, parse_quantity)
+    z = opt_parse(node, "z", version, parse_quantity)
     return Vec3(x=x, y=y, z=z)
 
 
-def parse_rot3(node: etree.Element) -> Rot3:
+def parse_rot3(node: etree.Element, version: str) -> Rot3:
     """Parse a measured rotation"""
-    roll = opt_parse(node, "roll", parse_quantity)
-    pitch = opt_parse(node, "pitch", parse_quantity)
-    yaw = opt_parse(node, "yaw", parse_quantity)
+    roll = opt_parse(node, "roll", version, parse_quantity)
+    pitch = opt_parse(node, "pitch", version, parse_quantity)
+    yaw = opt_parse(node, "yaw", version, parse_quantity)
     return Rot3(roll=roll, pitch=pitch, yaw=yaw)
 
 
-def parse_process(node: etree.Element) -> Process:
-    name = _load_text(node, "name")
-    date = _load_text(node, "date")
-    description = _load_text(node, "description")
-    terms = {t.attrib["name"]: t.text for t in node.findall("cansas:term", ns)}
+def parse_process(node: etree.Element, version: str) -> Process:
+    name = opt_parse(node, "name", version, parse_string)
+    date = opt_parse(node, "date", version, parse_string)
+    description = opt_parse(node, "description", version, parse_string)
+    terms = {t.attrib["name"]: t.text for t in node.findall(f"{version}:term", ns)}
     return Process(name=name, date=date, description=description, term=terms)
 
 
-def parse_beam_size(node: etree.Element) -> BeamSize:
+def parse_beam_size(node: etree.Element, version: str) -> BeamSize:
     return BeamSize(
-        name=opt_parse(node, "name", parse_string),
-        size=opt_parse(node, "size", parse_vec3),
+        name=opt_parse(node, "name", version, parse_string),
+        size=opt_parse(node, "size", version, parse_vec3),
     )
 
 
-def parse_source(node: etree.Element) -> Source:
-    radiation = opt_parse(node, "radiation", parse_string)
-    beam_shape = opt_parse(node, "beam_shape", parse_string)
-    beam_size = opt_parse(node, "beam_size", parse_beam_size)
-    wavelength = opt_parse(node, "wavelength", parse_quantity)
-    wavelength_min = opt_parse(node, "wavelength_min", parse_quantity)
-    wavelength_max = opt_parse(node, "wavelength_max", parse_quantity)
-    wavelength_spread = opt_parse(node, "wavelength_spread", parse_quantity)
+def parse_source(node: etree.Element, version: str) -> Source:
+    radiation = opt_parse(node, "radiation", version, parse_string)
+    beam_shape = opt_parse(node, "beam_shape", version, parse_string)
+    beam_size = opt_parse(node, "beam_size", version, parse_beam_size)
+    wavelength = opt_parse(node, "wavelength", version, parse_quantity)
+    wavelength_min = opt_parse(node, "wavelength_min", version, parse_quantity)
+    wavelength_max = opt_parse(node, "wavelength_max", version, parse_quantity)
+    wavelength_spread = opt_parse(node, "wavelength_spread", version, parse_quantity)
     return Source(
         radiation=radiation,
         beam_size=beam_size,
@@ -124,26 +123,26 @@ def parse_source(node: etree.Element) -> Source:
     )
 
 
-def parse_detector(node: etree.Element) -> Detector:
+def parse_detector(node: etree.Element, version: str) -> Detector:
     return Detector(
-        name=opt_parse(node, "name", parse_string),
-        distance=opt_parse(node, "SDD", parse_quantity),
-        offset=opt_parse(node, "offset", parse_vec3),
-        orientation=opt_parse(node, "orientation", parse_rot3),
-        beam_center=opt_parse(node, "beam_center", parse_vec3),
-        pixel_size=opt_parse(node, "pixel_size", parse_vec3),
-        slit_length=opt_parse(node, "slit_length", parse_quantity),
+        name=opt_parse(node, "name", version, parse_string),
+        distance=opt_parse(node, "SDD", version, parse_quantity),
+        offset=opt_parse(node, "offset", version, parse_vec3),
+        orientation=opt_parse(node, "orientation", version, parse_rot3),
+        beam_center=opt_parse(node, "beam_center", version, parse_vec3),
+        pixel_size=opt_parse(node, "pixel_size", version, parse_vec3),
+        slit_length=opt_parse(node, "slit_length", version, parse_quantity),
     )
 
 
-def parse_aperture(node: etree.Element) -> Aperture:
-    size = opt_parse(node, "size", parse_vec3)
+def parse_aperture(node: etree.Element, version: str) -> Aperture:
+    size = opt_parse(node, "size", version, parse_vec3)
     if size:
-        size_name = attr_parse(node.find("cansas:size", ns), "name")
+        size_name = attr_parse(node.find(f"{version}:size", ns), "name")
     else:
         size_name = None
     return Aperture(
-        distance=opt_parse(node, "distance", parse_quantity),
+        distance=opt_parse(node, "distance", version, parse_quantity),
         size=size,
         size_name=size_name,
         name=attr_parse(node, "name"),
@@ -151,39 +150,41 @@ def parse_aperture(node: etree.Element) -> Aperture:
     )
 
 
-def parse_collimation(node: etree.Element) -> Collimation:
+def parse_collimation(node: etree.Element, version: str) -> Collimation:
     return Collimation(
-        length=opt_parse(node, "length", parse_quantity),
-        apertures=all_parse(node, "aperture", parse_aperture),
+        length=opt_parse(node, "length", version, parse_quantity),
+        apertures=all_parse(node, "aperture", version, parse_aperture),
     )
 
 
-def parse_instrument(node: etree.Element) -> Instrument:
-    source = opt_parse(node, "SASsource", parse_source)
-    detector = all_parse(node, "SASdetector", parse_detector)
-    collimations = all_parse(node, "SAScollimation", parse_collimation)
+def parse_instrument(node: etree.Element, version: str) -> Instrument:
+    source = opt_parse(node, "SASsource", version, parse_source)
+    detector = all_parse(node, "SASdetector", version, parse_detector)
+    collimations = all_parse(node, "SAScollimation", version, parse_collimation)
     return Instrument(source=source, detector=detector, collimations=collimations)
 
 
-def parse_sample(node: etree.Element) -> Sample:
+def parse_sample(node: etree.Element, version: str) -> Sample:
     return Sample(
         name=attr_parse(node, "name"),
-        sample_id=opt_parse(node, "ID", parse_string),
-        thickness=opt_parse(node, "thickness", parse_quantity),
-        transmission=opt_parse(node, "transmission", lambda n: float(parse_string(n))),
-        temperature=opt_parse(node, "temperature", parse_quantity),
-        position=opt_parse(node, "position", parse_vec3),
-        orientation=opt_parse(node, "orientation", parse_rot3),
-        details=all_parse(node, "details", parse_string),
+        sample_id=opt_parse(node, "ID", version, parse_string),
+        thickness=opt_parse(node, "thickness", version, parse_quantity),
+        transmission=opt_parse(
+            node, "transmission", version, lambda n, v: float(parse_string(n, v))
+        ),
+        temperature=opt_parse(node, "temperature", version, parse_quantity),
+        position=opt_parse(node, "position", version, parse_vec3),
+        orientation=opt_parse(node, "orientation", version, parse_rot3),
+        details=all_parse(node, "details", version, parse_string),
     )
 
 
-def parse_data(node: etree.Element) -> dict[str, Quantity]:
+def parse_data(node: etree.Element, version: str) -> dict[str, Quantity]:
     aos = []
     keys = set()
     # Units for quantities
     us: dict[str, Unit] = {}
-    for idata in node.findall("cansas:Idata", ns):
+    for idata in node.findall(f"{version}:Idata", ns):
         struct = {}
         for value in idata.getchildren():
             name = etree.QName(value).localname
@@ -223,27 +224,37 @@ def load_data(filename) -> dict[str, SasData]:
     loaded_data: dict[str, SasData] = {}
     tree = etree.parse(filename)
     root = tree.getroot()
-    if root.tag != "{" + ns["cansas"] + "}SASroot":
+
+    version: str | None = None
+
+    # Find out cansas version
+    for n, v in ns.items():
+        if root.tag == "{" + v + "}SASroot":
+            version = n
+            break
+
+    if version is None:
         logger.error(f"Invalid root: {root.tag}")
         return loaded_data
-    for entry in tree.getroot().findall("cansas:SASentry", ns):
+
+    for entry in tree.getroot().findall(f"{version}:SASentry", ns):
         name = entry.attrib["name"]
 
         metadata = Metadata(
-            title=opt_parse(entry, "Title", parse_string),
-            run=all_parse(entry, "Run", parse_string),
-            instrument=opt_parse(entry, "SASinstrument", parse_instrument),
-            process=all_parse(entry, "SASprocess", parse_process),
-            sample=opt_parse(entry, "SASsample", parse_sample),
-            definition=opt_parse(entry, "SASdefinition", parse_string),
+            title=opt_parse(entry, "Title", version, parse_string),
+            run=all_parse(entry, "Run", version, parse_string),
+            instrument=opt_parse(entry, "SASinstrument", version, parse_instrument),
+            process=all_parse(entry, "SASprocess", version, parse_process),
+            sample=opt_parse(entry, "SASsample", version, parse_sample),
+            definition=opt_parse(entry, "SASdefinition", version, parse_string),
         )
 
         data = {}
 
         datacount = 0
-        for n in entry.findall("cansas:SASdata", ns):
+        for n in entry.findall(f"{version}:SASdata", ns):
             datacount += 1
-            data_set = parse_data(n)
+            data_set = parse_data(n, version)
             data = data_set
             break
 
@@ -266,10 +277,8 @@ if __name__ == "__main__":
         files = [test_file]
 
     for f in files:
-        try:
-            data = load_data(f)
+        print(f)
+        data = load_data(f)
 
-            for dataset in data.values():
-                print(dataset.summary())
-        except:
-            print(f)
+        # for dataset in data.values():
+        #     print(dataset.summary())
