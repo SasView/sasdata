@@ -151,7 +151,6 @@ def parse_apterture(node : HDF5Group) -> Aperture:
     return Aperture(distance=distance, size=size, size_name=size_name, name=name, type_=type_)
 
 def parse_beam_size(node : HDF5Group) -> BeamSize:
-    name = None
     name = attr_parse(node, "name")
     size = parse_vec3(node)
     return BeamSize(name=name, size=size)
