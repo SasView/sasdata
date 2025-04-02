@@ -139,7 +139,7 @@ def parse_detector(node: etree.Element) -> Detector:
 def parse_aperture(node: etree.Element) -> Aperture:
     size = opt_parse(node, "size", parse_vec3)
     if size:
-        size_name = attr_parse(node["size"], "name")
+        size_name = attr_parse(node.find("cansas:size", ns), "name")
     else:
         size_name = None
     return Aperture(
