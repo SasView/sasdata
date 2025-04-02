@@ -1,5 +1,6 @@
 import logging
 from lxml import etree
+from typing import Callable
 
 from sasdata.data import SasData
 from sasdata.dataset_types import one_dim
@@ -31,6 +32,30 @@ def _load_text(node: etree.Element, name: str) -> str | None:
     return None
 
 
+def parse_string(node: etree.Element) -> str:
+    """Access string data from a node"""
+    return node.text
+
+
+def opt_parse[T](
+    node: etree.Element, key: str, subparser: Callable[[etree.Element], T]
+) -> T | None:
+    """Parse subnode if preset"""
+    if (inner_node := node.find(f"cansas:{key}", ns)) is not None:
+        return subparser(inner_node)
+    return None
+
+
+def all_parse[T](
+    node: etree.Element, key: str, subparser: Callable[[etree.Element], T]
+) -> list[T]:
+    """Parse subnode if preset"""
+    return [subparser(n) for n in node.findall(f"cansas:{key}", ns)]
+    if (inner_node := node.find(f"cansas:{key}", ns)) is not None:
+        return subparser(inner_node)
+    return None
+
+
 def parse_process(node: etree.Element) -> Process:
     name = _load_text(node, "name")
     date = _load_text(node, "date")
@@ -49,17 +74,14 @@ def load_data(filename) -> dict[str, SasData]:
     for entry in tree.getroot().findall("cansas:SASentry", ns):
         name = entry.attrib["name"]
 
-        run = title = None
         title = _load_text(entry, "Title")
-        run = _load_text(entry, "Run")
+        runs = all_parse(entry, "Run", parse_string)
 
-        processes = [
-            parse_process(node) for node in entry.findall("cansas:SASprocess", ns)
-        ]
+        processes = all_parse(entry, "SASprocess", parse_process)
 
         metadata = Metadata(
             title=title,
-            run=[run] if run is not None else [],
+            run=runs,
             instrument=None,
             process=processes,
             sample=None,
