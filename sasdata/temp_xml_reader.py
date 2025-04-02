@@ -1,5 +1,6 @@
 import logging
 from lxml import etree
+import numpy as np
 from typing import Callable
 
 from sasdata.data import SasData
@@ -18,7 +19,8 @@ from sasdata.metadata import (
     Metadata,
 )
 from sasdata.quantities.quantity import Quantity
-from sasdata.quantities import units
+import sasdata.quantities.unit_parser as unit_parser
+from sasdata.quantities.units import Unit
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +45,7 @@ def parse_quantity(node: etree.Element) -> Quantity[float]:
     """Pull a single quantity with length units out of an XML node"""
     magnitude = float(node.text)
     unit = node.attrib["unit"]
-    return Quantity(magnitude, units.symbol_lookup[unit])
+    return Quantity(magnitude, unit_parser.parse(unit))
 
 
 def attr_parse(node: etree.Element, key: str) -> str | None:
@@ -176,6 +178,47 @@ def parse_sample(node: etree.Element) -> Sample:
     )
 
 
+def parse_data(node: etree.Element) -> dict[str, Quantity]:
+    aos = []
+    keys = set()
+    # Units for quantities
+    us: dict[str, Unit] = {}
+    for idata in node.findall("cansas:Idata", ns):
+        struct = {}
+        for value in idata.getchildren():
+            name = etree.QName(value).localname
+            if name not in us:
+                unit = unit_parser.parse(value.attrib["unit"])
+                us[name] = unit
+            struct[name] = float(value.text)
+            keys.add(name)
+        aos.append(struct)
+
+    # Convert array of structures to strucgture of arrays
+    soa: dict[str, list[float]] = {}
+    for key in keys:
+        soa[key] = []
+    for point in aos:
+        for key in keys:
+            if key in point:
+                soa[key].append(point[key])
+            else:
+                soa[key].append(np.nan)
+
+    uncertainties = set([x for x in keys if x.endswith("dev") and x[:-3] in keys])
+    keys = keys.difference(uncertainties)
+
+    result: dict[str, Quantity] = {}
+    for k in keys:
+        result[k] = Quantity(np.array(soa[k]), us[k])
+        if k + "dev" in uncertainties:
+            result[k] = result[k].with_standard_error(
+                Quantity(np.array(soa[k + "dev"]), us[k + "dev"])
+            )
+
+    return result
+
+
 def load_data(filename) -> dict[str, SasData]:
     loaded_data: dict[str, SasData] = {}
     tree = etree.parse(filename)
@@ -194,10 +237,22 @@ def load_data(filename) -> dict[str, SasData]:
             sample=opt_parse(entry, "SASsample", parse_sample),
             definition=opt_parse(entry, "SASdefinition", parse_string),
         )
+
+        data = {}
+
+        datacount = 0
+        for n in entry.findall("cansas:SASdata", ns):
+            datacount += 1
+            data_set = parse_data(n)
+            data = data_set
+            break
+
+        print(data)
+
         loaded_data[name] = SasData(
             name=name,
             dataset_type=one_dim,
-            data_contents={},
+            data_contents=data,
             metadata=metadata,
             verbose=False,
         )
