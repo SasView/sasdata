@@ -1230,6 +1230,7 @@ class Quantity[QuantityType]:
             "units": str(self.units), # Unit serialisation
             "variance": quantity_type_serialisation(self._variance),
             "hash_seed": self._hash_seed, # is this just a string?
+            "hash_value": self.hash_value,
             "history": self.history.serialise_json()
         }
 

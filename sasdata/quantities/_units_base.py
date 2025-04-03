@@ -264,7 +264,7 @@ class Unit:
     @staticmethod
     def parse(unit_string: str) -> "Unit":
         pass
-    
+
 
 class NamedUnit(Unit):
     """ Units, but they have a name, and a symbol
