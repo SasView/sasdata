@@ -313,6 +313,15 @@ class TestAccessManagement(TestCase):
         request2 = self.client_other.get("/v1/data/file/1/")
         self.assertEqual(request1.status_code, status.HTTP_200_OK)
         self.assertEqual(request2.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            request1.data,
+            {
+                "username": "testUser2",
+                "file": 1,
+                "file_name": "cyl_400_40.txt",
+                "access": True,
+            },
+        )
 
     # test removing another user's access to private data
     def test_remove_access(self):
@@ -323,6 +332,15 @@ class TestAccessManagement(TestCase):
         self.assertEqual(request1.status_code, status.HTTP_200_OK)
         self.assertEqual(request2.status_code, status.HTTP_200_OK)
         self.assertEqual(request3.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(
+            request2.data,
+            {
+                "username": "testUser2",
+                "file": 2,
+                "file_name": "cyl_400_20.txt",
+                "access": False,
+            },
+        )
 
     # test removing access from a user that already lacks access
     def test_remove_no_access(self):
@@ -333,6 +351,15 @@ class TestAccessManagement(TestCase):
         self.assertEqual(request1.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(request2.status_code, status.HTTP_200_OK)
         self.assertEqual(request3.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(
+            request2.data,
+            {
+                "username": "testUser2",
+                "file": 1,
+                "file_name": "cyl_400_40.txt",
+                "access": False,
+            },
+        )
 
     # test owner's access cannot be removed
     def test_cant_revoke_own_access(self):
@@ -341,6 +368,15 @@ class TestAccessManagement(TestCase):
         request2 = self.client_owner.get("/v1/data/file/1/")
         self.assertEqual(request1.status_code, status.HTTP_200_OK)
         self.assertEqual(request2.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            request1.data,
+            {
+                "username": "testUser",
+                "file": 1,
+                "file_name": "cyl_400_40.txt",
+                "access": True,
+            },
+        )
 
     # test giving access to a user that already has access
     def test_grant_existing_access(self):
@@ -351,6 +387,15 @@ class TestAccessManagement(TestCase):
         self.assertEqual(request1.status_code, status.HTTP_200_OK)
         self.assertEqual(request2.status_code, status.HTTP_200_OK)
         self.assertEqual(request3.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            request2.data,
+            {
+                "username": "testUser2",
+                "file": 2,
+                "file_name": "cyl_400_20.txt",
+                "access": True,
+            },
+        )
 
     # test that access is read-only for the file
     def test_no_edit_access(self):

@@ -201,10 +201,10 @@ class DataFileUsersView(APIView):
         else:
             db.users.remove(user)
         response_data = {
-            "user": user.username,
+            "username": user.username,
             "file": db.pk,
             "file_name": db.file_name,
-            "access": serializer.data["access"],
+            "access": (serializer.data["access"] or user == db.current_user),
         }
         return Response(response_data)
 
