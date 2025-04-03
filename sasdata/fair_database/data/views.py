@@ -338,7 +338,7 @@ class DataSetUsersView(APIView):
         else:
             db.users.remove(user)
         response_data = {
-            "user": user.username,
+            "username": user.username,
             "data_id": db.id,
             "name": db.name,
             "access": serializer.data["access"],

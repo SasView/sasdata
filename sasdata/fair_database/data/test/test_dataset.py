@@ -425,6 +425,15 @@ class TestDataSetAccessManagement(APITestCase):
         self.assertIn(  # codespell:ignore
             self.user2, DataSet.objects.get(id=1).users.all()
         )
+        self.assertEqual(
+            request1.data,
+            {
+                "username": "testUser2",
+                "data_id": 1,
+                "name": "Dataset 1",
+                "access": True,
+            },
+        )
         self.private_dataset.users.remove(self.user2)
 
     # Test revoking access to a dataset
@@ -436,6 +445,15 @@ class TestDataSetAccessManagement(APITestCase):
         self.assertEqual(request1.status_code, status.HTTP_200_OK)
         self.assertEqual(request2.status_code, status.HTTP_403_FORBIDDEN)
         self.assertNotIn(self.user2, DataSet.objects.get(id=2).users.all())
+        self.assertEqual(
+            request1.data,
+            {
+                "username": "testUser2",
+                "data_id": 2,
+                "name": "Dataset 2",
+                "access": False,
+            },
+        )
         self.shared_dataset.users.add(self.user2)
 
     # Test only the owner can change access
