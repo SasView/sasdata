@@ -15,7 +15,7 @@ Process:
 Process:
     Name: NCNR-IGOR
     Date: 03-SEP-2006 11:42:47
-    Description: None
+    Description: 
     Term: {'average_type': 'Circular', 'SAM_file': 'SEP06064.SA3_AJJ_L205', 'BKD_file': 'SEP06064.SA3_AJJ_L205', 'EMP_file': 'SEP06064.SA3_AJJ_L205', 'DIV_file': 'SEP06064.SA3_AJJ_L205', 'MASK_file': 'SEP06064.SA3_AJJ_L205', 'ABS:TSTAND': '1', 'ABS:DSTAND': '1', 'ABS:IZERO': '230.09', 'ABS:XSECT': '1'}
 Sample:
    ID:           SI600-new-long
