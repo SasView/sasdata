@@ -1,11 +1,11 @@
 from rest_framework import serializers
 
-from data.models import DataFile, DataSet, MetaData, OperationTree, Quantity, Session
+from data import models
 
 
 class DataFileSerializer(serializers.ModelSerializer):
     class Meta:
-        model = DataFile
+        model = models.DataFile
         fields = "__all__"
 
     def validate(self, data):
@@ -21,13 +21,13 @@ class AccessManagementSerializer(serializers.Serializer):
 
 class MetaDataSerializer(serializers.ModelSerializer):
     class Meta:
-        model = MetaData
+        model = models.MetaData
         fields = "__all__"
 
 
 class OperationTreeSerializer(serializers.ModelSerializer):
     class Meta:
-        model = OperationTree
+        model = models.OperationTree
         fields = ["quantity", "operation", "parameters"]
 
     def create(self, validated_data):
@@ -45,7 +45,7 @@ class OperationTreeSerializer(serializers.ModelSerializer):
             serializer2 = OperationTreeSerializer(data=parent2)
             if serializer2.is_valid(raise_exception=True):
                 parent_operation2 = serializer2.save()
-        return OperationTree.objects.create(
+        return models.OperationTree.objects.create(
             dataset=validated_data["quantity"],  # TODO: check uuid vs object
             operation=validated_data["operation"],
             parameters=validated_data["parameters"],
@@ -59,7 +59,7 @@ class QuantitySerializer(serializers.ModelSerializer):
     history = serializers.JSONField(required=False)  # TODO: is this required?
 
     class Meta:
-        model = Quantity
+        model = models.Quantity
         fields = ["value", "variance", "units", "hash", "label", "history"]
 
     # TODO: validation checks for history
@@ -67,7 +67,7 @@ class QuantitySerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         if "history" in validated_data:
             operations_raw = validated_data.pop("history")
-            quantity = Quantity.objects.create(**validated_data)
+            quantity = models.Quantity.objects.create(**validated_data)
             operations_tree_raw = operations_raw["operation_tree"]
             operations_tree_raw["quantity"] = quantity.id
             serializer = OperationTreeSerializer(data=operations_tree_raw)
@@ -75,20 +75,20 @@ class QuantitySerializer(serializers.ModelSerializer):
                 serializer.save()
             return quantity
         else:
-            return Quantity.objects.create(**validated_data)
+            return models.Quantity.objects.create(**validated_data)
 
 
 class DataSetSerializer(serializers.ModelSerializer):
     metadata = MetaDataSerializer(read_only=False)
     files = serializers.PrimaryKeyRelatedField(
-        required=False, many=True, allow_null=True, queryset=DataFile
+        required=False, many=True, allow_null=True, queryset=models.DataFile
     )
     data_contents = QuantitySerializer(many=True, read_only=False)
     # TODO: handle files better
     # TODO: see if I can find a better way to handle the quantity part
 
     class Meta:
-        model = DataSet
+        model = models.DataSet
         fields = [
             "id",
             "name",
@@ -124,7 +124,7 @@ class DataSetSerializer(serializers.ModelSerializer):
             MetaDataSerializer(), validated_data=metadata_raw
         )
         data_contents = validated_data.pop("data_contents")
-        dataset = DataSet.objects.create(metadata=metadata, **validated_data)
+        dataset = models.DataSet.objects.create(metadata=metadata, **validated_data)
         for d in data_contents:
             label = d.pop("label")
             quantity = QuantitySerializer.create(QuantitySerializer(), validated_data=d)
@@ -149,9 +149,18 @@ class DataSetSerializer(serializers.ModelSerializer):
     # TODO: custom method for database to serializer representation
 
 
-class SessionSerializer(serializers.ModelSerializer):
+class PublishedStateSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Session
+        model = models.PublishedState
+        fields = "__all__"
+
+
+class SessionSerializer(serializers.ModelSerializer):
+    dataset = DataSetSerializer(read_only=False, many=True)
+    published_state = PublishedStateSerializer(read_only=False)
+
+    class Meta:
+        model = models.Session
         fields = "__all__"
 
 
