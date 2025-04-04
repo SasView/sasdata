@@ -1,0 +1,39 @@
+None
+  Q
+  I
+Metadata:
+
+  ILL-D11 example1: 2A 5mM 0%D2O, Run: g013586.001
+  ================================================
+
+Definition: ILL-D11 example1: 2A 5mM 0%D2O
+Process:
+    Name: spol
+    Date: 04-Sep-2007 18:12:27
+    Description: None
+    Term: {'radialstep': '10.000', 'sector_width': '180.0', 'sector_orient': '0.0', 'Flux_monitor': '1.00', 'Count_time': '900.000', 'Q_resolution': 'estimated'}
+Sample:
+   ID:           This is a test file
+   Transmission: 0.0
+   Thickness:    0.0 mm
+   Temperature:  32.0 K
+   Position:     Vec3(x=10.0 mm, y=0.0 mm, z=None)
+   Orientation:  Rot3(roll=0.02 deg, pitch=None, yaw=None)
+Collimation:
+   Length: 10.0 m
+Detector:
+   Name:         
+   Distance:     10.0 m
+   Offset:       None
+   Orientation:  Rot3(roll=0.0 deg, pitch=None, yaw=None)
+   Beam center:  Vec3(x=311.0 mm, y=315.0 mm, z=None)
+   Pixel size:   Vec3(x=10.0 mm, y=10.0 mm, z=None)
+   Slit length:  None
+Source:
+    Radiation:         neutron
+    Shape:             None
+    Wavelength:        6.0 Å
+    Min. Wavelength:   None
+    Max. Wavelength:   None
+    Wavelength Spread: 0.0 Å
+    Beam Size:         BeamSize(name=None, size=None)
