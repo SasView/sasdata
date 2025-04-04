@@ -37,8 +37,14 @@ def parse_quantity(node: etree.Element, _version: str) -> Quantity[float]:
     """Pull a single quantity with length units out of an XML node"""
     body = "".join(node.itertext())  # Needed to parse all text, even after comments
     magnitude = float(body)
-    unit = node.attrib["unit"]
-    return Quantity(magnitude, unit_parser.parse(unit))
+    try:
+        unit = unit_parser.parse(node.attrib["unit"])
+    except ValueError:
+        logger.warning(
+            f'Could not parse unit "{node.attrib["unit"]}".  Marking value as unitless'
+        )
+        unit = unitless
+    return Quantity(magnitude, unit)
 
 
 def attr_parse(node: etree.Element, key: str) -> str | None:
