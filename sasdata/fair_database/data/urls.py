@@ -25,4 +25,15 @@ urlpatterns = [
         views.DataSetUsersView.as_view(),
         name="manage access to datasets",
     ),
+    path("session/", views.SessionView.as_view(), name="view and create sessions"),
+    path(
+        "session/<int:data_id>/",
+        views.SingleSessionView.as_view(),
+        name="load, modify, delete sessions",
+    ),
+    path(
+        "session/<int:data_id>/users/",
+        views.SessionUsersView.as_view(),
+        name="manage access to sessions",
+    ),
 ]
