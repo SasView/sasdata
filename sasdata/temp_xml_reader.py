@@ -40,7 +40,8 @@ def parse_string(node: etree.Element, _version: str) -> str:
 
 def parse_quantity(node: etree.Element, _version: str) -> Quantity[float]:
     """Pull a single quantity with length units out of an XML node"""
-    magnitude = float(node.text)
+    body = "".join(node.itertext())  # Needed to parse all text, even after comments
+    magnitude = float(body)
     unit = node.attrib["unit"]
     return Quantity(magnitude, unit_parser.parse(unit))
 
@@ -189,6 +190,8 @@ def parse_data(node: etree.Element, version: str) -> dict[str, Quantity]:
         struct = {}
         for value in idata.getchildren():
             name = etree.QName(value).localname
+            if value.text is None or value.text.strip() == "":
+                continue
             if name not in us:
                 unit = (
                     unit_parser.parse(value.attrib["unit"])
