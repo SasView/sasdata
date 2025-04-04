@@ -36,4 +36,4 @@ Source:
     Min. Wavelength:   None
     Max. Wavelength:   None
     Wavelength Spread: 0.0 Å
-    Beam Size:         BeamSize(name=None, size=None)
+    Beam Size:         BeamSize(name=None, size=Vec3(x=30.0 mm, y=0.0 mm, z=None))
