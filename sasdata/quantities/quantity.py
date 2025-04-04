@@ -996,11 +996,19 @@ def hash_data_via_numpy(*data: ArrayLike):
 
 QuantityType = TypeVar("QuantityType")
 
-# TODO: figure out how to handle np.ndarray serialization (save as file or otherwise)
+# TODO: change QuantityType serialisation for greater efficiency
 def quantity_type_serialisation(var):
-    if isinstance(var, (str, int, float)):
+    if isinstance(var, np.ndarray):
+        return {"array_contents": var.tobytes(), "shape": var.shape}
+    else:
         return var
-    return None
+
+def quantity_type_deserialisation(var):
+    if isinstance(var, dict):
+        array = np.frombuffer(var["array_contents"])
+        return np.reshape(array, shape=var["shape"])
+    else:
+        return var
 
 
 class QuantityHistory:
