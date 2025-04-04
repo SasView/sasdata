@@ -166,19 +166,21 @@ class OperationTree(models.Model):
     )
 
 
-'''
 class Session(Data):
     """Database model for a project save state."""
 
     # dataset
-    # dataset = models.ManyToManyField(DataSet)
+    dataset = models.ManyToManyField(DataSet)
 
     # operation tree
     # operations = models.ForeignKey(OperationTree, on_delete=models.CASCADE)
 
-    published_state = models.ForeignKey("PublishedState", blank=True, null=True, on_delete=SET_NULL)
+    published_state = models.OneToOneField(
+        "PublishedState", blank=True, null=True, on_delete=models.SET_NULL
+    )
 
-class PublishedState():
+
+class PublishedState(models.Model):
     """Database model for a project published state."""
 
     # published
@@ -186,6 +188,3 @@ class PublishedState():
 
     # doi
     doi = models.URLField()
-
-
-'''
