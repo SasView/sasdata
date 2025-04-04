@@ -36,7 +36,7 @@ test_xml_file_names = [
     "ISIS_1_1_doubletrans",
     "ISIS_1_1_notrans",
     "TestExtensions",
-    # "cansas1d",
+    "cansas1d",
     # "cansas1d_badunits",
     # "cansas1d_notitle",
     # "cansas1d_slit",
