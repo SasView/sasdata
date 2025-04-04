@@ -2263,6 +2263,7 @@ symbol_lookup = {
         "amu": atomic_mass_units,
         "degr": degrees,
         "Deg": degrees,
+        "degree": degrees,
         "degrees": degrees,
         "Degrees": degrees,
         "Counts": none,
