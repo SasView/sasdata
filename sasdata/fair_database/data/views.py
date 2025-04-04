@@ -382,15 +382,44 @@ class SingleSessionView(APIView):
 
     # get a specific session
     def get(self, request, data_id, version=None):
-        pass
+        db = get_object_or_404(Session, id=data_id)
+        if not permissions.check_permissions(request, db):
+            if not request.user.is_authenticated:
+                return HttpResponse("Must be authenticated to view session", status=401)
+            return HttpResponseForbidden(
+                "You do not have permission to view this session."
+            )
+        serializer = DataSetSerializer(db)
+        return Response(serializer.data)
 
     # modify a session
     def put(self, request, data_id, version=None):
-        pass
+        db = get_object_or_404(Session, id=data_id)
+        if not permissions.check_permissions(request, db):
+            if not request.user.is_authenticated:
+                return HttpResponse(
+                    "Must be authenticated to modify session", status=401
+                )
+            return HttpResponseForbidden("Cannot modify a session you do not own")
+        serializer = DataSetSerializer(
+            db, request.data, context={"request": request}, partial=True
+        )
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+        data = {"data_id": db.id, "is_public": db.is_public}
+        return Response(data)
 
     # delete a session
     def delete(self, request, data_id, version=None):
-        pass
+        db = get_object_or_404(Session, id=data_id)
+        if not permissions.check_permissions(request, db):
+            if not request.user.is_authenticated:
+                return HttpResponse(
+                    "Must be authenticated to delete a session", status=401
+                )
+            return HttpResponseForbidden("Not authorized to delete")
+        db.delete()
+        return Response({"success": True})
 
 
 class SessionUsersView(APIView):
