@@ -18,6 +18,7 @@ from data.serializers import (
     DataFileSerializer,
     DataSetSerializer,
     AccessManagementSerializer,
+    SessionSerializer,
 )
 from data.models import DataFile, DataSet
 from data.forms import DataFileForm
@@ -358,12 +359,18 @@ class SessionView(APIView):
         pass
 
     # Create a session
+    # TODO: revisit response data
     def post(self, request, version=None):
-        pass
+        serializer = SessionSerializer(data=request.data, context={"request": request})
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+        db = serializer.instance
+        response = {"session_id": db.id, "is_public": db.is_public}
+        return Response(data=response, status=status.HTTP_201_CREATED)
 
     # Create a session
     def put(self, request, version=None):
-        pass
+        return self.post(request, version)
 
 
 class SingleSessionView(APIView):
