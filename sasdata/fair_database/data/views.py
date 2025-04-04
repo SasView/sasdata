@@ -20,7 +20,7 @@ from data.serializers import (
     AccessManagementSerializer,
     SessionSerializer,
 )
-from data.models import DataFile, DataSet
+from data.models import DataFile, DataSet, Session
 from data.forms import DataFileForm
 from fair_database import permissions
 from fair_database.permissions import DataPermission
@@ -403,8 +403,36 @@ class SessionUsersView(APIView):
 
     # view the users that have access to a specific session
     def get(self, request, data_id, version=None):
-        pass
+        db = get_object_or_404(Session, id=data_id)
+        if not permissions.is_owner(request, db):
+            if not request.user.is_authenticated:
+                return HttpResponse("Must be authenticated to view access", status=401)
+            return HttpResponseForbidden("Must be the session owner to view access")
+        response_data = {
+            "session_id": db.id,
+            "users": [user.username for user in db.users.all()],
+        }
+        return Response(response_data)
 
     # grant or revoke access to a session
     def put(self, request, data_id, version=None):
-        pass
+        db = get_object_or_404(Session, id=data_id)
+        if not permissions.is_owner(request, db):
+            if not request.user.is_authenticated:
+                return HttpResponse(
+                    "Must be authenticated to manage access", status=401
+                )
+            return HttpResponseForbidden("Must be the dataset owner to manage access")
+        serializer = AccessManagementSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = get_object_or_404(User, username=serializer.data["username"])
+        if serializer.data["access"]:
+            db.users.add(user)
+        else:
+            db.users.remove(user)
+        response_data = {
+            "username": user.username,
+            "session_id": db.id,
+            "access": serializer.data["access"],
+        }
+        return Response(response_data)
