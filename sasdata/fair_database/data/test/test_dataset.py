@@ -469,3 +469,25 @@ class TestDataSetAccessManagement(APITestCase):
         cls.shared_dataset.delete()
         cls.user1.delete()
         cls.user2.delete()
+
+
+class TestOperationTree(APITestCase):
+    """Tests for datasets with operation trees."""
+
+    @classmethod
+    def setUpTestData(cls):
+        pass
+
+    # Test post with operation tree
+
+    # Test post with invalid operation
+
+    # Test get dataset with operation tree
+
+    # Test nested operations
+
+    # Different operations with different stored value types
+
+    @classmethod
+    def tearDownClass(cls):
+        pass
