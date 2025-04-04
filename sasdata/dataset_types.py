@@ -19,7 +19,7 @@ class DatasetType:
 one_dim = DatasetType(
             name="1D I vs Q",
             required=["Q", "I"],
-            optional=["dI", "dQ", "shadow"],
+            optional=["dI", "dQ", "Shadowfactor", "Qmean", "dQl", "dQw"],
             expected_orders=[
                 ["Q", "I", "dI"],
                 ["Q", "dQ", "I", "dI"]])
@@ -27,7 +27,7 @@ one_dim = DatasetType(
 two_dim = DatasetType(
             name="2D I vs Q",
             required=["Qx", "Qy", "I"],
-            optional=["dQx", "dQy", "dI", "Qz", "shadow"],
+            optional=["dQx", "dQy", "dI", "Qz", "ShadowFactor"],
             expected_orders=[
                 ["Qx", "Qy", "I"],
                 ["Qx", "Qy", "I", "dI"],
