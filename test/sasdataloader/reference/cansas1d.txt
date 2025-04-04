@@ -1,4 +1,4 @@
-Test title
+None
   Q
   I
 Metadata:
@@ -11,34 +11,12 @@ Process:
     Name: spol
     Date: 04-Sep-2007 18:35:02
     Description: None
-    Terms:
-        radialstep: 10.0 mm
-        sector_width: 180.0 deg
-        sector_orient: 0.0 deg
-        MASK_file: USER:MASK.COM
-    Notes:
-        AvA1 0.0000E+00 AsA2 1.0000E+00 XvA3 1.0526E+03 XsA4
-				5.2200E-02 XfA5 0.0000E+00
-        S... 13597 0 2.26E+02 2A 5mM 0%D2O Sbak 13594 0 1.13E+02
-				H2O Buffer
-        V... 13552 3 1.00E+00 H2O5m
+    Term: {'radialstep': '10.000', 'sector_width': '180.0', 'sector_orient': '0.0', 'MASK_file': 'USER:MASK.COM'}
 Process:
     Name: NCNR-IGOR
     Date: 03-SEP-2006 11:42:47
-    Description: 
-    Terms:
-        average_type: Circular
-        SAM_file: SEP06064.SA3_AJJ_L205
-        BKD_file: SEP06064.SA3_AJJ_L205
-        EMP_file: SEP06064.SA3_AJJ_L205
-        DIV_file: SEP06064.SA3_AJJ_L205
-        MASK_file: SEP06064.SA3_AJJ_L205
-        ABS:TSTAND: 1
-        ABS:DSTAND: 1.0 mm
-        ABS:IZERO: 230.09
-        ABS:XSECT: 1.0 mm
-    Notes:
-        No Information
+    Description: None
+    Term: {'average_type': 'Circular', 'SAM_file': 'SEP06064.SA3_AJJ_L205', 'BKD_file': 'SEP06064.SA3_AJJ_L205', 'EMP_file': 'SEP06064.SA3_AJJ_L205', 'DIV_file': 'SEP06064.SA3_AJJ_L205', 'MASK_file': 'SEP06064.SA3_AJJ_L205', 'ABS:TSTAND': '1', 'ABS:DSTAND': '1', 'ABS:IZERO': '230.09', 'ABS:XSECT': '1'}
 Sample:
    ID:           SI600-new-long
    Transmission: 0.327
@@ -48,14 +26,6 @@ Sample:
    Orientation:  Rot3(roll=22.5 deg, pitch=0.02 deg, yaw=None)
 Collimation:
    Length: 123.0 mm
-   Aperture:
-     Name: source
-     Aperture size: Vec3(x=50.0 mm, y=None, z=None)
-     Aperture distance: 11.0 m
-   Aperture:
-     Name: sample
-     Aperture size: Vec3(x=1.0 mm, y=None, z=None)
-     Aperture distance: None
 Detector:
    Name:         fictional hybrid
    Distance:     4.15 m
@@ -71,4 +41,4 @@ Source:
     Min. Wavelength:   0.22 nm
     Max. Wavelength:   1.0 nm
     Wavelength Spread: 14.3 %
-    Beam Size:         BeamSize(name='bm', size=Vec3(x=12.0 mm, y=13.0 mm, z=None))
+    Beam Size:         BeamSize(name=None, size=None)
