@@ -40,7 +40,7 @@ test_xml_file_names = [
     "cansas1d_badunits",
     "cansas1d_notitle",
     "cansas1d_slit",
-    # "cansas1d_units",
+    "cansas1d_units",
     "cansas_test",
     "cansas_test_modified",
     "cansas_xml_multisasentry_multisasdata",
