@@ -35,13 +35,12 @@ ns = {
 
 def parse_string(node: etree.Element, _version: str) -> str:
     """Access string data from a node"""
-    return node.text
+    return "".join(node.itertext())
 
 
-def parse_quantity(node: etree.Element, _version: str) -> Quantity[float]:
+def parse_quantity(node: etree.Element, version: str) -> Quantity[float]:
     """Pull a single quantity with length units out of an XML node"""
-    body = "".join(node.itertext())  # Needed to parse all text, even after comments
-    magnitude = float(body)
+    magnitude = float(parse_string(node, version))
     unit = node.attrib["unit"]
     return Quantity(magnitude, unit_parser.parse(unit))
 
@@ -95,7 +94,10 @@ def parse_process(node: etree.Element, version: str) -> Process:
     name = opt_parse(node, "name", version, parse_string)
     date = opt_parse(node, "date", version, parse_string)
     description = opt_parse(node, "description", version, parse_string)
-    terms = {t.attrib["name"]: t.text for t in node.findall(f"{version}:term", ns)}
+    terms = {
+        t.attrib["name"]: parse_string(t, version)
+        for t in node.findall(f"{version}:term", ns)
+    }
     return Process(name=name, date=date, description=description, term=terms)
 
 
@@ -190,7 +192,7 @@ def parse_data(node: etree.Element, version: str) -> dict[str, Quantity]:
         struct = {}
         for value in idata.getchildren():
             name = etree.QName(value).localname
-            if value.text is None or value.text.strip() == "":
+            if value.text is None or parse_string(value, version).strip() == "":
                 continue
             if name not in us:
                 unit = (
@@ -199,7 +201,7 @@ def parse_data(node: etree.Element, version: str) -> dict[str, Quantity]:
                     else unitless
                 )
                 us[name] = unit
-            struct[name] = float(value.text)
+            struct[name] = float(parse_string(value, version))
             keys.add(name)
         aos.append(struct)
 
