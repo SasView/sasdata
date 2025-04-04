@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from data.models import DataFile, DataSet, MetaData, OperationTree, Quantity
+from data.models import DataFile, DataSet, MetaData, OperationTree, Quantity, Session
 
 
 class DataFileSerializer(serializers.ModelSerializer):
@@ -147,6 +147,12 @@ class DataSetSerializer(serializers.ModelSerializer):
         return instance
 
     # TODO: custom method for database to serializer representation
+
+
+class SessionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Session
+        fields = "__all__"
 
 
 def constant_or_variable(operation: str):
