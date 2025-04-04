@@ -41,4 +41,4 @@ Source:
     Min. Wavelength:   2.2 Å
     Max. Wavelength:   10.0 Å
     Wavelength Spread: 14.3 %
-    Beam Size:         BeamSize(name=None, size=None)
+    Beam Size:         BeamSize(name='bm', size=Vec3(x=0.012 m, y=13000.0 none, z=None))
