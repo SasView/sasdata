@@ -109,7 +109,7 @@ aliases_2 = {
     "Ang": ["A", "Å"],
     "au": ["amu"],
     "percent": ["%"],
-    "deg": ["degr", "Deg", "degrees", "Degrees"],
+    "deg": ["degr", "Deg", "degree", "degrees", "Degrees"],
     "none": ["Counts", "counts", "cnts", "Cnts", "a.u.", "fraction", "Fraction"],
     "K": ["C"] # Ugh, cansas
 }
