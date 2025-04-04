@@ -20,7 +20,7 @@ from sasdata.metadata import (
 )
 from sasdata.quantities.quantity import Quantity
 import sasdata.quantities.unit_parser as unit_parser
-from sasdata.quantities.units import Unit
+from sasdata.quantities.units import Unit, none as unitless
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +29,7 @@ test_file = "./example_data/1d_data/ISIS_Polymer_Blend_TK49.xml"
 ns = {
     "cansas11": "urn:cansas1d:1.1",
     "cansas10": "urn:cansas1d:1.0",
+    "cansas_old": "cansas1d/1.0",
 }
 
 
@@ -189,7 +190,11 @@ def parse_data(node: etree.Element, version: str) -> dict[str, Quantity]:
         for value in idata.getchildren():
             name = etree.QName(value).localname
             if name not in us:
-                unit = unit_parser.parse(value.attrib["unit"])
+                unit = (
+                    unit_parser.parse(value.attrib["unit"])
+                    if "unit" in value.attrib
+                    else unitless
+                )
                 us[name] = unit
             struct[name] = float(value.text)
             keys.add(name)
@@ -238,7 +243,7 @@ def load_data(filename) -> dict[str, SasData]:
         return loaded_data
 
     for entry in tree.getroot().findall(f"{version}:SASentry", ns):
-        name = entry.attrib["name"]
+        name = attr_parse(entry, "name")
 
         metadata = Metadata(
             title=opt_parse(entry, "Title", version, parse_string),
