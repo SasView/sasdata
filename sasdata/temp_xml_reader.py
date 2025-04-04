@@ -108,10 +108,7 @@ def parse_process(node: etree.Element, version: str) -> Process:
 
 
 def parse_beam_size(node: etree.Element, version: str) -> BeamSize:
-    return BeamSize(
-        name=opt_parse(node, "name", version, parse_string),
-        size=opt_parse(node, "size", version, parse_vec3),
-    )
+    return BeamSize(name=attr_parse(node, "name"), size=parse_vec3(node, version))
 
 
 def parse_source(node: etree.Element, version: str) -> Source:
