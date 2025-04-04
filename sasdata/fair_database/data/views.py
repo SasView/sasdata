@@ -161,7 +161,7 @@ class SingleDataFileView(APIView):
 
 class DataFileUsersView(APIView):
     """
-    View for the users that have access to a dataset.
+    View for the users that have access to a datafile.
 
     Functionality for accessing a list of users with access and granting or
     revoking access.
@@ -344,3 +344,60 @@ class DataSetUsersView(APIView):
             "access": serializer.data["access"],
         }
         return Response(response_data)
+
+
+class SessionView(APIView):
+    """
+    View associated with the Session model.
+
+    Functionality for viewing a list of sessions and for creating a session.
+    """
+
+    # View a list of accessible sessions
+    def get(self, request, version=None):
+        pass
+
+    # Create a session
+    def post(self, request, version=None):
+        pass
+
+    # Create a session
+    def put(self, request, version=None):
+        pass
+
+
+class SingleSessionView(APIView):
+    """
+    View associated with single sessions.
+
+    Functionality for viewing, modifying, and deleting individual sessions.
+    """
+
+    # get a specific session
+    def get(self, request, data_id, version=None):
+        pass
+
+    # modify a session
+    def put(self, request, data_id, version=None):
+        pass
+
+    # delete a session
+    def delete(self, request, data_id, version=None):
+        pass
+
+
+class SessionUsersView(APIView):
+    """
+    View for the users that have access to a session.
+
+    Functionality for accessing a list of users with access and granting or
+    revoking access.
+    """
+
+    # view the users that have access to a specific session
+    def get(self, request, data_id, version=None):
+        pass
+
+    # grant or revoke access to a session
+    def put(self, request, data_id, version=None):
+        pass
