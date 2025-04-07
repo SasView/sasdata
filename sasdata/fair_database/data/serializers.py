@@ -55,24 +55,43 @@ class OperationTreeSerializer(serializers.ModelSerializer):
 
 
 class QuantitySerializer(serializers.ModelSerializer):
+    operation_tree = OperationTreeSerializer(read_only=False, required=False)
     label = serializers.CharField(max_length=20)
     history = serializers.JSONField(required=False)  # TODO: is this required?
 
     class Meta:
         model = models.Quantity
-        fields = ["value", "variance", "units", "hash", "label", "history"]
+        fields = [
+            "value",
+            "variance",
+            "units",
+            "hash",
+            "operation_tree",
+            "label",
+            "history",
+        ]
 
     # TODO: validation checks for history
+
+    def to_internal_value(self, data):
+        if "history" in data:
+            operations = data["history"]["operation_tree"]
+            if not operations["operation"] == "variable":
+                data_copy = data.copy()
+                data_copy["operation_tree"] = operations
+                return super().to_internal_value(data_copy)
+        return super().to_internal_value(data)
 
     def create(self, validated_data):
         if "history" in validated_data:
             operations_raw = validated_data.pop("history")
-            quantity = models.Quantity.objects.create(**validated_data)
             operations_tree_raw = operations_raw["operation_tree"]
-            operations_tree_raw["quantity"] = quantity.id
-            serializer = OperationTreeSerializer(data=operations_tree_raw)
-            if serializer.is_valid():
-                serializer.save()
+            operation_tree = OperationTreeSerializer.create(
+                OperationTreeSerializer(), validated_data=operations_tree_raw
+            )
+            quantity = models.Quantity.objects.create(
+                operation_tree=operation_tree, **validated_data
+            )
             return quantity
         else:
             return models.Quantity.objects.create(**validated_data)
