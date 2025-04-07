@@ -171,6 +171,9 @@ class OperationTree(models.Model):
 class Session(Data):
     """Database model for a project save state."""
 
+    # title
+    title = models.CharField(max_length=200)
+
     # dataset
     dataset = models.ManyToManyField(DataSet)
 
