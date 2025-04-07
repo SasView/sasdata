@@ -80,6 +80,11 @@ class Quantity(models.Model):
     # hash value
     hash = models.IntegerField()
 
+    # operation history of the quantity
+    operation_tree = models.OneToOneField(
+        "OperationTree", blank=True, null=True, on_delete=models.SET_NULL
+    )
+
 
 class LabeledQuantity(models.Model):
     dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE)
@@ -138,9 +143,6 @@ class OperationTree(models.Model):
         "tensor_product": "TensorProduct",
     }
 
-    # Dataset the operation tree is performed on
-    quantity = models.ForeignKey(Quantity, on_delete=models.CASCADE)
-
     # operation
     operation = models.CharField(max_length=20, choices=OPERATION_CHOICES)
 
@@ -172,9 +174,7 @@ class Session(Data):
     # dataset
     dataset = models.ManyToManyField(DataSet)
 
-    # operation tree
-    # operations = models.ForeignKey(OperationTree, on_delete=models.CASCADE)
-
+    # publishing state of the session
     published_state = models.OneToOneField(
         "PublishedState", blank=True, null=True, on_delete=models.SET_NULL
     )
