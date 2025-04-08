@@ -29,8 +29,8 @@ Collimation:
 Detector:
    Name:         fictional hybrid
    Distance:     4.15 m
-   Offset:       Vec3(x=1000000.0 nm, y=2000.0 none, z=None)
-   Orientation:  Rot3(roll=0.0174533 none, pitch=0.0 rad, yaw=0.0 none)
+   Offset:       Vec3(x=1000000.0 nm, y=2000.0 µm, z=None)
+   Orientation:  Rot3(roll=0.0174533 rad, pitch=0.0 rad, yaw=0.0 rad)
    Beam center:  Vec3(x=0.32264 m, y=0.32768 m, z=None)
    Pixel size:   Vec3(x=0.5 cm, y=0.5 cm, z=None)
    Slit length:  None
@@ -41,4 +41,4 @@ Source:
     Min. Wavelength:   2.2 Å
     Max. Wavelength:   10.0 Å
     Wavelength Spread: 14.3 %
-    Beam Size:         BeamSize(name='bm', size=Vec3(x=0.012 m, y=13000.0 none, z=None))
+    Beam Size:         BeamSize(name='bm', size=Vec3(x=0.012 m, y=13000.0 µm, z=None))
