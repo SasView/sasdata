@@ -562,6 +562,63 @@ class TestOperationTree(APITestCase):
         self.assertEqual(reciprocal.parent_operation1.operation, "variable")
         self.assertEqual(reciprocal.parameters, {})
 
+    def test_get_operation_tree_unary(self):
+        variable = OperationTree.objects.create(
+            id=1, operation="variable", parameters={"hash_value": 111, "name": "x"}
+        )
+        inv = OperationTree.objects.create(
+            id=2, operation="reciprocal", parent_operation1=variable
+        )
+        quantity = Quantity.objects.create(
+            id=1,
+            value=0,
+            variance=0,
+            label="test",
+            units="none",
+            hash=1,
+            operation_tree=inv,
+        )
+        dataset = DataSet.objects.create(
+            id=1,
+            current_user=self.user,
+            name="Test Dataset",
+            is_public=True,
+            metadata=None,
+        )
+        dataset.data_contents.add(quantity)
+        request = self.client.get("/v1/data/set/1/")
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            request.data,
+            {
+                "id": 1,
+                "current_user": 1,
+                "users": [],
+                "is_public": True,
+                "name": "Test Dataset",
+                "files": [],
+                "metadata": None,
+                "data_contents": [
+                    {
+                        "label": "test",
+                        "value": 0,
+                        "variance": 0,
+                        "units": "none",
+                        "hash": 1,
+                        "operation_tree": {
+                            "operation": "reciprocal",
+                            "parameters": {
+                                "a": {
+                                    "operation": "variable",
+                                    "parameters": {"hash_value": 111, "name": "x"},
+                                }
+                            },
+                        },
+                    }
+                ],
+            },
+        )
+
     def test_operation_tree_created_binary(self):
         self.dataset["data_contents"][0]["history"] = {
             "operation_tree": {
