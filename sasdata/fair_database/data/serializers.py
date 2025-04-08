@@ -33,7 +33,15 @@ class OperationTreeSerializer(serializers.ModelSerializer):
         model = models.OperationTree
         fields = ["operation", "parameters"]
 
-    # TODO: some kind of custom validation, custom
+    # TODO: some kind of custom validation
+    def to_representation(self, instance):
+        data = {"operation": instance.operation, "parameters": instance.parameters}
+        if instance.parent_operation1 is not None:
+            data["parameters"]["a"] = self.to_representation(instance.parent_operation1)
+        if instance.parent_operation2 is not None:
+            data["parameters"]["b"] = self.to_representation(instance.parent_operation2)
+        return data
+
     def create(self, validated_data):
         parent_operation1 = None
         parent_operation2 = None
@@ -75,7 +83,7 @@ class QuantitySerializer(serializers.ModelSerializer):
     # TODO: validation checks for history
 
     def to_internal_value(self, data):
-        if "history" in data:
+        if "history" in data and "operation_tree" in data["history"]:
             operations = data["history"]["operation_tree"]
             if not operations["operation"] == "variable":
                 data_copy = data.copy()
@@ -145,9 +153,8 @@ class DataSetSerializer(serializers.ModelSerializer):
         data_contents = validated_data.pop("data_contents")
         dataset = models.DataSet.objects.create(metadata=metadata, **validated_data)
         for d in data_contents:
-            label = d.pop("label")
             quantity = QuantitySerializer.create(QuantitySerializer(), validated_data=d)
-            dataset.data_contents.add(quantity, through_defaults={"label": label})
+            dataset.data_contents.add(quantity)
         return dataset
 
     # TODO: account for updating other attributes
