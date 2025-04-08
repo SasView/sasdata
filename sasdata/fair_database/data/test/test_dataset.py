@@ -516,7 +516,9 @@ class TestOperationTree(APITestCase):
             },
             "references": {},
         }
-        cls.user = User.objects.create_user(username="testUser", password="sasview!")
+        cls.user = User.objects.create_user(
+            id=1, username="testUser", password="sasview!"
+        )
         cls.client = APIClient()
         cls.client.force_authenticate(cls.user)
 
