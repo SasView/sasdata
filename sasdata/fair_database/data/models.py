@@ -57,7 +57,7 @@ class DataSet(Data):
     )
 
     # data contents - maybe ManyToManyField
-    data_contents = models.ManyToManyField("Quantity", through="LabeledQuantity")
+    data_contents = models.ManyToManyField("Quantity")
 
     # TODO: update based on SasData class in data.py
     # type of dataset
@@ -85,11 +85,7 @@ class Quantity(models.Model):
         "OperationTree", blank=True, null=True, on_delete=models.SET_NULL
     )
 
-
-class LabeledQuantity(models.Model):
-    dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE)
-    quantity = models.ForeignKey(Quantity, on_delete=models.CASCADE)
-    label = models.CharField(max_length=20)
+    label = models.CharField(max_length=50)
 
 
 def empty_list():
