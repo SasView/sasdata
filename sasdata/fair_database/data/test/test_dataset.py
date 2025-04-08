@@ -3,7 +3,7 @@ from django.db.models import Max
 from rest_framework.test import APIClient, APITestCase
 from rest_framework import status
 
-from data.models import DataSet
+from data.models import DataSet, MetaData, OperationTree, Quantity
 
 
 class TestDataSet(APITestCase):
@@ -476,18 +476,199 @@ class TestOperationTree(APITestCase):
 
     @classmethod
     def setUpTestData(cls):
-        pass
+        cls.dataset = {
+            "name": "Test Dataset",
+            "metadata": {
+                "title": "test metadata",
+                "run": 1,
+                "definition": "test",
+                "instrument": {"source": {}, "collimation": {}, "detectors": {}},
+            },
+            "data_contents": [
+                {
+                    "label": "test",
+                    "value": {"array_contents": [0, 0, 0, 0], "shape": (2, 2)},
+                    "variance": {"array_contents": [0, 0, 0, 0], "shape": (2, 2)},
+                    "units": "none",
+                    "hash": 0,
+                }
+            ],
+            "is_public": True,
+        }
+        cls.nested_operations = {
+            "operation_tree": {
+                "operation": "neg",
+                "parameters": {
+                    "a": {
+                        "operation": "mul",
+                        "parameters": {
+                            "a": {
+                                "operation": "constant",
+                                "parameters": {"value": {"type": "int", "value": 7}},
+                            },
+                            "b": {
+                                "operation": "variable",
+                                "parameters": {"hash_value": 111, "name": "x"},
+                            },
+                        },
+                    },
+                },
+            },
+            "references": {},
+        }
+        cls.user = User.objects.create_user(username="testUser", password="sasview!")
+        cls.client = APIClient()
+        cls.client.force_authenticate(cls.user)
 
     # Test post with operation tree
+    def test_operation_tree_created_unary(self):
+        self.dataset["data_contents"][0]["history"] = {
+            "operation_tree": {
+                "operation": "reciprocal",
+                "parameters": {
+                    "a": {
+                        "operation": "variable",
+                        "parameters": {"hash_value": 111, "name": "x"},
+                    }
+                },
+            },
+            "references": {},
+        }
+        request = self.client.post("/v1/data/set/", data=self.dataset, format="json")
+        max_id = DataSet.objects.aggregate(Max("id"))["id__max"]
+        new_dataset = DataSet.objects.get(id=max_id)
+        new_quantity = new_dataset.data_contents.get(hash=0)
+        reciprocal = new_quantity.operation_tree
+        self.assertEqual(request.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(
+            new_quantity.value, {"array_contents": [0, 0, 0, 0], "shape": [2, 2]}
+        )
+        self.assertEqual(reciprocal.operation, "reciprocal")
+        self.assertEqual(reciprocal.parent_operation1.operation, "variable")
+        self.assertEqual(reciprocal.parameters, {})
 
-    # Test post with invalid operation
+    def test_operation_tree_created_binary(self):
+        self.dataset["data_contents"][0]["history"] = {
+            "operation_tree": {
+                "operation": "add",
+                "parameters": {
+                    "a": {
+                        "operation": "variable",
+                        "parameters": {"hash_value": 111, "name": "x"},
+                    },
+                    "b": {"operation": "constant", "parameters": {"value": 5}},
+                },
+            },
+            "references": {},
+        }
+        request = self.client.post("/v1/data/set/", data=self.dataset, format="json")
+        max_id = DataSet.objects.aggregate(Max("id"))["id__max"]
+        new_dataset = DataSet.objects.get(id=max_id)
+        new_quantity = new_dataset.data_contents.get(hash=0)
+        add = new_quantity.operation_tree
+        variable = add.parent_operation1
+        constant = add.parent_operation2
+        self.assertEqual(request.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(add.operation, "add")
+        self.assertEqual(add.parameters, {})
+        self.assertEqual(variable.operation, "variable")
+        self.assertEqual(variable.parameters, {"hash_value": 111, "name": "x"})
+        self.assertEqual(constant.operation, "constant")
+        self.assertEqual(constant.parameters, {"value": 5})
 
-    # Test get dataset with operation tree
+    def test_operation_tree_created_pow(self):
+        self.dataset["data_contents"][0]["history"] = {
+            "operation_tree": {
+                "operation": "pow",
+                "parameters": {
+                    "a": {
+                        "operation": "variable",
+                        "parameters": {"hash_value": 111, "name": "x"},
+                    },
+                    "power": 2,
+                },
+            },
+            "references": {},
+        }
+        request = self.client.post("/v1/data/set/", data=self.dataset, format="json")
+        max_id = DataSet.objects.aggregate(Max("id"))["id__max"]
+        new_dataset = DataSet.objects.get(id=max_id)
+        new_quantity = new_dataset.data_contents.get(hash=0)
+        pow = new_quantity.operation_tree
+        self.assertEqual(request.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(pow.operation, "pow")
+        self.assertEqual(pow.parameters, {"power": 2})
+
+    def test_operation_tree_created_transpose(self):
+        self.dataset["data_contents"][0]["history"] = {
+            "operation_tree": {
+                "operation": "transpose",
+                "parameters": {
+                    "a": {
+                        "operation": "variable",
+                        "parameters": {"hash_value": 111, "name": "x"},
+                    },
+                    "axes": [1, 0],
+                },
+            },
+            "references": {},
+        }
+        request = self.client.post("/v1/data/set/", data=self.dataset, format="json")
+        max_id = DataSet.objects.aggregate(Max("id"))["id__max"]
+        new_dataset = DataSet.objects.get(id=max_id)
+        new_quantity = new_dataset.data_contents.get(hash=0)
+        transpose = new_quantity.operation_tree
+        variable = transpose.parent_operation1
+        self.assertEqual(request.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(transpose.operation, "transpose")
+        self.assertEqual(transpose.parameters, {"axes": [1, 0]})
+        self.assertEqual(variable.operation, "variable")
+        self.assertEqual(variable.parameters, {"hash_value": 111, "name": "x"})
+
+    def test_operation_tree_created_nested(self):
+        self.dataset["data_contents"][0]["history"] = self.nested_operations
+        request = self.client.post("/v1/data/set/", data=self.dataset, format="json")
+        max_id = DataSet.objects.aggregate(Max("id"))["id__max"]
+        new_dataset = DataSet.objects.get(id=max_id)
+        new_quantity = new_dataset.data_contents.get(hash=0)
+        negate = new_quantity.operation_tree
+        multiply = negate.parent_operation1
+        constant = multiply.parent_operation1
+        variable = multiply.parent_operation2
+        self.assertEqual(request.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(negate.operation, "neg")
+        self.assertEqual(negate.parameters, {})
+        self.assertEqual(multiply.operation, "mul")
+        self.assertEqual(multiply.parameters, {})
+        self.assertEqual(constant.operation, "constant")
+        self.assertEqual(constant.parameters, {"value": {"type": "int", "value": 7}})
+        self.assertEqual(variable.operation, "variable")
+        self.assertEqual(variable.parameters, {"hash_value": 111, "name": "x"})
+
+    # for each, test creation and get
+
+    # no history, or variable only
 
     # Test nested operations
 
-    # Different operations with different stored value types
+    # binary operation
+
+    # unary operation
+
+    # pow
+
+    # transpose
+
+    # tensordot
+
+    # invalid operation (create only)
+
+    def tearDown(self):
+        DataSet.objects.all().delete()
+        MetaData.objects.all().delete()
+        Quantity.objects.all().delete()
+        OperationTree.objects.all().delete()
 
     @classmethod
     def tearDownClass(cls):
-        pass
+        cls.user.delete()
