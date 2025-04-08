@@ -3,6 +3,9 @@ from rest_framework import serializers
 from data import models
 
 
+# TODO: more custom validation, particularly for specific nested dictionary structures
+
+
 class DataFileSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.DataFile
@@ -28,36 +31,34 @@ class MetaDataSerializer(serializers.ModelSerializer):
 class OperationTreeSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.OperationTree
-        fields = ["quantity", "operation", "parameters"]
+        fields = ["operation", "parameters"]
 
+    # TODO: some kind of custom validation, custom
     def create(self, validated_data):
         parent_operation1 = None
         parent_operation2 = None
         if not constant_or_variable(validated_data["operation"]):
             parent1 = validated_data["parameters"].pop("a")
-            parent1["quantity"] = validated_data["quantity"]
             serializer1 = OperationTreeSerializer(data=parent1)
             if serializer1.is_valid(raise_exception=True):
                 parent_operation1 = serializer1.save()
         if binary(validated_data["operation"]):
             parent2 = validated_data["parameters"].pop("b")
-            parent2["quantity"] = validated_data["quantity"]
             serializer2 = OperationTreeSerializer(data=parent2)
             if serializer2.is_valid(raise_exception=True):
                 parent_operation2 = serializer2.save()
         return models.OperationTree.objects.create(
-            dataset=validated_data["quantity"],  # TODO: check uuid vs object
             operation=validated_data["operation"],
             parameters=validated_data["parameters"],
             parent_operation1=parent_operation1,
-            parent_operaton2=parent_operation2,
+            parent_operation2=parent_operation2,
         )
 
 
 class QuantitySerializer(serializers.ModelSerializer):
     operation_tree = OperationTreeSerializer(read_only=False, required=False)
     label = serializers.CharField(max_length=20)
-    history = serializers.JSONField(required=False)  # TODO: is this required?
+    # history = serializers.JSONField(required=False)  # TODO: is this required?
 
     class Meta:
         model = models.Quantity
@@ -68,7 +69,7 @@ class QuantitySerializer(serializers.ModelSerializer):
             "hash",
             "operation_tree",
             "label",
-            "history",
+            # "history",
         ]
 
     # TODO: validation checks for history
@@ -83,11 +84,10 @@ class QuantitySerializer(serializers.ModelSerializer):
         return super().to_internal_value(data)
 
     def create(self, validated_data):
-        if "history" in validated_data:
-            operations_raw = validated_data.pop("history")
-            operations_tree_raw = operations_raw["operation_tree"]
+        if "operation_tree" in validated_data:
+            operations_data = validated_data.pop("operation_tree")
             operation_tree = OperationTreeSerializer.create(
-                OperationTreeSerializer(), validated_data=operations_tree_raw
+                OperationTreeSerializer(), validated_data=operations_data
             )
             quantity = models.Quantity.objects.create(
                 operation_tree=operation_tree, **validated_data
@@ -184,8 +184,8 @@ class SessionSerializer(serializers.ModelSerializer):
 
 
 def constant_or_variable(operation: str):
-    return str in ["zero", "one", "constant", "variable"]
+    return operation in ["zero", "one", "constant", "variable"]
 
 
 def binary(operation: str):
-    return str in ["add", "sub", "mul", "div", "dot", "matmul", "tensor_product"]
+    return operation in ["add", "sub", "mul", "div", "dot", "matmul", "tensor_product"]
