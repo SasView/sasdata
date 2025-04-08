@@ -44,8 +44,6 @@ class DataFile(Data):
 class DataSet(Data):
     """Database model for a set of data and associated metadata."""
 
-    # TODO: Update when plan for this is finished.
-
     # dataset name
     name = models.CharField(max_length=200)
 
@@ -61,6 +59,7 @@ class DataSet(Data):
     # data contents - maybe ManyToManyField
     data_contents = models.ManyToManyField("Quantity", through="LabeledQuantity")
 
+    # TODO: update based on SasData class in data.py
     # type of dataset
     # dataset_type = models.JSONField()
 
@@ -80,7 +79,8 @@ class Quantity(models.Model):
     # hash value
     hash = models.IntegerField()
 
-    # operation history of the quantity
+    # TODO: add field to store references portion of QuantityHistory
+    # operation history of the quantity - operation_tree from QuantityHistory
     operation_tree = models.OneToOneField(
         "OperationTree", blank=True, null=True, on_delete=models.SET_NULL
     )
