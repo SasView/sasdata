@@ -660,6 +660,14 @@ class TestOperationTree(APITestCase):
         self.assertEqual(variable.operation, "variable")
         self.assertEqual(variable.parameters, {"hash_value": 111, "name": "x"})
 
+    def test_create_operation_tree_invalid(self):
+        self.dataset["data_contents"][0]["history"] = {
+            "operation_tree": {"operation": "fix", "parameters": {}},
+            "references": {},
+        }
+        request = self.client.post("/v1/data/set/", data=self.dataset, format="json")
+        self.assertEqual(request.status_code, status.HTTP_400_BAD_REQUEST)
+
     # for each, test creation and get
 
     # no history, or variable only
