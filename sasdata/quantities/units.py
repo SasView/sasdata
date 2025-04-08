@@ -382,7 +382,7 @@ class NamedUnit(Unit):
         """Match other units exactly or match strings against ANY of our names"""
         match other:
             case str():
-                return self.name == other or self.ascii_symbol == other or self.symbol == other
+                return self.name == other or self.name == f"{other}s" or self.ascii_symbol == other or self.symbol == other
             case NamedUnit():
                 return self.name == other.name \
                     and self.ascii_symbol == other.ascii_symbol and self.symbol == other.symbol
