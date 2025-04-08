@@ -521,6 +521,21 @@ class TestOperationTree(APITestCase):
         cls.client.force_authenticate(cls.user)
 
     # Test post with operation tree
+    def test_operation_tree_created_variable(self):
+        self.dataset["data_contents"][0]["history"] = {
+            "operation_tree": {
+                "operation": "variable",
+                "parameters": {"hash_value": 0, "name": "test"},
+            },
+            "references": {},
+        }
+        request = self.client.post("/v1/data/set/", data=self.dataset, format="json")
+        max_id = DataSet.objects.aggregate(Max("id"))["id__max"]
+        new_dataset = DataSet.objects.get(id=max_id)
+        new_quantity = new_dataset.data_contents.get(hash=0)
+        self.assertEqual(request.status_code, status.HTTP_201_CREATED)
+        self.assertIsNone(new_quantity.operation_tree)
+
     def test_operation_tree_created_unary(self):
         self.dataset["data_contents"][0]["history"] = {
             "operation_tree": {
