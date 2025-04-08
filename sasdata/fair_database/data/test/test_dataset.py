@@ -648,6 +648,73 @@ class TestOperationTree(APITestCase):
         self.assertEqual(constant.operation, "constant")
         self.assertEqual(constant.parameters, {"value": 5})
 
+    def test_get_operation_tree_binary(self):
+        variable = OperationTree.objects.create(
+            id=1, operation="variable", parameters={"hash_value": 111, "name": "x"}
+        )
+        constant = OperationTree.objects.create(
+            id=2, operation="constant", parameters={"value": 1}
+        )
+        add = OperationTree.objects.create(
+            id=3,
+            operation="add",
+            parent_operation1=variable,
+            parent_operation2=constant,
+        )
+        quantity = Quantity.objects.create(
+            id=1,
+            value=0,
+            variance=0,
+            label="test",
+            units="none",
+            hash=1,
+            operation_tree=add,
+        )
+        dataset = DataSet.objects.create(
+            id=1,
+            current_user=self.user,
+            name="Test Dataset",
+            is_public=True,
+            metadata=None,
+        )
+        dataset.data_contents.add(quantity)
+        request = self.client.get("/v1/data/set/1/")
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            request.data,
+            {
+                "id": 1,
+                "current_user": 1,
+                "users": [],
+                "is_public": True,
+                "name": "Test Dataset",
+                "files": [],
+                "metadata": None,
+                "data_contents": [
+                    {
+                        "label": "test",
+                        "value": 0,
+                        "variance": 0,
+                        "units": "none",
+                        "hash": 1,
+                        "operation_tree": {
+                            "operation": "add",
+                            "parameters": {
+                                "a": {
+                                    "operation": "variable",
+                                    "parameters": {"hash_value": 111, "name": "x"},
+                                },
+                                "b": {
+                                    "operation": "constant",
+                                    "parameters": {"value": 1},
+                                },
+                            },
+                        },
+                    }
+                ],
+            },
+        )
+
     def test_operation_tree_created_pow(self):
         self.dataset["data_contents"][0]["history"] = {
             "operation_tree": {
@@ -670,6 +737,64 @@ class TestOperationTree(APITestCase):
         self.assertEqual(request.status_code, status.HTTP_201_CREATED)
         self.assertEqual(pow.operation, "pow")
         self.assertEqual(pow.parameters, {"power": 2})
+
+    def test_get_operation_tree_pow(self):
+        variable = OperationTree.objects.create(
+            id=1, operation="variable", parameters={"hash_value": 111, "name": "x"}
+        )
+        pow = OperationTree.objects.create(
+            id=2, operation="pow", parent_operation1=variable, parameters={"power": 2}
+        )
+        quantity = Quantity.objects.create(
+            id=1,
+            value=0,
+            variance=0,
+            label="test",
+            units="none",
+            hash=1,
+            operation_tree=pow,
+        )
+        dataset = DataSet.objects.create(
+            id=1,
+            current_user=self.user,
+            name="Test Dataset",
+            is_public=True,
+            metadata=None,
+        )
+        dataset.data_contents.add(quantity)
+        request = self.client.get("/v1/data/set/1/")
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            request.data,
+            {
+                "id": 1,
+                "current_user": 1,
+                "users": [],
+                "is_public": True,
+                "name": "Test Dataset",
+                "files": [],
+                "metadata": None,
+                "data_contents": [
+                    {
+                        "label": "test",
+                        "value": 0,
+                        "variance": 0,
+                        "units": "none",
+                        "hash": 1,
+                        "operation_tree": {
+                            "operation": "pow",
+                            "parameters": {
+                                "a": {
+                                    "operation": "variable",
+                                    "parameters": {"hash_value": 111, "name": "x"},
+                                },
+                                "power": 2,
+                            },
+                        },
+                    }
+                ],
+            },
+        )
 
     def test_operation_tree_created_transpose(self):
         self.dataset["data_contents"][0]["history"] = {
@@ -697,6 +822,67 @@ class TestOperationTree(APITestCase):
         self.assertEqual(variable.operation, "variable")
         self.assertEqual(variable.parameters, {"hash_value": 111, "name": "x"})
 
+    def test_get_operation_tree_transpose(self):
+        variable = OperationTree.objects.create(
+            id=1, operation="variable", parameters={"hash_value": 111, "name": "x"}
+        )
+        inv = OperationTree.objects.create(
+            id=2,
+            operation="transpose",
+            parent_operation1=variable,
+            parameters={"axes": (1, 0)},
+        )
+        quantity = Quantity.objects.create(
+            id=1,
+            value=0,
+            variance=0,
+            label="test",
+            units="none",
+            hash=1,
+            operation_tree=inv,
+        )
+        dataset = DataSet.objects.create(
+            id=1,
+            current_user=self.user,
+            name="Test Dataset",
+            is_public=True,
+            metadata=None,
+        )
+        dataset.data_contents.add(quantity)
+        request = self.client.get("/v1/data/set/1/")
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            request.data,
+            {
+                "id": 1,
+                "current_user": 1,
+                "users": [],
+                "is_public": True,
+                "name": "Test Dataset",
+                "files": [],
+                "metadata": None,
+                "data_contents": [
+                    {
+                        "label": "test",
+                        "value": 0,
+                        "variance": 0,
+                        "units": "none",
+                        "hash": 1,
+                        "operation_tree": {
+                            "operation": "transpose",
+                            "parameters": {
+                                "a": {
+                                    "operation": "variable",
+                                    "parameters": {"hash_value": 111, "name": "x"},
+                                },
+                                "axes": [1, 0],
+                            },
+                        },
+                    }
+                ],
+            },
+        )
+
     def test_operation_tree_created_nested(self):
         self.dataset["data_contents"][0]["history"] = self.nested_operations
         request = self.client.post("/v1/data/set/", data=self.dataset, format="json")
@@ -716,6 +902,88 @@ class TestOperationTree(APITestCase):
         self.assertEqual(constant.parameters, {"value": {"type": "int", "value": 7}})
         self.assertEqual(variable.operation, "variable")
         self.assertEqual(variable.parameters, {"hash_value": 111, "name": "x"})
+
+    def test_get_operation_tree_nested(self):
+        variable = OperationTree.objects.create(
+            id=1, operation="variable", parameters={"hash_value": 111, "name": "x"}
+        )
+        constant = OperationTree.objects.create(
+            id=2,
+            operation="constant",
+            parameters={"value": {"type": "int", "value": 7}},
+        )
+        multiply = OperationTree.objects.create(
+            id=3,
+            operation="mul",
+            parent_operation1=constant,
+            parent_operation2=variable,
+        )
+        neg = OperationTree.objects.create(
+            id=4, operation="neg", parent_operation1=multiply
+        )
+        quantity = Quantity.objects.create(
+            id=1,
+            value=0,
+            variance=0,
+            label="test",
+            units="none",
+            hash=1,
+            operation_tree=neg,
+        )
+        dataset = DataSet.objects.create(
+            id=1,
+            current_user=self.user,
+            name="Test Dataset",
+            is_public=True,
+            metadata=None,
+        )
+        dataset.data_contents.add(quantity)
+        request = self.client.get("/v1/data/set/1/")
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            request.data,
+            {
+                "id": 1,
+                "current_user": 1,
+                "users": [],
+                "is_public": True,
+                "name": "Test Dataset",
+                "files": [],
+                "metadata": None,
+                "data_contents": [
+                    {
+                        "label": "test",
+                        "value": 0,
+                        "variance": 0,
+                        "units": "none",
+                        "hash": 1,
+                        "operation_tree": {
+                            "operation": "neg",
+                            "parameters": {
+                                "a": {
+                                    "operation": "mul",
+                                    "parameters": {
+                                        "a": {
+                                            "operation": "constant",
+                                            "parameters": {
+                                                "value": {"type": "int", "value": 7}
+                                            },
+                                        },
+                                        "b": {
+                                            "operation": "variable",
+                                            "parameters": {
+                                                "hash_value": 111,
+                                                "name": "x",
+                                            },
+                                        },
+                                    },
+                                }
+                            },
+                        },
+                    }
+                ],
+            },
+        )
 
     def test_create_operation_tree_invalid(self):
         self.dataset["data_contents"][0]["history"] = {
