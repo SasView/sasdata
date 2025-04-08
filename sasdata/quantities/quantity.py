@@ -1222,9 +1222,9 @@ class Quantity[QuantityType]:
 
     @staticmethod
     def deserialise_json(json_data: dict) -> "Quantity":
-        value = None # TODO QuantityType deserialisation
+        value = numerical_decode(json_data["value"])
         units = Unit.parse(json_data["units"])
-        standard_error = None #TODO QuantityType deserialisation
+        standard_error = numerical_decode(json_data["variance"]) ** 0.5
         hash_seed = json_data["hash_seed"]
         history = QuantityHistory.deserialise_json(json_data["history"])
         quantity = Quantity(value, units, standard_error, hash_seed)
@@ -1234,9 +1234,9 @@ class Quantity[QuantityType]:
     # TODO: fill out actual values
     def serialise_json(self):
         return {
-            "value": quantity_type_serialisation(self.value),
+            "value": numerical_encode(self.value),
             "units": str(self.units), # Unit serialisation
-            "variance": quantity_type_serialisation(self._variance),
+            "variance": numerical_encode(self._variance),
             "hash_seed": self._hash_seed, # is this just a string?
             "hash_value": self.hash_value,
             "history": self.history.serialise_json()
