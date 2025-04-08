@@ -681,6 +681,7 @@ picohenry = NamedUnit(1e-12, Dimensions(2, -2, 1, -2, 0, 0, 0),name='picohenry',
 femtohenry = NamedUnit(1e-15, Dimensions(2, -2, 1, -2, 0, 0, 0),name='femtohenry',ascii_symbol='fH',symbol='fH')
 attohenry = NamedUnit(1e-18, Dimensions(2, -2, 1, -2, 0, 0, 0),name='attohenry',ascii_symbol='aH',symbol='aH')
 angstroms = NamedUnit(1e-10, Dimensions(1, 0, 0, 0, 0, 0, 0),name='angstroms',ascii_symbol='Ang',latex_symbol=r'\AA',symbol='Å')
+microns = NamedUnit(1e-06, Dimensions(1, 0, 0, 0, 0, 0, 0),name='microns',ascii_symbol='micron',symbol='micron')
 minutes = NamedUnit(60, Dimensions(0, 1, 0, 0, 0, 0, 0),name='minutes',ascii_symbol='min',symbol='min')
 hours = NamedUnit(360, Dimensions(0, 1, 0, 0, 0, 0, 0),name='hours',ascii_symbol='h',symbol='h')
 days = NamedUnit(8640, Dimensions(0, 1, 0, 0, 0, 0, 0),name='days',ascii_symbol='d',symbol='d')
@@ -802,6 +803,11 @@ cubic_angstroms = NamedUnit(1e-30, Dimensions(length=3), name='cubic_angstroms',
 per_angstrom = NamedUnit(10000000000.0, Dimensions(length=-1), name='per_angstrom', ascii_symbol='Ang^-1', symbol='Å⁻¹')
 per_square_angstrom = NamedUnit(1e+20, Dimensions(length=-2), name='per_square_angstrom', ascii_symbol='Ang^-2', symbol='Å⁻²')
 per_cubic_angstrom = NamedUnit(9.999999999999999e+29, Dimensions(length=-3), name='per_cubic_angstrom', ascii_symbol='Ang^-3', symbol='Å⁻³')
+square_microns = NamedUnit(1e-12, Dimensions(length=2), name='square_microns', ascii_symbol='micron^2', symbol='micron²')
+cubic_microns = NamedUnit(9.999999999999999e-19, Dimensions(length=3), name='cubic_microns', ascii_symbol='micron^3', symbol='micron³')
+per_micron = NamedUnit(1000000.0, Dimensions(length=-1), name='per_micron', ascii_symbol='micron^-1', symbol='micron⁻¹')
+per_square_micron = NamedUnit(1000000000000.0001, Dimensions(length=-2), name='per_square_micron', ascii_symbol='micron^-2', symbol='micron⁻²')
+per_cubic_micron = NamedUnit(1.0000000000000001e+18, Dimensions(length=-3), name='per_cubic_micron', ascii_symbol='micron^-3', symbol='micron⁻³')
 square_miles = NamedUnit(2589988.110336, Dimensions(length=2), name='square_miles', ascii_symbol='miles^2', symbol='miles²')
 cubic_miles = NamedUnit(4168181825.44058, Dimensions(length=3), name='cubic_miles', ascii_symbol='miles^3', symbol='miles³')
 per_mile = NamedUnit(0.0006213711922373339, Dimensions(length=-1), name='per_mile', ascii_symbol='miles^-1', symbol='miles⁻¹')
@@ -1174,6 +1180,28 @@ angstroms_per_day = NamedUnit(1.1574074074074074e-14, Dimensions(length=1, time=
 angstroms_per_square_day = NamedUnit(1.3395919067215363e-18, Dimensions(length=1, time=-2), name='angstroms_per_square_day', ascii_symbol='Ang/d^2', symbol='Åd⁻²')
 angstroms_per_year = NamedUnit(3.168873850681143e-17, Dimensions(length=1, time=-1), name='angstroms_per_year', ascii_symbol='Ang/y', symbol='Åy⁻¹')
 angstroms_per_square_year = NamedUnit(1.0041761481530734e-23, Dimensions(length=1, time=-2), name='angstroms_per_square_year', ascii_symbol='Ang/y^2', symbol='Åy⁻²')
+microns_per_second = NamedUnit(1e-06, Dimensions(length=1, time=-1), name='microns_per_second', ascii_symbol='micron/s', symbol='microns⁻¹')
+microns_per_square_second = NamedUnit(1e-06, Dimensions(length=1, time=-2), name='microns_per_square_second', ascii_symbol='micron/s^2', symbol='microns⁻²')
+microns_per_millisecond = NamedUnit(0.001, Dimensions(length=1, time=-1), name='microns_per_millisecond', ascii_symbol='micron/ms', symbol='micronms⁻¹')
+microns_per_square_millisecond = NamedUnit(1.0, Dimensions(length=1, time=-2), name='microns_per_square_millisecond', ascii_symbol='micron/ms^2', symbol='micronms⁻²')
+microns_per_microsecond = NamedUnit(1.0, Dimensions(length=1, time=-1), name='microns_per_microsecond', ascii_symbol='micron/us', symbol='micronµs⁻¹')
+microns_per_square_microsecond = NamedUnit(1000000.0, Dimensions(length=1, time=-2), name='microns_per_square_microsecond', ascii_symbol='micron/us^2', symbol='micronµs⁻²')
+microns_per_nanosecond = NamedUnit(999.9999999999999, Dimensions(length=1, time=-1), name='microns_per_nanosecond', ascii_symbol='micron/ns', symbol='micronns⁻¹')
+microns_per_square_nanosecond = NamedUnit(999999999999.9999, Dimensions(length=1, time=-2), name='microns_per_square_nanosecond', ascii_symbol='micron/ns^2', symbol='micronns⁻²')
+microns_per_picosecond = NamedUnit(1000000.0, Dimensions(length=1, time=-1), name='microns_per_picosecond', ascii_symbol='micron/ps', symbol='micronps⁻¹')
+microns_per_square_picosecond = NamedUnit(1e+18, Dimensions(length=1, time=-2), name='microns_per_square_picosecond', ascii_symbol='micron/ps^2', symbol='micronps⁻²')
+microns_per_femtosecond = NamedUnit(999999999.9999999, Dimensions(length=1, time=-1), name='microns_per_femtosecond', ascii_symbol='micron/fs', symbol='micronfs⁻¹')
+microns_per_square_femtosecond = NamedUnit(9.999999999999998e+23, Dimensions(length=1, time=-2), name='microns_per_square_femtosecond', ascii_symbol='micron/fs^2', symbol='micronfs⁻²')
+microns_per_attosecond = NamedUnit(999999999999.9999, Dimensions(length=1, time=-1), name='microns_per_attosecond', ascii_symbol='micron/as', symbol='micronas⁻¹')
+microns_per_square_attosecond = NamedUnit(9.999999999999999e+29, Dimensions(length=1, time=-2), name='microns_per_square_attosecond', ascii_symbol='micron/as^2', symbol='micronas⁻²')
+microns_per_minute = NamedUnit(1.6666666666666667e-08, Dimensions(length=1, time=-1), name='microns_per_minute', ascii_symbol='micron/min', symbol='micronmin⁻¹')
+microns_per_square_minute = NamedUnit(2.7777777777777777e-10, Dimensions(length=1, time=-2), name='microns_per_square_minute', ascii_symbol='micron/min^2', symbol='micronmin⁻²')
+microns_per_hour = NamedUnit(2.7777777777777776e-09, Dimensions(length=1, time=-1), name='microns_per_hour', ascii_symbol='micron/h', symbol='micronh⁻¹')
+microns_per_square_hour = NamedUnit(7.716049382716049e-12, Dimensions(length=1, time=-2), name='microns_per_square_hour', ascii_symbol='micron/h^2', symbol='micronh⁻²')
+microns_per_day = NamedUnit(1.1574074074074074e-10, Dimensions(length=1, time=-1), name='microns_per_day', ascii_symbol='micron/d', symbol='micrond⁻¹')
+microns_per_square_day = NamedUnit(1.3395919067215363e-14, Dimensions(length=1, time=-2), name='microns_per_square_day', ascii_symbol='micron/d^2', symbol='micrond⁻²')
+microns_per_year = NamedUnit(3.168873850681143e-13, Dimensions(length=1, time=-1), name='microns_per_year', ascii_symbol='micron/y', symbol='microny⁻¹')
+microns_per_square_year = NamedUnit(1.0041761481530734e-19, Dimensions(length=1, time=-2), name='microns_per_square_year', ascii_symbol='micron/y^2', symbol='microny⁻²')
 miles_per_second = NamedUnit(1609.344, Dimensions(length=1, time=-1), name='miles_per_second', ascii_symbol='miles/s', symbol='miless⁻¹')
 miles_per_square_second = NamedUnit(1609.344, Dimensions(length=1, time=-2), name='miles_per_square_second', ascii_symbol='miles/s^2', symbol='miless⁻²')
 miles_per_millisecond = NamedUnit(1609344.0, Dimensions(length=1, time=-1), name='miles_per_millisecond', ascii_symbol='miles/ms', symbol='milesms⁻¹')
@@ -1518,6 +1546,22 @@ attograms_per_cubic_angstrom = NamedUnit(1000000000.0, Dimensions(length=-3, mas
 atomic_mass_units_per_cubic_angstrom = NamedUnit(1660.5389209999996, Dimensions(length=-3, mass=1), name='atomic_mass_units_per_cubic_angstrom', ascii_symbol='au Ang^-3', symbol='auÅ⁻³')
 pounds_per_cubic_angstrom = NamedUnit(4.5359237e+29, Dimensions(length=-3, mass=1), name='pounds_per_cubic_angstrom', ascii_symbol='lb Ang^-3', symbol='lbÅ⁻³')
 ounces_per_cubic_angstrom = NamedUnit(2.8349523125e+28, Dimensions(length=-3, mass=1), name='ounces_per_cubic_angstrom', ascii_symbol='oz Ang^-3', symbol='ozÅ⁻³')
+grams_per_cubic_micron = NamedUnit(1000000000000000.1, Dimensions(length=-3, mass=1), name='grams_per_cubic_micron', ascii_symbol='g micron^-3', symbol='gmicron⁻³')
+exagrams_per_cubic_micron = NamedUnit(1.0000000000000001e+33, Dimensions(length=-3, mass=1), name='exagrams_per_cubic_micron', ascii_symbol='Eg micron^-3', symbol='Egmicron⁻³')
+petagrams_per_cubic_micron = NamedUnit(1.0000000000000002e+30, Dimensions(length=-3, mass=1), name='petagrams_per_cubic_micron', ascii_symbol='Pg micron^-3', symbol='Pgmicron⁻³')
+teragrams_per_cubic_micron = NamedUnit(1.0000000000000002e+27, Dimensions(length=-3, mass=1), name='teragrams_per_cubic_micron', ascii_symbol='Tg micron^-3', symbol='Tgmicron⁻³')
+gigagrams_per_cubic_micron = NamedUnit(1.0000000000000001e+24, Dimensions(length=-3, mass=1), name='gigagrams_per_cubic_micron', ascii_symbol='Gg micron^-3', symbol='Ggmicron⁻³')
+megagrams_per_cubic_micron = NamedUnit(1.0000000000000001e+21, Dimensions(length=-3, mass=1), name='megagrams_per_cubic_micron', ascii_symbol='Mg micron^-3', symbol='Mgmicron⁻³')
+kilograms_per_cubic_micron = NamedUnit(1.0000000000000001e+18, Dimensions(length=-3, mass=1), name='kilograms_per_cubic_micron', ascii_symbol='kg micron^-3', symbol='kgmicron⁻³')
+milligrams_per_cubic_micron = NamedUnit(1000000000000.0001, Dimensions(length=-3, mass=1), name='milligrams_per_cubic_micron', ascii_symbol='mg micron^-3', symbol='mgmicron⁻³')
+micrograms_per_cubic_micron = NamedUnit(1000000000.0000002, Dimensions(length=-3, mass=1), name='micrograms_per_cubic_micron', ascii_symbol='ug micron^-3', symbol='µgmicron⁻³')
+nanograms_per_cubic_micron = NamedUnit(1000000.0000000003, Dimensions(length=-3, mass=1), name='nanograms_per_cubic_micron', ascii_symbol='ng micron^-3', symbol='ngmicron⁻³')
+picograms_per_cubic_micron = NamedUnit(1000.0000000000002, Dimensions(length=-3, mass=1), name='picograms_per_cubic_micron', ascii_symbol='pg micron^-3', symbol='pgmicron⁻³')
+femtograms_per_cubic_micron = NamedUnit(1.0000000000000002, Dimensions(length=-3, mass=1), name='femtograms_per_cubic_micron', ascii_symbol='fg micron^-3', symbol='fgmicron⁻³')
+attograms_per_cubic_micron = NamedUnit(0.0010000000000000002, Dimensions(length=-3, mass=1), name='attograms_per_cubic_micron', ascii_symbol='ag micron^-3', symbol='agmicron⁻³')
+atomic_mass_units_per_cubic_micron = NamedUnit(1.660538921e-09, Dimensions(length=-3, mass=1), name='atomic_mass_units_per_cubic_micron', ascii_symbol='au micron^-3', symbol='aumicron⁻³')
+pounds_per_cubic_micron = NamedUnit(4.5359237000000006e+17, Dimensions(length=-3, mass=1), name='pounds_per_cubic_micron', ascii_symbol='lb micron^-3', symbol='lbmicron⁻³')
+ounces_per_cubic_micron = NamedUnit(2.8349523125000004e+16, Dimensions(length=-3, mass=1), name='ounces_per_cubic_micron', ascii_symbol='oz micron^-3', symbol='ozmicron⁻³')
 grams_per_cubic_mile = NamedUnit(2.399127585789277e-13, Dimensions(length=-3, mass=1), name='grams_per_cubic_mile', ascii_symbol='g miles^-3', symbol='gmiles⁻³')
 exagrams_per_cubic_mile = NamedUnit(239912.7585789277, Dimensions(length=-3, mass=1), name='exagrams_per_cubic_mile', ascii_symbol='Eg miles^-3', symbol='Egmiles⁻³')
 petagrams_per_cubic_mile = NamedUnit(239.9127585789277, Dimensions(length=-3, mass=1), name='petagrams_per_cubic_mile', ascii_symbol='Pg miles^-3', symbol='Pgmiles⁻³')
@@ -1694,6 +1738,13 @@ nanomoles_per_cubic_angstrom = NamedUnit(6.02214076e+44, Dimensions(length=-3, m
 picomoles_per_cubic_angstrom = NamedUnit(6.02214076e+41, Dimensions(length=-3, moles_hint=1), name='picomoles_per_cubic_angstrom', ascii_symbol='pmol Ang^-3', symbol='pmolÅ⁻³')
 femtomoles_per_cubic_angstrom = NamedUnit(6.022140759999999e+38, Dimensions(length=-3, moles_hint=1), name='femtomoles_per_cubic_angstrom', ascii_symbol='fmol Ang^-3', symbol='fmolÅ⁻³')
 attomoles_per_cubic_angstrom = NamedUnit(6.02214076e+35, Dimensions(length=-3, moles_hint=1), name='attomoles_per_cubic_angstrom', ascii_symbol='amol Ang^-3', symbol='amolÅ⁻³')
+moles_per_cubic_micron = NamedUnit(6.022140760000001e+41, Dimensions(length=-3, moles_hint=1), name='moles_per_cubic_micron', ascii_symbol='mol micron^-3', symbol='molmicron⁻³')
+millimoles_per_cubic_micron = NamedUnit(6.022140760000001e+38, Dimensions(length=-3, moles_hint=1), name='millimoles_per_cubic_micron', ascii_symbol='mmol micron^-3', symbol='mmolmicron⁻³')
+micromoles_per_cubic_micron = NamedUnit(6.0221407600000004e+35, Dimensions(length=-3, moles_hint=1), name='micromoles_per_cubic_micron', ascii_symbol='umol micron^-3', symbol='µmolmicron⁻³')
+nanomoles_per_cubic_micron = NamedUnit(6.022140760000001e+32, Dimensions(length=-3, moles_hint=1), name='nanomoles_per_cubic_micron', ascii_symbol='nmol micron^-3', symbol='nmolmicron⁻³')
+picomoles_per_cubic_micron = NamedUnit(6.022140760000001e+29, Dimensions(length=-3, moles_hint=1), name='picomoles_per_cubic_micron', ascii_symbol='pmol micron^-3', symbol='pmolmicron⁻³')
+femtomoles_per_cubic_micron = NamedUnit(6.022140760000001e+26, Dimensions(length=-3, moles_hint=1), name='femtomoles_per_cubic_micron', ascii_symbol='fmol micron^-3', symbol='fmolmicron⁻³')
+attomoles_per_cubic_micron = NamedUnit(6.0221407600000005e+23, Dimensions(length=-3, moles_hint=1), name='attomoles_per_cubic_micron', ascii_symbol='amol micron^-3', symbol='amolmicron⁻³')
 moles_per_cubic_mile = NamedUnit(144478840228220.0, Dimensions(length=-3, moles_hint=1), name='moles_per_cubic_mile', ascii_symbol='mol miles^-3', symbol='molmiles⁻³')
 millimoles_per_cubic_mile = NamedUnit(144478840228.22003, Dimensions(length=-3, moles_hint=1), name='millimoles_per_cubic_mile', ascii_symbol='mmol miles^-3', symbol='mmolmiles⁻³')
 micromoles_per_cubic_mile = NamedUnit(144478840.22822002, Dimensions(length=-3, moles_hint=1), name='micromoles_per_cubic_mile', ascii_symbol='umol miles^-3', symbol='µmolmiles⁻³')
@@ -1990,6 +2041,7 @@ symbol_lookup = {
         "aH": attohenry,
         "Ang": angstroms,
         "Å": angstroms,
+        "micron": microns,
         "min": minutes,
         "h": hours,
         "d": days,
@@ -2081,6 +2133,7 @@ length = UnitGroup(
     decimeters,
     centimeters,
     angstroms,
+    microns,
     miles,
     yards,
     feet,
@@ -2106,6 +2159,7 @@ area = UnitGroup(
     square_decimeters,
     square_centimeters,
     square_angstroms,
+    square_microns,
     square_miles,
     square_yards,
     square_feet,
@@ -2132,6 +2186,7 @@ volume = UnitGroup(
     cubic_decimeters,
     cubic_centimeters,
     cubic_angstroms,
+    cubic_microns,
     cubic_miles,
     cubic_yards,
     cubic_feet,
@@ -2157,6 +2212,7 @@ inverse_length = UnitGroup(
     per_decimeter,
     per_centimeter,
     per_angstrom,
+    per_micron,
     per_mile,
     per_yard,
     per_foot,
@@ -2182,6 +2238,7 @@ inverse_area = UnitGroup(
     per_square_decimeter,
     per_square_centimeter,
     per_square_angstrom,
+    per_square_micron,
     per_square_mile,
     per_square_yard,
     per_square_foot,
@@ -2207,6 +2264,7 @@ inverse_volume = UnitGroup(
     per_cubic_decimeter,
     per_cubic_centimeter,
     per_cubic_angstrom,
+    per_cubic_micron,
     per_cubic_mile,
     per_cubic_yard,
     per_cubic_foot,
@@ -2426,6 +2484,17 @@ speed = UnitGroup(
     angstroms_per_hour,
     angstroms_per_day,
     angstroms_per_year,
+    microns_per_second,
+    microns_per_millisecond,
+    microns_per_microsecond,
+    microns_per_nanosecond,
+    microns_per_picosecond,
+    microns_per_femtosecond,
+    microns_per_attosecond,
+    microns_per_minute,
+    microns_per_hour,
+    microns_per_day,
+    microns_per_year,
     miles_per_second,
     miles_per_millisecond,
     miles_per_microsecond,
@@ -2651,6 +2720,17 @@ acceleration = UnitGroup(
     angstroms_per_square_hour,
     angstroms_per_square_day,
     angstroms_per_square_year,
+    microns_per_square_second,
+    microns_per_square_millisecond,
+    microns_per_square_microsecond,
+    microns_per_square_nanosecond,
+    microns_per_square_picosecond,
+    microns_per_square_femtosecond,
+    microns_per_square_attosecond,
+    microns_per_square_minute,
+    microns_per_square_hour,
+    microns_per_square_day,
+    microns_per_square_year,
     miles_per_square_second,
     miles_per_square_millisecond,
     miles_per_square_microsecond,
@@ -2956,6 +3036,22 @@ density = UnitGroup(
     atomic_mass_units_per_cubic_angstrom,
     pounds_per_cubic_angstrom,
     ounces_per_cubic_angstrom,
+    grams_per_cubic_micron,
+    exagrams_per_cubic_micron,
+    petagrams_per_cubic_micron,
+    teragrams_per_cubic_micron,
+    gigagrams_per_cubic_micron,
+    megagrams_per_cubic_micron,
+    kilograms_per_cubic_micron,
+    milligrams_per_cubic_micron,
+    micrograms_per_cubic_micron,
+    nanograms_per_cubic_micron,
+    picograms_per_cubic_micron,
+    femtograms_per_cubic_micron,
+    attograms_per_cubic_micron,
+    atomic_mass_units_per_cubic_micron,
+    pounds_per_cubic_micron,
+    ounces_per_cubic_micron,
     grams_per_cubic_mile,
     exagrams_per_cubic_mile,
     petagrams_per_cubic_mile,
@@ -3420,6 +3516,13 @@ concentration = UnitGroup(
     picomoles_per_cubic_angstrom,
     femtomoles_per_cubic_angstrom,
     attomoles_per_cubic_angstrom,
+    moles_per_cubic_micron,
+    millimoles_per_cubic_micron,
+    micromoles_per_cubic_micron,
+    nanomoles_per_cubic_micron,
+    picomoles_per_cubic_micron,
+    femtomoles_per_cubic_micron,
+    attomoles_per_cubic_micron,
     moles_per_cubic_mile,
     millimoles_per_cubic_mile,
     micromoles_per_cubic_mile,
