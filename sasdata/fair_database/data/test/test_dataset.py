@@ -522,7 +522,7 @@ class TestOperationTree(APITestCase):
         cls.client = APIClient()
         cls.client.force_authenticate(cls.user)
 
-    # Test post with operation tree
+    # Test creating quantity with no operations performed
     def test_operation_tree_created_variable(self):
         self.dataset["data_contents"][0]["history"] = {
             "operation_tree": {
@@ -538,6 +538,9 @@ class TestOperationTree(APITestCase):
         self.assertEqual(request.status_code, status.HTTP_201_CREATED)
         self.assertIsNone(new_quantity.operation_tree)
 
+    # Test accessing a quantity with no operations performed
+
+    # Test creating quantity with unary operation
     def test_operation_tree_created_unary(self):
         self.dataset["data_contents"][0]["history"] = {
             "operation_tree": {
@@ -564,6 +567,7 @@ class TestOperationTree(APITestCase):
         self.assertEqual(reciprocal.parent_operation1.operation, "variable")
         self.assertEqual(reciprocal.parameters, {})
 
+    # Test accessing quantity with unary operation
     def test_get_operation_tree_unary(self):
         variable = OperationTree.objects.create(
             id=1, operation="variable", parameters={"hash_value": 111, "name": "x"}
@@ -621,6 +625,7 @@ class TestOperationTree(APITestCase):
             },
         )
 
+    # Test creating quantity with binary operation
     def test_operation_tree_created_binary(self):
         self.dataset["data_contents"][0]["history"] = {
             "operation_tree": {
@@ -650,6 +655,7 @@ class TestOperationTree(APITestCase):
         self.assertEqual(constant.operation, "constant")
         self.assertEqual(constant.parameters, {"value": 5})
 
+    # Test accessing quantity with binary operation
     def test_get_operation_tree_binary(self):
         variable = OperationTree.objects.create(
             id=1, operation="variable", parameters={"hash_value": 111, "name": "x"}
@@ -717,6 +723,7 @@ class TestOperationTree(APITestCase):
             },
         )
 
+    # Test creating quantity with exponent
     def test_operation_tree_created_pow(self):
         self.dataset["data_contents"][0]["history"] = {
             "operation_tree": {
@@ -740,6 +747,7 @@ class TestOperationTree(APITestCase):
         self.assertEqual(pow.operation, "pow")
         self.assertEqual(pow.parameters, {"power": 2})
 
+    # Test accessing a quantity with exponent
     def test_get_operation_tree_pow(self):
         variable = OperationTree.objects.create(
             id=1, operation="variable", parameters={"hash_value": 111, "name": "x"}
@@ -798,6 +806,7 @@ class TestOperationTree(APITestCase):
             },
         )
 
+    # Test creating a transposed quantity
     def test_operation_tree_created_transpose(self):
         self.dataset["data_contents"][0]["history"] = {
             "operation_tree": {
@@ -824,6 +833,7 @@ class TestOperationTree(APITestCase):
         self.assertEqual(variable.operation, "variable")
         self.assertEqual(variable.parameters, {"hash_value": 111, "name": "x"})
 
+    # Test accessing a transposed quantity
     def test_get_operation_tree_transpose(self):
         variable = OperationTree.objects.create(
             id=1, operation="variable", parameters={"hash_value": 111, "name": "x"}
@@ -885,6 +895,7 @@ class TestOperationTree(APITestCase):
             },
         )
 
+    # Test creating a quantity with multiple operations
     def test_operation_tree_created_nested(self):
         self.dataset["data_contents"][0]["history"] = self.nested_operations
         request = self.client.post("/v1/data/set/", data=self.dataset, format="json")
@@ -905,6 +916,7 @@ class TestOperationTree(APITestCase):
         self.assertEqual(variable.operation, "variable")
         self.assertEqual(variable.parameters, {"hash_value": 111, "name": "x"})
 
+    # Test accessing a quantity with multiple operations
     def test_get_operation_tree_nested(self):
         variable = OperationTree.objects.create(
             id=1, operation="variable", parameters={"hash_value": 111, "name": "x"}
@@ -987,6 +999,11 @@ class TestOperationTree(APITestCase):
             },
         )
 
+    # Test creating a quantity with tensordot
+
+    # Test accessing a quantity with tensordot
+
+    # Test creating a quantity with an invalid operation
     def test_create_operation_tree_invalid(self):
         self.dataset["data_contents"][0]["history"] = {
             "operation_tree": {"operation": "fix", "parameters": {}},
@@ -995,23 +1012,20 @@ class TestOperationTree(APITestCase):
         request = self.client.post("/v1/data/set/", data=self.dataset, format="json")
         self.assertEqual(request.status_code, status.HTTP_400_BAD_REQUEST)
 
-    # for each, test creation and get
+    # Test creating a quantity with a nested invalid operation
 
-    # no history, or variable only
+    # Test creating invalid operation parameters
+    # binary has a and b - both should be operations
+    # unary has a (operation)
+    # constant has value
+    # variable has name and hash_value
+    # pow has power
+    # transpose has axes
+    # tensordot has a_index and b_index
 
-    # Test nested operations
+    # Test creating nested invalid operation parameters
 
-    # binary operation
-
-    # unary operation
-
-    # pow
-
-    # transpose
-
-    # tensordot
-
-    # invalid operation (create only)
+    # Test creating a quantity with no history
 
     def tearDown(self):
         DataSet.objects.all().delete()
