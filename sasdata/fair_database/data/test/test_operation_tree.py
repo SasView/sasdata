@@ -235,8 +235,29 @@ class TestCreateOperationTree(APITestCase):
         }
         request = self.client.post("/v1/data/set/", data=self.dataset, format="json")
         self.assertEqual(request.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(len(DataSet.objects.all()), 0)
+        self.assertEqual(len(Quantity.objects.all()), 0)
+        self.assertEqual(len(OperationTree.objects.all()), 0)
 
     # Test creating a quantity with a nested invalid operation
+    def test_create_operation_tree_invalid_nested(self):
+        self.dataset["data_contents"][0]["history"] = {
+            "operation_tree": {
+                "operation": "reciprocal",
+                "parameters": {
+                    "a": {
+                        "operation": "fix",
+                        "parameters": {},
+                    }
+                },
+            },
+            "references": {},
+        }
+        request = self.client.post("/v1/data/set/", data=self.dataset, format="json")
+        self.assertEqual(request.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(len(DataSet.objects.all()), 0)
+        self.assertEqual(len(Quantity.objects.all()), 0)
+        self.assertEqual(len(OperationTree.objects.all()), 0)
 
     # Test creating invalid operation parameters
     # binary has a and b - both should be operations
