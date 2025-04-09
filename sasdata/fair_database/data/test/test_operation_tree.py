@@ -30,27 +30,6 @@ class TestCreateOperationTree(APITestCase):
             ],
             "is_public": True,
         }
-        cls.nested_operations = {
-            "operation_tree": {
-                "operation": "neg",
-                "parameters": {
-                    "a": {
-                        "operation": "mul",
-                        "parameters": {
-                            "a": {
-                                "operation": "constant",
-                                "parameters": {"value": {"type": "int", "value": 7}},
-                            },
-                            "b": {
-                                "operation": "variable",
-                                "parameters": {"hash_value": 111, "name": "x"},
-                            },
-                        },
-                    },
-                },
-            },
-            "references": {},
-        }
         cls.user = User.objects.create_user(
             id=1, username="testUser", password="sasview!"
         )
@@ -183,7 +162,27 @@ class TestCreateOperationTree(APITestCase):
 
     # Test creating a quantity with multiple operations
     def test_operation_tree_created_nested(self):
-        self.dataset["data_contents"][0]["history"] = self.nested_operations
+        self.dataset["data_contents"][0]["history"] = {
+            "operation_tree": {
+                "operation": "neg",
+                "parameters": {
+                    "a": {
+                        "operation": "mul",
+                        "parameters": {
+                            "a": {
+                                "operation": "constant",
+                                "parameters": {"value": {"type": "int", "value": 7}},
+                            },
+                            "b": {
+                                "operation": "variable",
+                                "parameters": {"hash_value": 111, "name": "x"},
+                            },
+                        },
+                    },
+                },
+            },
+            "references": {},
+        }
         request = self.client.post("/v1/data/set/", data=self.dataset, format="json")
         max_id = DataSet.objects.aggregate(Max("id"))["id__max"]
         new_dataset = DataSet.objects.get(id=max_id)
@@ -203,6 +202,30 @@ class TestCreateOperationTree(APITestCase):
         self.assertEqual(variable.parameters, {"hash_value": 111, "name": "x"})
 
     # Test creating a quantity with tensordot
+    def test_operation_tree_created_tensor(self):
+        self.dataset["data_contents"][0]["history"] = {
+            "operation_tree": {
+                "operation": "tensor_product",
+                "parameters": {
+                    "a": {
+                        "operation": "variable",
+                        "parameters": {"hash_value": 111, "name": "x"},
+                    },
+                    "b": {"operation": "constant", "parameters": {"value": 5}},
+                    "a_index": 1,
+                    "b_index": 1,
+                },
+            },
+            "references": {},
+        }
+        request = self.client.post("/v1/data/set/", data=self.dataset, format="json")
+        max_id = DataSet.objects.aggregate(Max("id"))["id__max"]
+        new_dataset = DataSet.objects.get(id=max_id)
+        new_quantity = new_dataset.data_contents.get(hash=0)
+        tensor = new_quantity.operation_tree
+        self.assertEqual(request.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(tensor.operation, "tensor_product")
+        self.assertEqual(tensor.parameters, {"a_index": 1, "b_index": 1})
 
     # Test creating a quantity with an invalid operation
     def test_create_operation_tree_invalid(self):
@@ -536,6 +559,55 @@ class TestGetOperationTree(APITestCase):
         )
 
     # Test accessing a quantity with tensordot
+    def test_get_operation_tree_tensordot(self):
+        tensor = OperationTree.objects.create(
+            id=3,
+            operation="tensor_product",
+            parent_operation1=self.variable,
+            parent_operation2=self.constant,
+            parameters={"a_index": 1, "b_index": 1},
+        )
+        self.quantity.operation_tree = tensor
+        self.quantity.save()
+        request = self.client.get("/v1/data/set/1/")
+        tensor.delete()
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            request.data,
+            {
+                "id": 1,
+                "current_user": 1,
+                "users": [],
+                "is_public": True,
+                "name": "Test Dataset",
+                "files": [],
+                "metadata": None,
+                "data_contents": [
+                    {
+                        "label": "test",
+                        "value": 0,
+                        "variance": 0,
+                        "units": "none",
+                        "hash": 1,
+                        "operation_tree": {
+                            "operation": "tensor_product",
+                            "parameters": {
+                                "a": {
+                                    "operation": "variable",
+                                    "parameters": {"hash_value": 111, "name": "x"},
+                                },
+                                "b": {
+                                    "operation": "constant",
+                                    "parameters": {"value": 1},
+                                },
+                                "a_index": 1,
+                                "b_index": 1,
+                            },
+                        },
+                    }
+                ],
+            },
+        )
 
     @classmethod
     def tearDownClass(cls):
