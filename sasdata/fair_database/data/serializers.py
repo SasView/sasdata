@@ -34,6 +34,42 @@ class OperationTreeSerializer(serializers.ModelSerializer):
         fields = ["operation", "parameters"]
 
     # TODO: some kind of custom validation
+    def validate_parameters(self, value):
+        if "a" in value:
+            serializer = OperationTreeSerializer(data=value["a"])
+            serializer.is_valid(raise_exception=True)
+        if "b" in value:
+            serializer = OperationTreeSerializer(data=value["b"])
+            serializer.is_valid(raise_exception=True)
+        return value
+
+    def validate(self, data):
+        expected_parameters = {
+            "zero": [],
+            "one": [],
+            "constant": ["value"],
+            "variable": ["hash_value", "name"],
+            "neg": ["a"],
+            "reciprocal": ["a"],
+            "add": ["a", "b"],
+            "sub": ["a", "b"],
+            "mul": ["a", "b"],
+            "div": ["a", "b"],
+            "pow": ["a", "power"],
+            "transpose": ["a", "axes"],
+            "dot": ["a", "b"],
+            "matmul": ["a", "b"],
+            "tensor_product": ["a", "b", "a_index", "b_index"],
+        }
+
+        for parameter in expected_parameters[data["operation"]]:
+            if parameter not in data["parameters"]:
+                raise serializers.ValidationError(
+                    data["operation"] + " requires parameter " + parameter
+                )
+
+        return data
+
     def to_representation(self, instance):
         data = {"operation": instance.operation, "parameters": instance.parameters}
         if instance.parent_operation1 is not None:
