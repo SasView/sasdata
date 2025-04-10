@@ -154,7 +154,7 @@ class OperationTree(models.Model):
         "self",
         blank=True,
         null=True,
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         related_name="child_operations1",
     )
 
@@ -163,7 +163,7 @@ class OperationTree(models.Model):
         "self",
         blank=True,
         null=True,
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         related_name="child_operations2",
     )
 
