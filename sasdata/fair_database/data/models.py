@@ -57,7 +57,7 @@ class DataSet(Data):
     )
 
     # data contents - maybe ManyToManyField
-    data_contents = models.ManyToManyField("Quantity")
+    # data_contents = models.ManyToManyField("Quantity")
 
     # TODO: update based on SasData class in data.py
     # type of dataset
@@ -86,6 +86,10 @@ class Quantity(models.Model):
     )
 
     label = models.CharField(max_length=50)
+
+    dataset = models.ForeignKey(
+        DataSet, on_delete=models.CASCADE, related_name="data_contents"
+    )
 
 
 def empty_list():
