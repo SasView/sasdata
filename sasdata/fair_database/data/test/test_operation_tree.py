@@ -227,6 +227,47 @@ class TestCreateOperationTree(APITestCase):
         self.assertEqual(tensor.operation, "tensor_product")
         self.assertEqual(tensor.parameters, {"a_index": 1, "b_index": 1})
 
+    # Test creating a quantity with no history
+
+    def tearDown(self):
+        DataSet.objects.all().delete()
+        MetaData.objects.all().delete()
+        Quantity.objects.all().delete()
+        OperationTree.objects.all().delete()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.user.delete()
+
+
+class TestCreateInvalidOperationTree(APITestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.dataset = {
+            "name": "Test Dataset",
+            "metadata": {
+                "title": "test metadata",
+                "run": 1,
+                "definition": "test",
+                "instrument": {"source": {}, "collimation": {}, "detectors": {}},
+            },
+            "data_contents": [
+                {
+                    "label": "test",
+                    "value": {"array_contents": [0, 0, 0, 0], "shape": (2, 2)},
+                    "variance": {"array_contents": [0, 0, 0, 0], "shape": (2, 2)},
+                    "units": "none",
+                    "hash": 0,
+                }
+            ],
+            "is_public": True,
+        }
+        cls.user = User.objects.create_user(
+            id=1, username="testUser", password="sasview!"
+        )
+        cls.client = APIClient()
+        cls.client.force_authenticate(cls.user)
+
     # Test creating a quantity with an invalid operation
     def test_create_operation_tree_invalid(self):
         self.dataset["data_contents"][0]["history"] = {
@@ -270,14 +311,6 @@ class TestCreateOperationTree(APITestCase):
 
     # Test creating nested invalid operation parameters
 
-    # Test creating a quantity with no history
-
-    def tearDown(self):
-        DataSet.objects.all().delete()
-        MetaData.objects.all().delete()
-        Quantity.objects.all().delete()
-        OperationTree.objects.all().delete()
-
     @classmethod
     def tearDownClass(cls):
         cls.user.delete()
@@ -314,6 +347,7 @@ class TestGetOperationTree(APITestCase):
         cls.client = APIClient()
         cls.client.force_authenticate(cls.user)
 
+    # TODO: make scrolling past these less painful by only including the parts of responses I care about
     # Test accessing a quantity with no operations performed
     def test_get_operation_tree_none(self):
         request = self.client.get("/v1/data/set/1/")
