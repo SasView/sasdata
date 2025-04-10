@@ -3,7 +3,7 @@ from django.db.models import Max
 from rest_framework.test import APIClient, APITestCase
 from rest_framework import status
 
-from data.models import DataSet
+from data.models import DataSet, Quantity
 
 
 class TestDataSet(APITestCase):
@@ -339,10 +339,15 @@ class TestSingleDataSet(APITestCase):
 
     # Test deleting a dataset
     def test_delete_dataset(self):
+        quantity = Quantity.objects.create(
+            id=1, value=0, variance=0, units="none", hash=0, label="test"
+        )
+        self.private_dataset.data_contents.add(quantity)
         request = self.auth_client1.delete("/v1/data/set/2/")
         self.assertEqual(request.status_code, status.HTTP_200_OK)
         self.assertEqual(request.data, {"success": True})
         self.assertRaises(DataSet.DoesNotExist, DataSet.objects.get, id=2)
+        self.assertRaises(Quantity.DoesNotExist, Quantity.objects.get, id=1)
         self.private_dataset = DataSet.objects.create(
             id=2, current_user=self.user1, name="Dataset 2", metadata=None
         )
