@@ -499,6 +499,8 @@ class TestGetOperationTree(APITestCase):
         self.quantity.operation_tree = inv
         self.quantity.save()
         request = self.client.get("/v1/data/set/1/")
+        inv.parent_operation1 = None
+        inv.save()
         inv.delete()
         self.assertEqual(request.status_code, status.HTTP_200_OK)
         self.assertEqual(
@@ -532,6 +534,9 @@ class TestGetOperationTree(APITestCase):
         self.quantity.operation_tree = add
         self.quantity.save()
         request = self.client.get("/v1/data/set/1/")
+        add.parent_operation1 = None
+        add.parent_operation2 = None
+        add.save()
         add.delete()
         self.assertEqual(request.status_code, status.HTTP_200_OK)
         self.assertEqual(
@@ -562,6 +567,8 @@ class TestGetOperationTree(APITestCase):
         self.quantity.operation_tree = power
         self.quantity.save()
         request = self.client.get("/v1/data/set/1/")
+        power.parent_operation1 = None
+        power.save()
         power.delete()
         self.assertEqual(request.status_code, status.HTTP_200_OK)
         self.assertEqual(
@@ -592,7 +599,10 @@ class TestGetOperationTree(APITestCase):
         self.quantity.operation_tree = neg
         self.quantity.save()
         request = self.client.get("/v1/data/set/1/")
-        multiply.delete()
+        multiply.parent_operation1 = None
+        multiply.parent_operation2 = None
+        multiply.save()
+        neg.delete()
         self.assertEqual(request.status_code, status.HTTP_200_OK)
         self.assertEqual(
             request.data["data_contents"][0]["operation_tree"],
@@ -630,6 +640,8 @@ class TestGetOperationTree(APITestCase):
         self.quantity.operation_tree = trans
         self.quantity.save()
         request = self.client.get("/v1/data/set/1/")
+        trans.parent_operation1 = None
+        trans.save()
         trans.delete()
         self.assertEqual(request.status_code, status.HTTP_200_OK)
         self.assertEqual(
@@ -658,6 +670,9 @@ class TestGetOperationTree(APITestCase):
         self.quantity.operation_tree = tensor
         self.quantity.save()
         request = self.client.get("/v1/data/set/1/")
+        tensor.parent_operation1 = None
+        tensor.parent_operation2 = None
+        tensor.save()
         tensor.delete()
         self.assertEqual(request.status_code, status.HTTP_200_OK)
         self.assertEqual(
