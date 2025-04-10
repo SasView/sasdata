@@ -36,7 +36,7 @@ class TestCreateOperationTree(APITestCase):
         cls.client = APIClient()
         cls.client.force_authenticate(cls.user)
 
-    # Test creating quantity with no operations performed
+    # Test creating quantity with no operations performed (variable-only history)
     def test_operation_tree_created_variable(self):
         self.dataset["data_contents"][0]["history"] = {
             "operation_tree": {
@@ -228,6 +228,17 @@ class TestCreateOperationTree(APITestCase):
         self.assertEqual(tensor.parameters, {"a_index": 1, "b_index": 1})
 
     # Test creating a quantity with no history
+    def test_operation_tree_created_no_history(self):
+        if "history" in self.dataset["data_contents"][0]:
+            self.dataset["data_contents"][0].pop("history")
+            request = self.client.post(
+                "/v1/data/set/", data=self.dataset, format="json"
+            )
+            max_id = DataSet.objects.aggregate(Max("id"))["id__max"]
+            new_dataset = DataSet.objects.get(id=max_id)
+            new_quantity = new_dataset.data_contents.get(hash=0)
+            self.assertEqual(request.status_code, status.HTTP_201_CREATED)
+            self.assertIsNone(new_quantity.operation_tree)
 
     def tearDown(self):
         DataSet.objects.all().delete()
