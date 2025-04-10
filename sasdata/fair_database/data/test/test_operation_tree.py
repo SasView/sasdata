@@ -347,31 +347,19 @@ class TestGetOperationTree(APITestCase):
         cls.client = APIClient()
         cls.client.force_authenticate(cls.user)
 
-    # TODO: make scrolling past these less painful by only including the parts of responses I care about
     # Test accessing a quantity with no operations performed
     def test_get_operation_tree_none(self):
         request = self.client.get("/v1/data/set/1/")
         self.assertEqual(request.status_code, status.HTTP_200_OK)
         self.assertEqual(
-            request.data,
+            request.data["data_contents"][0],
             {
-                "id": 1,
-                "current_user": 1,
-                "users": [],
-                "is_public": True,
-                "name": "Test Dataset",
-                "files": [],
-                "metadata": None,
-                "data_contents": [
-                    {
-                        "label": "test",
-                        "value": 0,
-                        "variance": 0,
-                        "units": "none",
-                        "hash": 1,
-                        "operation_tree": None,
-                    }
-                ],
+                "label": "test",
+                "value": 0,
+                "variance": 0,
+                "units": "none",
+                "hash": 1,
+                "operation_tree": None,
             },
         )
 
@@ -386,33 +374,22 @@ class TestGetOperationTree(APITestCase):
         inv.delete()
         self.assertEqual(request.status_code, status.HTTP_200_OK)
         self.assertEqual(
-            request.data,
+            request.data["data_contents"][0],
             {
-                "id": 1,
-                "current_user": 1,
-                "users": [],
-                "is_public": True,
-                "name": "Test Dataset",
-                "files": [],
-                "metadata": None,
-                "data_contents": [
-                    {
-                        "label": "test",
-                        "value": 0,
-                        "variance": 0,
-                        "units": "none",
-                        "hash": 1,
-                        "operation_tree": {
-                            "operation": "reciprocal",
-                            "parameters": {
-                                "a": {
-                                    "operation": "variable",
-                                    "parameters": {"hash_value": 111, "name": "x"},
-                                }
-                            },
-                        },
-                    }
-                ],
+                "label": "test",
+                "value": 0,
+                "variance": 0,
+                "units": "none",
+                "hash": 1,
+                "operation_tree": {
+                    "operation": "reciprocal",
+                    "parameters": {
+                        "a": {
+                            "operation": "variable",
+                            "parameters": {"hash_value": 111, "name": "x"},
+                        }
+                    },
+                },
             },
         )
 
@@ -430,37 +407,19 @@ class TestGetOperationTree(APITestCase):
         add.delete()
         self.assertEqual(request.status_code, status.HTTP_200_OK)
         self.assertEqual(
-            request.data,
+            request.data["data_contents"][0]["operation_tree"],
             {
-                "id": 1,
-                "current_user": 1,
-                "users": [],
-                "is_public": True,
-                "name": "Test Dataset",
-                "files": [],
-                "metadata": None,
-                "data_contents": [
-                    {
-                        "label": "test",
-                        "value": 0,
-                        "variance": 0,
-                        "units": "none",
-                        "hash": 1,
-                        "operation_tree": {
-                            "operation": "add",
-                            "parameters": {
-                                "a": {
-                                    "operation": "variable",
-                                    "parameters": {"hash_value": 111, "name": "x"},
-                                },
-                                "b": {
-                                    "operation": "constant",
-                                    "parameters": {"value": 1},
-                                },
-                            },
-                        },
-                    }
-                ],
+                "operation": "add",
+                "parameters": {
+                    "a": {
+                        "operation": "variable",
+                        "parameters": {"hash_value": 111, "name": "x"},
+                    },
+                    "b": {
+                        "operation": "constant",
+                        "parameters": {"value": 1},
+                    },
+                },
             },
         )
 
@@ -478,34 +437,16 @@ class TestGetOperationTree(APITestCase):
         power.delete()
         self.assertEqual(request.status_code, status.HTTP_200_OK)
         self.assertEqual(
-            request.data,
+            request.data["data_contents"][0]["operation_tree"],
             {
-                "id": 1,
-                "current_user": 1,
-                "users": [],
-                "is_public": True,
-                "name": "Test Dataset",
-                "files": [],
-                "metadata": None,
-                "data_contents": [
-                    {
-                        "label": "test",
-                        "value": 0,
-                        "variance": 0,
-                        "units": "none",
-                        "hash": 1,
-                        "operation_tree": {
-                            "operation": "pow",
-                            "parameters": {
-                                "a": {
-                                    "operation": "variable",
-                                    "parameters": {"hash_value": 111, "name": "x"},
-                                },
-                                "power": 2,
-                            },
-                        },
-                    }
-                ],
+                "operation": "pow",
+                "parameters": {
+                    "a": {
+                        "operation": "variable",
+                        "parameters": {"hash_value": 111, "name": "x"},
+                    },
+                    "power": 2,
+                },
             },
         )
 
@@ -526,45 +467,27 @@ class TestGetOperationTree(APITestCase):
         multiply.delete()
         self.assertEqual(request.status_code, status.HTTP_200_OK)
         self.assertEqual(
-            request.data,
+            request.data["data_contents"][0]["operation_tree"],
             {
-                "id": 1,
-                "current_user": 1,
-                "users": [],
-                "is_public": True,
-                "name": "Test Dataset",
-                "files": [],
-                "metadata": None,
-                "data_contents": [
-                    {
-                        "label": "test",
-                        "value": 0,
-                        "variance": 0,
-                        "units": "none",
-                        "hash": 1,
-                        "operation_tree": {
-                            "operation": "neg",
-                            "parameters": {
-                                "a": {
-                                    "operation": "mul",
-                                    "parameters": {
-                                        "a": {
-                                            "operation": "constant",
-                                            "parameters": {"value": 1},
-                                        },
-                                        "b": {
-                                            "operation": "variable",
-                                            "parameters": {
-                                                "hash_value": 111,
-                                                "name": "x",
-                                            },
-                                        },
-                                    },
-                                }
+                "operation": "neg",
+                "parameters": {
+                    "a": {
+                        "operation": "mul",
+                        "parameters": {
+                            "a": {
+                                "operation": "constant",
+                                "parameters": {"value": 1},
+                            },
+                            "b": {
+                                "operation": "variable",
+                                "parameters": {
+                                    "hash_value": 111,
+                                    "name": "x",
+                                },
                             },
                         },
                     }
-                ],
+                },
             },
         )
 
@@ -582,34 +505,16 @@ class TestGetOperationTree(APITestCase):
         trans.delete()
         self.assertEqual(request.status_code, status.HTTP_200_OK)
         self.assertEqual(
-            request.data,
+            request.data["data_contents"][0]["operation_tree"],
             {
-                "id": 1,
-                "current_user": 1,
-                "users": [],
-                "is_public": True,
-                "name": "Test Dataset",
-                "files": [],
-                "metadata": None,
-                "data_contents": [
-                    {
-                        "label": "test",
-                        "value": 0,
-                        "variance": 0,
-                        "units": "none",
-                        "hash": 1,
-                        "operation_tree": {
-                            "operation": "transpose",
-                            "parameters": {
-                                "a": {
-                                    "operation": "variable",
-                                    "parameters": {"hash_value": 111, "name": "x"},
-                                },
-                                "axes": [1, 0],
-                            },
-                        },
-                    }
-                ],
+                "operation": "transpose",
+                "parameters": {
+                    "a": {
+                        "operation": "variable",
+                        "parameters": {"hash_value": 111, "name": "x"},
+                    },
+                    "axes": [1, 0],
+                },
             },
         )
 
@@ -628,39 +533,21 @@ class TestGetOperationTree(APITestCase):
         tensor.delete()
         self.assertEqual(request.status_code, status.HTTP_200_OK)
         self.assertEqual(
-            request.data,
+            request.data["data_contents"][0]["operation_tree"],
             {
-                "id": 1,
-                "current_user": 1,
-                "users": [],
-                "is_public": True,
-                "name": "Test Dataset",
-                "files": [],
-                "metadata": None,
-                "data_contents": [
-                    {
-                        "label": "test",
-                        "value": 0,
-                        "variance": 0,
-                        "units": "none",
-                        "hash": 1,
-                        "operation_tree": {
-                            "operation": "tensor_product",
-                            "parameters": {
-                                "a": {
-                                    "operation": "variable",
-                                    "parameters": {"hash_value": 111, "name": "x"},
-                                },
-                                "b": {
-                                    "operation": "constant",
-                                    "parameters": {"value": 1},
-                                },
-                                "a_index": 1,
-                                "b_index": 1,
-                            },
-                        },
-                    }
-                ],
+                "operation": "tensor_product",
+                "parameters": {
+                    "a": {
+                        "operation": "variable",
+                        "parameters": {"hash_value": 111, "name": "x"},
+                    },
+                    "b": {
+                        "operation": "constant",
+                        "parameters": {"value": 1},
+                    },
+                    "a_index": 1,
+                    "b_index": 1,
+                },
             },
         )
 
