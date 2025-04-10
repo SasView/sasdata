@@ -300,16 +300,132 @@ class TestCreateInvalidOperationTree(APITestCase):
         self.assertEqual(len(Quantity.objects.all()), 0)
         self.assertEqual(len(OperationTree.objects.all()), 0)
 
-    # Test creating invalid operation parameters
-    # binary has a and b - both should be operations
-    # unary has a (operation)
-    # constant has value
-    # variable has name and hash_value
-    # pow has power
-    # transpose has axes
-    # tensordot has a_index and b_index
+    # Test creating a unary operation with a missing parameter fails
+    def test_create_missing_parameter_unary(self):
+        self.dataset["data_contents"][0]["history"] = {
+            "operation_tree": {"operation": "neg", "parameters": {}},
+            "references": {},
+        }
+        request = self.client.post("/v1/data/set/", data=self.dataset, format="json")
+        self.assertEqual(request.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(len(DataSet.objects.all()), 0)
+        self.assertEqual(len(Quantity.objects.all()), 0)
+        self.assertEqual(len(OperationTree.objects.all()), 0)
 
-    # Test creating nested invalid operation parameters
+    # Test creating a binary operation with a missing parameter fails
+    def test_create_missing_parameter_binary(self):
+        self.dataset["data_contents"][0]["history"] = {
+            "operation_tree": {
+                "operation": "add",
+                "parameters": {
+                    "a": {
+                        "operation": "variable",
+                        "parameters": {"hash_value": 111, "name": "x"},
+                    }
+                },
+            },
+            "references": {},
+        }
+        request = self.client.post("/v1/data/set/", data=self.dataset, format="json")
+        self.assertEqual(request.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(len(DataSet.objects.all()), 0)
+        self.assertEqual(len(Quantity.objects.all()), 0)
+        self.assertEqual(len(OperationTree.objects.all()), 0)
+
+    # TODO: should variable-only history be ignored?
+    # Test creating a variable with a missing parameter fails
+    def test_create_missing_parameter_variable(self):
+        self.dataset["data_contents"][0]["history"] = {
+            "operation_tree": {
+                "operation": "neg",
+                "parameters": {
+                    "a": {"operation": "variable", "parameters": {"name": "x"}}
+                },
+            },
+            "references": {},
+        }
+        request = self.client.post("/v1/data/set/", data=self.dataset, format="json")
+        self.assertEqual(request.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(len(DataSet.objects.all()), 0)
+        self.assertEqual(len(Quantity.objects.all()), 0)
+        self.assertEqual(len(OperationTree.objects.all()), 0)
+
+    # Test creating a constant with a missing parameter fails
+    def test_create_missing_parameter_constant(self):
+        self.dataset["data_contents"][0]["history"] = {
+            "operation_tree": {
+                "operation": "neg",
+                "parameters": {"a": {"operation": "constant", "parameters": {}}},
+            },
+            "references": {},
+        }
+        request = self.client.post("/v1/data/set/", data=self.dataset, format="json")
+        self.assertEqual(request.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(len(DataSet.objects.all()), 0)
+        self.assertEqual(len(Quantity.objects.all()), 0)
+        self.assertEqual(len(OperationTree.objects.all()), 0)
+
+    # Test creating an exponent with a missing parameter fails
+    def test_create_missing_parameter_pow(self):
+        self.dataset["data_contents"][0]["history"] = {
+            "operation_tree": {
+                "operation": "pow",
+                "parameters": {
+                    "a": {
+                        "operation": "variable",
+                        "parameters": {"hash_value": 111, "name": "x"},
+                    },
+                },
+            },
+            "references": {},
+        }
+        request = self.client.post("/v1/data/set/", data=self.dataset, format="json")
+        self.assertEqual(request.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(len(DataSet.objects.all()), 0)
+        self.assertEqual(len(Quantity.objects.all()), 0)
+        self.assertEqual(len(OperationTree.objects.all()), 0)
+
+    # Test creating a transpose with a missing parameter fails
+    def test_create_missing_parameter_transpose(self):
+        self.dataset["data_contents"][0]["history"] = {
+            "operation_tree": {
+                "operation": "transpose",
+                "parameters": {
+                    "a": {
+                        "operation": "variable",
+                        "parameters": {"hash_value": 111, "name": "x"},
+                    },
+                },
+            },
+            "references": {},
+        }
+        request = self.client.post("/v1/data/set/", data=self.dataset, format="json")
+        self.assertEqual(request.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(len(DataSet.objects.all()), 0)
+        self.assertEqual(len(Quantity.objects.all()), 0)
+        self.assertEqual(len(OperationTree.objects.all()), 0)
+
+    # Test creating a tensor with a missing parameter fails
+    def test_create_missing_parameter_tensor(self):
+        self.dataset["data_contents"][0]["history"] = {
+            "operation_tree": {
+                "operation": "tensor_product",
+                "parameters": {
+                    "a": {
+                        "operation": "variable",
+                        "parameters": {"hash_value": 111, "name": "x"},
+                    },
+                    "b": {"operation": "constant", "parameters": {"value": 5}},
+                    "b_index": 1,
+                },
+            },
+            "references": {},
+        }
+        request = self.client.post("/v1/data/set/", data=self.dataset, format="json")
+        self.assertEqual(request.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(len(DataSet.objects.all()), 0)
+        self.assertEqual(len(Quantity.objects.all()), 0)
+        self.assertEqual(len(OperationTree.objects.all()), 0)
 
     @classmethod
     def tearDownClass(cls):
