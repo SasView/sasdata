@@ -33,7 +33,6 @@ class OperationTreeSerializer(serializers.ModelSerializer):
         model = models.OperationTree
         fields = ["operation", "parameters"]
 
-    # TODO: some kind of custom validation
     def validate_parameters(self, value):
         if "a" in value:
             serializer = OperationTreeSerializer(data=value["a"])
@@ -116,8 +115,7 @@ class QuantitySerializer(serializers.ModelSerializer):
             # "history",
         ]
 
-    # TODO: validation checks for history
-
+    # TODO: should variable-only history be assumed to refer to the same Quantity and ignored?
     def to_internal_value(self, data):
         if "history" in data and "operation_tree" in data["history"]:
             operations = data["history"]["operation_tree"]
