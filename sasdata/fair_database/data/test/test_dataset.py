@@ -339,7 +339,12 @@ class TestSingleDataSet(APITestCase):
 
     # Test deleting a dataset
     def test_delete_dataset(self):
-        operation = OperationTree.objects.create(id=1, operation="zero", parameters={})
+        nested_operation = OperationTree.objects.create(
+            id=1, operation="zero", parameters={}
+        )
+        operation = OperationTree.objects.create(
+            id=2, operation="neg", parent_operation1=nested_operation
+        )
         Quantity.objects.create(
             id=1,
             value=0,
@@ -357,6 +362,7 @@ class TestSingleDataSet(APITestCase):
         self.assertRaises(DataSet.DoesNotExist, DataSet.objects.get, id=2)
         self.assertRaises(Quantity.DoesNotExist, Quantity.objects.get, id=1)
         self.assertRaises(OperationTree.DoesNotExist, OperationTree.objects.get, id=1)
+        self.assertRaises(OperationTree.DoesNotExist, OperationTree.objects.get, id=2)
         self.private_dataset = DataSet.objects.create(
             id=2, current_user=self.user1, name="Dataset 2", metadata=None
         )
