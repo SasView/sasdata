@@ -101,6 +101,9 @@ class OperationTreeSerializer(serializers.ModelSerializer):
 class QuantitySerializer(serializers.ModelSerializer):
     operation_tree = OperationTreeSerializer(read_only=False, required=False)
     label = serializers.CharField(max_length=20)
+    dataset = serializers.PrimaryKeyRelatedField(
+        queryset=models.DataSet, required=False, allow_null=True
+    )
     # history = serializers.JSONField(required=False)  # TODO: is this required?
 
     class Meta:
@@ -112,6 +115,7 @@ class QuantitySerializer(serializers.ModelSerializer):
             "hash",
             "operation_tree",
             "label",
+            "dataset",
             # "history",
         ]
 
@@ -126,17 +130,18 @@ class QuantitySerializer(serializers.ModelSerializer):
         return super().to_internal_value(data)
 
     def create(self, validated_data):
+        dataset = models.DataSet.objects.get(id=validated_data.pop("dataset"))
         if "operation_tree" in validated_data:
             operations_data = validated_data.pop("operation_tree")
             operation_tree = OperationTreeSerializer.create(
                 OperationTreeSerializer(), validated_data=operations_data
             )
             quantity = models.Quantity.objects.create(
-                operation_tree=operation_tree, **validated_data
+                dataset=dataset, operation_tree=operation_tree, **validated_data
             )
             return quantity
         else:
-            return models.Quantity.objects.create(**validated_data)
+            return models.Quantity.objects.create(dataset=dataset, **validated_data)
 
 
 class DataSetSerializer(serializers.ModelSerializer):
@@ -187,8 +192,9 @@ class DataSetSerializer(serializers.ModelSerializer):
         data_contents = validated_data.pop("data_contents")
         dataset = models.DataSet.objects.create(metadata=metadata, **validated_data)
         for d in data_contents:
-            quantity = QuantitySerializer.create(QuantitySerializer(), validated_data=d)
-            dataset.data_contents.add(quantity)
+            d["dataset"] = dataset.id
+            QuantitySerializer.create(QuantitySerializer(), validated_data=d)
+            # dataset.data_contents.add(quantity)
         return dataset
 
     # TODO: account for updating other attributes
