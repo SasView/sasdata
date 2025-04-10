@@ -340,7 +340,7 @@ class TestSingleDataSet(APITestCase):
     # Test deleting a dataset
     def test_delete_dataset(self):
         operation = OperationTree.objects.create(id=1, operation="zero", parameters={})
-        quantity = Quantity.objects.create(
+        Quantity.objects.create(
             id=1,
             value=0,
             variance=0,
@@ -360,8 +360,6 @@ class TestSingleDataSet(APITestCase):
         self.private_dataset = DataSet.objects.create(
             id=2, current_user=self.user1, name="Dataset 2", metadata=None
         )
-        operation.delete()
-        quantity.delete()
 
     # Test cannot delete a public dataset
     def test_delete_public_dataset(self):
