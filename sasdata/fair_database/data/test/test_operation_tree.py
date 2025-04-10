@@ -449,14 +449,6 @@ class TestGetOperationTree(APITestCase):
         cls.user = User.objects.create_user(
             id=1, username="testUser", password="sasview!"
         )
-        cls.quantity = Quantity.objects.create(
-            id=1,
-            value=0,
-            variance=0,
-            label="test",
-            units="none",
-            hash=1,
-        )
         cls.dataset = DataSet.objects.create(
             id=1,
             current_user=cls.user,
@@ -464,13 +456,22 @@ class TestGetOperationTree(APITestCase):
             is_public=True,
             metadata=None,
         )
+        cls.quantity = Quantity.objects.create(
+            id=1,
+            value=0,
+            variance=0,
+            label="test",
+            units="none",
+            hash=1,
+            dataset=cls.dataset,
+        )
         cls.variable = OperationTree.objects.create(
             id=1, operation="variable", parameters={"hash_value": 111, "name": "x"}
         )
         cls.constant = OperationTree.objects.create(
             id=2, operation="constant", parameters={"value": 1}
         )
-        cls.dataset.data_contents.add(cls.quantity)
+        # cls.dataset.data_contents.add(cls.quantity)
         cls.client = APIClient()
         cls.client.force_authenticate(cls.user)
 
