@@ -129,6 +129,12 @@ class QuantitySerializer(serializers.ModelSerializer):
                 return super().to_internal_value(data_copy)
         return super().to_internal_value(data)
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if "dataset" in data:
+            data.pop("dataset")
+        return data
+
     def create(self, validated_data):
         dataset = models.DataSet.objects.get(id=validated_data.pop("dataset"))
         if "operation_tree" in validated_data:
