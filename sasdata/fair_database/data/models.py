@@ -50,6 +50,14 @@ class DataSet(Data):
     # associated files
     files = models.ManyToManyField(DataFile)
 
+    session = models.ForeignKey(
+        "Session",
+        on_delete=models.CASCADE,
+        related_name="datasets",
+        blank=True,
+        null=True,
+    )
+
     # TODO: update based on SasData class in data.py
     # type of dataset
     # dataset_type = models.JSONField()
@@ -175,9 +183,6 @@ class Session(Data):
 
     # title
     title = models.CharField(max_length=200)
-
-    # dataset
-    dataset = models.ManyToManyField(DataSet)
 
     # publishing state of the session
     published_state = models.OneToOneField(
