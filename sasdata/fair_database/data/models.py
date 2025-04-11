@@ -71,10 +71,6 @@ class Quantity(models.Model):
     hash = models.IntegerField()
 
     # TODO: add field to store references portion of QuantityHistory
-    # operation history of the quantity - operation_tree from QuantityHistory
-    operation_tree = models.OneToOneField(
-        "OperationTree", blank=True, null=True, on_delete=models.SET_NULL
-    )
 
     label = models.CharField(max_length=50)
 
@@ -162,6 +158,15 @@ class OperationTree(models.Model):
         null=True,
         on_delete=models.PROTECT,
         related_name="child_operations2",
+    )
+
+    # related quantity, only set for base of tree
+    quantity = models.OneToOneField(
+        Quantity,
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+        related_name="operation_tree",
     )
 
 

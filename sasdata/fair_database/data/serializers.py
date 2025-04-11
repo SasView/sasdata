@@ -37,9 +37,13 @@ class MetaDataSerializer(serializers.ModelSerializer):
 
 
 class OperationTreeSerializer(serializers.ModelSerializer):
+    quantity = serializers.PrimaryKeyRelatedField(
+        queryset=models.Quantity, required=False, allow_null=True
+    )
+
     class Meta:
         model = models.OperationTree
-        fields = ["operation", "parameters"]
+        fields = ["operation", "parameters", "quantity"]
 
     def validate_parameters(self, value):
         if "a" in value:
@@ -86,6 +90,7 @@ class OperationTreeSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
+        quantity = None
         parent_operation1 = None
         parent_operation2 = None
         if not constant_or_variable(validated_data["operation"]):
@@ -98,11 +103,14 @@ class OperationTreeSerializer(serializers.ModelSerializer):
             serializer2 = OperationTreeSerializer(data=parent2)
             if serializer2.is_valid(raise_exception=True):
                 parent_operation2 = serializer2.save()
+        if "quantity" in validated_data:
+            quantity = models.Quantity.objects.get(id=validated_data.pop("quantity"))
         return models.OperationTree.objects.create(
             operation=validated_data["operation"],
             parameters=validated_data["parameters"],
             parent_operation1=parent_operation1,
             parent_operation2=parent_operation2,
+            quantity=quantity,
         )
 
 
@@ -147,11 +155,10 @@ class QuantitySerializer(serializers.ModelSerializer):
         dataset = models.DataSet.objects.get(id=validated_data.pop("dataset"))
         if "operation_tree" in validated_data:
             operations_data = validated_data.pop("operation_tree")
-            operation_tree = OperationTreeSerializer.create(
+            quantity = models.Quantity.objects.create(dataset=dataset, **validated_data)
+            operations_data["quantity"] = quantity.id
+            OperationTreeSerializer.create(
                 OperationTreeSerializer(), validated_data=operations_data
-            )
-            quantity = models.Quantity.objects.create(
-                dataset=dataset, operation_tree=operation_tree, **validated_data
             )
             return quantity
         else:
