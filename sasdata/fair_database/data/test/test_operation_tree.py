@@ -36,6 +36,10 @@ class TestCreateOperationTree(APITestCase):
         cls.client = APIClient()
         cls.client.force_authenticate(cls.user)
 
+    @staticmethod
+    def get_operation_tree(quantity):
+        return quantity.operation_tree
+
     # Test creating quantity with no operations performed (variable-only history)
     def test_operation_tree_created_variable(self):
         self.dataset["data_contents"][0]["history"] = {
@@ -50,7 +54,11 @@ class TestCreateOperationTree(APITestCase):
         new_dataset = DataSet.objects.get(id=max_id)
         new_quantity = new_dataset.data_contents.get(hash=0)
         self.assertEqual(request.status_code, status.HTTP_201_CREATED)
-        self.assertIsNone(new_quantity.operation_tree)
+        self.assertRaises(
+            Quantity.operation_tree.RelatedObjectDoesNotExist,
+            self.get_operation_tree,
+            quantity=new_quantity,
+        )
 
     # Test creating quantity with unary operation
     def test_operation_tree_created_unary(self):
@@ -493,10 +501,11 @@ class TestGetOperationTree(APITestCase):
     # Test accessing quantity with unary operation
     def test_get_operation_tree_unary(self):
         inv = OperationTree.objects.create(
-            id=3, operation="reciprocal", parent_operation1=self.variable
+            id=3,
+            operation="reciprocal",
+            parent_operation1=self.variable,
+            quantity=self.quantity,
         )
-        self.quantity.operation_tree = inv
-        self.quantity.save()
         request = self.client.get("/v1/data/set/1/")
         inv.parent_operation1 = None
         inv.save()
@@ -529,9 +538,8 @@ class TestGetOperationTree(APITestCase):
             operation="add",
             parent_operation1=self.variable,
             parent_operation2=self.constant,
+            quantity=self.quantity,
         )
-        self.quantity.operation_tree = add
-        self.quantity.save()
         request = self.client.get("/v1/data/set/1/")
         add.parent_operation1 = None
         add.parent_operation2 = None
@@ -562,9 +570,8 @@ class TestGetOperationTree(APITestCase):
             operation="pow",
             parent_operation1=self.variable,
             parameters={"power": 2},
+            quantity=self.quantity,
         )
-        self.quantity.operation_tree = power
-        self.quantity.save()
         request = self.client.get("/v1/data/set/1/")
         power.parent_operation1 = None
         power.save()
@@ -593,10 +600,8 @@ class TestGetOperationTree(APITestCase):
             parent_operation2=self.variable,
         )
         neg = OperationTree.objects.create(
-            id=4, operation="neg", parent_operation1=multiply
+            id=4, operation="neg", parent_operation1=multiply, quantity=self.quantity
         )
-        self.quantity.operation_tree = neg
-        self.quantity.save()
         request = self.client.get("/v1/data/set/1/")
         multiply.parent_operation1 = None
         multiply.parent_operation2 = None
@@ -635,9 +640,8 @@ class TestGetOperationTree(APITestCase):
             operation="transpose",
             parent_operation1=self.variable,
             parameters={"axes": (1, 0)},
+            quantity=self.quantity,
         )
-        self.quantity.operation_tree = trans
-        self.quantity.save()
         request = self.client.get("/v1/data/set/1/")
         trans.parent_operation1 = None
         trans.save()
@@ -665,9 +669,8 @@ class TestGetOperationTree(APITestCase):
             parent_operation1=self.variable,
             parent_operation2=self.constant,
             parameters={"a_index": 1, "b_index": 1},
+            quantity=self.quantity,
         )
-        self.quantity.operation_tree = tensor
-        self.quantity.save()
         request = self.client.get("/v1/data/set/1/")
         tensor.parent_operation1 = None
         tensor.parent_operation2 = None
