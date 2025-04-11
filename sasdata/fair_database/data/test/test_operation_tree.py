@@ -79,12 +79,14 @@ class TestCreateOperationTree(APITestCase):
         new_dataset = DataSet.objects.get(id=max_id)
         new_quantity = new_dataset.data_contents.get(hash=0)
         reciprocal = new_quantity.operation_tree
+        variable = reciprocal.parent_operations.all().get(label="a")
         self.assertEqual(request.status_code, status.HTTP_201_CREATED)
         self.assertEqual(
             new_quantity.value, {"array_contents": [0, 0, 0, 0], "shape": [2, 2]}
         )
         self.assertEqual(reciprocal.operation, "reciprocal")
-        self.assertEqual(reciprocal.parent_operation1.operation, "variable")
+        self.assertEqual(variable.operation, "variable")
+        self.assertEqual(len(reciprocal.parent_operations.all()), 1)
         self.assertEqual(reciprocal.parameters, {})
 
     # Test creating quantity with binary operation
@@ -107,8 +109,8 @@ class TestCreateOperationTree(APITestCase):
         new_dataset = DataSet.objects.get(id=max_id)
         new_quantity = new_dataset.data_contents.get(hash=0)
         add = new_quantity.operation_tree
-        variable = add.parent_operation1
-        constant = add.parent_operation2
+        variable = add.parent_operations.get(label="a")
+        constant = add.parent_operations.get(label="b")
         self.assertEqual(request.status_code, status.HTTP_201_CREATED)
         self.assertEqual(add.operation, "add")
         self.assertEqual(add.parameters, {})
@@ -116,6 +118,7 @@ class TestCreateOperationTree(APITestCase):
         self.assertEqual(variable.parameters, {"hash_value": 111, "name": "x"})
         self.assertEqual(constant.operation, "constant")
         self.assertEqual(constant.parameters, {"value": 5})
+        self.assertEqual(len(add.parent_operations.all()), 2)
 
     # Test creating quantity with exponent
     def test_operation_tree_created_pow(self):
@@ -161,7 +164,7 @@ class TestCreateOperationTree(APITestCase):
         new_dataset = DataSet.objects.get(id=max_id)
         new_quantity = new_dataset.data_contents.get(hash=0)
         transpose = new_quantity.operation_tree
-        variable = transpose.parent_operation1
+        variable = transpose.parent_operations.get()
         self.assertEqual(request.status_code, status.HTTP_201_CREATED)
         self.assertEqual(transpose.operation, "transpose")
         self.assertEqual(transpose.parameters, {"axes": [1, 0]})
@@ -196,9 +199,9 @@ class TestCreateOperationTree(APITestCase):
         new_dataset = DataSet.objects.get(id=max_id)
         new_quantity = new_dataset.data_contents.get(hash=0)
         negate = new_quantity.operation_tree
-        multiply = negate.parent_operation1
-        constant = multiply.parent_operation1
-        variable = multiply.parent_operation2
+        multiply = negate.parent_operations.get()
+        constant = multiply.parent_operations.get(label="a")
+        variable = multiply.parent_operations.get(label="b")
         self.assertEqual(request.status_code, status.HTTP_201_CREATED)
         self.assertEqual(negate.operation, "neg")
         self.assertEqual(negate.parameters, {})
@@ -503,12 +506,14 @@ class TestGetOperationTree(APITestCase):
         inv = OperationTree.objects.create(
             id=3,
             operation="reciprocal",
-            parent_operation1=self.variable,
             quantity=self.quantity,
         )
+        self.variable.label = "a"
+        self.variable.child_operation = inv
+        self.variable.save()
         request = self.client.get("/v1/data/set/1/")
-        inv.parent_operation1 = None
-        inv.save()
+        self.variable.child_operation = None
+        self.variable.save()
         inv.delete()
         self.assertEqual(request.status_code, status.HTTP_200_OK)
         self.assertEqual(
@@ -536,14 +541,19 @@ class TestGetOperationTree(APITestCase):
         add = OperationTree.objects.create(
             id=3,
             operation="add",
-            parent_operation1=self.variable,
-            parent_operation2=self.constant,
             quantity=self.quantity,
         )
+        self.variable.label = "a"
+        self.variable.child_operation = add
+        self.variable.save()
+        self.constant.label = "b"
+        self.constant.child_operation = add
+        self.constant.save()
         request = self.client.get("/v1/data/set/1/")
-        add.parent_operation1 = None
-        add.parent_operation2 = None
-        add.save()
+        self.variable.child_operation = None
+        self.constant.child_operation = None
+        self.variable.save()
+        self.constant.save()
         add.delete()
         self.assertEqual(request.status_code, status.HTTP_200_OK)
         self.assertEqual(
@@ -568,13 +578,15 @@ class TestGetOperationTree(APITestCase):
         power = OperationTree.objects.create(
             id=3,
             operation="pow",
-            parent_operation1=self.variable,
             parameters={"power": 2},
             quantity=self.quantity,
         )
+        self.variable.label = "a"
+        self.variable.child_operation = power
+        self.variable.save()
         request = self.client.get("/v1/data/set/1/")
-        power.parent_operation1 = None
-        power.save()
+        self.variable.child_operation = None
+        self.variable.save()
         power.delete()
         self.assertEqual(request.status_code, status.HTTP_200_OK)
         self.assertEqual(
@@ -593,19 +605,23 @@ class TestGetOperationTree(APITestCase):
 
     # Test accessing a quantity with multiple operations
     def test_get_operation_tree_nested(self):
-        multiply = OperationTree.objects.create(
-            id=3,
-            operation="mul",
-            parent_operation1=self.constant,
-            parent_operation2=self.variable,
-        )
         neg = OperationTree.objects.create(
-            id=4, operation="neg", parent_operation1=multiply, quantity=self.quantity
+            id=4, operation="neg", quantity=self.quantity
         )
+        multiply = OperationTree.objects.create(
+            id=3, operation="mul", child_operation=neg, label="a"
+        )
+        self.constant.label = "a"
+        self.constant.child_operation = multiply
+        self.constant.save()
+        self.variable.label = "b"
+        self.variable.child_operation = multiply
+        self.variable.save()
         request = self.client.get("/v1/data/set/1/")
-        multiply.parent_operation1 = None
-        multiply.parent_operation2 = None
-        multiply.save()
+        self.constant.child_operation = None
+        self.variable.child_operation = None
+        self.constant.save()
+        self.variable.save()
         neg.delete()
         self.assertEqual(request.status_code, status.HTTP_200_OK)
         self.assertEqual(
@@ -638,13 +654,15 @@ class TestGetOperationTree(APITestCase):
         trans = OperationTree.objects.create(
             id=3,
             operation="transpose",
-            parent_operation1=self.variable,
             parameters={"axes": (1, 0)},
             quantity=self.quantity,
         )
+        self.variable.label = "a"
+        self.variable.child_operation = trans
+        self.variable.save()
         request = self.client.get("/v1/data/set/1/")
-        trans.parent_operation1 = None
-        trans.save()
+        self.variable.child_operation = None
+        self.variable.save()
         trans.delete()
         self.assertEqual(request.status_code, status.HTTP_200_OK)
         self.assertEqual(
@@ -666,15 +684,20 @@ class TestGetOperationTree(APITestCase):
         tensor = OperationTree.objects.create(
             id=3,
             operation="tensor_product",
-            parent_operation1=self.variable,
-            parent_operation2=self.constant,
             parameters={"a_index": 1, "b_index": 1},
             quantity=self.quantity,
         )
+        self.variable.label = "a"
+        self.variable.child_operation = tensor
+        self.variable.save()
+        self.constant.label = "b"
+        self.constant.child_operation = tensor
+        self.constant.save()
         request = self.client.get("/v1/data/set/1/")
-        tensor.parent_operation1 = None
-        tensor.parent_operation2 = None
-        tensor.save()
+        self.variable.child_operation = None
+        self.constant.child_operation = None
+        self.variable.save()
+        self.constant.save()
         tensor.delete()
         self.assertEqual(request.status_code, status.HTTP_200_OK)
         self.assertEqual(
