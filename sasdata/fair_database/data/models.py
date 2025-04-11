@@ -184,11 +184,6 @@ class Session(Data):
     # title
     title = models.CharField(max_length=200)
 
-    # publishing state of the session
-    published_state = models.OneToOneField(
-        "PublishedState", blank=True, null=True, on_delete=models.SET_NULL
-    )
-
 
 class PublishedState(models.Model):
     """Database model for a project published state."""
@@ -198,3 +193,8 @@ class PublishedState(models.Model):
 
     # doi
     doi = models.URLField()
+
+    # session
+    session = models.OneToOneField(
+        Session, on_delete=models.CASCADE, related_name="published_state"
+    )
