@@ -235,6 +235,10 @@ class DataSetSerializer(serializers.ModelSerializer):
 
 
 class PublishedStateSerializer(serializers.ModelSerializer):
+    session = serializers.PrimaryKeyRelatedField(
+        queryset=models.Session, required=False, allow_null=True
+    )
+
     class Meta:
         model = models.PublishedState
         fields = "__all__"
