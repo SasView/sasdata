@@ -346,11 +346,9 @@ class TestSingleDataSet(APITestCase):
             label="test",
             dataset=self.private_dataset,
         )
-        nested_operation = OperationTree.objects.create(
-            id=1, operation="zero", parameters={}
-        )
+        neg = OperationTree.objects.create(id=1, operation="neg", quantity=quantity)
         OperationTree.objects.create(
-            id=2, operation="neg", parent_operation1=nested_operation, quantity=quantity
+            id=2, operation="zero", parameters={}, child_operation=neg
         )
         request = self.auth_client1.delete("/v1/data/set/2/")
         self.assertEqual(request.status_code, status.HTTP_200_OK)
