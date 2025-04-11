@@ -150,22 +150,14 @@ class OperationTree(models.Model):
     # parameters
     parameters = models.JSONField(default=empty_dict)
 
-    # previous operation
-    parent_operation1 = models.ForeignKey(
-        "self",
-        blank=True,
-        null=True,
-        on_delete=models.PROTECT,
-        related_name="child_operations1",
-    )
+    label = models.CharField(max_length=10, blank=True, null=True)
 
-    # optional second previous operation for binary operations
-    parent_operation2 = models.ForeignKey(
+    child_operation = models.ForeignKey(
         "self",
+        on_delete=models.CASCADE,
+        related_name="parent_operations",
         blank=True,
         null=True,
-        on_delete=models.PROTECT,
-        related_name="child_operations2",
     )
 
     # related quantity, only set for base of tree

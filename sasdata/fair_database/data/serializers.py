@@ -40,10 +40,14 @@ class OperationTreeSerializer(serializers.ModelSerializer):
     quantity = serializers.PrimaryKeyRelatedField(
         queryset=models.Quantity, required=False, allow_null=True
     )
+    child_operation = serializers.PrimaryKeyRelatedField(
+        queryset=models.OperationTree, required=False, allow_null=True
+    )
+    label = serializers.CharField(max_length=10, required=False)
 
     class Meta:
         model = models.OperationTree
-        fields = ["operation", "parameters", "quantity"]
+        fields = ["operation", "parameters", "quantity", "label", "child_operation"]
 
     def validate_parameters(self, value):
         if "a" in value:
@@ -83,35 +87,50 @@ class OperationTreeSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = {"operation": instance.operation, "parameters": instance.parameters}
-        if instance.parent_operation1 is not None:
-            data["parameters"]["a"] = self.to_representation(instance.parent_operation1)
-        if instance.parent_operation2 is not None:
-            data["parameters"]["b"] = self.to_representation(instance.parent_operation2)
+        for parent_operation in instance.parent_operations.all():
+            data["parameters"][parent_operation.label] = self.to_representation(
+                parent_operation
+            )
         return data
 
     def create(self, validated_data):
         quantity = None
+        label = None
+        child_operation = None
         parent_operation1 = None
         parent_operation2 = None
-        if not constant_or_variable(validated_data["operation"]):
-            parent1 = validated_data["parameters"].pop("a")
-            serializer1 = OperationTreeSerializer(data=parent1)
-            if serializer1.is_valid(raise_exception=True):
-                parent_operation1 = serializer1.save()
-        if binary(validated_data["operation"]):
-            parent2 = validated_data["parameters"].pop("b")
-            serializer2 = OperationTreeSerializer(data=parent2)
-            if serializer2.is_valid(raise_exception=True):
-                parent_operation2 = serializer2.save()
         if "quantity" in validated_data:
             quantity = models.Quantity.objects.get(id=validated_data.pop("quantity"))
-        return models.OperationTree.objects.create(
+        if "label" in validated_data:
+            label = validated_data["label"]
+        if "child_operation" in validated_data:
+            child_operation = models.OperationTree.objects.get(
+                id=validated_data.pop("child_operation")
+            )
+        if not constant_or_variable(validated_data["operation"]):
+            parent_operation1 = validated_data["parameters"].pop("a")
+            parent_operation1["label"] = "a"
+        if binary(validated_data["operation"]):
+            parent_operation2 = validated_data["parameters"].pop("b")
+            parent_operation2["label"] = "b"
+        operation_tree = models.OperationTree.objects.create(
             operation=validated_data["operation"],
             parameters=validated_data["parameters"],
-            parent_operation1=parent_operation1,
-            parent_operation2=parent_operation2,
+            label=label,
             quantity=quantity,
+            child_operation=child_operation,
         )
+        if parent_operation1:
+            parent_operation1["child_operation"] = operation_tree.id
+            OperationTreeSerializer.create(
+                OperationTreeSerializer(), validated_data=parent_operation1
+            )
+        if parent_operation2:
+            parent_operation2["child_operation"] = operation_tree.id
+            OperationTreeSerializer.create(
+                OperationTreeSerializer(), validated_data=parent_operation2
+            )
+        return operation_tree
 
 
 class QuantitySerializer(serializers.ModelSerializer):
