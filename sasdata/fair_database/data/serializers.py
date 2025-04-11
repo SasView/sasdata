@@ -95,14 +95,11 @@ class OperationTreeSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         quantity = None
-        label = None
         child_operation = None
         parent_operation1 = None
         parent_operation2 = None
         if "quantity" in validated_data:
             quantity = models.Quantity.objects.get(id=validated_data.pop("quantity"))
-        if "label" in validated_data:
-            label = validated_data["label"]
         if "child_operation" in validated_data:
             child_operation = models.OperationTree.objects.get(
                 id=validated_data.pop("child_operation")
@@ -114,11 +111,7 @@ class OperationTreeSerializer(serializers.ModelSerializer):
             parent_operation2 = validated_data["parameters"].pop("b")
             parent_operation2["label"] = "b"
         operation_tree = models.OperationTree.objects.create(
-            operation=validated_data["operation"],
-            parameters=validated_data["parameters"],
-            label=label,
-            quantity=quantity,
-            child_operation=child_operation,
+            quantity=quantity, child_operation=child_operation, **validated_data
         )
         if parent_operation1:
             parent_operation1["child_operation"] = operation_tree.id
@@ -190,8 +183,10 @@ class DataSetSerializer(serializers.ModelSerializer):
         required=False, many=True, allow_null=True, queryset=models.DataFile
     )
     data_contents = QuantitySerializer(many=True, read_only=False)
+    session = serializers.PrimaryKeyRelatedField(
+        queryset=models.Session, required=False, allow_null=True
+    )
     # TODO: handle files better
-    # TODO: see if I can find a better way to handle the quantity part
 
     class Meta:
         model = models.DataSet
@@ -204,7 +199,14 @@ class DataSetSerializer(serializers.ModelSerializer):
             "is_public",
             "current_user",
             "users",
+            "session",
         ]
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if "session" in data:
+            data.pop("session")
+        return data
 
     def validate(self, data):
         if (
@@ -223,11 +225,14 @@ class DataSetSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
+        session = None
         if self.context["request"].user.is_authenticated:
             validated_data["current_user"] = self.context["request"].user
         metadata_raw = validated_data.pop("metadata")
+        if session in validated_data:
+            session = models.Session.objects.get(id=validated_data["session"])
         data_contents = validated_data.pop("data_contents")
-        dataset = models.DataSet.objects.create(**validated_data)
+        dataset = models.DataSet.objects.create(session=session, **validated_data)
         metadata_raw["dataset"] = dataset.id
         MetaDataSerializer.create(MetaDataSerializer(), validated_data=metadata_raw)
         for d in data_contents:
@@ -265,11 +270,21 @@ class PublishedStateSerializer(serializers.ModelSerializer):
 
 class SessionSerializer(serializers.ModelSerializer):
     datasets = DataSetSerializer(read_only=False, many=True)
-    published_state = PublishedStateSerializer(read_only=False)
+    published_state = PublishedStateSerializer(read_only=False, required=False)
 
     class Meta:
         model = models.Session
         fields = ["title", "published_state", "datasets"]
+
+    def create(self, validated_data):
+        if self.context["request"].user.is_authenticated:
+            validated_data["current_user"] = self.context["request"].user
+        datasets = validated_data.pop("datasets")
+        session = models.Session.objects.create(**validated_data)
+        for dataset in datasets:
+            dataset["session"] = session.id
+            DataSetSerializer.create(DataSetSerializer(), validated_data=dataset)
+        return session
 
 
 def constant_or_variable(operation: str):
