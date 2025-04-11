@@ -50,15 +50,6 @@ class DataSet(Data):
     # associated files
     files = models.ManyToManyField(DataFile)
 
-    # metadata - maybe a foreign key?
-    # TODO: when MetaData is finished, set blank/null false
-    metadata = models.OneToOneField(
-        "MetaData", blank=True, null=True, on_delete=models.CASCADE
-    )
-
-    # data contents - maybe ManyToManyField
-    # data_contents = models.ManyToManyField("Quantity")
-
     # TODO: update based on SasData class in data.py
     # type of dataset
     # dataset_type = models.JSONField()
@@ -103,6 +94,7 @@ def empty_dict():
 class MetaData(models.Model):
     """Database model for scattering metadata"""
 
+    # TODO: update based on changes in sasdata/metadata.py
     # title
     title = models.CharField(max_length=500, default="Title")
 
@@ -120,6 +112,11 @@ class MetaData(models.Model):
 
     # sample
     sample = models.JSONField(blank=True, null=True)
+
+    # associated dataset
+    dataset = models.OneToOneField(
+        DataSet, on_delete=models.CASCADE, related_name="metadata"
+    )
 
 
 class OperationTree(models.Model):

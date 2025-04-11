@@ -36,13 +36,12 @@ class TestDataSet(APITestCase):
             current_user=cls.user1,
             is_public=True,
             name="Dataset 1",
-            metadata=None,
         )
         cls.private_dataset = DataSet.objects.create(
-            id=2, current_user=cls.user1, name="Dataset 2", metadata=None
+            id=2, current_user=cls.user1, name="Dataset 2"
         )
         cls.unowned_dataset = DataSet.objects.create(
-            id=3, is_public=True, name="Dataset 3", metadata=None
+            id=3, is_public=True, name="Dataset 3"
         )
         cls.private_dataset.users.add(cls.user3)
         cls.auth_client1 = APIClient()
@@ -216,13 +215,12 @@ class TestSingleDataSet(APITestCase):
             current_user=cls.user1,
             is_public=True,
             name="Dataset 1",
-            metadata=None,
         )
         cls.private_dataset = DataSet.objects.create(
-            id=2, current_user=cls.user1, name="Dataset 2", metadata=None
+            id=2, current_user=cls.user1, name="Dataset 2"
         )
         cls.unowned_dataset = DataSet.objects.create(
-            id=3, is_public=True, name="Dataset 3", metadata=None
+            id=3, is_public=True, name="Dataset 3"
         )
         cls.private_dataset.users.add(cls.user3)
         cls.auth_client1 = APIClient()
@@ -364,7 +362,7 @@ class TestSingleDataSet(APITestCase):
         self.assertRaises(OperationTree.DoesNotExist, OperationTree.objects.get, id=1)
         self.assertRaises(OperationTree.DoesNotExist, OperationTree.objects.get, id=2)
         self.private_dataset = DataSet.objects.create(
-            id=2, current_user=self.user1, name="Dataset 2", metadata=None
+            id=2, current_user=self.user1, name="Dataset 2"
         )
 
     # Test cannot delete a public dataset
@@ -402,10 +400,10 @@ class TestDataSetAccessManagement(APITestCase):
         cls.user1 = User.objects.create_user(username="testUser1", password="secret")
         cls.user2 = User.objects.create_user(username="testUser2", password="secret")
         cls.private_dataset = DataSet.objects.create(
-            id=1, current_user=cls.user1, name="Dataset 1", metadata=None
+            id=1, current_user=cls.user1, name="Dataset 1"
         )
         cls.shared_dataset = DataSet.objects.create(
-            id=2, current_user=cls.user1, name="Dataset 2", metadata=None
+            id=2, current_user=cls.user1, name="Dataset 2"
         )
         cls.shared_dataset.users.add(cls.user2)
         cls.client_owner = APIClient()

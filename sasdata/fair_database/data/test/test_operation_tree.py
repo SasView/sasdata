@@ -454,7 +454,6 @@ class TestGetOperationTree(APITestCase):
             current_user=cls.user,
             name="Test Dataset",
             is_public=True,
-            metadata=None,
         )
         cls.quantity = Quantity.objects.create(
             id=1,
