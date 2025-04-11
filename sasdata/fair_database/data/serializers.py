@@ -23,9 +23,17 @@ class AccessManagementSerializer(serializers.Serializer):
 
 
 class MetaDataSerializer(serializers.ModelSerializer):
+    dataset = serializers.PrimaryKeyRelatedField(
+        queryset=models.DataSet, required=False, allow_null=True
+    )
+
     class Meta:
         model = models.MetaData
         fields = "__all__"
+
+    def create(self, validated_data):
+        dataset = models.DataSet.objects.get(id=validated_data.pop("dataset"))
+        return models.MetaData.objects.create(dataset=dataset, **validated_data)
 
 
 class OperationTreeSerializer(serializers.ModelSerializer):
@@ -192,15 +200,13 @@ class DataSetSerializer(serializers.ModelSerializer):
         if self.context["request"].user.is_authenticated:
             validated_data["current_user"] = self.context["request"].user
         metadata_raw = validated_data.pop("metadata")
-        metadata = MetaDataSerializer.create(
-            MetaDataSerializer(), validated_data=metadata_raw
-        )
         data_contents = validated_data.pop("data_contents")
-        dataset = models.DataSet.objects.create(metadata=metadata, **validated_data)
+        dataset = models.DataSet.objects.create(**validated_data)
+        metadata_raw["dataset"] = dataset.id
+        MetaDataSerializer.create(MetaDataSerializer(), validated_data=metadata_raw)
         for d in data_contents:
             d["dataset"] = dataset.id
             QuantitySerializer.create(QuantitySerializer(), validated_data=d)
-            # dataset.data_contents.add(quantity)
         return dataset
 
     # TODO: account for updating other attributes
