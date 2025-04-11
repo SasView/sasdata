@@ -241,12 +241,12 @@ class PublishedStateSerializer(serializers.ModelSerializer):
 
 
 class SessionSerializer(serializers.ModelSerializer):
-    dataset = DataSetSerializer(read_only=False, many=True)
+    datasets = DataSetSerializer(read_only=False, many=True)
     published_state = PublishedStateSerializer(read_only=False)
 
     class Meta:
         model = models.Session
-        fields = "__all__"
+        fields = ["title", "published_state", "datasets"]
 
 
 def constant_or_variable(operation: str):
