@@ -356,7 +356,15 @@ class SessionView(APIView):
 
     # View a list of accessible sessions
     def get(self, request, version=None):
-        pass
+        session_list = {"session_ids": {}}
+        sessions = Session.objects.all()
+        if "username" in request.GET:
+            user = get_object_or_404(User, username=request.GET["username"])
+            sessions = Session.objects.filter(current_user=user)
+        for session in sessions:
+            if permissions.check_permissions(request, session):
+                session_list["session_ids"][session.id] = session.title
+        return Response(data=session_list)
 
     # Create a session
     # TODO: revisit response data
