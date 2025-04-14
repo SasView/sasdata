@@ -297,7 +297,12 @@ class TestSingleDataSet(APITestCase):
             sample="none",
             dataset=cls.public_dataset,
         )
+        cls.file = DataFile.objects.create(
+            id=1, file_name="cyl_testdata.txt", is_public=False, current_user=cls.user1
+        )
+        cls.file.file.save("cyl_testdata.txt", open(find("cyl_testdata.txt")))
         cls.private_dataset.users.add(cls.user3)
+        cls.public_dataset.files.add(cls.file)
         cls.auth_client1 = APIClient()
         cls.auth_client2 = APIClient()
         cls.auth_client3 = APIClient()
@@ -312,7 +317,7 @@ class TestSingleDataSet(APITestCase):
         request2 = self.auth_client3.get("/v1/data/set/2/")
         self.assertEqual(request1.status_code, status.HTTP_200_OK)
         self.assertEqual(request2.status_code, status.HTTP_200_OK)
-        self.assertDictEqual(
+        self.assertEqual(
             request1.data,
             {
                 "id": 2,
@@ -330,8 +335,10 @@ class TestSingleDataSet(APITestCase):
     def test_load_public_dataset(self):
         request1 = self.client.get("/v1/data/set/1/")
         request2 = self.auth_client2.get("/v1/data/set/1/")
+        request3 = self.auth_client1.get("/v1/data/set/1/")
         self.assertEqual(request1.status_code, status.HTTP_200_OK)
         self.assertEqual(request2.status_code, status.HTTP_200_OK)
+        self.assertEqual(request3.status_code, status.HTTP_200_OK)
         self.assertDictEqual(
             request1.data,
             {
@@ -341,6 +348,28 @@ class TestSingleDataSet(APITestCase):
                 "is_public": True,
                 "name": "Dataset 1",
                 "files": [],
+                "metadata": {
+                    "id": 1,
+                    "title": "Metadata",
+                    "run": 0,
+                    "definition": "test",
+                    "instrument": "none",
+                    "process": "none",
+                    "sample": "none",
+                },
+                "data_contents": [],
+            },
+        )
+        self.assertEqual(request1.data, request2.data)
+        self.assertEqual(
+            request3.data,
+            {
+                "id": 1,
+                "current_user": 1,
+                "users": [],
+                "is_public": True,
+                "name": "Dataset 1",
+                "files": [1],
                 "metadata": {
                     "id": 1,
                     "title": "Metadata",
@@ -469,6 +498,8 @@ class TestSingleDataSet(APITestCase):
         cls.user1.delete()
         cls.user2.delete()
         cls.user3.delete()
+        cls.file.delete()
+        shutil.rmtree(settings.MEDIA_ROOT)
 
 
 class TestDataSetAccessManagement(APITestCase):
