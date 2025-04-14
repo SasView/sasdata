@@ -97,6 +97,7 @@ def parse_rot3(node: etree.Element, version: str) -> Rot3:
 
 
 def parse_process(node: etree.Element, version: str) -> Process:
+    """Parse an experimental process"""
     name = opt_parse(node, "name", version, parse_string)
     date = opt_parse(node, "date", version, parse_string)
     description = opt_parse(node, "description", version, parse_string)
@@ -108,10 +109,12 @@ def parse_process(node: etree.Element, version: str) -> Process:
 
 
 def parse_beam_size(node: etree.Element, version: str) -> BeamSize:
+    """Parse a beam size"""
     return BeamSize(name=attr_parse(node, "name"), size=parse_vec3(node, version))
 
 
 def parse_source(node: etree.Element, version: str) -> Source:
+    """Parse a radiation source"""
     radiation = opt_parse(node, "radiation", version, parse_string)
     beam_shape = opt_parse(node, "beam_shape", version, parse_string)
     beam_size = opt_parse(node, "beam_size", version, parse_beam_size)
@@ -131,6 +134,7 @@ def parse_source(node: etree.Element, version: str) -> Source:
 
 
 def parse_detector(node: etree.Element, version: str) -> Detector:
+    """Parse signal detector metadata"""
     return Detector(
         name=opt_parse(node, "name", version, parse_string),
         distance=opt_parse(node, "SDD", version, parse_quantity),
@@ -143,6 +147,7 @@ def parse_detector(node: etree.Element, version: str) -> Detector:
 
 
 def parse_aperture(node: etree.Element, version: str) -> Aperture:
+    """Parse an aperture description"""
     size = opt_parse(node, "size", version, parse_vec3)
     if size:
         size_name = attr_parse(node.find(f"{version}:size", ns), "name")
@@ -158,6 +163,7 @@ def parse_aperture(node: etree.Element, version: str) -> Aperture:
 
 
 def parse_collimation(node: etree.Element, version: str) -> Collimation:
+    """Parse a beam collimation"""
     return Collimation(
         length=opt_parse(node, "length", version, parse_quantity),
         apertures=all_parse(node, "aperture", version, parse_aperture),
@@ -165,6 +171,7 @@ def parse_collimation(node: etree.Element, version: str) -> Collimation:
 
 
 def parse_instrument(node: etree.Element, version: str) -> Instrument:
+    """Parse instrument metadata"""
     source = opt_parse(node, "SASsource", version, parse_source)
     detector = all_parse(node, "SASdetector", version, parse_detector)
     collimations = all_parse(node, "SAScollimation", version, parse_collimation)
@@ -172,6 +179,7 @@ def parse_instrument(node: etree.Element, version: str) -> Instrument:
 
 
 def parse_sample(node: etree.Element, version: str) -> Sample:
+    """Parse sample metadata"""
     return Sample(
         name=attr_parse(node, "name"),
         sample_id=opt_parse(node, "ID", version, parse_string),
@@ -187,6 +195,7 @@ def parse_sample(node: etree.Element, version: str) -> Sample:
 
 
 def parse_data(node: etree.Element, version: str) -> dict[str, Quantity]:
+    """Parse scattering data"""
     aos = []
     keys = set()
     # Units for quantities
@@ -242,6 +251,7 @@ def get_cansas_version(root) -> str | None:
 
 
 def load_data(filename) -> dict[str, SasData]:
+    """Load scattering data from an XML file"""
     loaded_data: dict[str, SasData] = {}
     tree = etree.parse(filename)
     root = tree.getroot()
