@@ -254,7 +254,8 @@ def parse_process(node : HDF5Group) -> Process:
     description = opt_parse(node, "description", parse_string)
     term_values = [parse_term(node[n]) for n in node if "term" in n]
     terms = {tup[0]: tup[1] for tup in term_values if tup is not None}
-    return Process(name=name, date=date, description=description, terms=terms)
+    notes = [parse_string(node[n]) for n in node if "note" in n]
+    return Process(name=name, date=date, description=description, terms=terms, notes=notes)
 
 def parse_metadata(node : HDF5Group) -> Metadata:
     instrument = opt_parse(node, "sasinstrument", parse_instrument)
