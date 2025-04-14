@@ -18,6 +18,12 @@ Process:
         sector_width: 180.0 deg
         sector_orient: 0.0 deg
         MASK_file: USER:MASK.COM
+    Notes:
+        AvA1 0.0000E+00 AsA2 1.0000E+00 XvA3 1.0526E+03 XsA4
+				5.2200E-02 XfA5 0.0000E+00
+        S... 13597 0 2.26E+02 2A 5mM 0%D2O Sbak 13594 0 1.13E+02
+				H2O Buffer
+        V... 13552 3 1.00E+00 H2O5m
 Process:
     Name: NCNR-IGOR
     Date: 03-SEP-2006 11:42:47
