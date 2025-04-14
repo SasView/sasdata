@@ -343,6 +343,14 @@ class SessionSerializer(serializers.ModelSerializer):
         model = models.Session
         fields = ["title", "published_state", "datasets"]
 
+    def to_internal_value(self, data):
+        data_copy = data.copy()
+        if "is_public" in data:
+            if "datasets" in data:
+                for dataset in data_copy["datasets"]:
+                    dataset["is_public"] = data["is_public"]
+        return super().to_internal_value(data_copy)
+
     # Create a Session instance
     def create(self, validated_data):
         if self.context["request"].user.is_authenticated:
