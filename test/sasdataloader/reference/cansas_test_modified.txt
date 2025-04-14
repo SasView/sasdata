@@ -11,7 +11,13 @@ Process:
     Name: spol
     Date: 04-Sep-2007 18:12:27
     Description: None
-    Term: {'radialstep': '10.000', 'sector_width': '180.0', 'sector_orient': '0.0', 'Flux_monitor': '1.00', 'Count_time': '900.000', 'Q_resolution': 'estimated'}
+    Terms:
+        radialstep: 10.0 mm
+        sector_width: 180.0 deg
+        sector_orient: 0.0 deg
+        Flux_monitor: 1.00
+        Count_time: 900.0 s
+        Q_resolution: estimated
 Sample:
    ID:           This is a test file
    Transmission: 0.0
