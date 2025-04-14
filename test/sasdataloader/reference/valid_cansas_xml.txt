@@ -11,7 +11,9 @@ Process:
     Name: Mantid generated CanSAS1D XML
     Date: 10-Oct-2013 16:00:29
     Description: None
-    Term: {'svn': '2.6.20130902.1504', 'user_file': 'K:/masks/MASKLOQ_MAN_133D_Xpress_8mm.txt'}
+    Terms:
+        svn: 2.6.20130902.1504
+        user_file: K:/masks/MASKLOQ_MAN_133D_Xpress_8mm.txt
 Sample:
    ID:           LOQ_Standard_TK49_SANS
    Transmission: None
