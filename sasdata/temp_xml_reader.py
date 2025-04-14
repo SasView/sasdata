@@ -96,16 +96,23 @@ def parse_rot3(node: etree._Element, version: str) -> Rot3:
     return Rot3(roll=roll, pitch=pitch, yaw=yaw)
 
 
+def parse_term(node: etree._Element, version: str) -> str | Quantity[float]:
+    """Parse a process term, which may be a measured quantity or a string"""
+    if "unit" in node.attrib:
+        return parse_quantity(node, version)
+    else:
+        return parse_string(node, version)
+
 def parse_process(node: etree._Element, version: str) -> Process:
     """Parse an experimental process"""
     name = opt_parse(node, "name", version, parse_string)
     date = opt_parse(node, "date", version, parse_string)
     description = opt_parse(node, "description", version, parse_string)
     terms = {
-        t.attrib["name"]: parse_string(t, version)
+        t.attrib["name"]: parse_term(t, version)
         for t in node.findall(f"{version}:term", ns)
     }
-    return Process(name=name, date=date, description=description, term=terms)
+    return Process(name=name, date=date, description=description, terms=terms)
 
 
 def parse_beam_size(node: etree._Element, version: str) -> BeamSize:
