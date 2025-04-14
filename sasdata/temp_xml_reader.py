@@ -112,7 +112,9 @@ def parse_process(node: etree._Element, version: str) -> Process:
         t.attrib["name"]: parse_term(t, version)
         for t in node.findall(f"{version}:term", ns)
     }
-    return Process(name=name, date=date, description=description, terms=terms)
+    notes = [parse_string(note, version) for note in node.findall(f"{version}:SASprocessnote", ns)]
+    notes = [n.strip() for n in notes if n is not None and n.strip()]
+    return Process(name=name, date=date, description=description, terms=terms, notes=notes)
 
 
 def parse_beam_size(node: etree._Element, version: str) -> BeamSize:
