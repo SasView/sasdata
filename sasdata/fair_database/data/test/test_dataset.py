@@ -1,9 +1,19 @@
+import os
+import shutil
+
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.db.models import Max
 from rest_framework.test import APIClient, APITestCase
 from rest_framework import status
 
-from data.models import DataSet, MetaData, OperationTree, Quantity
+from data.models import DataFile, DataSet, MetaData, OperationTree, Quantity
+
+
+def find(filename):
+    return os.path.join(
+        os.path.dirname(__file__), "../../../example_data/1d_data", filename
+    )
 
 
 class TestDataSet(APITestCase):
@@ -156,6 +166,60 @@ class TestDataSet(APITestCase):
         new_dataset.delete()
         new_metadata.delete()
 
+    # Test creating a database with associated files
+    def test_dataset_created_with_files(self):
+        file = DataFile.objects.create(
+            id=1, file_name="cyl_testdata.txt", is_public=True
+        )
+        file.file.save("cyl_testdata.txt", open(find("cyl_testdata.txt")))
+        dataset = {
+            "name": "Dataset with file",
+            "metadata": self.empty_metadata,
+            "is_public": True,
+            "data_contents": self.empty_data,
+            "files": [1],
+        }
+        request = self.client.post("/v1/data/set/", data=dataset, format="json")
+        max_id = DataSet.objects.aggregate(Max("id"))["id__max"]
+        new_dataset = DataSet.objects.get(id=max_id)
+        self.assertEqual(request.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(
+            request.data,
+            {"dataset_id": max_id, "name": "Dataset with file", "is_public": True},
+        )
+        self.assertTrue(file in new_dataset.files.all())
+        new_dataset.delete()
+        file.delete()
+
+    # Test that a dataset cannot be associated with inaccessible files
+    def test_no_dataset_with_private_files(self):
+        file = DataFile.objects.create(
+            id=1, file_name="cyl_testdata.txt", is_public=False, current_user=self.user2
+        )
+        file.file.save("cyl_testdata.txt", open(find("cyl_testdata.txt")))
+        dataset = {
+            "name": "Dataset with file",
+            "metadata": self.empty_metadata,
+            "is_public": True,
+            "data_contents": self.empty_data,
+            "files": [1],
+        }
+        request = self.client.post("/v1/data/set/", data=dataset, format="json")
+        file.delete()
+        self.assertEqual(request.status_code, status.HTTP_400_BAD_REQUEST)
+
+    # Test that a dataset cannot be associated with nonexistent files
+    def test_no_dataset_with_nonexistent_files(self):
+        dataset = {
+            "name": "Dataset with file",
+            "metadata": self.empty_metadata,
+            "is_public": True,
+            "data_contents": self.empty_data,
+            "files": [2],
+        }
+        request = self.client.post("/v1/data/set/", data=dataset, format="json")
+        self.assertEqual(request.status_code, status.HTTP_400_BAD_REQUEST)
+
     # Test that a private dataset cannot be created without an owner
     def test_no_private_unowned_dataset(self):
         dataset = {
@@ -194,6 +258,7 @@ class TestDataSet(APITestCase):
         cls.user1.delete()
         cls.user2.delete()
         cls.user3.delete()
+        shutil.rmtree(settings.MEDIA_ROOT)
 
 
 class TestSingleDataSet(APITestCase):
