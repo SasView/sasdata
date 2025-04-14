@@ -13,12 +13,26 @@ Process:
     Name: spol
     Date: 04-Sep-2007 18:35:02
     Description: None
-    Term: {'radialstep': '10.000', 'sector_width': '180.0', 'sector_orient': '0.0', 'MASK_file': 'USER:MASK.COM'}
+    Terms:
+        radialstep: 10.0 mm
+        sector_width: 180.0 deg
+        sector_orient: 0.0 deg
+        MASK_file: USER:MASK.COM
 Process:
     Name: NCNR-IGOR
     Date: 03-SEP-2006 11:42:47
     Description: 
-    Term: {'average_type': 'Circular', 'SAM_file': 'SEP06064.SA3_AJJ_L205', 'BKD_file': 'SEP06064.SA3_AJJ_L205', 'EMP_file': 'SEP06064.SA3_AJJ_L205', 'DIV_file': 'SEP06064.SA3_AJJ_L205', 'MASK_file': 'SEP06064.SA3_AJJ_L205', 'ABS:TSTAND': '1', 'ABS:DSTAND': '1', 'ABS:IZERO': '230.09', 'ABS:XSECT': '1'}
+    Terms:
+        average_type: Circular
+        SAM_file: SEP06064.SA3_AJJ_L205
+        BKD_file: SEP06064.SA3_AJJ_L205
+        EMP_file: SEP06064.SA3_AJJ_L205
+        DIV_file: SEP06064.SA3_AJJ_L205
+        MASK_file: SEP06064.SA3_AJJ_L205
+        ABS:TSTAND: 1
+        ABS:DSTAND: 1.0 mm
+        ABS:IZERO: 230.09
+        ABS:XSECT: 1.0 mm
 Sample:
    ID:           SI600-new-long
    Transmission: 0.327

@@ -242,7 +242,7 @@ def parse_process(node : HDF5Group) -> Process:
     date = opt_parse(node, "date", parse_string)
     description = opt_parse(node, "description", parse_string)
     term = opt_parse(node, "term", parse_string)
-    return Process(name=name, date=date, description=description, term=term)
+    return Process(name=name, date=date, description=description, terms=term)
 
 def parse_metadata(node : HDF5Group) -> Metadata:
     instrument = opt_parse(node, "sasinstrument", parse_instrument)
