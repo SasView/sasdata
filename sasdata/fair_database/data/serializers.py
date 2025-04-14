@@ -241,15 +241,21 @@ class DataSetSerializer(serializers.ModelSerializer):
         data = super().to_representation(instance)
         if "session" in data:
             data.pop("session")
+        if "request" in self.context:
+            files = [
+                file.id
+                for file in instance.files.all()
+                if (
+                    file.is_public
+                    or permissions.has_access(self.context["request"], file)
+                )
+            ]
+            data["files"] = files
         return data
 
     # Check that files exist and user has access to them
     def validate_files(self, value):
         for file in value:
-            # try:
-            #   db = models.DataFile.objects.get(id=file)
-            # except models.DataFile.DoesNotExist:
-            #  raise serializers.ValidationError("File " + str(file) + " does not exist")
             if not file.is_public or permissions.has_access(
                 self.context["request"], file
             ):
