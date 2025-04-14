@@ -268,11 +268,16 @@ def load_data(filename) -> dict[str, SasData]:
     for entry in tree.getroot().findall(f"{version}:SASentry", ns):
         name = attr_parse(entry, "name")
 
+        title = opt_parse(entry, "Title", version, parse_string)
+
         if name is None:
-            name = f"SasData{dataindex:02}"
+            if title is None:
+                name = f"SasData{dataindex:02}"
+            else:
+                name = title
 
         metadata = Metadata(
-            title=opt_parse(entry, "Title", version, parse_string),
+            title=title,
             run=all_parse(entry, "Run", version, parse_string),
             instrument=opt_parse(entry, "SASinstrument", version, parse_instrument),
             process=all_parse(entry, "SASprocess", version, parse_process),
