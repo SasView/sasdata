@@ -7,10 +7,14 @@ from data import models
 
 
 class DataFileSerializer(serializers.ModelSerializer):
+    """Serialization, deserialization, and validation for the DataFile model."""
+
     class Meta:
         model = models.DataFile
         fields = "__all__"
 
+    # TODO: check partial updates
+    # Check that private data has an owner
     def validate(self, data):
         if not self.context["is_public"] and not data["current_user"]:
             raise serializers.ValidationError("private data must have an owner")
@@ -18,11 +22,20 @@ class DataFileSerializer(serializers.ModelSerializer):
 
 
 class AccessManagementSerializer(serializers.Serializer):
+    """
+    Serialization, deserialization, and validation for granting and revoking
+    access to instances of any exposed model.
+    """
+
+    # The username of a user
     username = serializers.CharField(max_length=200, required=False)
+    # Whether that user has access
     access = serializers.BooleanField()
 
 
 class MetaDataSerializer(serializers.ModelSerializer):
+    """Serialization, deserialization, and validation for the MetaData model."""
+
     dataset = serializers.PrimaryKeyRelatedField(
         queryset=models.DataSet, required=False, allow_null=True
     )
@@ -31,18 +44,22 @@ class MetaDataSerializer(serializers.ModelSerializer):
         model = models.MetaData
         fields = "__all__"
 
+    # Serialize an entry in MetaData
     def to_representation(self, instance):
         data = super().to_representation(instance)
         if "dataset" in data:
             data.pop("dataset")
         return data
 
+    # Create an entry in MetaData
     def create(self, validated_data):
         dataset = models.DataSet.objects.get(id=validated_data.pop("dataset"))
         return models.MetaData.objects.create(dataset=dataset, **validated_data)
 
 
 class OperationTreeSerializer(serializers.ModelSerializer):
+    """Serialization, deserialization, and validation for the OperationTree model."""
+
     quantity = serializers.PrimaryKeyRelatedField(
         queryset=models.Quantity, required=False, allow_null=True
     )
@@ -55,6 +72,7 @@ class OperationTreeSerializer(serializers.ModelSerializer):
         model = models.OperationTree
         fields = ["operation", "parameters", "quantity", "label", "child_operation"]
 
+    # Validate parent operations
     def validate_parameters(self, value):
         if "a" in value:
             serializer = OperationTreeSerializer(data=value["a"])
@@ -64,6 +82,7 @@ class OperationTreeSerializer(serializers.ModelSerializer):
             serializer.is_valid(raise_exception=True)
         return value
 
+    # Check that the operation has the correct parameters
     def validate(self, data):
         expected_parameters = {
             "zero": [],
@@ -91,6 +110,7 @@ class OperationTreeSerializer(serializers.ModelSerializer):
 
         return data
 
+    # Serialize an OperationTree instance
     def to_representation(self, instance):
         data = {"operation": instance.operation, "parameters": instance.parameters}
         for parent_operation in instance.parent_operations.all():
@@ -99,6 +119,7 @@ class OperationTreeSerializer(serializers.ModelSerializer):
             )
         return data
 
+    # Create an OperationTree instance
     def create(self, validated_data):
         quantity = None
         child_operation = None
@@ -133,12 +154,13 @@ class OperationTreeSerializer(serializers.ModelSerializer):
 
 
 class QuantitySerializer(serializers.ModelSerializer):
+    """Serialization, deserialization, and validation for the Quantity model."""
+
     operation_tree = OperationTreeSerializer(read_only=False, required=False)
     label = serializers.CharField(max_length=20)
     dataset = serializers.PrimaryKeyRelatedField(
         queryset=models.DataSet, required=False, allow_null=True
     )
-    # history = serializers.JSONField(required=False)  # TODO: is this required?
 
     class Meta:
         model = models.Quantity
@@ -154,6 +176,7 @@ class QuantitySerializer(serializers.ModelSerializer):
         ]
 
     # TODO: should variable-only history be assumed to refer to the same Quantity and ignored?
+    # Extract operation tree from history
     def to_internal_value(self, data):
         if "history" in data and "operation_tree" in data["history"]:
             operations = data["history"]["operation_tree"]
@@ -163,12 +186,14 @@ class QuantitySerializer(serializers.ModelSerializer):
                 return super().to_internal_value(data_copy)
         return super().to_internal_value(data)
 
+    # Serialize a Quantity instance
     def to_representation(self, instance):
         data = super().to_representation(instance)
         if "dataset" in data:
             data.pop("dataset")
         return data
 
+    # Create a Quantity instance
     def create(self, validated_data):
         dataset = models.DataSet.objects.get(id=validated_data.pop("dataset"))
         if "operation_tree" in validated_data:
@@ -184,6 +209,8 @@ class QuantitySerializer(serializers.ModelSerializer):
 
 
 class DataSetSerializer(serializers.ModelSerializer):
+    """Serialization, deserialization, and validation for the DataSet model."""
+
     metadata = MetaDataSerializer(read_only=False)
     files = serializers.PrimaryKeyRelatedField(
         required=False, many=True, allow_null=True, queryset=models.DataFile
@@ -208,12 +235,14 @@ class DataSetSerializer(serializers.ModelSerializer):
             "session",
         ]
 
+    # Serialize a DataSet instance
     def to_representation(self, instance):
         data = super().to_representation(instance)
         if "session" in data:
             data.pop("session")
         return data
 
+    # Check that private data has an owner
     def validate(self, data):
         if (
             not self.context["request"].user.is_authenticated
@@ -230,6 +259,7 @@ class DataSetSerializer(serializers.ModelSerializer):
                     raise serializers.ValidationError("private data must have an owner")
         return data
 
+    # Create a DataSet instance
     def create(self, validated_data):
         session = None
         if self.context["request"].user.is_authenticated:
@@ -248,6 +278,7 @@ class DataSetSerializer(serializers.ModelSerializer):
 
     # TODO: account for updating other attributes
     # TODO: account for metadata potentially being null
+    # Update a DataSet instance
     def update(self, instance, validated_data):
         if "metadata" in validated_data:
             metadata_raw = validated_data.pop("metadata")
@@ -265,6 +296,8 @@ class DataSetSerializer(serializers.ModelSerializer):
 
 
 class PublishedStateSerializer(serializers.ModelSerializer):
+    """Serialization, deserialization, and validation for the PublishedState model."""
+
     session = serializers.PrimaryKeyRelatedField(
         queryset=models.Session, required=False, allow_null=True
     )
@@ -275,6 +308,8 @@ class PublishedStateSerializer(serializers.ModelSerializer):
 
 
 class SessionSerializer(serializers.ModelSerializer):
+    """Serialization, deserialization, and validation for the Session model."""
+
     datasets = DataSetSerializer(read_only=False, many=True)
     published_state = PublishedStateSerializer(read_only=False, required=False)
 
@@ -282,6 +317,7 @@ class SessionSerializer(serializers.ModelSerializer):
         model = models.Session
         fields = ["title", "published_state", "datasets"]
 
+    # Create a Session instance
     def create(self, validated_data):
         if self.context["request"].user.is_authenticated:
             validated_data["current_user"] = self.context["request"].user
@@ -293,9 +329,11 @@ class SessionSerializer(serializers.ModelSerializer):
         return session
 
 
+# Determine if an operation does not have parent operations
 def constant_or_variable(operation: str):
     return operation in ["zero", "one", "constant", "variable"]
 
 
+# Determine if an operation has two parent operations
 def binary(operation: str):
     return operation in ["add", "sub", "mul", "div", "dot", "matmul", "tensor_product"]
