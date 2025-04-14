@@ -412,7 +412,8 @@ class TestDataSetAccessManagement(APITestCase):
         request1 = self.client_owner.get("/v1/data/set/1/users/")
         self.assertEqual(request1.status_code, status.HTTP_200_OK)
         self.assertEqual(
-            request1.data, {"data_id": 1, "name": "Dataset 1", "users": []}
+            request1.data,
+            {"data_id": 1, "name": "Dataset 1", "is_public": False, "users": []},
         )
 
     # Test listing users with access
@@ -420,7 +421,13 @@ class TestDataSetAccessManagement(APITestCase):
         request1 = self.client_owner.get("/v1/data/set/2/users/")
         self.assertEqual(request1.status_code, status.HTTP_200_OK)
         self.assertEqual(
-            request1.data, {"data_id": 2, "name": "Dataset 2", "users": ["testUser2"]}
+            request1.data,
+            {
+                "data_id": 2,
+                "name": "Dataset 2",
+                "is_public": False,
+                "users": ["testUser2"],
+            },
         )
 
     # Test only owner can view access
