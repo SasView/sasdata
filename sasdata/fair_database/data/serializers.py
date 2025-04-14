@@ -213,7 +213,7 @@ class DataSetSerializer(serializers.ModelSerializer):
 
     metadata = MetaDataSerializer(read_only=False)
     files = serializers.PrimaryKeyRelatedField(
-        required=False, many=True, allow_null=True, queryset=models.DataFile
+        required=False, many=True, allow_null=True, queryset=models.DataFile.objects
     )
     data_contents = QuantitySerializer(many=True, read_only=False)
     session = serializers.PrimaryKeyRelatedField(
@@ -262,13 +262,17 @@ class DataSetSerializer(serializers.ModelSerializer):
     # Create a DataSet instance
     def create(self, validated_data):
         session = None
+        files = []
         if self.context["request"].user.is_authenticated:
             validated_data["current_user"] = self.context["request"].user
         metadata_raw = validated_data.pop("metadata")
-        if session in validated_data:
+        if "session" in validated_data:
             session = models.Session.objects.get(id=validated_data["session"])
         data_contents = validated_data.pop("data_contents")
+        if "files" in validated_data:
+            files = validated_data.pop("files")
         dataset = models.DataSet.objects.create(session=session, **validated_data)
+        dataset.files.set(files)
         metadata_raw["dataset"] = dataset.id
         MetaDataSerializer.create(MetaDataSerializer(), validated_data=metadata_raw)
         for d in data_contents:
