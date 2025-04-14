@@ -11,7 +11,9 @@ Process:
     Name: Mantid generated CanSAS1D XML
     Date: 02-Aug-2013 16:54:14
     Description: None
-    Term: {'svn': '2.5.3', 'user_file': 'K:/masks/MASKLOQ_MAN_132E_Lu_Banjo_12mm.txt'}
+    Terms:
+        svn: 2.5.3
+        user_file: K:/masks/MASKLOQ_MAN_132E_Lu_Banjo_12mm.txt
 Sample:
    ID:           TK49 c10_SANS
    Transmission: None
