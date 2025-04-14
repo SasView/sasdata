@@ -217,7 +217,7 @@ def parse_data(node: etree.Element, version: str) -> dict[str, Quantity]:
             keys.add(name)
         aos.append(struct)
 
-    # Convert array of structures to strucgture of arrays
+    # Convert array of structures to structure of arrays
     soa: dict[str, list[float]] = {}
     for key in keys:
         soa[key] = []
