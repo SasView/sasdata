@@ -142,7 +142,7 @@ class Process:
     name :  str  | None
     date :  str  | None
     description :  str  | None
-    term :  str  | None
+    terms :  dict[str, str | Quantity[float]]
 
     def single_line_desc(self):
         """
@@ -151,11 +151,16 @@ class Process:
         return f"{self.name.value} {self.date.value} {self.description.value}"
 
     def summary(self):
+        if self.terms:
+            termInfo = "    Terms:\n" + "\n".join(
+                [f"        {k}: {v}" for k, v in self.terms.items()]) + "\n"
+        else:
+            termInfo = ""
         return (f"Process:\n"
                 f"    Name: {self.name}\n"
                 f"    Date: {self.date}\n"
                 f"    Description: {self.description}\n"
-                f"    Term: {self.term}\n"
+                f"{termInfo}"
                 )
 
 
