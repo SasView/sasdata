@@ -233,18 +233,20 @@ def parse_data(node: etree.Element, version: str) -> dict[str, Quantity]:
     return result
 
 
+def get_cansas_version(root) -> str | None:
+    """Find the cansas version of a file"""
+    for n, v in ns.items():
+        if root.tag == "{" + v + "}SASroot":
+            return n
+    return None
+
+
 def load_data(filename) -> dict[str, SasData]:
     loaded_data: dict[str, SasData] = {}
     tree = etree.parse(filename)
     root = tree.getroot()
 
-    version: str | None = None
-
-    # Find out cansas version
-    for n, v in ns.items():
-        if root.tag == "{" + v + "}SASroot":
-            version = n
-            break
+    version = get_cansas_version(root)
 
     if version is None:
         logger.error(f"Invalid root: {root.tag}")
