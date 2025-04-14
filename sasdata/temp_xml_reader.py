@@ -259,11 +259,17 @@ def load_data(filename) -> dict[str, SasData]:
     version = get_cansas_version(root)
 
     if version is None:
-        logger.error(f"Invalid root: {root.tag}")
+        logger.error(f"Invalid root: {root.tag!r}")
         return loaded_data
+
+    # How many data sets have we loaded?
+    dataindex = 1
 
     for entry in tree.getroot().findall(f"{version}:SASentry", ns):
         name = attr_parse(entry, "name")
+
+        if name is None:
+            name = f"SasData{dataindex:02}"
 
         metadata = Metadata(
             title=opt_parse(entry, "Title", version, parse_string),
@@ -290,6 +296,7 @@ def load_data(filename) -> dict[str, SasData]:
             metadata=metadata,
             verbose=False,
         )
+        dataindex += 1
     return loaded_data
 
 
