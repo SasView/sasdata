@@ -274,7 +274,7 @@ def parse_metadata(node : HDF5Group) -> Metadata:
 ### End Metadata parsing code
 
 
-def load_data(filename) -> dict[str, SasData]:
+def load_data(filename: str) -> dict[str, SasData]:
     with h5py.File(filename, "r") as f:
         loaded_data: dict[str, SasData] = {}
 
