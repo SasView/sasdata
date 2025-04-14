@@ -18,6 +18,10 @@ Process:
         Flux_monitor: 1.00
         Count_time: 900.0 s
         Q_resolution: estimated
+    Notes:
+        AvA1 0.0000E+00 AsA2 1.0000E+00 XvA3 1.1111E+01 XsA4 5.2200E-02 XfA5 0.0000E+00
+        S... 13586  0  5.63E+01 2A 5mM 0%D2O    Sbak 13567  0  1.88E+01 H2O buffer
+        Sbak 13533  0  7.49E+00 H2O buffer      V... 13552  1  1.00E+00 Normal 10m from
 Sample:
    ID:           This is a test file
    Transmission: 0.0
