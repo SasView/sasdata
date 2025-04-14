@@ -231,6 +231,7 @@ class DataSetView(APIView):
                 data_list["dataset_ids"][dataset.id] = dataset.name
         return Response(data=data_list)
 
+    # TODO: enable uploading files as part of dataset creation, not just associating dataset with existing files
     # create a dataset
     def post(self, request, version=None):
         # TODO: JSON deserialization probably
@@ -266,7 +267,7 @@ class SingleDataSetView(APIView):
             return HttpResponseForbidden(
                 "You do not have permission to view this dataset."
             )
-        serializer = DataSetSerializer(db)
+        serializer = DataSetSerializer(db, context={"request": request})
         return Response(serializer.data)
 
     # edit a specific dataset
