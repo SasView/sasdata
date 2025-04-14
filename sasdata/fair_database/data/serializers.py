@@ -31,6 +31,12 @@ class MetaDataSerializer(serializers.ModelSerializer):
         model = models.MetaData
         fields = "__all__"
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if "dataset" in data:
+            data.pop("dataset")
+        return data
+
     def create(self, validated_data):
         dataset = models.DataSet.objects.get(id=validated_data.pop("dataset"))
         return models.MetaData.objects.create(dataset=dataset, **validated_data)
