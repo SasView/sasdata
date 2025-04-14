@@ -3,7 +3,7 @@ from django.db.models import Max
 from rest_framework.test import APIClient, APITestCase
 from rest_framework import status
 
-from data.models import DataSet, OperationTree, Quantity
+from data.models import DataSet, MetaData, OperationTree, Quantity
 
 
 class TestDataSet(APITestCase):
@@ -222,6 +222,16 @@ class TestSingleDataSet(APITestCase):
         cls.unowned_dataset = DataSet.objects.create(
             id=3, is_public=True, name="Dataset 3"
         )
+        cls.metadata = MetaData.objects.create(
+            id=1,
+            title="Metadata",
+            run=0,
+            definition="test",
+            instrument="none",
+            process="none",
+            sample="none",
+            dataset=cls.public_dataset,
+        )
         cls.private_dataset.users.add(cls.user3)
         cls.auth_client1 = APIClient()
         cls.auth_client2 = APIClient()
@@ -266,7 +276,15 @@ class TestSingleDataSet(APITestCase):
                 "is_public": True,
                 "name": "Dataset 1",
                 "files": [],
-                "metadata": None,
+                "metadata": {
+                    "id": 1,
+                    "title": "Metadata",
+                    "run": 0,
+                    "definition": "test",
+                    "instrument": "none",
+                    "process": "none",
+                    "sample": "none",
+                },
                 "data_contents": [],
             },
         )
