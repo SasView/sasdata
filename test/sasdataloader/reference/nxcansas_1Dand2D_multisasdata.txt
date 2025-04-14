@@ -9,7 +9,6 @@ Process:
     Name: Mantid generated CanSAS1D XML
     Date: 11-May-2016 12:15:34
     Description: None
-    Term: None
 Sample:
    ID:           
    Transmission: None
