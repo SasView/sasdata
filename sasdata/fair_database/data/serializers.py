@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from data import models
+from fair_database import permissions
 
 
 # TODO: more custom validation, particularly for specific nested dictionary structures
@@ -241,6 +242,21 @@ class DataSetSerializer(serializers.ModelSerializer):
         if "session" in data:
             data.pop("session")
         return data
+
+    # Check that files exist and user has access to them
+    def validate_files(self, value):
+        for file in value:
+            # try:
+            #   db = models.DataFile.objects.get(id=file)
+            # except models.DataFile.DoesNotExist:
+            #  raise serializers.ValidationError("File " + str(file) + " does not exist")
+            if not file.is_public or permissions.has_access(
+                self.context["request"], file
+            ):
+                raise serializers.ValidationError(
+                    "You do not have access to file " + str(file.id)
+                )
+            return value
 
     # Check that private data has an owner
     def validate(self, data):
