@@ -5,7 +5,7 @@ import h5py
 import logging
 
 import numpy as np
-from typing import Callable
+from typing import Callable, Tuple
 
 
 from h5py._hl.dataset import Dataset as HDF5Dataset
@@ -237,12 +237,24 @@ def parse_sample(node : HDF5Group) -> Sample:
                   orientation=orientation,
                   details=details)
 
+def parse_term(node : HDF5Group) -> Tuple[str, str | Quantity[float]] | None:
+    name = attr_parse(node, "name")
+    unit = attr_parse(node, "unit")
+    value = attr_parse(node, "value")
+    if name is None or value is None:
+        return None
+    if unit and unit.strip():
+        return (name, Quantity(float(value), units.symbol_lookup[unit]))
+    return (name, value)
+
+
 def parse_process(node : HDF5Group) -> Process:
     name = opt_parse(node, "name", parse_string)
     date = opt_parse(node, "date", parse_string)
     description = opt_parse(node, "description", parse_string)
-    term = opt_parse(node, "term", parse_string)
-    return Process(name=name, date=date, description=description, terms=term)
+    term_values = [parse_term(node[n]) for n in node if "term" in n]
+    terms = {tup[0]: tup[1] for tup in term_values if tup is not None}
+    return Process(name=name, date=date, description=description, terms=terms)
 
 def parse_metadata(node : HDF5Group) -> Metadata:
     instrument = opt_parse(node, "sasinstrument", parse_instrument)
