@@ -293,5 +293,5 @@ if __name__ == "__main__":
         print(f)
         data = load_data(f)
 
-        # for dataset in data.values():
-        #     print(dataset.summary())
+        for dataset in data.values():
+            print(dataset.summary())
