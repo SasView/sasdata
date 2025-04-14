@@ -180,6 +180,7 @@ class DataFileUsersView(APIView):
         response_data = {
             "file": db.pk,
             "file_name": db.file_name,
+            "is_public": db.is_public,
             "users": [user.username for user in db.users.all()],
         }
         return Response(response_data)
@@ -318,6 +319,7 @@ class DataSetUsersView(APIView):
         response_data = {
             "data_id": db.id,
             "name": db.name,
+            "is_public": db.is_public,
             "users": [user.username for user in db.users.all()],
         }
         return Response(response_data)
@@ -447,6 +449,8 @@ class SessionUsersView(APIView):
             return HttpResponseForbidden("Must be the session owner to view access")
         response_data = {
             "session_id": db.id,
+            "title": db.title,
+            "is_public": db.is_public,
             "users": [user.username for user in db.users.all()],
         }
         return Response(response_data)
@@ -470,6 +474,7 @@ class SessionUsersView(APIView):
         response_data = {
             "username": user.username,
             "session_id": db.id,
+            "title": db.title,
             "access": serializer.data["access"],
         }
         return Response(response_data)

@@ -295,14 +295,24 @@ class TestAccessManagement(TestCase):
     # test viewing no one with access
     def test_view_no_access(self):
         request = self.client_owner.get("/v1/data/file/1/users/")
-        data = {"file": 1, "file_name": "cyl_400_40.txt", "users": []}
+        data = {
+            "file": 1,
+            "file_name": "cyl_400_40.txt",
+            "is_public": False,
+            "users": [],
+        }
         self.assertEqual(request.status_code, status.HTTP_200_OK)
         self.assertEqual(request.data, data)
 
     # test viewing list of users with access
     def test_view_access(self):
         request = self.client_owner.get("/v1/data/file/2/users/")
-        data = {"file": 2, "file_name": "cyl_400_20.txt", "users": ["testUser2"]}
+        data = {
+            "file": 2,
+            "file_name": "cyl_400_20.txt",
+            "is_public": False,
+            "users": ["testUser2"],
+        }
         self.assertEqual(request.status_code, status.HTTP_200_OK)
         self.assertEqual(request.data, data)
 
