@@ -33,12 +33,12 @@ ns = {
 }
 
 
-def parse_string(node: etree.Element, _version: str) -> str:
+def parse_string(node: etree._Element, _version: str) -> str:
     """Access string data from a node"""
     return "".join(node.itertext())
 
 
-def parse_quantity(node: etree.Element, version: str) -> Quantity[float]:
+def parse_quantity(node: etree._Element, version: str) -> Quantity[float]:
     """Pull a single quantity with length units out of an XML node"""
     magnitude = float(parse_string(node, version))
     try:
@@ -51,7 +51,7 @@ def parse_quantity(node: etree.Element, version: str) -> Quantity[float]:
     return Quantity(magnitude, unit)
 
 
-def attr_parse(node: etree.Element, key: str) -> str | None:
+def attr_parse(node: etree._Element, key: str) -> str | None:
     """Parse an attribute if it is present"""
     if key in node.attrib:
         return node.attrib[key]
@@ -59,10 +59,10 @@ def attr_parse(node: etree.Element, key: str) -> str | None:
 
 
 def opt_parse[T](
-    node: etree.Element,
+    node: etree._Element,
     key: str,
     version: str,
-    subparser: Callable[[etree.Element, str], T],
+    subparser: Callable[[etree._Element, str], T],
 ) -> T | None:
     """Parse subnode if preset"""
     if (inner_node := node.find(f"{version}:{key}", ns)) is not None:
@@ -71,16 +71,16 @@ def opt_parse[T](
 
 
 def all_parse[T](
-    node: etree.Element,
+    node: etree._Element,
     key: str,
     version: str,
-    subparser: Callable[[etree.Element, str], T],
+    subparser: Callable[[etree._Element, str], T],
 ) -> list[T]:
     """Parse subnode if preset"""
     return [subparser(n, version) for n in node.findall(f"{version}:{key}", ns)]
 
 
-def parse_vec3(node: etree.Element, version: str) -> Vec3:
+def parse_vec3(node: etree._Element, version: str) -> Vec3:
     """Parse a measured 3-vector"""
     x = opt_parse(node, "x", version, parse_quantity)
     y = opt_parse(node, "y", version, parse_quantity)
@@ -88,7 +88,7 @@ def parse_vec3(node: etree.Element, version: str) -> Vec3:
     return Vec3(x=x, y=y, z=z)
 
 
-def parse_rot3(node: etree.Element, version: str) -> Rot3:
+def parse_rot3(node: etree._Element, version: str) -> Rot3:
     """Parse a measured rotation"""
     roll = opt_parse(node, "roll", version, parse_quantity)
     pitch = opt_parse(node, "pitch", version, parse_quantity)
@@ -96,7 +96,7 @@ def parse_rot3(node: etree.Element, version: str) -> Rot3:
     return Rot3(roll=roll, pitch=pitch, yaw=yaw)
 
 
-def parse_process(node: etree.Element, version: str) -> Process:
+def parse_process(node: etree._Element, version: str) -> Process:
     """Parse an experimental process"""
     name = opt_parse(node, "name", version, parse_string)
     date = opt_parse(node, "date", version, parse_string)
@@ -108,12 +108,12 @@ def parse_process(node: etree.Element, version: str) -> Process:
     return Process(name=name, date=date, description=description, term=terms)
 
 
-def parse_beam_size(node: etree.Element, version: str) -> BeamSize:
+def parse_beam_size(node: etree._Element, version: str) -> BeamSize:
     """Parse a beam size"""
     return BeamSize(name=attr_parse(node, "name"), size=parse_vec3(node, version))
 
 
-def parse_source(node: etree.Element, version: str) -> Source:
+def parse_source(node: etree._Element, version: str) -> Source:
     """Parse a radiation source"""
     radiation = opt_parse(node, "radiation", version, parse_string)
     beam_shape = opt_parse(node, "beam_shape", version, parse_string)
@@ -133,7 +133,7 @@ def parse_source(node: etree.Element, version: str) -> Source:
     )
 
 
-def parse_detector(node: etree.Element, version: str) -> Detector:
+def parse_detector(node: etree._Element, version: str) -> Detector:
     """Parse signal detector metadata"""
     return Detector(
         name=opt_parse(node, "name", version, parse_string),
@@ -146,11 +146,11 @@ def parse_detector(node: etree.Element, version: str) -> Detector:
     )
 
 
-def parse_aperture(node: etree.Element, version: str) -> Aperture:
+def parse_aperture(node: etree._Element, version: str) -> Aperture:
     """Parse an aperture description"""
     size = opt_parse(node, "size", version, parse_vec3)
-    if size:
-        size_name = attr_parse(node.find(f"{version}:size", ns), "name")
+    if size and (innerSize := node.find(f"{version}:size", ns)) is not None:
+            size_name = attr_parse(innerSize, "name")
     else:
         size_name = None
     return Aperture(
@@ -162,7 +162,7 @@ def parse_aperture(node: etree.Element, version: str) -> Aperture:
     )
 
 
-def parse_collimation(node: etree.Element, version: str) -> Collimation:
+def parse_collimation(node: etree._Element, version: str) -> Collimation:
     """Parse a beam collimation"""
     return Collimation(
         length=opt_parse(node, "length", version, parse_quantity),
@@ -170,7 +170,7 @@ def parse_collimation(node: etree.Element, version: str) -> Collimation:
     )
 
 
-def parse_instrument(node: etree.Element, version: str) -> Instrument:
+def parse_instrument(node: etree._Element, version: str) -> Instrument:
     """Parse instrument metadata"""
     source = opt_parse(node, "SASsource", version, parse_source)
     detector = all_parse(node, "SASdetector", version, parse_detector)
@@ -178,7 +178,7 @@ def parse_instrument(node: etree.Element, version: str) -> Instrument:
     return Instrument(source=source, detector=detector, collimations=collimations)
 
 
-def parse_sample(node: etree.Element, version: str) -> Sample:
+def parse_sample(node: etree._Element, version: str) -> Sample:
     """Parse sample metadata"""
     return Sample(
         name=attr_parse(node, "name"),
@@ -194,7 +194,7 @@ def parse_sample(node: etree.Element, version: str) -> Sample:
     )
 
 
-def parse_data(node: etree.Element, version: str) -> dict[str, Quantity]:
+def parse_data(node: etree._Element, version: str) -> dict[str, Quantity]:
     """Parse scattering data"""
     aos = []
     keys = set()
