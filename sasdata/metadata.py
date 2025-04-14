@@ -143,6 +143,7 @@ class Process:
     date :  str  | None
     description :  str  | None
     terms :  dict[str, str | Quantity[float]]
+    notes: list[str]
 
     def single_line_desc(self):
         """
@@ -156,11 +157,19 @@ class Process:
                 [f"        {k}: {v}" for k, v in self.terms.items()]) + "\n"
         else:
             termInfo = ""
+
+        if self.notes:
+            noteInfo = "    Notes:\n" + "\n".join(
+                [f"        {note}" for note in self.notes]) + "\n"
+        else:
+            noteInfo = ""
+
         return (f"Process:\n"
                 f"    Name: {self.name}\n"
                 f"    Date: {self.date}\n"
                 f"    Description: {self.description}\n"
                 f"{termInfo}"
+                f"{noteInfo}"
                 )
 
 
