@@ -482,8 +482,12 @@ class SessionUsersView(APIView):
         user = get_object_or_404(User, username=serializer.data["username"])
         if serializer.data["access"]:
             db.users.add(user)
+            for dataset in db.datasets.all():
+                dataset.users.add(user)
         else:
             db.users.remove(user)
+            for dataset in db.datasets.all():
+                dataset.users.remove(user)
         response_data = {
             "username": user.username,
             "session_id": db.id,
