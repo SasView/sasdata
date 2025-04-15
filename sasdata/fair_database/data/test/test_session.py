@@ -518,9 +518,120 @@ class TestSingleSession(APITestCase):
 class TestSessionAccessManagement(APITestCase):
     @classmethod
     def setUpTestData(cls):
-        pass
+        cls.user1 = User.objects.create_user(username="testUser1", password="secret")
+        cls.user2 = User.objects.create_user(username="testUser2", password="secret")
+        cls.private_session = Session.objects.create(
+            id=1, current_user=cls.user1, title="Private Session", is_public=False
+        )
+        cls.shared_session = Session.objects.create(
+            id=2, current_user=cls.user1, title="Shared Session", is_public=False
+        )
+        cls.private_dataset = DataSet.objects.create(
+            id=1,
+            current_user=cls.user1,
+            name="Private Dataset",
+            session=cls.private_session,
+        )
+        cls.shared_dataset = DataSet.objects.create(
+            id=2,
+            current_user=cls.user1,
+            name="Shared Dataset",
+            session=cls.shared_session,
+        )
+        cls.shared_session.users.add(cls.user2)
+        cls.shared_dataset.users.add(cls.user2)
+        cls.client_owner = APIClient()
+        cls.client_other = APIClient()
+        cls.client_owner.force_authenticate(cls.user1)
+        cls.client_other.force_authenticate(cls.user2)
 
     # Test listing access
+    def test_list_access_private(self):
+        request = self.client_owner.get("/v1/data/session/1/users/")
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            request.data,
+            {
+                "session_id": 1,
+                "title": "Private Session",
+                "is_public": False,
+                "users": [],
+            },
+        )
+
+    def test_list_access_shared(self):
+        request = self.client_owner.get("/v1/data/session/2/users/")
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            request.data,
+            {
+                "session_id": 2,
+                "title": "Shared Session",
+                "is_public": False,
+                "users": ["testUser2"],
+            },
+        )
+
+    def test_list_access_unauthorized(self):
+        request1 = self.client_other.get("/v1/data/session/1/users/")
+        request2 = self.client_other.get("/v1/data/session/2/users/")
+        self.assertEqual(request1.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(request2.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_grant_access(self):
+        request1 = self.client_owner.put(
+            "/v1/data/session/1/users/", {"username": "testUser2", "access": True}
+        )
+        request2 = self.client_other.get("/v1/data/session/1/")
+        request3 = self.client_other.get("/v1/data/set/1/")
+        self.assertEqual(request1.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            request1.data,
+            {
+                "username": "testUser2",
+                "session_id": 1,
+                "title": "Private Session",
+                "access": True,
+            },
+        )
+        self.assertEqual(request2.status_code, status.HTTP_200_OK)
+        self.assertEqual(request3.status_code, status.HTTP_200_OK)
+        self.assertIn(self.user2, self.private_session.users.all())  # codespell:ignore
+        self.assertIn(self.user2, self.private_dataset.users.all())  # codespell:ignore
+        self.private_session.users.remove(self.user2)
+        self.private_dataset.users.remove(self.user2)
+
+    def test_revoke_access(self):
+        request1 = self.client_owner.put(
+            "/v1/data/session/2/users/", {"username": "testUser2", "access": False}
+        )
+        request2 = self.client_other.get("/v1/data/session/2/")
+        request3 = self.client_other.get("/v1/data/session/2/")
+        self.assertEqual(request1.status_code, status.HTTP_200_OK)
+        self.assertEqual(request2.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(request3.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(
+            request1.data,
+            {
+                "username": "testUser2",
+                "session_id": 2,
+                "title": "Shared Session",
+                "access": False,
+            },
+        )
+        self.assertNotIn(self.user2, self.shared_session.users.all())
+        self.assertNotIn(self.user2, self.shared_dataset.users.all())
+        self.shared_session.users.add(self.user2)
+        self.shared_dataset.users.add(self.user2)
+
+    def test_revoke_access_unauthorized(self):
+        request1 = self.client_other.put(
+            "/v1/data/session/2/users/", {"username": "testUser2", "access": False}
+        )
+        request2 = self.client_other.get("/v1/data/session/2/")
+        self.assertEqual(request1.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(request2.status_code, status.HTTP_200_OK)
+        self.assertIn(self.user2, self.shared_session.users.all())  # codespell:ignore
 
     # Test listing access not as the owner
 
@@ -534,4 +645,7 @@ class TestSessionAccessManagement(APITestCase):
 
     @classmethod
     def tearDownClass(cls):
-        pass
+        cls.private_session.delete()
+        cls.shared_session.delete()
+        cls.user1.delete()
+        cls.user2.delete()
