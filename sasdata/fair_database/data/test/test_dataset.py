@@ -136,7 +136,13 @@ class TestDataSet(APITestCase):
         self.assertEqual(request.status_code, status.HTTP_201_CREATED)
         self.assertEqual(
             request.data,
-            {"dataset_id": max_id, "name": "New Dataset", "is_public": False},
+            {
+                "dataset_id": max_id,
+                "name": "New Dataset",
+                "authenticated": True,
+                "current_user": "testUser1",
+                "is_public": False,
+            },
         )
         self.assertEqual(new_dataset.name, "New Dataset")
         self.assertEqual(new_metadata.title, "New Metadata")
@@ -159,7 +165,13 @@ class TestDataSet(APITestCase):
         self.assertEqual(request.status_code, status.HTTP_201_CREATED)
         self.assertEqual(
             request.data,
-            {"dataset_id": max_id, "name": "New Dataset", "is_public": True},
+            {
+                "dataset_id": max_id,
+                "name": "New Dataset",
+                "authenticated": False,
+                "current_user": "",
+                "is_public": True,
+            },
         )
         self.assertEqual(new_dataset.name, "New Dataset")
         self.assertIsNone(new_dataset.current_user)
@@ -185,7 +197,13 @@ class TestDataSet(APITestCase):
         self.assertEqual(request.status_code, status.HTTP_201_CREATED)
         self.assertEqual(
             request.data,
-            {"dataset_id": max_id, "name": "Dataset with file", "is_public": True},
+            {
+                "dataset_id": max_id,
+                "name": "Dataset with file",
+                "authenticated": False,
+                "current_user": "",
+                "is_public": True,
+            },
         )
         self.assertTrue(file in new_dataset.files.all())
         new_dataset.delete()
@@ -246,7 +264,13 @@ class TestDataSet(APITestCase):
         self.assertEqual(DataSet.objects.get(id=2).name, "Dataset 2")
         self.assertEqual(
             request.data,
-            {"dataset_id": max_id, "name": "Overwrite Dataset", "is_public": True},
+            {
+                "dataset_id": max_id,
+                "name": "Overwrite Dataset",
+                "authenticated": True,
+                "current_user": "testUser2",
+                "is_public": True,
+            },
         )
         DataSet.objects.get(id=max_id).delete()
 
