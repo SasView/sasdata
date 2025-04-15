@@ -12,6 +12,7 @@ Any useful metadata which cannot be included in these classes represent a bug in
 from dataclasses import dataclass
 
 from sasdata.quantities.quantity import Quantity
+from numpy import ndarray
 
 @dataclass(kw_only=True)
 class Vec3:
@@ -189,7 +190,7 @@ class Instrument:
 class MetaNode:
     name: str
     attrs: dict[str, str]
-    contents: str | list["MetaNode"]
+    contents: str | ndarray | list["MetaNode"]
     def to_string(self, header=""):
         if self.attrs:
             attributes = f"\n{header}  Attributes:\n" + "\n".join([f"{header}    {k}: {v}" for k, v in self.attrs.items()])
