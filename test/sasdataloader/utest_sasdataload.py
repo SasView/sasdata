@@ -77,19 +77,20 @@ def test_xml_load_file(f):
     keys = sorted([d for d in data])
     assert "".join(data[k].summary() for k in keys) == expected
 
+
 @pytest.mark.sasdata
 def test_filter_data():
     data = xml_load_data(local_load("data/cansas1d_notitle.xml"))
     for k, v in data.items():
         assert v.metadata.raw.filter("transmission") == ["0.327"]
-        assert v.metadata.raw.filter("wavelength") == [Quantity(6.0, unit_parser.parse("A"))]
+        assert v.metadata.raw.filter("wavelength") == [
+            Quantity(6.0, unit_parser.parse("A"))
+        ]
         assert v.metadata.raw.filter("SDD") == [Quantity(4.15, unit_parser.parse("m"))]
     data = hdf_load_data(local_load("data/nxcansas_1Dand2D_multisasentry.h5"))
     for k, v in data.items():
-        print([y
-               for x in v.metadata.raw.contents if x.name.startswith("sasinstrument")
-               for y in x.contents if y.name.startswith("sasdetector")
-               ])
         assert v.metadata.raw.filter("radiation") == ["Spallation Neutron Source"]
-        assert v.metadata.raw.filter("SDD") == [Quantity(np.array([2845.26], dtype=np.float32), unit_parser.parse("mm")),
-                                                Quantity(np.array([4385.28], dtype=np.float32), unit_parser.parse("mm"))]
+        assert v.metadata.raw.filter("SDD") == [
+            Quantity(np.array([2845.26], dtype=np.float32), unit_parser.parse("mm")),
+            Quantity(np.array([4385.28], dtype=np.float32), unit_parser.parse("mm")),
+        ]
