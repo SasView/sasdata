@@ -412,7 +412,7 @@ class SingleSessionView(APIView):
             return HttpResponseForbidden(
                 "You do not have permission to view this session."
             )
-        serializer = DataSetSerializer(db)
+        serializer = SessionSerializer(db)
         return Response(serializer.data)
 
     # modify a session
@@ -424,7 +424,7 @@ class SingleSessionView(APIView):
                     "Must be authenticated to modify session", status=401
                 )
             return HttpResponseForbidden("Cannot modify a session you do not own")
-        serializer = DataSetSerializer(
+        serializer = Session(
             db, request.data, context={"request": request}, partial=True
         )
         if serializer.is_valid(raise_exception=True):
