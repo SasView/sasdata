@@ -350,6 +350,26 @@ class SessionSerializer(serializers.ModelSerializer):
             "users",
         ]
 
+    def validate(self, data):
+        if (
+            not self.context["request"].user.is_authenticated
+            and "is_public" in data
+            and not data["is_public"]
+        ):
+            raise serializers.ValidationError("private sessions must have an owner")
+        if "current_user" in data and data["current_user"] is None:
+            if "is_public" in data:
+                if not "is_public":
+                    raise serializers.ValidationError(
+                        "private sessions must have an owner"
+                    )
+            else:
+                if not self.instance.is_public:
+                    raise serializers.ValidationError(
+                        "private sessions must have an owner"
+                    )
+        return data
+
     def to_internal_value(self, data):
         data_copy = data.copy()
         if "is_public" in data:
