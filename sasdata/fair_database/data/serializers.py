@@ -342,6 +342,7 @@ class SessionSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Session
         fields = [
+            "id",
             "title",
             "published_state",
             "datasets",
