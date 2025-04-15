@@ -191,7 +191,7 @@ class Instrument:
 class MetaNode:
     name: str
     attrs: dict[str, str]
-    contents: str | ndarray | list["MetaNode"]
+    contents: str | Quantity | ndarray | list["MetaNode"]
     def to_string(self, header=""):
         """Convert node to pretty printer string"""
         if self.attrs:
@@ -210,21 +210,19 @@ class MetaNode:
     def filter(self, name: str) -> list[ndarray | Quantity | str]:
         match self.contents:
             case str():
-                if name != self.name:
-                    return []
-                if "unit" not in self.attrs:
+                if name == self.name:
                     return [self.contents]
-                return [Quantity(float(self.contents), unit_parser.parse(self.attrs["unit"]))]
             case ndarray():
-                if name != self.name:
-                    return []
-                if "unit" not in self.attrs:
+                if name == self.name:
                     return [self.contents]
-                return [Quantity(self.contents, unit_parser.parse(self.attrs["unit"]))]
+            case Quantity():
+                if name == self.name:
+                    return [self.contents]
             case list():
                 return [y for x in self.contents for y in x.filter(name)]
             case _:
-                return []
+                raise RuntimeError(f"Cannot filter contents of type {type(self.contents)}: {self.contents}")
+        return []
 
 
 @dataclass(kw_only=True)

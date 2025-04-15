@@ -2,6 +2,7 @@
 Unit tests for the new recursive cansas reader
 """
 
+import numpy as np
 import os
 import unittest
 import pytest
@@ -19,6 +20,8 @@ from sasdata.dataloader.data_info import Data1D, Data2D
 from sasdata.dataloader.readers.xml_reader import XMLreader
 from sasdata.dataloader.readers.cansas_reader import Reader
 from sasdata.dataloader.readers.cansas_constants import CansasConstants
+from sasdata.quantities.quantity import Quantity
+import sasdata.quantities.unit_parser as unit_parser
 from sasdata.temp_hdf5_reader import load_data as hdf_load_data
 from sasdata.temp_xml_reader import load_data as xml_load_data
 
@@ -73,3 +76,20 @@ def test_xml_load_file(f):
         expected = "".join(infile.readlines())
     keys = sorted([d for d in data])
     assert "".join(data[k].summary() for k in keys) == expected
+
+@pytest.mark.sasdata
+def test_filter_data():
+    data = xml_load_data(local_load("data/cansas1d_notitle.xml"))
+    for k, v in data.items():
+        assert v.metadata.raw.filter("transmission") == ["0.327"]
+        assert v.metadata.raw.filter("wavelength") == [Quantity(6.0, unit_parser.parse("A"))]
+        assert v.metadata.raw.filter("SDD") == [Quantity(4.15, unit_parser.parse("m"))]
+    data = hdf_load_data(local_load("data/nxcansas_1Dand2D_multisasentry.h5"))
+    for k, v in data.items():
+        print([y
+               for x in v.metadata.raw.contents if x.name.startswith("sasinstrument")
+               for y in x.contents if y.name.startswith("sasdetector")
+               ])
+        assert v.metadata.raw.filter("radiation") == ["Spallation Neutron Source"]
+        assert v.metadata.raw.filter("SDD") == [Quantity(np.array([2845.26], dtype=np.float32), unit_parser.parse("mm")),
+                                                Quantity(np.array([4385.28], dtype=np.float32), unit_parser.parse("mm"))]

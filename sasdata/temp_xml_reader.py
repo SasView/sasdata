@@ -253,14 +253,24 @@ def get_cansas_version(root: etree._Element) -> str | None:
             return n
     return None
 
-def load_raw(node: etree._Element) -> MetaNode:
+def load_raw(node: etree._Element, version: str) -> MetaNode:
     attrib = {k: v for k, v in node.attrib.items()}
     nodes = [n for n in node if not isinstance(n, etree._Comment)]
-    contents: str | list[MetaNode] = ""
+    contents: Quantity[float] | str | list[MetaNode] = ""
     if nodes:
-        contents = [load_raw(n) for n in nodes]
+        contents = [load_raw(n, version) for n in nodes]
     else:
-        contents = " ".join(node.itertext())
+        if "unit" in attrib and attrib["unit"]:
+            value = parse_string(node, version)
+            if value:
+                try:
+                    contents = Quantity(float(value), unit_parser.parse(attrib["unit"]))
+                except ValueError:
+                    contents = value
+            else:
+                contents = value
+        else:
+            contents = parse_string(node, version)
     return MetaNode(name=etree.QName(node).localname,
                     attrs=attrib,
                     contents=contents)
@@ -299,7 +309,7 @@ def load_data(filename: str) -> dict[str, SasData]:
             process=all_parse(entry, "SASprocess", version, parse_process),
             sample=opt_parse(entry, "SASsample", version, parse_sample),
             definition=opt_parse(entry, "SASdefinition", version, parse_string),
-            raw=load_raw(root)
+            raw=load_raw(root, version)
         )
 
         data = {}
