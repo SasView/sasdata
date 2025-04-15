@@ -268,10 +268,139 @@ class TestSession(APITestCase):
 class TestSingleSession(APITestCase):
     @classmethod
     def setUpTestData(cls):
-        pass
+        cls.user1 = User.objects.create_user(
+            id=1, username="testUser1", password="secret"
+        )
+        cls.user2 = User.objects.create_user(
+            id=2, username="testUser2", password="secret"
+        )
+        cls.public_session = Session.objects.create(
+            id=1, current_user=cls.user1, title="Public Session", is_public=True
+        )
+        cls.private_session = Session.objects.create(
+            id=2, current_user=cls.user1, title="Private Session", is_public=False
+        )
+        cls.unowned_session = Session.objects.create(
+            id=3, title="Unowned Session", is_public=True
+        )
+        cls.public_dataset = DataSet.objects.create(
+            id=1,
+            current_user=cls.user1,
+            is_public=True,
+            name="Public Dataset",
+            session=cls.public_session,
+        )
+        cls.private_dataset = DataSet.objects.create(
+            id=2,
+            current_user=cls.user1,
+            name="Private Dataset",
+            session=cls.private_session,
+        )
+        cls.unowned_dataset = DataSet.objects.create(
+            id=3, is_public=True, name="Unowned Dataset", session=cls.unowned_session
+        )
+        cls.auth_client1 = APIClient()
+        cls.auth_client2 = APIClient()
+        cls.auth_client1.force_authenticate(cls.user1)
+        cls.auth_client2.force_authenticate(cls.user2)
 
-    # Test accessing session
-    # public, private, with/without access
+    # Test loading another user's public session
+    def test_get_public_session(self):
+        request = self.auth_client2.get("/v1/data/session/1/")
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            request.data,
+            {
+                "id": 1,
+                "current_user": 1,
+                "users": [],
+                "is_public": True,
+                "title": "Public Session",
+                "published_state": None,
+                "datasets": [
+                    {
+                        "id": 1,
+                        "current_user": 1,
+                        "users": [],
+                        "is_public": True,
+                        "name": "Public Dataset",
+                        "files": [],
+                        "metadata": None,
+                        "data_contents": [],
+                    }
+                ],
+            },
+        )
+
+    # Test loading a private session as the owner
+    def test_get_private_session(self):
+        request = self.auth_client1.get("/v1/data/session/2/")
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            request.data,
+            {
+                "id": 2,
+                "current_user": 1,
+                "users": [],
+                "is_public": False,
+                "title": "Private Session",
+                "published_state": None,
+                "datasets": [
+                    {
+                        "id": 2,
+                        "current_user": 1,
+                        "users": [],
+                        "is_public": False,
+                        "name": "Private Dataset",
+                        "files": [],
+                        "metadata": None,
+                        "data_contents": [],
+                    }
+                ],
+            },
+        )
+
+    # Test loading a private session as a user with granted access
+    def test_get_private_session_access_granted(self):
+        self.private_session.users.add(self.user2)
+        request = self.auth_client2.get("/v1/data/session/2/")
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.private_session.users.remove(self.user2)
+
+    # Test loading an unowned session
+    def test_get_unowned_session(self):
+        request = self.auth_client1.get("/v1/data/session/3/")
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            request.data,
+            {
+                "id": 3,
+                "current_user": None,
+                "users": [],
+                "is_public": True,
+                "title": "Unowned Session",
+                "published_state": None,
+                "datasets": [
+                    {
+                        "id": 3,
+                        "current_user": None,
+                        "users": [],
+                        "is_public": True,
+                        "name": "Unowned Dataset",
+                        "files": [],
+                        "metadata": None,
+                        "data_contents": [],
+                    }
+                ],
+            },
+        )
+
+    # Test loading another user's private session
+    def test_get_private_session_unauthorized(self):
+        request1 = self.auth_client2.get("/v1/data/session/2/")
+        request2 = self.client.get("/v1/data/session/2/")
+        self.assertEqual(request1.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(request2.status_code, status.HTTP_401_UNAUTHORIZED)
 
     # Test updating session
     # public, private, owner, not owner
@@ -281,7 +410,11 @@ class TestSingleSession(APITestCase):
 
     @classmethod
     def tearDownClass(cls):
-        pass
+        cls.public_session.delete()
+        cls.private_session.delete()
+        cls.unowned_session.delete()
+        cls.user1.delete()
+        cls.user2.delete()
 
 
 class TestSessionAccessManagement(APITestCase):
