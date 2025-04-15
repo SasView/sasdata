@@ -12,6 +12,7 @@ Any useful metadata which cannot be included in these classes represent a bug in
 from dataclasses import dataclass
 
 from sasdata.quantities.quantity import Quantity
+from sasdata.quantities import unit_parser
 from numpy import ndarray
 
 @dataclass(kw_only=True)
@@ -192,6 +193,7 @@ class MetaNode:
     attrs: dict[str, str]
     contents: str | ndarray | list["MetaNode"]
     def to_string(self, header=""):
+        """Convert node to pretty printer string"""
         if self.attrs:
             attributes = f"\n{header}  Attributes:\n" + "\n".join([f"{header}    {k}: {v}" for k, v in self.attrs.items()])
         else:
@@ -205,6 +207,25 @@ class MetaNode:
             children = ""
 
         return f"\n{header}{self.name}:{attributes}{children}"
+    def filter(self, name: str) -> list[ndarray | Quantity | str]:
+        match self.contents:
+            case str():
+                if name != self.name:
+                    return []
+                if "unit" not in self.attrs:
+                    return [self.contents]
+                return [Quantity(float(self.contents), unit_parser.parse(self.attrs["unit"]))]
+            case ndarray():
+                if name != self.name:
+                    return []
+                if "unit" not in self.attrs:
+                    return [self.contents]
+                return [Quantity(self.contents, unit_parser.parse(self.attrs["unit"]))]
+            case list():
+                return [y for x in self.contents for y in x.filter(name)]
+            case _:
+                return []
+
 
 @dataclass(kw_only=True)
 class Metadata:
