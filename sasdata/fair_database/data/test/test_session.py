@@ -181,7 +181,7 @@ class TestSession(APITestCase):
         )
         self.assertEqual(new_session.current_user, self.user1)
         self.assertEqual(new_dataset.current_user, self.user1)
-        self.assertTrue(all([(not new_session.is_public), (not new_dataset.is_public)]))
+        self.assertFalse(any([new_session.is_public, new_dataset.is_public]))
         new_session.delete()
 
     # Test creating a session while unauthenticated
@@ -404,6 +404,72 @@ class TestSingleSession(APITestCase):
 
     # Test updating session
     # public, private, owner, not owner
+    def test_update_public_session(self):
+        request = self.auth_client1.put(
+            "/v1/data/session/1/", data={"is_public": False}
+        )
+        session = Session.objects.get(id=1)
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            request.data,
+            {"session_id": 1, "title": "Public Session", "is_public": False},
+        )
+        self.assertFalse(session.is_public)
+        session.is_public = False
+        session.save()
+
+    def test_update_public_session_unauthorized(self):
+        request1 = self.auth_client2.put(
+            "/v1/data/session/1/", data={"is_public": False}
+        )
+        request2 = self.client.put("/v1/data/session/1/", data={"is_public": False})
+        session = Session.objects.get(id=1)
+        session.users.add(self.user2)
+        request3 = self.auth_client2.put(
+            "/v1/data/session/1/", data={"is_public": False}
+        )
+        session.users.remove(self.user2)
+        self.assertEqual(request1.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(request2.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(request3.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertTrue(Session.objects.get(id=1).is_public)
+
+    def test_update_private_session(self):
+        request1 = self.auth_client1.put(
+            "/v1/data/session/2/", data={"is_public": True}
+        )
+        session = Session.objects.get(id=2)
+        self.assertEqual(request1.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            request1.data,
+            {"session_id": 2, "title": "Private Session", "is_public": True},
+        )
+        self.assertTrue(session.is_public)
+        session.is_public = False
+        session.save()
+
+    def test_update_private_session_unauthorized(self):
+        request1 = self.auth_client2.put(
+            "/v1/data/session/2/", data={"is_public": True}
+        )
+        request2 = self.client.put("/v1/data/session/2/", data={"is_public": True})
+        session = Session.objects.get(id=2)
+        session.users.add(self.user2)
+        request3 = self.auth_client2.put(
+            "/v1/data/session/2/", data={"is_public": True}
+        )
+        session.users.remove(self.user2)
+        self.assertEqual(request1.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(request2.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(request3.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertFalse(Session.objects.get(id=2).is_public)
+
+    def test_update_unowned_session(self):
+        request = self.auth_client1.put(
+            "/v1/data/session/3/", data={"is_public": False}
+        )
+        self.assertEqual(request.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertTrue(Session.objects.get(id=3).is_public)
 
     # Test deleting session
     # Test delete cascades
