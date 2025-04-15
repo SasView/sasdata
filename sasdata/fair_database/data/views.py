@@ -240,7 +240,13 @@ class DataSetView(APIView):
         if serializer.is_valid(raise_exception=True):
             serializer.save()
         db = serializer.instance
-        response = {"dataset_id": db.id, "name": db.name, "is_public": db.is_public}
+        response = {
+            "dataset_id": db.id,
+            "name": db.name,
+            "authenticated": request.user.is_authenticated,
+            "current_user": request.user.username,
+            "is_public": db.is_public,
+        }
         return Response(data=response, status=status.HTTP_201_CREATED)
 
     # create a dataset
@@ -376,7 +382,13 @@ class SessionView(APIView):
         if serializer.is_valid(raise_exception=True):
             serializer.save()
         db = serializer.instance
-        response = {"session_id": db.id, "is_public": db.is_public}
+        response = {
+            "session_id": db.id,
+            "title": db.title,
+            "authenticated": request.user.is_authenticated,
+            "current_user": request.user.username,
+            "is_public": db.is_public,
+        }
         return Response(data=response, status=status.HTTP_201_CREATED)
 
     # Create a session
