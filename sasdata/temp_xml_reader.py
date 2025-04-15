@@ -16,7 +16,9 @@ from sasdata.metadata import (
     Rot3,
     Sample,
     Process,
+    MetaNode,
     Metadata,
+
 )
 from sasdata.quantities.quantity import Quantity
 import sasdata.quantities.unit_parser as unit_parser
@@ -244,12 +246,24 @@ def parse_data(node: etree._Element, version: str) -> dict[str, Quantity]:
     return result
 
 
-def get_cansas_version(root) -> str | None:
+def get_cansas_version(root: etree._Element) -> str | None:
     """Find the cansas version of a file"""
     for n, v in ns.items():
         if root.tag == "{" + v + "}SASroot":
             return n
     return None
+
+def load_raw(node: etree._Element) -> MetaNode:
+    attrib = {k: v for k, v in node.attrib.items()}
+    nodes = [n for n in node if not isinstance(n, etree._Comment)]
+    contents: str | list[MetaNode] = ""
+    if nodes:
+        contents = [load_raw(n) for n in nodes]
+    else:
+        contents = " ".join(node.itertext())
+    return MetaNode(name=etree.QName(node).localname,
+                    attrs=attrib,
+                    contents=contents)
 
 
 def load_data(filename: str) -> dict[str, SasData]:
@@ -285,6 +299,7 @@ def load_data(filename: str) -> dict[str, SasData]:
             process=all_parse(entry, "SASprocess", version, parse_process),
             sample=opt_parse(entry, "SASsample", version, parse_sample),
             definition=opt_parse(entry, "SASdefinition", version, parse_string),
+            raw=load_raw(root)
         )
 
         data = {}
