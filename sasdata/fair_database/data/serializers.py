@@ -289,7 +289,7 @@ class DataSetSerializer(serializers.ModelSerializer):
             validated_data["current_user"] = self.context["request"].user
         metadata_raw = validated_data.pop("metadata")
         if "session" in validated_data:
-            session = models.Session.objects.get(id=validated_data["session"])
+            session = models.Session.objects.get(id=validated_data.pop("session"))
         data_contents = validated_data.pop("data_contents")
         if "files" in validated_data:
             files = validated_data.pop("files")
@@ -341,7 +341,14 @@ class SessionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Session
-        fields = ["title", "published_state", "datasets"]
+        fields = [
+            "title",
+            "published_state",
+            "datasets",
+            "current_user",
+            "is_public",
+            "users",
+        ]
 
     def to_internal_value(self, data):
         data_copy = data.copy()
@@ -359,7 +366,9 @@ class SessionSerializer(serializers.ModelSerializer):
         session = models.Session.objects.create(**validated_data)
         for dataset in datasets:
             dataset["session"] = session.id
-            DataSetSerializer.create(DataSetSerializer(), validated_data=dataset)
+            DataSetSerializer.create(
+                DataSetSerializer(context=self.context), validated_data=dataset
+            )
         return session
 
 
