@@ -424,12 +424,12 @@ class SingleSessionView(APIView):
                     "Must be authenticated to modify session", status=401
                 )
             return HttpResponseForbidden("Cannot modify a session you do not own")
-        serializer = Session(
+        serializer = SessionSerializer(
             db, request.data, context={"request": request}, partial=True
         )
         if serializer.is_valid(raise_exception=True):
             serializer.save()
-        data = {"data_id": db.id, "is_public": db.is_public}
+        data = {"session_id": db.id, "title": db.title, "is_public": db.is_public}
         return Response(data)
 
     # delete a session
