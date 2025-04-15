@@ -473,6 +473,38 @@ class TestSingleSession(APITestCase):
 
     # Test deleting session
     # Test delete cascades
+    def test_delete_private_session(self):
+        request = self.auth_client1.delete("/v1/data/session/2/")
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertRaises(Session.DoesNotExist, Session.objects.get, id=2)
+        self.assertRaises(DataSet.DoesNotExist, DataSet.objects.get, id=2)
+        self.private_session = Session.objects.create(
+            id=2, current_user=self.user1, title="Private Session", is_public=False
+        )
+        self.private_dataset = DataSet.objects.create(
+            id=2,
+            current_user=self.user1,
+            name="Private Dataset",
+            session=self.private_session,
+        )
+
+    def test_delete_private_session_unauthorized(self):
+        request1 = self.auth_client2.delete("/v1/data/session/2/")
+        request2 = self.client.delete("/v1/data/session/2/")
+        self.private_session.users.add(self.user2)
+        request3 = self.auth_client2.delete("/v1/data/session/2/")
+        self.private_session.users.remove(self.user2)
+        self.assertEqual(request1.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(request2.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(request3.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_delete_public_session(self):
+        request = self.auth_client1.delete("/v1/data/session/1/")
+        self.assertEqual(request.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_delete_unowned_session(self):
+        request = self.auth_client1.delete("/v1/data/session/3/")
+        self.assertEqual(request.status_code, status.HTTP_403_FORBIDDEN)
 
     @classmethod
     def tearDownClass(cls):
