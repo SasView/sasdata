@@ -1,9 +1,10 @@
 from django.contrib.auth.models import User
+from django.db.models import Max
 from rest_framework.test import APIClient, APITestCase
 from rest_framework import status
 
 
-from data.models import Session
+from data.models import DataSet, Session
 
 
 class TestSession(APITestCase):
@@ -95,10 +96,165 @@ class TestSession(APITestCase):
         self.assertEqual(request.status_code, status.HTTP_200_OK)
         self.assertEqual(request.data, {"session_ids": {1: "Public Session"}})
 
-    # Test creating a session - public, private, unauthenticated
-    # Datasets have same access as session
+    # Test creating a public session
+    def test_session_created(self):
+        session = {
+            "title": "New session",
+            "datasets": [
+                {
+                    "name": "New dataset",
+                    "metadata": {
+                        "title": "New metadata",
+                        "run": 0,
+                        "description": "test",
+                        "instrument": {},
+                        "process": {},
+                        "sample": {},
+                    },
+                    "data_contents": [],
+                }
+            ],
+            "is_public": True,
+        }
+        request = self.auth_client1.post(
+            "/v1/data/session/", data=session, format="json"
+        )
+        max_id = Session.objects.aggregate(Max("id"))["id__max"]
+        new_session = Session.objects.get(id=max_id)
+        new_dataset = new_session.datasets.get()
+        new_metadata = new_dataset.metadata
+        self.assertEqual(request.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(
+            request.data,
+            {
+                "session_id": max_id,
+                "title": "New session",
+                "authenticated": True,
+                "current_user": "testUser1",
+                "is_public": True,
+            },
+        )
+        self.assertEqual(new_session.title, "New session")
+        self.assertEqual(new_dataset.name, "New dataset")
+        self.assertEqual(new_metadata.title, "New metadata")
+        self.assertEqual(new_session.current_user, self.user1)
+        self.assertEqual(new_dataset.current_user, self.user1)
+        self.assertTrue(all([new_session.is_public, new_dataset.is_public]))
+        new_session.delete()
+
+    # Test creating a private session
+    def test_session_created_private(self):
+        session = {
+            "title": "New session",
+            "datasets": [
+                {
+                    "name": "New dataset",
+                    "metadata": {
+                        "title": "New metadata",
+                        "run": 0,
+                        "description": "test",
+                        "instrument": {},
+                        "process": {},
+                        "sample": {},
+                    },
+                    "data_contents": [],
+                }
+            ],
+            "is_public": False,
+        }
+        request = self.auth_client1.post(
+            "/v1/data/session/", data=session, format="json"
+        )
+        max_id = Session.objects.aggregate(Max("id"))["id__max"]
+        new_session = Session.objects.get(id=max_id)
+        new_dataset = new_session.datasets.get()
+        self.assertEqual(request.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(
+            request.data,
+            {
+                "session_id": max_id,
+                "title": "New session",
+                "authenticated": True,
+                "current_user": "testUser1",
+                "is_public": False,
+            },
+        )
+        self.assertEqual(new_session.current_user, self.user1)
+        self.assertEqual(new_dataset.current_user, self.user1)
+        self.assertTrue(all([(not new_session.is_public), (not new_dataset.is_public)]))
+        new_session.delete()
+
+    # Test creating a session while unauthenticated
+    def test_session_created_unauthenticated(self):
+        session = {
+            "title": "New session",
+            "datasets": [
+                {
+                    "name": "New dataset",
+                    "metadata": {
+                        "title": "New metadata",
+                        "run": 0,
+                        "description": "test",
+                        "instrument": {},
+                        "process": {},
+                        "sample": {},
+                    },
+                    "data_contents": [],
+                }
+            ],
+            "is_public": True,
+        }
+        request = self.client.post("/v1/data/session/", data=session, format="json")
+        max_id = Session.objects.aggregate(Max("id"))["id__max"]
+        new_session = Session.objects.get(id=max_id)
+        new_dataset = new_session.datasets.get()
+        self.assertEqual(request.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(
+            request.data,
+            {
+                "session_id": max_id,
+                "title": "New session",
+                "authenticated": False,
+                "current_user": "",
+                "is_public": True,
+            },
+        )
+        self.assertIsNone(new_session.current_user)
+        self.assertIsNone(new_dataset.current_user)
+        self.assertTrue(all([new_session.is_public, new_dataset.is_public]))
+        new_session.delete()
+
+    # Test that a private session must have an owner
+    def test_no_private_unowned_session(self):
+        session = {"title": "New session", "datasets": [], "is_public": False}
+        request = self.client.post("/v1/data/session/", data=session, format="json")
+        self.assertEqual(request.status_code, status.HTTP_400_BAD_REQUEST)
 
     # Test post fails with dataset validation issue
+    def test_no_session_invalid_dataset(self):
+        session = {
+            "title": "New session",
+            "datasets": [
+                {
+                    "metadata": {
+                        "title": "New metadata",
+                        "run": 0,
+                        "description": "test",
+                        "instrument": {},
+                        "process": {},
+                        "sample": {},
+                    },
+                    "data_contents": [],
+                }
+            ],
+            "is_public": True,
+        }
+        request = self.auth_client1.post(
+            "/v1/data/session/", data=session, format="json"
+        )
+        self.assertEqual(request.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(len(Session.objects.all()), 3)
+        self.assertEqual(len(DataSet.objects.all()), 0)
 
     @classmethod
     def tearDownClass(cls):
