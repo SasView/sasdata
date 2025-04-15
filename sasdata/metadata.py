@@ -186,6 +186,26 @@ class Instrument:
             self.source.summary())
 
 @dataclass(kw_only=True)
+class MetaNode:
+    name: str
+    attrs: dict[str, str]
+    contents: str | list["MetaNode"]
+    def to_string(self, header=""):
+        if self.attrs:
+            attributes = f"\n{header}  Attributes:\n" + "\n".join([f"{header}    {k}: {v}" for k, v in self.attrs.items()])
+        else:
+            attributes = ""
+        if self.contents:
+            if type(self.contents) is str:
+                children = f"\n{header}  {self.contents}"
+            else:
+                children = "".join([n.to_string(header + "  ") for n in self.contents])
+        else:
+            children = ""
+
+        return f"\n{header}{self.name}:{attributes}{children}"
+
+@dataclass(kw_only=True)
 class Metadata:
     title: str | None
     run: list[str]
@@ -193,6 +213,7 @@ class Metadata:
     process: list[Process]
     sample: Sample | None
     instrument: Instrument | None
+    raw: MetaNode
 
     def summary(self):
         run_string = self.run[0] if len(self.run) == 1 else self.run
