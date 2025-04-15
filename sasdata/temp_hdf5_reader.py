@@ -258,23 +258,24 @@ def parse_process(node : HDF5Group) -> Process:
     return Process(name=name, date=date, description=description, terms=terms, notes=notes)
 
 def load_raw(node: HDF5Group | HDF5Dataset) -> MetaNode:
-    print("Node:", node)
-    print("Type:", type(node))
-    print("Dir:", dir(node))
+    name = node.name.split("/")[-1]
     match node:
         case HDF5Group():
-            name = node.name
             attrib = {a: node.attrs[a] for a in node.attrs}
             contents = [load_raw(node[v]) for v in node]
             return MetaNode(name=name, attrs=attrib, contents=contents)
         case HDF5Dataset(dtype=dt):
-            print("Dt: ", dt)
-            name = node.name
             attrib = {a: node.attrs[a] for a in node.attrs}
             if (str(dt).startswith("|S")):
-                contents = node.asstr()[0]
+                if "units" in attrib:
+                    contents = Quantity(float(node.asstr()[0]), parse(attrib["units"]))
+                else:
+                    contents = node.asstr()[0]
             else:
-                contents = node[:]
+                if "units" in attrib and attrib["units"]:
+                    contents = Quantity(node[:], parse(attrib["units"]))
+                else:
+                    contents = node[:]
             return MetaNode(name=name, attrs=attrib, contents=contents)
         case _:
             raise RuntimeError(f"Cannot load raw data of type {type(node)}")
