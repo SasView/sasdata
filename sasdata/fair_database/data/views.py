@@ -274,7 +274,10 @@ class SingleDataSetView(APIView):
                 "You do not have permission to view this dataset."
             )
         serializer = DataSetSerializer(db, context={"request": request})
-        return Response(serializer.data)
+        response_data = serializer.data
+        if db.current_user:
+            response_data["current_user"] = db.current_user.username
+        return Response(response_data)
 
     # edit a specific dataset
     def put(self, request, data_id, version=None):
@@ -413,7 +416,10 @@ class SingleSessionView(APIView):
                 "You do not have permission to view this session."
             )
         serializer = SessionSerializer(db)
-        return Response(serializer.data)
+        response_data = serializer.data
+        if db.current_user:
+            response_data["current_user"] = db.current_user.username
+        return Response(response_data)
 
     # modify a session
     def put(self, request, data_id, version=None):
