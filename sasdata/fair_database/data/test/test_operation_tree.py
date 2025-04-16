@@ -47,7 +47,7 @@ class TestCreateOperationTree(APITestCase):
                 "operation": "variable",
                 "parameters": {"hash_value": 0, "name": "test"},
             },
-            "references": {},
+            "references": [],
         }
         request = self.client.post("/v1/data/set/", data=self.dataset, format="json")
         max_id = DataSet.objects.aggregate(Max("id"))["id__max"]
@@ -72,7 +72,7 @@ class TestCreateOperationTree(APITestCase):
                     }
                 },
             },
-            "references": {},
+            "references": [],
         }
         request = self.client.post("/v1/data/set/", data=self.dataset, format="json")
         max_id = DataSet.objects.aggregate(Max("id"))["id__max"]
@@ -102,7 +102,7 @@ class TestCreateOperationTree(APITestCase):
                     "b": {"operation": "constant", "parameters": {"value": 5}},
                 },
             },
-            "references": {},
+            "references": [],
         }
         request = self.client.post("/v1/data/set/", data=self.dataset, format="json")
         max_id = DataSet.objects.aggregate(Max("id"))["id__max"]
@@ -133,7 +133,7 @@ class TestCreateOperationTree(APITestCase):
                     "power": 2,
                 },
             },
-            "references": {},
+            "references": [],
         }
         request = self.client.post("/v1/data/set/", data=self.dataset, format="json")
         max_id = DataSet.objects.aggregate(Max("id"))["id__max"]
@@ -157,7 +157,7 @@ class TestCreateOperationTree(APITestCase):
                     "axes": [1, 0],
                 },
             },
-            "references": {},
+            "references": [],
         }
         request = self.client.post("/v1/data/set/", data=self.dataset, format="json")
         max_id = DataSet.objects.aggregate(Max("id"))["id__max"]
@@ -192,7 +192,7 @@ class TestCreateOperationTree(APITestCase):
                     },
                 },
             },
-            "references": {},
+            "references": [],
         }
         request = self.client.post("/v1/data/set/", data=self.dataset, format="json")
         max_id = DataSet.objects.aggregate(Max("id"))["id__max"]
@@ -227,7 +227,7 @@ class TestCreateOperationTree(APITestCase):
                     "b_index": 1,
                 },
             },
-            "references": {},
+            "references": [],
         }
         request = self.client.post("/v1/data/set/", data=self.dataset, format="json")
         max_id = DataSet.objects.aggregate(Max("id"))["id__max"]
@@ -294,7 +294,7 @@ class TestCreateInvalidOperationTree(APITestCase):
     def test_create_operation_tree_invalid(self):
         self.dataset["data_contents"][0]["history"] = {
             "operation_tree": {"operation": "fix", "parameters": {}},
-            "references": {},
+            "references": [],
         }
         request = self.client.post("/v1/data/set/", data=self.dataset, format="json")
         self.assertEqual(request.status_code, status.HTTP_400_BAD_REQUEST)
@@ -314,7 +314,7 @@ class TestCreateInvalidOperationTree(APITestCase):
                     }
                 },
             },
-            "references": {},
+            "references": [],
         }
         request = self.client.post("/v1/data/set/", data=self.dataset, format="json")
         self.assertEqual(request.status_code, status.HTTP_400_BAD_REQUEST)
@@ -346,7 +346,7 @@ class TestCreateInvalidOperationTree(APITestCase):
                     }
                 },
             },
-            "references": {},
+            "references": [],
         }
         request = self.client.post("/v1/data/set/", data=self.dataset, format="json")
         self.assertEqual(request.status_code, status.HTTP_400_BAD_REQUEST)
@@ -364,7 +364,7 @@ class TestCreateInvalidOperationTree(APITestCase):
                     "a": {"operation": "variable", "parameters": {"name": "x"}}
                 },
             },
-            "references": {},
+            "references": [],
         }
         request = self.client.post("/v1/data/set/", data=self.dataset, format="json")
         self.assertEqual(request.status_code, status.HTTP_400_BAD_REQUEST)
@@ -379,7 +379,7 @@ class TestCreateInvalidOperationTree(APITestCase):
                 "operation": "neg",
                 "parameters": {"a": {"operation": "constant", "parameters": {}}},
             },
-            "references": {},
+            "references": [],
         }
         request = self.client.post("/v1/data/set/", data=self.dataset, format="json")
         self.assertEqual(request.status_code, status.HTTP_400_BAD_REQUEST)
@@ -399,7 +399,7 @@ class TestCreateInvalidOperationTree(APITestCase):
                     },
                 },
             },
-            "references": {},
+            "references": [],
         }
         request = self.client.post("/v1/data/set/", data=self.dataset, format="json")
         self.assertEqual(request.status_code, status.HTTP_400_BAD_REQUEST)
@@ -419,7 +419,7 @@ class TestCreateInvalidOperationTree(APITestCase):
                     },
                 },
             },
-            "references": {},
+            "references": [],
         }
         request = self.client.post("/v1/data/set/", data=self.dataset, format="json")
         self.assertEqual(request.status_code, status.HTTP_400_BAD_REQUEST)
@@ -441,7 +441,7 @@ class TestCreateInvalidOperationTree(APITestCase):
                     "b_index": 1,
                 },
             },
-            "references": {},
+            "references": [],
         }
         request = self.client.post("/v1/data/set/", data=self.dataset, format="json")
         self.assertEqual(request.status_code, status.HTTP_400_BAD_REQUEST)
@@ -498,6 +498,7 @@ class TestGetOperationTree(APITestCase):
                 "units": "none",
                 "hash": 1,
                 "operation_tree": None,
+                "references": [],
             },
         )
 
@@ -533,6 +534,7 @@ class TestGetOperationTree(APITestCase):
                         }
                     },
                 },
+                "references": [],
             },
         )
 
