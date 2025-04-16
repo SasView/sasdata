@@ -478,6 +478,67 @@ class TestSingleDataSet(APITestCase):
         self.assertEqual(request1.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(request2.status_code, status.HTTP_401_UNAUTHORIZED)
 
+    # Test updating metadata
+    def test_update_dataset_metadata(self):
+        new_metadata = {
+            "title": "Updated Metadata",
+            "run": ["X"],
+            "definition": "update test",
+            "instrument": "none",
+            "process": "none",
+            "sample": "none",
+        }
+        request = self.auth_client1.put(
+            "/v1/data/set/1/", data={"metadata": new_metadata}, format="json"
+        )
+        dataset = DataSet.objects.get(id=1)
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertEqual(dataset.metadata.title, "Updated Metadata")
+        self.assertEqual(dataset.metadata.id, 1)
+        self.assertEqual(len(MetaData.objects.all()), 1)
+        dataset.metadata.delete()
+        self.metadata = MetaData.objects.create(
+            id=1,
+            title="Metadata",
+            run=0,
+            definition="test",
+            instrument="none",
+            process="none",
+            sample="none",
+            dataset=self.public_dataset,
+        )
+
+    # Test partially updating metadata
+    def test_update_dataset_partial_metadata(self):
+        request = self.auth_client1.put(
+            "/v1/data/set/1/",
+            data={"metadata": {"title": "Different Title"}},
+            format="json",
+        )
+        dataset = DataSet.objects.get(id=1)
+        metadata = dataset.metadata
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertEqual(metadata.title, "Different Title")
+        self.assertEqual(metadata.definition, "test")
+        self.assertEqual(metadata.id, 1)
+        metadata.title = "Metadata"
+        metadata.save()
+
+    # Test that a dataset cannot be updated to be private and unowned
+    def test_update_dataset_no_private_unowned(self):
+        request1 = self.auth_client1.put("/v1/data/set/2/", data={"current_user": ""})
+        request2 = self.auth_client1.put(
+            "/v1/data/set/1/", data={"current_user": "", "is_public": False}
+        )
+        public_dataset = DataSet.objects.get(id=1)
+        self.assertEqual(request1.status_code, status.HTTP_200_OK)
+        self.assertEqual(request2.status_code, status.HTTP_200_OK)
+        self.assertEqual(DataSet.objects.get(id=2).current_user, self.user1)
+        self.assertEqual(public_dataset.current_user, self.user1)
+        self.assertFalse(public_dataset.is_public)
+        public_dataset.is_public = True
+        public_dataset.save()
+
     # Test deleting a dataset
     def test_delete_dataset(self):
         quantity = Quantity.objects.create(
