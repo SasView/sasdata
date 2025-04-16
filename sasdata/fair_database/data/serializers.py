@@ -451,6 +451,13 @@ class SessionSerializer(serializers.ModelSerializer):
             )
         return session
 
+    def update(self, instance, validated_data):
+        if "is_public" in validated_data:
+            for dataset in instance.datasets.all():
+                dataset.is_public = validated_data["is_public"]
+                dataset.save()
+        return super().update(instance, validated_data)
+
 
 # Determine if an operation does not have parent operations
 def constant_or_variable(operation: str):
