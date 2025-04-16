@@ -165,6 +165,7 @@ class QuantitySerializer(serializers.ModelSerializer):
     dataset = serializers.PrimaryKeyRelatedField(
         queryset=models.DataSet, required=False, allow_null=True
     )
+    history = serializers.JSONField(required=False, allow_null=True)
 
     class Meta:
         model = models.Quantity
@@ -178,7 +179,7 @@ class QuantitySerializer(serializers.ModelSerializer):
             "label",
             "dataset",
             "derived_quantity",
-            # "history",
+            "history",
         ]
 
     def validate_references(self, value):
@@ -200,6 +201,7 @@ class QuantitySerializer(serializers.ModelSerializer):
                     data_copy["operation_tree"] = operations
             if "references" in data["history"]:
                 data_copy["references"] = data["history"]["references"]
+            data_copy.pop("history")
             return super().to_internal_value(data_copy)
         return super().to_internal_value(data)
 
@@ -210,6 +212,9 @@ class QuantitySerializer(serializers.ModelSerializer):
             data.pop("dataset")
         if "derived_quantity" in data:
             data.pop("derived_quantity")
+        data["history"] = {}
+        data["history"]["operation_tree"] = data.pop("operation_tree")
+        data["history"]["references"] = data.pop("references")
         return data
 
     # Create a Quantity instance
