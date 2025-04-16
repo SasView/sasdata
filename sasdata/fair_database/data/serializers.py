@@ -5,6 +5,7 @@ from fair_database import permissions
 
 
 # TODO: more custom validation, particularly for specific nested dictionary structures
+# TODO: custom update methods for nested structures
 
 
 class DataFileSerializer(serializers.ModelSerializer):
@@ -333,7 +334,7 @@ class DataSetSerializer(serializers.ModelSerializer):
             and not data["is_public"]
         ):
             raise serializers.ValidationError("private data must have an owner")
-        if "current_user" in data and data["current_user"] is None:
+        if "current_user" in data and data["current_user"] == "":
             if "is_public" in data:
                 if not "is_public":
                     raise serializers.ValidationError("private data must have an owner")
@@ -364,7 +365,6 @@ class DataSetSerializer(serializers.ModelSerializer):
         return dataset
 
     # TODO: account for updating other attributes
-    # TODO: account for metadata potentially being null
     # Update a DataSet instance
     def update(self, instance, validated_data):
         if "metadata" in validated_data:
@@ -378,8 +378,6 @@ class DataSetSerializer(serializers.ModelSerializer):
         instance.name = validated_data.get("name", instance.name)
         instance.save()
         return instance
-
-    # TODO: custom method for database to serializer representation
 
 
 class PublishedStateSerializer(serializers.ModelSerializer):
@@ -419,7 +417,7 @@ class SessionSerializer(serializers.ModelSerializer):
             and not data["is_public"]
         ):
             raise serializers.ValidationError("private sessions must have an owner")
-        if "current_user" in data and data["current_user"] is None:
+        if "current_user" in data and data["current_user"] == "":
             if "is_public" in data:
                 if not "is_public":
                     raise serializers.ValidationError(
