@@ -158,6 +158,9 @@ class QuantitySerializer(serializers.ModelSerializer):
     """Serialization, deserialization, and validation for the Quantity model."""
 
     operation_tree = OperationTreeSerializer(read_only=False, required=False)
+    derived_quantity = serializers.PrimaryKeyRelatedField(
+        queryset=models.Quantity, required=False, allow_null=True
+    )
     label = serializers.CharField(max_length=20)
     dataset = serializers.PrimaryKeyRelatedField(
         queryset=models.DataSet, required=False, allow_null=True
@@ -171,20 +174,33 @@ class QuantitySerializer(serializers.ModelSerializer):
             "units",
             "hash",
             "operation_tree",
+            "references",
             "label",
             "dataset",
+            "derived_quantity",
             # "history",
         ]
+
+    def validate_references(self, value):
+        for ref in value:
+            serializer = QuantitySerializer(data=ref)
+            serializer.is_valid(raise_exception=True)
 
     # TODO: should variable-only history be assumed to refer to the same Quantity and ignored?
     # Extract operation tree from history
     def to_internal_value(self, data):
-        if "history" in data and "operation_tree" in data["history"]:
-            operations = data["history"]["operation_tree"]
-            if not operations["operation"] == "variable":
-                data_copy = data.copy()
-                data_copy["operation_tree"] = operations
-                return super().to_internal_value(data_copy)
+        if "history" in data:
+            data_copy = data.copy()
+            if "operation_tree" in data["history"]:
+                operations = data["history"]["operation_tree"]
+                if (
+                    "operation" in operations
+                    and not operations["operation"] == "variable"
+                ):
+                    data_copy["operation_tree"] = operations
+            if "references" in data["history"]:
+                data_copy["references"] = data["history"]["references"]
+            return super().to_internal_value(data_copy)
         return super().to_internal_value(data)
 
     # Serialize a Quantity instance
@@ -192,21 +208,37 @@ class QuantitySerializer(serializers.ModelSerializer):
         data = super().to_representation(instance)
         if "dataset" in data:
             data.pop("dataset")
+        if "derived_quantity" in data:
+            data.pop("derived_quantity")
         return data
 
     # Create a Quantity instance
     def create(self, validated_data):
         dataset = models.DataSet.objects.get(id=validated_data.pop("dataset"))
+        operations_tree = None
+        derived_quantity = None
+        references = None
         if "operation_tree" in validated_data:
-            operations_data = validated_data.pop("operation_tree")
-            quantity = models.Quantity.objects.create(dataset=dataset, **validated_data)
-            operations_data["quantity"] = quantity.id
-            OperationTreeSerializer.create(
-                OperationTreeSerializer(), validated_data=operations_data
+            operations_tree = validated_data.pop("operation_tree")
+        if "derived_quantity" in validated_data:
+            derived_quantity = models.Quantity.objects.get(
+                id=validated_data.pop("derived_quantity")
             )
-            return quantity
-        else:
-            return models.Quantity.objects.create(dataset=dataset, **validated_data)
+        if "references" in validated_data:
+            references = validated_data.pop("references")
+        quantity = models.Quantity.objects.create(
+            dataset=dataset, derived_quantity=derived_quantity, **validated_data
+        )
+        if operations_tree:
+            operations_tree["quantity"] = quantity.id
+            OperationTreeSerializer.create(
+                OperationTreeSerializer(), validated_data=operations_tree
+            )
+        if references:
+            for ref in references:
+                ref["derived_quantity"] = quantity.id
+                QuantitySerializer.create(QuantitySerializer(), validated_data=ref)
+        return quantity
 
 
 class DataSetSerializer(serializers.ModelSerializer):
