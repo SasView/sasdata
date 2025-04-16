@@ -84,12 +84,24 @@ class Quantity(models.Model):
         DataSet, on_delete=models.CASCADE, related_name="data_contents"
     )
 
+
+class ReferenceQuantity(models.Model):
+    # data value
+    value = models.JSONField()
+
+    # variance of the data
+    variance = models.JSONField()
+
+    # units
+    units = models.CharField(max_length=200)
+
+    # hash value
+    hash = models.IntegerField()
+
     derived_quantity = models.ForeignKey(
-        "self",
+        Quantity,
         related_name="references",
         on_delete=models.CASCADE,
-        blank=True,
-        null=True,
     )
 
 
