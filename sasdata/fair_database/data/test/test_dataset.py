@@ -345,7 +345,7 @@ class TestSingleDataSet(APITestCase):
             request1.data,
             {
                 "id": 2,
-                "current_user": 1,
+                "current_user": "testUser1",
                 "users": [3],
                 "is_public": False,
                 "name": "Dataset 2",
@@ -367,7 +367,7 @@ class TestSingleDataSet(APITestCase):
             request1.data,
             {
                 "id": 1,
-                "current_user": 1,
+                "current_user": "testUser1",
                 "users": [],
                 "is_public": True,
                 "name": "Dataset 1",
@@ -389,7 +389,7 @@ class TestSingleDataSet(APITestCase):
             request3.data,
             {
                 "id": 1,
-                "current_user": 1,
+                "current_user": "testUser1",
                 "users": [],
                 "is_public": True,
                 "name": "Dataset 1",

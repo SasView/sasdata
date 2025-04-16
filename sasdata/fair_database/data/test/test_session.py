@@ -312,7 +312,7 @@ class TestSingleSession(APITestCase):
             request.data,
             {
                 "id": 1,
-                "current_user": 1,
+                "current_user": "testUser1",
                 "users": [],
                 "is_public": True,
                 "title": "Public Session",
@@ -340,7 +340,7 @@ class TestSingleSession(APITestCase):
             request.data,
             {
                 "id": 2,
-                "current_user": 1,
+                "current_user": "testUser1",
                 "users": [],
                 "is_public": False,
                 "title": "Private Session",
