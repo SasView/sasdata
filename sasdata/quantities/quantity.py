@@ -1112,9 +1112,9 @@ class QuantityHistory:
     def serialise_json(self):
         return {
             "operation_tree": self.operation_tree.serialise(),
-            "references": {
-                key: self.references[key].serialise_json() for key in self.references
-            }
+            "references": [
+                ref.serialise_json() for ref in self.references.values()
+            ]
 
         }
 
