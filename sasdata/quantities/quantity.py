@@ -1115,7 +1115,7 @@ class QuantityHistory:
         return {
             "operation_tree": self.operation_tree.serialise(),
             "references": [
-                ref.serialise_json() for ref in self.references.values()
+                ref.serialise_json_no_history() for ref in self.references.values()
             ]
 
         }
@@ -1233,7 +1233,6 @@ class Quantity[QuantityType]:
         quantity.history = history
         return quantity
 
-    # TODO: fill out actual values
     def serialise_json(self):
         return {
             "value": numerical_encode(self.value),
@@ -1242,6 +1241,16 @@ class Quantity[QuantityType]:
             "hash_seed": self._hash_seed, # is this just a string?
             "hash_value": self.hash_value,
             "history": self.history.serialise_json()
+        }
+
+    def serialise_json_no_history(self):
+        return {
+            "value": numerical_encode(self.value),
+            "units": str(self.units),  # Unit serialisation
+            "variance": numerical_encode(self._variance),
+            "hash_seed": self._hash_seed,  # is this just a string?
+            "hash_value": self.hash_value,
+            "history": {}
         }
 
     def __mul__(self: Self, other: ArrayLike | Self ) -> Self:
