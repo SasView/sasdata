@@ -497,8 +497,10 @@ class TestGetOperationTree(APITestCase):
                 "variance": 0,
                 "units": "none",
                 "hash": 1,
-                "operation_tree": None,
-                "references": [],
+                "history": {
+                    "operation_tree": None,
+                    "references": [],
+                },
             },
         )
 
@@ -525,16 +527,18 @@ class TestGetOperationTree(APITestCase):
                 "variance": 0,
                 "units": "none",
                 "hash": 1,
-                "operation_tree": {
-                    "operation": "reciprocal",
-                    "parameters": {
-                        "a": {
-                            "operation": "variable",
-                            "parameters": {"hash_value": 111, "name": "x"},
-                        }
+                "history": {
+                    "operation_tree": {
+                        "operation": "reciprocal",
+                        "parameters": {
+                            "a": {
+                                "operation": "variable",
+                                "parameters": {"hash_value": 111, "name": "x"},
+                            }
+                        },
                     },
+                    "references": [],
                 },
-                "references": [],
             },
         )
 
@@ -559,7 +563,7 @@ class TestGetOperationTree(APITestCase):
         add.delete()
         self.assertEqual(request.status_code, status.HTTP_200_OK)
         self.assertEqual(
-            request.data["data_contents"][0]["operation_tree"],
+            request.data["data_contents"][0]["history"]["operation_tree"],
             {
                 "operation": "add",
                 "parameters": {
@@ -592,7 +596,7 @@ class TestGetOperationTree(APITestCase):
         power.delete()
         self.assertEqual(request.status_code, status.HTTP_200_OK)
         self.assertEqual(
-            request.data["data_contents"][0]["operation_tree"],
+            request.data["data_contents"][0]["history"]["operation_tree"],
             {
                 "operation": "pow",
                 "parameters": {
@@ -627,7 +631,7 @@ class TestGetOperationTree(APITestCase):
         neg.delete()
         self.assertEqual(request.status_code, status.HTTP_200_OK)
         self.assertEqual(
-            request.data["data_contents"][0]["operation_tree"],
+            request.data["data_contents"][0]["history"]["operation_tree"],
             {
                 "operation": "neg",
                 "parameters": {
@@ -668,7 +672,7 @@ class TestGetOperationTree(APITestCase):
         trans.delete()
         self.assertEqual(request.status_code, status.HTTP_200_OK)
         self.assertEqual(
-            request.data["data_contents"][0]["operation_tree"],
+            request.data["data_contents"][0]["history"]["operation_tree"],
             {
                 "operation": "transpose",
                 "parameters": {
@@ -703,7 +707,7 @@ class TestGetOperationTree(APITestCase):
         tensor.delete()
         self.assertEqual(request.status_code, status.HTTP_200_OK)
         self.assertEqual(
-            request.data["data_contents"][0]["operation_tree"],
+            request.data["data_contents"][0]["history"]["operation_tree"],
             {
                 "operation": "tensor_product",
                 "parameters": {
