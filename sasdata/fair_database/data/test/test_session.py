@@ -450,6 +450,7 @@ class TestSingleSession(APITestCase):
             {"session_id": 2, "title": "Private Session", "is_public": True},
         )
         self.assertTrue(session.is_public)
+        self.assertTrue(session.datasets.get().is_public)
         session.is_public = False
         session.save()
 

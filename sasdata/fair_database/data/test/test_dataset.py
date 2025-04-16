@@ -468,7 +468,6 @@ class TestSingleDataSet(APITestCase):
         self.assertEqual(DataSet.objects.get(id=1).name, "Different name")
         self.public_dataset.save()
 
-    # TODO: test updating metadata once metadata is figured out
     # TODO: test invalid updates if and when those are figured out
 
     # Test changing an unowned dataset
