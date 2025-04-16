@@ -30,7 +30,14 @@ class TestDataSet(APITestCase):
             "sample": {},
         }
         cls.empty_data = [
-            {"value": 0, "variance": 0, "units": "no", "hash": 0, "label": "test"}
+            {
+                "value": 0,
+                "variance": 0,
+                "units": "no",
+                "hash": 0,
+                "label": "test",
+                "history": {"operation_tree": {}, "references": []},
+            }
         ]
         cls.user1 = User.objects.create_user(
             id=1, username="testUser1", password="secret"
