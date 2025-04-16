@@ -8,6 +8,8 @@ from data.models import DataSet, Session
 
 
 class TestSession(APITestCase):
+    """Test HTTP methods of SessionView."""
+
     @classmethod
     def setUpTestData(cls):
         cls.user1 = User.objects.create_user(
@@ -266,6 +268,8 @@ class TestSession(APITestCase):
 
 
 class TestSingleSession(APITestCase):
+    """Test HTTP methods of SingleSessionView."""
+
     @classmethod
     def setUpTestData(cls):
         cls.user1 = User.objects.create_user(
@@ -402,8 +406,7 @@ class TestSingleSession(APITestCase):
         self.assertEqual(request1.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(request2.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    # Test updating session
-    # public, private, owner, not owner
+    # Test updating a public session
     def test_update_public_session(self):
         request = self.auth_client1.put(
             "/v1/data/session/1/", data={"is_public": False}
@@ -418,6 +421,7 @@ class TestSingleSession(APITestCase):
         session.is_public = False
         session.save()
 
+    # Test that another user's public session cannot be updated
     def test_update_public_session_unauthorized(self):
         request1 = self.auth_client2.put(
             "/v1/data/session/1/", data={"is_public": False}
@@ -434,6 +438,7 @@ class TestSingleSession(APITestCase):
         self.assertEqual(request3.status_code, status.HTTP_403_FORBIDDEN)
         self.assertTrue(Session.objects.get(id=1).is_public)
 
+    # Test updating a private session
     def test_update_private_session(self):
         request1 = self.auth_client1.put(
             "/v1/data/session/2/", data={"is_public": True}
@@ -448,6 +453,7 @@ class TestSingleSession(APITestCase):
         session.is_public = False
         session.save()
 
+    # Test that another user's private session cannot be updated
     def test_update_private_session_unauthorized(self):
         request1 = self.auth_client2.put(
             "/v1/data/session/2/", data={"is_public": True}
@@ -464,6 +470,7 @@ class TestSingleSession(APITestCase):
         self.assertEqual(request3.status_code, status.HTTP_403_FORBIDDEN)
         self.assertFalse(Session.objects.get(id=2).is_public)
 
+    # Test that an unowned session cannot be updated
     def test_update_unowned_session(self):
         request = self.auth_client1.put(
             "/v1/data/session/3/", data={"is_public": False}
@@ -471,8 +478,7 @@ class TestSingleSession(APITestCase):
         self.assertEqual(request.status_code, status.HTTP_403_FORBIDDEN)
         self.assertTrue(Session.objects.get(id=3).is_public)
 
-    # Test deleting session
-    # Test delete cascades
+    # Test deleting a private session
     def test_delete_private_session(self):
         request = self.auth_client1.delete("/v1/data/session/2/")
         self.assertEqual(request.status_code, status.HTTP_200_OK)
@@ -488,6 +494,7 @@ class TestSingleSession(APITestCase):
             session=self.private_session,
         )
 
+    # Test that another user's private session cannot be deleted
     def test_delete_private_session_unauthorized(self):
         request1 = self.auth_client2.delete("/v1/data/session/2/")
         request2 = self.client.delete("/v1/data/session/2/")
@@ -498,10 +505,12 @@ class TestSingleSession(APITestCase):
         self.assertEqual(request2.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertEqual(request3.status_code, status.HTTP_403_FORBIDDEN)
 
+    # Test that a public session cannot be deleted
     def test_delete_public_session(self):
         request = self.auth_client1.delete("/v1/data/session/1/")
         self.assertEqual(request.status_code, status.HTTP_403_FORBIDDEN)
 
+    # Test that an unowned session cannot be deleted
     def test_delete_unowned_session(self):
         request = self.auth_client1.delete("/v1/data/session/3/")
         self.assertEqual(request.status_code, status.HTTP_403_FORBIDDEN)
@@ -516,6 +525,8 @@ class TestSingleSession(APITestCase):
 
 
 class TestSessionAccessManagement(APITestCase):
+    """Test HTTP methods of SessionUsersView."""
+
     @classmethod
     def setUpTestData(cls):
         cls.user1 = User.objects.create_user(username="testUser1", password="secret")
@@ -545,7 +556,7 @@ class TestSessionAccessManagement(APITestCase):
         cls.client_owner.force_authenticate(cls.user1)
         cls.client_other.force_authenticate(cls.user2)
 
-    # Test listing access
+    # Test listing access to an unshared session
     def test_list_access_private(self):
         request = self.client_owner.get("/v1/data/session/1/users/")
         self.assertEqual(request.status_code, status.HTTP_200_OK)
@@ -559,6 +570,7 @@ class TestSessionAccessManagement(APITestCase):
             },
         )
 
+    # Test listing access to a shared session
     def test_list_access_shared(self):
         request = self.client_owner.get("/v1/data/session/2/users/")
         self.assertEqual(request.status_code, status.HTTP_200_OK)
@@ -572,12 +584,14 @@ class TestSessionAccessManagement(APITestCase):
             },
         )
 
+    # Test that only the owner can view access
     def test_list_access_unauthorized(self):
         request1 = self.client_other.get("/v1/data/session/1/users/")
         request2 = self.client_other.get("/v1/data/session/2/users/")
         self.assertEqual(request1.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(request2.status_code, status.HTTP_403_FORBIDDEN)
 
+    # Test granting access to a session
     def test_grant_access(self):
         request1 = self.client_owner.put(
             "/v1/data/session/1/users/", {"username": "testUser2", "access": True}
@@ -601,6 +615,7 @@ class TestSessionAccessManagement(APITestCase):
         self.private_session.users.remove(self.user2)
         self.private_dataset.users.remove(self.user2)
 
+    # Test revoking access to a session
     def test_revoke_access(self):
         request1 = self.client_owner.put(
             "/v1/data/session/2/users/", {"username": "testUser2", "access": False}
@@ -624,6 +639,7 @@ class TestSessionAccessManagement(APITestCase):
         self.shared_session.users.add(self.user2)
         self.shared_dataset.users.add(self.user2)
 
+    # Test that only the owner can change access
     def test_revoke_access_unauthorized(self):
         request1 = self.client_other.put(
             "/v1/data/session/2/users/", {"username": "testUser2", "access": False}
@@ -632,16 +648,6 @@ class TestSessionAccessManagement(APITestCase):
         self.assertEqual(request1.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(request2.status_code, status.HTTP_200_OK)
         self.assertIn(self.user2, self.shared_session.users.all())  # codespell:ignore
-
-    # Test listing access not as the owner
-
-    # Test granting access
-
-    # Test revoking access
-
-    # Test can't revoke own access
-
-    # Test only owner can change access
 
     @classmethod
     def tearDownClass(cls):
