@@ -3,7 +3,7 @@ from django.db.models import Max
 from rest_framework.test import APIClient, APITestCase
 from rest_framework import status
 
-from data.models import DataSet, MetaData, OperationTree, Quantity
+from data.models import DataSet, MetaData, OperationTree, Quantity, ReferenceQuantity
 
 
 class TestCreateOperationTree(APITestCase):
@@ -47,7 +47,16 @@ class TestCreateOperationTree(APITestCase):
                 "operation": "variable",
                 "parameters": {"hash_value": 0, "name": "test"},
             },
-            "references": [],
+            "references": [
+                {
+                    "label": "test",
+                    "value": {"array_contents": [0, 0, 0, 0], "shape": (2, 2)},
+                    "variance": {"array_contents": [0, 0, 0, 0], "shape": (2, 2)},
+                    "units": "none",
+                    "hash": 0,
+                    "history": {},
+                }
+            ],
         }
         request = self.client.post("/v1/data/set/", data=self.dataset, format="json")
         max_id = DataSet.objects.aggregate(Max("id"))["id__max"]
@@ -59,6 +68,7 @@ class TestCreateOperationTree(APITestCase):
             self.get_operation_tree,
             quantity=new_quantity,
         )
+        self.assertEqual(len(new_quantity.references.all()), 0)
 
     # Test creating quantity with unary operation
     def test_operation_tree_created_unary(self):
@@ -72,7 +82,9 @@ class TestCreateOperationTree(APITestCase):
                     }
                 },
             },
-            "references": [],
+            "references": [
+                {"value": 5, "variance": 0, "units": "none", "hash": 111, "history": {}}
+            ],
         }
         request = self.client.post("/v1/data/set/", data=self.dataset, format="json")
         max_id = DataSet.objects.aggregate(Max("id"))["id__max"]
@@ -88,6 +100,9 @@ class TestCreateOperationTree(APITestCase):
         self.assertEqual(variable.operation, "variable")
         self.assertEqual(len(reciprocal.parent_operations.all()), 1)
         self.assertEqual(reciprocal.parameters, {})
+        self.assertEqual(len(ReferenceQuantity.objects.all()), 1)
+        self.assertEqual(len(new_quantity.references.all()), 1)
+        self.assertEqual(new_quantity.references.get(hash=111).value, 5)
 
     # Test creating quantity with binary operation
     def test_operation_tree_created_binary(self):
@@ -102,7 +117,9 @@ class TestCreateOperationTree(APITestCase):
                     "b": {"operation": "constant", "parameters": {"value": 5}},
                 },
             },
-            "references": [],
+            "references": [
+                {"value": 5, "variance": 0, "units": "none", "hash": 111, "history": {}}
+            ],
         }
         request = self.client.post("/v1/data/set/", data=self.dataset, format="json")
         max_id = DataSet.objects.aggregate(Max("id"))["id__max"]
@@ -119,6 +136,8 @@ class TestCreateOperationTree(APITestCase):
         self.assertEqual(constant.operation, "constant")
         self.assertEqual(constant.parameters, {"value": 5})
         self.assertEqual(len(add.parent_operations.all()), 2)
+        self.assertEqual(len(new_quantity.references.all()), 1)
+        self.assertEqual(new_quantity.references.get(hash=111).value, 5)
 
     # Test creating quantity with exponent
     def test_operation_tree_created_pow(self):
@@ -133,7 +152,9 @@ class TestCreateOperationTree(APITestCase):
                     "power": 2,
                 },
             },
-            "references": [],
+            "references": [
+                {"value": 5, "variance": 0, "units": "none", "hash": 111, "history": {}}
+            ],
         }
         request = self.client.post("/v1/data/set/", data=self.dataset, format="json")
         max_id = DataSet.objects.aggregate(Max("id"))["id__max"]
@@ -143,6 +164,8 @@ class TestCreateOperationTree(APITestCase):
         self.assertEqual(request.status_code, status.HTTP_201_CREATED)
         self.assertEqual(pow.operation, "pow")
         self.assertEqual(pow.parameters, {"power": 2})
+        self.assertEqual(len(new_quantity.references.all()), 1)
+        self.assertEqual(new_quantity.references.get(hash=111).value, 5)
 
     # Test creating a transposed quantity
     def test_operation_tree_created_transpose(self):
@@ -157,7 +180,9 @@ class TestCreateOperationTree(APITestCase):
                     "axes": [1, 0],
                 },
             },
-            "references": [],
+            "references": [
+                {"value": 5, "variance": 0, "units": "none", "hash": 111, "history": {}}
+            ],
         }
         request = self.client.post("/v1/data/set/", data=self.dataset, format="json")
         max_id = DataSet.objects.aggregate(Max("id"))["id__max"]
@@ -170,6 +195,8 @@ class TestCreateOperationTree(APITestCase):
         self.assertEqual(transpose.parameters, {"axes": [1, 0]})
         self.assertEqual(variable.operation, "variable")
         self.assertEqual(variable.parameters, {"hash_value": 111, "name": "x"})
+        self.assertEqual(len(new_quantity.references.all()), 1)
+        self.assertEqual(new_quantity.references.get(hash=111).value, 5)
 
     # Test creating a quantity with multiple operations
     def test_operation_tree_created_nested(self):
@@ -192,7 +219,9 @@ class TestCreateOperationTree(APITestCase):
                     },
                 },
             },
-            "references": [],
+            "references": [
+                {"value": 5, "variance": 0, "units": "none", "hash": 111, "history": {}}
+            ],
         }
         request = self.client.post("/v1/data/set/", data=self.dataset, format="json")
         max_id = DataSet.objects.aggregate(Max("id"))["id__max"]
@@ -211,6 +240,8 @@ class TestCreateOperationTree(APITestCase):
         self.assertEqual(constant.parameters, {"value": {"type": "int", "value": 7}})
         self.assertEqual(variable.operation, "variable")
         self.assertEqual(variable.parameters, {"hash_value": 111, "name": "x"})
+        self.assertEqual(len(new_quantity.references.all()), 1)
+        self.assertEqual(new_quantity.references.get(hash=111).value, 5)
 
     # Test creating a quantity with tensordot
     def test_operation_tree_created_tensor(self):
@@ -227,7 +258,9 @@ class TestCreateOperationTree(APITestCase):
                     "b_index": 1,
                 },
             },
-            "references": [],
+            "references": [
+                {"value": 5, "variance": 0, "units": "none", "hash": 111, "history": {}}
+            ],
         }
         request = self.client.post("/v1/data/set/", data=self.dataset, format="json")
         max_id = DataSet.objects.aggregate(Max("id"))["id__max"]
@@ -237,6 +270,8 @@ class TestCreateOperationTree(APITestCase):
         self.assertEqual(request.status_code, status.HTTP_201_CREATED)
         self.assertEqual(tensor.operation, "tensor_product")
         self.assertEqual(tensor.parameters, {"a_index": 1, "b_index": 1})
+        self.assertEqual(len(new_quantity.references.all()), 1)
+        self.assertEqual(new_quantity.references.get(hash=111).value, 5)
 
     # Test creating a quantity with no history
     def test_operation_tree_created_no_history(self):
@@ -250,6 +285,7 @@ class TestCreateOperationTree(APITestCase):
             new_quantity = new_dataset.data_contents.get(hash=0)
             self.assertEqual(request.status_code, status.HTTP_201_CREATED)
             self.assertIsNone(new_quantity.operation_tree)
+            self.assertEqual(len(new_quantity.references.all()), 0)
 
     def tearDown(self):
         DataSet.objects.all().delete()
@@ -449,6 +485,8 @@ class TestCreateInvalidOperationTree(APITestCase):
         self.assertEqual(len(Quantity.objects.all()), 0)
         self.assertEqual(len(OperationTree.objects.all()), 0)
 
+    # TODO: Test variables have corresponding reference quantities
+
     @classmethod
     def tearDownClass(cls):
         cls.user.delete()
@@ -481,13 +519,29 @@ class TestGetOperationTree(APITestCase):
         cls.constant = OperationTree.objects.create(
             id=2, operation="constant", parameters={"value": 1}
         )
-        # cls.dataset.data_contents.add(cls.quantity)
+        cls.ref_quantity = ReferenceQuantity.objects.create(
+            id=1,
+            value=5,
+            variance=0,
+            units="none",
+            hash=111,
+            derived_quantity=cls.quantity,
+        )
         cls.client = APIClient()
         cls.client.force_authenticate(cls.user)
 
     # Test accessing a quantity with no operations performed
     def test_get_operation_tree_none(self):
+        self.ref_quantity.delete()
         request = self.client.get("/v1/data/set/1/")
+        self.ref_quantity = ReferenceQuantity.objects.create(
+            id=1,
+            value=5,
+            variance=0,
+            units="none",
+            hash=111,
+            derived_quantity=self.quantity,
+        )
         self.assertEqual(request.status_code, status.HTTP_200_OK)
         self.assertEqual(
             request.data["data_contents"][0],
@@ -537,7 +591,14 @@ class TestGetOperationTree(APITestCase):
                             }
                         },
                     },
-                    "references": [],
+                    "references": [
+                        {
+                            "value": 5,
+                            "variance": 0,
+                            "units": "none",
+                            "hash": 111,
+                        }
+                    ],
                 },
             },
         )
