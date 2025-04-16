@@ -78,12 +78,18 @@ class Quantity(models.Model):
     # hash value
     hash = models.IntegerField()
 
-    # TODO: add field to store references portion of QuantityHistory
-
     label = models.CharField(max_length=50)
 
     dataset = models.ForeignKey(
         DataSet, on_delete=models.CASCADE, related_name="data_contents"
+    )
+
+    derived_quantity = models.ForeignKey(
+        "self",
+        related_name="references",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
     )
 
 
