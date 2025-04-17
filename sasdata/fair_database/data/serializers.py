@@ -53,11 +53,6 @@ class MetaDataSerializer(serializers.ModelSerializer):
             data.pop("dataset")
         return data
 
-    # Create an entry in MetaData
-    def create(self, validated_data):
-        dataset = models.DataSet.objects.get(id=validated_data.pop("dataset"))
-        return models.MetaData.objects.create(dataset=dataset, **validated_data)
-
 
 class OperationTreeSerializer(serializers.ModelSerializer):
     """Serialization, deserialization, and validation for the OperationTree model."""
@@ -123,32 +118,22 @@ class OperationTreeSerializer(serializers.ModelSerializer):
 
     # Create an OperationTree instance
     def create(self, validated_data):
-        quantity = None
-        child_operation = None
         parent_operation1 = None
         parent_operation2 = None
-        if "quantity" in validated_data:
-            quantity = models.Quantity.objects.get(id=validated_data.pop("quantity"))
-        if "child_operation" in validated_data:
-            child_operation = models.OperationTree.objects.get(
-                id=validated_data.pop("child_operation")
-            )
         if not constant_or_variable(validated_data["operation"]):
             parent_operation1 = validated_data["parameters"].pop("a")
             parent_operation1["label"] = "a"
         if binary(validated_data["operation"]):
             parent_operation2 = validated_data["parameters"].pop("b")
             parent_operation2["label"] = "b"
-        operation_tree = models.OperationTree.objects.create(
-            quantity=quantity, child_operation=child_operation, **validated_data
-        )
+        operation_tree = models.OperationTree.objects.create(**validated_data)
         if parent_operation1:
-            parent_operation1["child_operation"] = operation_tree.id
+            parent_operation1["child_operation"] = operation_tree
             OperationTreeSerializer.create(
                 OperationTreeSerializer(), validated_data=parent_operation1
             )
         if parent_operation2:
-            parent_operation2["child_operation"] = operation_tree.id
+            parent_operation2["child_operation"] = operation_tree
             OperationTreeSerializer.create(
                 OperationTreeSerializer(), validated_data=parent_operation2
             )
@@ -171,16 +156,11 @@ class ReferenceQuantitySerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
-        derived_quantity = models.Quantity.objects.get(
-            id=validated_data.pop("derived_quantity")
-        )
         if "label" in validated_data:
             validated_data.pop("label")
         if "history" in validated_data:
             validated_data.pop("history")
-        return models.ReferenceQuantity.objects.create(
-            derived_quantity=derived_quantity, **validated_data
-        )
+        return models.ReferenceQuantity.objects.create(**validated_data)
 
 
 class QuantitySerializer(serializers.ModelSerializer):
@@ -247,7 +227,6 @@ class QuantitySerializer(serializers.ModelSerializer):
 
     # Create a Quantity instance
     def create(self, validated_data):
-        dataset = models.DataSet.objects.get(id=validated_data.pop("dataset"))
         operations_tree = None
         references = None
         if "operation_tree" in validated_data:
@@ -256,15 +235,15 @@ class QuantitySerializer(serializers.ModelSerializer):
             history = validated_data.pop("history")
             if history and "references" in history:
                 references = history.pop("references")
-        quantity = models.Quantity.objects.create(dataset=dataset, **validated_data)
+        quantity = models.Quantity.objects.create(**validated_data)
         if operations_tree:
-            operations_tree["quantity"] = quantity.id
+            operations_tree["quantity"] = quantity
             OperationTreeSerializer.create(
                 OperationTreeSerializer(), validated_data=operations_tree
             )
         if references:
             for ref in references:
-                ref["derived_quantity"] = quantity.id
+                ref["derived_quantity"] = quantity
                 ReferenceQuantitySerializer.create(
                     ReferenceQuantitySerializer(), validated_data=ref
                 )
@@ -345,22 +324,19 @@ class DataSetSerializer(serializers.ModelSerializer):
 
     # Create a DataSet instance
     def create(self, validated_data):
-        session = None
         files = []
         if self.context["request"].user.is_authenticated:
             validated_data["current_user"] = self.context["request"].user
         metadata_raw = validated_data.pop("metadata")
-        if "session" in validated_data:
-            session = models.Session.objects.get(id=validated_data.pop("session"))
         data_contents = validated_data.pop("data_contents")
         if "files" in validated_data:
             files = validated_data.pop("files")
-        dataset = models.DataSet.objects.create(session=session, **validated_data)
+        dataset = models.DataSet.objects.create(**validated_data)
         dataset.files.set(files)
-        metadata_raw["dataset"] = dataset.id
+        metadata_raw["dataset"] = dataset
         MetaDataSerializer.create(MetaDataSerializer(), validated_data=metadata_raw)
         for d in data_contents:
-            d["dataset"] = dataset.id
+            d["dataset"] = dataset
             QuantitySerializer.create(QuantitySerializer(), validated_data=d)
         return dataset
 
@@ -390,6 +366,20 @@ class PublishedStateSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.PublishedState
         fields = "__all__"
+
+    def to_internal_value(self, data):
+        data_copy = data.copy()
+        data_copy["doi"] = "http://127.0.0.1:8000/v1/data/session/"
+        return data_copy
+
+    def create(self, validated_data):
+        # TODO: generate DOI
+        validated_data["doi"] = (
+            "http://127.0.0.1:8000/v1/data/session/"
+            + str(validated_data["session"].id)
+            + "/"
+        )
+        models.PublishedState.objects.create(**validated_data)
 
 
 class SessionSerializer(serializers.ModelSerializer):
@@ -440,12 +430,20 @@ class SessionSerializer(serializers.ModelSerializer):
 
     # Create a Session instance
     def create(self, validated_data):
+        published_state = None
         if self.context["request"].user.is_authenticated:
             validated_data["current_user"] = self.context["request"].user
+        if "published_state" in validated_data:
+            published_state = validated_data.pop("published_state")
         datasets = validated_data.pop("datasets")
         session = models.Session.objects.create(**validated_data)
+        if published_state:
+            published_state["session"] = session
+            PublishedStateSerializer.create(
+                PublishedStateSerializer(), validated_data=published_state
+            )
         for dataset in datasets:
-            dataset["session"] = session.id
+            dataset["session"] = session
             DataSetSerializer.create(
                 DataSetSerializer(context=self.context), validated_data=dataset
             )
