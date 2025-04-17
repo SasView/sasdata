@@ -1,8 +1,14 @@
 from django.contrib.auth.models import User
+from django.db.models import Max
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
 from data.models import PublishedState, Session
+
+
+# TODO: account for non-placeholder doi
+def doi_generator(id: int):
+    return "http://127.0.0.1:8000/v1/data/session/" + str(id) + "/"
 
 
 class TestSessionWithPublishedState(APITestCase):
@@ -42,21 +48,24 @@ class TestPublishedStateView(APITestCase):
         cls.unowned_session = Session.objects.create(
             id=3, title="Unowned Session", is_public=True
         )
+        cls.unpublished_session = Session.objects.create(
+            id=4, current_user=cls.user1, title="Publishable Session", is_public=True
+        )
         cls.public_ps = PublishedState.objects.create(
             id=1,
-            doi="http://127.0.0.1:8000/v1/data/session/1/",
+            doi=doi_generator(1),
             published=True,
             session=cls.public_session,
         )
         cls.private_ps = PublishedState.objects.create(
             id=2,
-            doi="http://127.0.0.1:8000/v1/data/session/2/",
+            doi=doi_generator(2),
             published=False,
             session=cls.private_session,
         )
         cls.unowned_ps = PublishedState.objects.create(
             id=3,
-            doi="http://127.0.0.1:8000/v1/data/session/3/",
+            doi=doi_generator(3),
             published=True,
             session=cls.unowned_session,
         )
@@ -76,17 +85,17 @@ class TestPublishedStateView(APITestCase):
                     1: {
                         "title": "Public Session",
                         "published": True,
-                        "doi": "http://127.0.0.1:8000/v1/data/session/1/",
+                        "doi": doi_generator(1),
                     },
                     2: {
                         "title": "Private Session",
                         "published": False,
-                        "doi": "http://127.0.0.1:8000/v1/data/session/2/",
+                        "doi": doi_generator(2),
                     },
                     3: {
                         "title": "Unowned Session",
                         "published": True,
-                        "doi": "http://127.0.0.1:8000/v1/data/session/3/",
+                        "doi": doi_generator(3),
                     },
                 }
             },
@@ -102,12 +111,12 @@ class TestPublishedStateView(APITestCase):
                     1: {
                         "title": "Public Session",
                         "published": True,
-                        "doi": "http://127.0.0.1:8000/v1/data/session/1/",
+                        "doi": doi_generator(1),
                     },
                     3: {
                         "title": "Unowned Session",
                         "published": True,
-                        "doi": "http://127.0.0.1:8000/v1/data/session/3/",
+                        "doi": doi_generator(3),
                     },
                 }
             },
@@ -125,17 +134,17 @@ class TestPublishedStateView(APITestCase):
                     1: {
                         "title": "Public Session",
                         "published": True,
-                        "doi": "http://127.0.0.1:8000/v1/data/session/1/",
+                        "doi": doi_generator(1),
                     },
                     2: {
                         "title": "Private Session",
                         "published": False,
-                        "doi": "http://127.0.0.1:8000/v1/data/session/2/",
+                        "doi": doi_generator(2),
                     },
                     3: {
                         "title": "Unowned Session",
                         "published": True,
-                        "doi": "http://127.0.0.1:8000/v1/data/session/3/",
+                        "doi": doi_generator(3),
                     },
                 }
             },
@@ -151,16 +160,93 @@ class TestPublishedStateView(APITestCase):
                     1: {
                         "title": "Public Session",
                         "published": True,
-                        "doi": "http://127.0.0.1:8000/v1/data/session/1/",
+                        "doi": doi_generator(1),
                     },
                     3: {
                         "title": "Unowned Session",
                         "published": True,
-                        "doi": "http://127.0.0.1:8000/v1/data/session/3/",
+                        "doi": doi_generator(3),
                     },
                 }
             },
         )
+
+    def test_published_state_created_private(self):
+        self.unpublished_session.is_public = False
+        self.unpublished_session.save()
+        published_state = {"published": True, "session": 4}
+        request = self.auth_client1.post("/v1/data/published/", data=published_state)
+        max_id = PublishedState.objects.aggregate(Max("id"))["id__max"]
+        new_ps = PublishedState.objects.get(id=max_id)
+        self.publishable_session = Session.objects.get(id=4)
+        self.assertEqual(request.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(
+            request.data,
+            {
+                "published_state_id": max_id,
+                "session_id": 4,
+                "title": "Publishable Session",
+                "doi": doi_generator(4),
+                "published": True,
+                "current_user": "testUser1",
+                "is_public": False,
+            },
+        )
+        self.assertEqual(self.publishable_session.published_state, new_ps)
+        self.assertEqual(new_ps.session, self.publishable_session)
+        new_ps.delete()
+        self.unpublished_session.is_public = True
+        self.unpublished_session.save()
+
+    def test_published_state_created_public(self):
+        published_state = {"published": False, "session": 4}
+        request = self.auth_client1.post("/v1/data/published/", data=published_state)
+        max_id = PublishedState.objects.aggregate(Max("id"))["id__max"]
+        new_ps = PublishedState.objects.get(id=max_id)
+        self.publishable_session = Session.objects.get(id=4)
+        self.assertEqual(request.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(
+            request.data,
+            {
+                "published_state_id": max_id,
+                "session_id": 4,
+                "title": "Publishable Session",
+                "doi": doi_generator(4),
+                "published": False,
+                "current_user": "testUser1",
+                "is_public": True,
+            },
+        )
+        self.assertEqual(self.publishable_session.published_state, new_ps)
+        self.assertEqual(new_ps.session, self.publishable_session)
+        new_ps.delete()
+
+    def test_published_state_created_unowned(self):
+        self.unpublished_session.current_user = None
+        self.unpublished_session.save()
+        published_state = {"published": True, "session": 4}
+        request = self.auth_client1.post("/v1/data/published/", data=published_state)
+        self.assertEqual(request.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(len(PublishedState.objects.all()), 3)
+        self.unpublished_session.current_user = self.user1
+        self.unpublished_session.save()
+
+    def test_published_state_created_unauthenticated(self):
+        published_state = {"published": True, "session": 4}
+        request = self.client.post("/v1/data/published/", data=published_state)
+        self.assertEqual(request.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(len(PublishedState.objects.all()), 3)
+
+    def test_published_state_created_unauthorized(self):
+        published_state = {"published": True, "session": 4}
+        request = self.auth_client2.post("/v1/data/published/", data=published_state)
+        self.assertEqual(request.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(len(PublishedState.objects.all()), 3)
+
+    def test_no_duplicate_published_states(self):
+        published_state = {"published": True, "session": 1}
+        request = self.auth_client1.post("/v1/data/published/", data=published_state)
+        self.assertEqual(request.status_code, status.HTTP_400_BAD_REQUEST)
 
     # Test creating a published state
 
