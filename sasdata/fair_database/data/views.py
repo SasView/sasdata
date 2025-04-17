@@ -582,8 +582,12 @@ class SinglePublishedStateView(APIView):
             )
         serializer = PublishedStateSerializer(db)
         response_data = serializer.data
-        if db.current_user:
-            response_data["current_user"] = db.current_user.username
+        response_data["title"] = db.session.title
+        if db.session.current_user:
+            response_data["current_user"] = db.session.current_user.username
+        else:
+            response_data["current_user"] = ""
+        response_data["is_public"] = db.session.is_public
         return Response(response_data)
 
     # Modify a published state
