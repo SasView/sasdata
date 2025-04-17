@@ -36,4 +36,14 @@ urlpatterns = [
         views.SessionUsersView.as_view(),
         name="manage access to sessions",
     ),
+    path(
+        "published/",
+        views.PublishedStateView.as_view(),
+        name="view and create published states",
+    ),
+    path(
+        "published/<int:ps_id>/",
+        views.SinglePublishedStateView.as_view(),
+        name="load, modify, delete published states",
+    ),
 ]
