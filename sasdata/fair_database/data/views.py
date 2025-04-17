@@ -535,7 +535,6 @@ class PublishedStateView(APIView):
             data=request.data, context={"request": request}
         )
         if serializer.is_valid(raise_exception=True):
-            print(serializer.validated_data["session"])
             if not permissions.is_owner(request, serializer.validated_data["session"]):
                 if not request.user.is_authenticated:
                     return HttpResponse(
