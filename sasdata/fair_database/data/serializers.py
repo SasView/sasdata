@@ -360,7 +360,7 @@ class PublishedStateSerializer(serializers.ModelSerializer):
     """Serialization, deserialization, and validation for the PublishedState model."""
 
     session = serializers.PrimaryKeyRelatedField(
-        queryset=models.Session, required=False, allow_null=True
+        queryset=models.Session.objects, required=False, allow_null=True
     )
 
     class Meta:
@@ -370,7 +370,7 @@ class PublishedStateSerializer(serializers.ModelSerializer):
     def to_internal_value(self, data):
         data_copy = data.copy()
         data_copy["doi"] = "http://127.0.0.1:8000/v1/data/session/"
-        return data_copy
+        return super().to_internal_value(data_copy)
 
     def create(self, validated_data):
         # TODO: generate DOI
@@ -379,7 +379,7 @@ class PublishedStateSerializer(serializers.ModelSerializer):
             + str(validated_data["session"].id)
             + "/"
         )
-        models.PublishedState.objects.create(**validated_data)
+        return models.PublishedState.objects.create(**validated_data)
 
 
 class PublishedStateUpdateSerializer(serializers.ModelSerializer):
