@@ -20,7 +20,7 @@ from data.serializers import (
     AccessManagementSerializer,
     SessionSerializer,
 )
-from data.models import DataFile, DataSet, Session
+from data.models import DataFile, DataSet, PublishedState, Session
 from data.forms import DataFileForm
 from fair_database import permissions
 from fair_database.permissions import DataPermission
@@ -513,7 +513,19 @@ class PublishedStateView(APIView):
 
     # View a list of accessible sessions' published states
     def get(self, request, version=None):
-        pass
+        ps_list = {"published_state_ids": {}}
+        published_states = PublishedState.objects.all()
+        if "username" in request.GET:
+            user = get_object_or_404(User, username=request.GET["username"])
+            published_states = PublishedState.objects.filter(session__current_user=user)
+        for ps in published_states:
+            if permissions.check_permissions(request, ps.session):
+                ps_list["published_state_ids"][ps.id] = {
+                    "title": ps.session.title,
+                    "published": ps.published,
+                    "doi": ps.doi,
+                }
+        return Response(data=ps_list)
 
     # Create a published state for an existing session
     def post(self, request, version=None):
