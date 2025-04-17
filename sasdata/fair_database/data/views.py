@@ -618,7 +618,7 @@ class SinglePublishedStateView(APIView):
     # Delete a published state
     def delete(self, request, ps_id, version=None):
         db = get_object_or_404(PublishedState, id=ps_id)
-        if not permissions.check_permissions(request, db):
+        if not permissions.check_permissions(request, db.session):
             if not request.user.is_authenticated:
                 return HttpResponse(
                     "Must be authenticated to delete a published state", status=401
