@@ -457,6 +457,36 @@ class TestSinglePublishedStateView(APITestCase):
         self.assertFalse(PublishedState.objects.get(id=2).published)
 
     # Test deleting a published state - session not deleted
+    def test_delete_private_published_state(self):
+        request = self.auth_client1.delete("/v1/data/published/2/")
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(PublishedState.objects.all()), 2)
+        self.assertEqual(len(Session.objects.all()), 3)
+        self.assertRaises(PublishedState.DoesNotExist, PublishedState.objects.get, id=2)
+        self.private_ps = PublishedState.objects.create(
+            id=2,
+            doi=doi_generator(2),
+            published=False,
+            session=self.private_session,
+        )
+
+    def test_delete_private_published_state_unauthorized(self):
+        request1 = self.auth_client2.delete("/v1/data/published/2/")
+        self.private_session.users.add(self.user2)
+        request2 = self.auth_client2.delete("/v1/data/published/2/")
+        self.private_session.users.remove(self.user2)
+        request3 = self.client.delete("/v1/data/published/2/")
+        self.assertEqual(request1.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(request2.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(request3.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_cant_delete_public_published_state(self):
+        request = self.auth_client1.delete("/v1/data/published/1/")
+        self.assertEqual(request.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_delete_unowned_published_state(self):
+        request = self.auth_client1.delete("/v1/data/published/3/")
+        self.assertEqual(request.status_code, status.HTTP_403_FORBIDDEN)
 
     @classmethod
     def tearDownClass(cls):
