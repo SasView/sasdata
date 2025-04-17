@@ -382,6 +382,12 @@ class PublishedStateSerializer(serializers.ModelSerializer):
         models.PublishedState.objects.create(**validated_data)
 
 
+class PublishedStateUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.PublishedState
+        fields = ["published"]
+
+
 class SessionSerializer(serializers.ModelSerializer):
     """Serialization, deserialization, and validation for the Session model."""
 
