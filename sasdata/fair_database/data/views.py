@@ -20,6 +20,7 @@ from data.serializers import (
     AccessManagementSerializer,
     SessionSerializer,
     PublishedStateSerializer,
+    PublishedStateUpdateSerializer,
 )
 from data.models import DataFile, DataSet, PublishedState, Session
 from data.forms import DataFileForm
@@ -587,7 +588,28 @@ class SinglePublishedStateView(APIView):
 
     # Modify a published state
     def put(self, request, ps_id, version=None):
-        pass
+        db = get_object_or_404(Session, id=ps_id)
+        if not permissions.check_permissions(request, db.session):
+            if not request.user.is_authenticated:
+                return HttpResponse(
+                    "Must be authenticated to modify published state", status=401
+                )
+            return HttpResponseForbidden(
+                "Cannot modify a published state you do not own"
+            )
+        serializer = PublishedStateUpdateSerializer(
+            db, request.data, context={"request": request}, partial=True
+        )
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+        data = {
+            "published_state_id": db.id,
+            "session_id": db.session.id,
+            "title": db.session.title,
+            "published": db.published,
+            "is_public": db.session.is_public,
+        }
+        return Response(data)
 
     # Delete a published state
     def delete(self, request, ps_id, version=None):
