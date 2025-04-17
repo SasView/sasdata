@@ -367,6 +367,16 @@ class PublishedStateSerializer(serializers.ModelSerializer):
         model = models.PublishedState
         fields = "__all__"
 
+    def validate_session(self, value):
+        try:
+            published = value.published_state
+            if published is not None:
+                raise serializers.ValidationError(
+                    "Only one published state per session"
+                )
+        except models.Session.published_state.RelatedObjectDoesNotExist:
+            return value
+
     def to_internal_value(self, data):
         data_copy = data.copy()
         data_copy["doi"] = "http://127.0.0.1:8000/v1/data/session/"
