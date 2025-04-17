@@ -266,9 +266,119 @@ class TestPublishedStateView(APITestCase):
 class TestSinglePublishedStateView(APITestCase):
     @classmethod
     def setUpTestData(cls):
-        pass
+        cls.user1 = User.objects.create_user(
+            id=1, username="testUser1", password="secret"
+        )
+        cls.user2 = User.objects.create_user(
+            id=2, username="testUser2", password="secret"
+        )
+        cls.public_session = Session.objects.create(
+            id=1, current_user=cls.user1, title="Public Session", is_public=True
+        )
+        cls.private_session = Session.objects.create(
+            id=2, current_user=cls.user1, title="Private Session", is_public=False
+        )
+        cls.unowned_session = Session.objects.create(
+            id=3, title="Unowned Session", is_public=True
+        )
+        cls.public_ps = PublishedState.objects.create(
+            id=1,
+            doi=doi_generator(1),
+            published=True,
+            session=cls.public_session,
+        )
+        cls.private_ps = PublishedState.objects.create(
+            id=2,
+            doi=doi_generator(2),
+            published=False,
+            session=cls.private_session,
+        )
+        cls.unowned_ps = PublishedState.objects.create(
+            id=3,
+            doi=doi_generator(3),
+            published=True,
+            session=cls.unowned_session,
+        )
+        cls.auth_client1 = APIClient()
+        cls.auth_client2 = APIClient()
+        cls.auth_client1.force_authenticate(cls.user1)
+        cls.auth_client2.force_authenticate(cls.user2)
 
     # Test viewing a published state - various permissions
+    def test_get_public_published_state(self):
+        request1 = self.auth_client2.get("/v1/data/published/1/")
+        request2 = self.client.get("/v1/data/published/1/")
+        self.assertEqual(request1.status_code, status.HTTP_200_OK)
+        self.assertEqual(request2.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            request1.data,
+            {
+                "id": 1,
+                "doi": doi_generator(1),
+                "published": True,
+                "session": 1,
+                "title": "Public Session",
+                "current_user": "testUser1",
+                "is_public": True,
+            },
+        )
+        self.assertEqual(request1.data, request2.data)
+
+    def test_get_private_published_state(self):
+        request = self.auth_client1.get("/v1/data/published/2/")
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            request.data,
+            {
+                "id": 2,
+                "doi": doi_generator(2),
+                "published": False,
+                "session": 2,
+                "title": "Private Session",
+                "current_user": "testUser1",
+                "is_public": False,
+            },
+        )
+
+    def test_get_unowned_published_state(self):
+        request = self.auth_client1.get("/v1/data/published/3/")
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            request.data,
+            {
+                "id": 3,
+                "doi": doi_generator(3),
+                "published": True,
+                "session": 3,
+                "title": "Unowned Session",
+                "current_user": "",
+                "is_public": True,
+            },
+        )
+
+    def test_get_shared_published_state(self):
+        self.private_session.users.add(self.user2)
+        request = self.auth_client2.get("/v1/data/published/2/")
+        self.private_session.users.remove(self.user2)
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            request.data,
+            {
+                "id": 2,
+                "doi": doi_generator(2),
+                "published": False,
+                "session": 2,
+                "title": "Private Session",
+                "current_user": "testUser1",
+                "is_public": False,
+            },
+        )
+
+    def test_get_private_published_state_unauthorized(self):
+        request1 = self.client.get("/v1/data/published/2/")
+        request2 = self.auth_client2.get("/v1/data/published/2/")
+        self.assertEqual(request1.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(request2.status_code, status.HTTP_403_FORBIDDEN)
 
     # Test updating a published state
 
@@ -276,4 +386,8 @@ class TestSinglePublishedStateView(APITestCase):
 
     @classmethod
     def tearDownClass(cls):
-        pass
+        cls.public_session.delete()
+        cls.private_session.delete()
+        cls.unowned_session.delete()
+        cls.user1.delete()
+        cls.user2.delete()
