@@ -501,3 +501,44 @@ class SessionUsersView(APIView):
             "access": serializer.data["access"],
         }
         return Response(response_data)
+
+
+class PublishedStateView(APIView):
+    """
+    View associated with the PublishedState model.
+
+    Functionality for viewing a list of session published states and for
+    creating a published state.
+    """
+
+    # View a list of accessible sessions' published states
+    def get(self, request, version=None):
+        pass
+
+    # Create a published state for an existing session
+    def post(self, request, version=None):
+        pass
+
+    # Create a published state for an existing session
+    def put(self, request, version=None):
+        return self.post(request, version)
+
+
+class SinglePublishedStateView(APIView):
+    """
+    View associated with specific session published states.
+
+    Functionality for viewing, modifying, and deleting individual published states.
+    """
+
+    # View a specific published state
+    def get(self, request, ps_id, version=None):
+        pass
+
+    # Modify a published state
+    def put(self, request, ps_id, version=None):
+        pass
+
+    # Delete a published state
+    def delete(self, request, ps_id, version=None):
+        pass
