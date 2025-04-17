@@ -534,16 +534,17 @@ class PublishedStateView(APIView):
         serializer = PublishedStateSerializer(
             data=request.data, context={"request": request}
         )
-        if not permissions.is_owner(request, serializer.data["session"]):
-            if not request.user.is_authenticated:
-                return HttpResponse(
-                    "Must be authenticated to create a published state for a session",
-                    status=401,
-                )
-            return HttpResponseForbidden(
-                "Must be the session owner to create a published state for a session"
-            )
         if serializer.is_valid(raise_exception=True):
+            print(serializer.validated_data["session"])
+            if not permissions.is_owner(request, serializer.validated_data["session"]):
+                if not request.user.is_authenticated:
+                    return HttpResponse(
+                        "Must be authenticated to create a published state for a session",
+                        status=401,
+                    )
+                return HttpResponseForbidden(
+                    "Must be the session owner to create a published state for a session"
+                )
             serializer.save()
         db = serializer.instance
         response = {
