@@ -381,6 +381,80 @@ class TestSinglePublishedStateView(APITestCase):
         self.assertEqual(request2.status_code, status.HTTP_403_FORBIDDEN)
 
     # Test updating a published state
+    def test_update_public_published_state(self):
+        request = self.auth_client1.put(
+            "/v1/data/published/1/", data={"published": False}
+        )
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            request.data,
+            {
+                "published_state_id": 1,
+                "session_id": 1,
+                "title": "Public Session",
+                "published": False,
+                "is_public": True,
+            },
+        )
+        self.assertFalse(PublishedState.objects.get(id=1).published)
+        self.public_ps.save()
+
+    def test_update_private_published_state(self):
+        request = self.auth_client1.put(
+            "/v1/data/published/2/", data={"published": True}
+        )
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            request.data,
+            {
+                "published_state_id": 2,
+                "session_id": 2,
+                "title": "Private Session",
+                "published": True,
+                "is_public": False,
+            },
+        )
+        self.assertTrue(PublishedState.objects.get(id=2).published)
+        self.private_ps.save()
+
+    def test_update_unowned_published_state(self):
+        request1 = self.auth_client1.put(
+            "/v1/data/published/3/", data={"published": False}
+        )
+        request2 = self.client.put("/v1/data/published/3/", data={"published": False})
+        self.assertEqual(request1.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(request2.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertTrue(PublishedState.objects.get(id=3).published)
+
+    def test_update_public_published_state_unauthorized(self):
+        request1 = self.auth_client2.put(
+            "/v1/data/published/1/", data={"published": False}
+        )
+        self.public_session.users.add(self.user2)
+        request2 = self.auth_client2.put(
+            "/v1/data/published/1/", data={"published": False}
+        )
+        self.public_session.users.remove(self.user2)
+        request3 = self.client.put("/v1/data/published/1/", data={"published": False})
+        self.assertEqual(request1.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(request2.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(request3.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertTrue(PublishedState.objects.get(id=1).published)
+
+    def test_update_private_published_state_unauthorized(self):
+        request1 = self.auth_client2.put(
+            "/v1/data/published/2/", data={"published": True}
+        )
+        self.public_session.users.add(self.user2)
+        request2 = self.auth_client2.put(
+            "/v1/data/published/2/", data={"published": True}
+        )
+        self.public_session.users.remove(self.user2)
+        request3 = self.client.put("/v1/data/published/2/", data={"published": True})
+        self.assertEqual(request1.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(request2.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(request3.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertFalse(PublishedState.objects.get(id=2).published)
 
     # Test deleting a published state - session not deleted
 
