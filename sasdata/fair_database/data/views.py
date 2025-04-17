@@ -570,7 +570,20 @@ class SinglePublishedStateView(APIView):
 
     # View a specific published state
     def get(self, request, ps_id, version=None):
-        pass
+        db = get_object_or_404(PublishedState, id=ps_id)
+        if not permissions.check_permissions(request, db.session):
+            if not request.user.is_authenticated:
+                return HttpResponse(
+                    "Must be authenticated to view published state", status=401
+                )
+            return HttpResponseForbidden(
+                "You do not have permission to view this published state."
+            )
+        serializer = PublishedStateSerializer(db)
+        response_data = serializer.data
+        if db.current_user:
+            response_data["current_user"] = db.current_user.username
+        return Response(response_data)
 
     # Modify a published state
     def put(self, request, ps_id, version=None):
