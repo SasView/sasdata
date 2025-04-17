@@ -19,6 +19,7 @@ from data.serializers import (
     DataSetSerializer,
     AccessManagementSerializer,
     SessionSerializer,
+    PublishedStateSerializer,
 )
 from data.models import DataFile, DataSet, PublishedState, Session
 from data.forms import DataFileForm
@@ -529,7 +530,31 @@ class PublishedStateView(APIView):
 
     # Create a published state for an existing session
     def post(self, request, version=None):
-        pass
+        serializer = PublishedStateSerializer(
+            data=request.data, context={"request": request}
+        )
+        if not permissions.is_owner(request, serializer.data["session"]):
+            if not request.user.is_authenticated:
+                return HttpResponse(
+                    "Must be authenticated to create a published state for a session",
+                    status=401,
+                )
+            return HttpResponseForbidden(
+                "Must be the session owner to create a published state for a session"
+            )
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+        db = serializer.instance
+        response = {
+            "published_state_id": db.id,
+            "session_id": db.session.id,
+            "title": db.session.title,
+            "doi": db.doi,
+            "published": db.published,
+            "current_user": request.user.username,
+            "is_public": db.session.is_public,
+        }
+        return Response(data=response, status=status.HTTP_201_CREATED)
 
     # Create a published state for an existing session
     def put(self, request, version=None):
