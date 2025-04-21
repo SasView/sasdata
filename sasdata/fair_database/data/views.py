@@ -1,4 +1,5 @@
 import os
+import json
 
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
@@ -236,9 +237,15 @@ class DataSetView(APIView):
     # TODO: enable uploading files as part of dataset creation, not just associating dataset with existing files
     # create a dataset
     def post(self, request, version=None):
-        # TODO: JSON deserialization probably
         # TODO: revisit request data format
-        serializer = DataSetSerializer(data=request.data, context={"request": request})
+        if isinstance(request.data, str):
+            serializer = DataSetSerializer(
+                data=json.loads(request.data), context={"request": request}
+            )
+        else:
+            serializer = DataSetSerializer(
+                data=request.data, context={"request": request}
+            )
         if serializer.is_valid(raise_exception=True):
             serializer.save()
         db = serializer.instance
@@ -383,7 +390,14 @@ class SessionView(APIView):
     # Create a session
     # TODO: revisit response data
     def post(self, request, version=None):
-        serializer = SessionSerializer(data=request.data, context={"request": request})
+        if isinstance(request.data, str):
+            serializer = SessionSerializer(
+                data=json.loads(request.data), context={"request": request}
+            )
+        else:
+            serializer = SessionSerializer(
+                data=request.data, context={"request": request}
+            )
         if serializer.is_valid(raise_exception=True):
             serializer.save()
         db = serializer.instance
@@ -531,9 +545,14 @@ class PublishedStateView(APIView):
 
     # Create a published state for an existing session
     def post(self, request, version=None):
-        serializer = PublishedStateSerializer(
-            data=request.data, context={"request": request}
-        )
+        if isinstance(request.data, str):
+            serializer = PublishedStateSerializer(
+                data=json.loads(request.data), context={"request": request}
+            )
+        else:
+            serializer = PublishedStateSerializer(
+                data=request.data, context={"request": request}
+            )
         if serializer.is_valid(raise_exception=True):
             if not permissions.is_owner(request, serializer.validated_data["session"]):
                 if not request.user.is_authenticated:
