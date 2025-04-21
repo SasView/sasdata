@@ -1,3 +1,4 @@
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import serializers
 
 from data import models
@@ -470,6 +471,19 @@ class SessionSerializer(serializers.ModelSerializer):
             for dataset in instance.datasets.all():
                 dataset.is_public = validated_data["is_public"]
                 dataset.save()
+        if "published_state" in validated_data:
+            pb_raw = validated_data.pop("published_state")
+            try:
+                PublishedStateUpdateSerializer.update(
+                    PublishedStateUpdateSerializer(),
+                    instance.published_state,
+                    validated_data=pb_raw,
+                )
+            except ObjectDoesNotExist:
+                pb_raw["session"] = instance
+                PublishedStateSerializer.create(
+                    PublishedStateSerializer(), validated_data=pb_raw
+                )
         return super().update(instance, validated_data)
 
 
