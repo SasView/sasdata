@@ -245,6 +245,15 @@ class TestDataSet(APITestCase):
         request = self.client.post("/v1/data/set/", data=dataset, format="json")
         self.assertEqual(request.status_code, status.HTTP_400_BAD_REQUEST)
 
+    def test_metadata_required(self):
+        dataset = {
+            "name": "No metadata",
+            "is_public": True,
+            "data_contents": self.empty_data,
+        }
+        request = self.auth_client1.post("/v1/data/set/", data=dataset, format="json")
+        self.assertEqual(request.status_code, status.HTTP_400_BAD_REQUEST)
+
     # Test that a private dataset cannot be created without an owner
     def test_no_private_unowned_dataset(self):
         dataset = {
