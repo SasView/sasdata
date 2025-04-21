@@ -3,8 +3,7 @@ from django.db.models import Max
 from rest_framework.test import APIClient, APITestCase
 from rest_framework import status
 
-
-from data.models import DataSet, Session
+from data.models import DataSet, PublishedState, Session
 
 
 class TestSession(APITestCase):
@@ -117,6 +116,7 @@ class TestSession(APITestCase):
                 }
             ],
             "is_public": True,
+            "published_state": {"published": False},
         }
         request = self.auth_client1.post(
             "/v1/data/session/", data=session, format="json"
@@ -125,6 +125,7 @@ class TestSession(APITestCase):
         new_session = Session.objects.get(id=max_id)
         new_dataset = new_session.datasets.get()
         new_metadata = new_dataset.metadata
+        new_published_state = new_session.published_state
         self.assertEqual(request.status_code, status.HTTP_201_CREATED)
         self.assertEqual(
             request.data,
@@ -142,6 +143,7 @@ class TestSession(APITestCase):
         self.assertEqual(new_session.current_user, self.user1)
         self.assertEqual(new_dataset.current_user, self.user1)
         self.assertTrue(all([new_session.is_public, new_dataset.is_public]))
+        self.assertFalse(new_published_state.published)
         new_session.delete()
 
     # Test creating a private session
@@ -303,6 +305,12 @@ class TestSingleSession(APITestCase):
         cls.unowned_dataset = DataSet.objects.create(
             id=3, is_public=True, name="Unowned Dataset", session=cls.unowned_session
         )
+        cls.private_published_state = PublishedState.objects.create(
+            id=2,
+            session=cls.private_session,
+            published=False,
+            doi="http://localhost:8000/v1/data/session/2/",
+        )
         cls.auth_client1 = APIClient()
         cls.auth_client2 = APIClient()
         cls.auth_client1.force_authenticate(cls.user1)
@@ -320,7 +328,6 @@ class TestSingleSession(APITestCase):
                 "users": [],
                 "is_public": True,
                 "title": "Public Session",
-                "published_state": None,
                 "datasets": [
                     {
                         "id": 1,
@@ -333,6 +340,7 @@ class TestSingleSession(APITestCase):
                         "data_contents": [],
                     }
                 ],
+                "published_state": None,
             },
         )
 
@@ -348,7 +356,12 @@ class TestSingleSession(APITestCase):
                 "users": [],
                 "is_public": False,
                 "title": "Private Session",
-                "published_state": None,
+                "published_state": {
+                    "id": 2,
+                    "published": False,
+                    "doi": "http://localhost:8000/v1/data/session/2/",
+                    "session": 2,
+                },
                 "datasets": [
                     {
                         "id": 2,
@@ -421,6 +434,17 @@ class TestSingleSession(APITestCase):
         session.is_public = False
         session.save()
 
+    def test_update_session_new_published_state(self):
+        request = self.auth_client1.put(
+            "/v1/data/session/1/",
+            data={"published_state": {"published": False}},
+            format="json",
+        )
+        new_published_state = Session.objects.get(id=1).published_state
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertFalse(new_published_state.published)
+        new_published_state.delete()
+
     # Test that another user's public session cannot be updated
     def test_update_public_session_unauthorized(self):
         request1 = self.auth_client2.put(
@@ -454,6 +478,16 @@ class TestSingleSession(APITestCase):
         session.is_public = False
         session.save()
 
+    def test_update_session_published_state(self):
+        request = self.auth_client1.put(
+            "/v1/data/session/2/",
+            data={"published_state": {"published": True}},
+            format="json",
+        )
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertTrue(PublishedState.objects.get(id=2).published)
+        self.private_published_state.save()
+
     # Test that another user's private session cannot be updated
     def test_update_private_session_unauthorized(self):
         request1 = self.auth_client2.put(
@@ -485,6 +519,7 @@ class TestSingleSession(APITestCase):
         self.assertEqual(request.status_code, status.HTTP_200_OK)
         self.assertRaises(Session.DoesNotExist, Session.objects.get, id=2)
         self.assertRaises(DataSet.DoesNotExist, DataSet.objects.get, id=2)
+        self.assertRaises(PublishedState.DoesNotExist, PublishedState.objects.get, id=2)
         self.private_session = Session.objects.create(
             id=2, current_user=self.user1, title="Private Session", is_public=False
         )
@@ -493,6 +528,12 @@ class TestSingleSession(APITestCase):
             current_user=self.user1,
             name="Private Dataset",
             session=self.private_session,
+        )
+        self.private_published_state = PublishedState.objects.create(
+            id=2,
+            session=self.private_session,
+            published=False,
+            doi="http://localhost:8000/v1/data/session/2/",
         )
 
     # Test that another user's private session cannot be deleted
