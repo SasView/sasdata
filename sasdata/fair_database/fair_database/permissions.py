@@ -14,11 +14,9 @@ def has_access(request, obj):
 class DataPermission(BasePermission):
     def has_object_permission(self, request, view, obj):
         if request.method == "GET":
-            if obj.is_public or has_access(request, obj):
-                return True
+            return obj.is_public or has_access(request, obj)
         elif request.method == "DELETE":
-            if not obj.is_public and is_owner(request, obj):
-                return True
+            return not obj.is_public and is_owner(request, obj)
         else:
             return is_owner(request, obj)
 
