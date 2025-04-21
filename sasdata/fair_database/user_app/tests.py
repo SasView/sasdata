@@ -120,10 +120,10 @@ class AuthTests(TestCase):
         self.client1.post("/auth/register/", data=self.register_data)
         response = self.client1.post("/auth/logout/")
         response2 = self.client1.get("/auth/user/")
-        User.objects.get(username="testUser").delete()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.content, b'{"detail":"Successfully logged out."}')
         self.assertEqual(response2.status_code, status.HTTP_401_UNAUTHORIZED)
+        User.objects.get(username="testUser").delete()
 
     def test_multiple_logout(self):
         self.client1.post("/auth/login/", data=self.login_data_2)
@@ -142,10 +142,10 @@ class AuthTests(TestCase):
         )
         logout_response = self.client1.post("/auth/logout/")
         login_response = self.client1.post("/auth/login/", data=self.login_data)
-        User.objects.get(username="testUser").delete()
         self.assertEqual(register_response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(logout_response.status_code, status.HTTP_200_OK)
         self.assertEqual(login_response.status_code, status.HTTP_200_OK)
+        User.objects.get(username="testUser").delete()
 
     # Test password is successfully changed
     def test_password_change(self):

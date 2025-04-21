@@ -3,6 +3,14 @@ from django.contrib.auth.models import User
 from django.core.files.storage import FileSystemStorage
 
 
+def empty_list():
+    return []
+
+
+def empty_dict():
+    return {}
+
+
 class Data(models.Model):
     """Base model for data."""
 
@@ -86,6 +94,15 @@ class Quantity(models.Model):
 
 
 class ReferenceQuantity(models.Model):
+    """
+    Database models for quantities referenced by variables in an OperationTree.
+
+    Corresponds to the references dictionary in the QuantityHistory class in
+    sasdata/quantity.py. ReferenceQuantities should be essentially the same as
+    Quantities but with no operations performed on them and therefore no
+    OperationTree.
+    """
+
     # data value
     value = models.JSONField()
 
@@ -103,14 +120,6 @@ class ReferenceQuantity(models.Model):
         related_name="references",
         on_delete=models.CASCADE,
     )
-
-
-def empty_list():
-    return []
-
-
-def empty_dict():
-    return {}
 
 
 class MetaData(models.Model):
@@ -178,7 +187,8 @@ class OperationTree(models.Model):
         null=True,
     )
 
-    # related quantity, only set for base of tree
+    # quantity the operation produces
+    # only set for base of tree (the most recent operation)
     quantity = models.OneToOneField(
         Quantity,
         on_delete=models.CASCADE,
@@ -201,6 +211,7 @@ class PublishedState(models.Model):
     # published
     published = models.BooleanField(default=False)
 
+    # TODO: update doi as needed when DOI generation is implemented
     # doi
     doi = models.URLField()
 
