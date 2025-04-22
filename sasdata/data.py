@@ -84,11 +84,12 @@ class SasData:
     @staticmethod
     def deserialise_json(json_data: dict) -> "SasData":
         name = json_data["name"]
-        data_contents = {} # deserialize Quantity
-        dataset_type = json_data["dataset_type"]
+        data_contents = {}
+        dataset_type = json_data["dataset_type"] # TODO: update when DatasetType is more finalized
         metadata = json_data["metadata"].deserialise_json()
-        verbose = json_data["verbose"]
-        return SasData(name, data_contents, dataset_type, metadata, verbose)
+        for quantity in json_data["data_contents"]:
+            data_contents[quantity["label"]] = Quantity.deserialise_json(quantity)
+        return SasData(name, data_contents, dataset_type, metadata)
 
     def serialise(self) -> str:
         return json.dumps(self._serialise_json())

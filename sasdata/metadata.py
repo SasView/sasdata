@@ -20,6 +20,19 @@ class Vec3:
     y : Quantity[float] | None
     z : Quantity[float] | None
 
+    @staticmethod
+    def deserialise_json(json_data: dict):
+        x = None
+        y = None
+        z = None
+        if "x" in json_data:
+            x = Quantity.deserialise_json(json_data["x"])
+        if "y" in json_data:
+            y = Quantity.deserialise_json(json_data["y"])
+        if "z" in json_data:
+            z = Quantity.deserialise_json(json_data["z"])
+        return Vec3(x=x, y=y, z=z)
+
     def serialise_json(self):
         data = {
             "x": None,
@@ -40,6 +53,19 @@ class Rot3:
     roll : Quantity[float] | None
     pitch : Quantity[float] | None
     yaw : Quantity[float] | None
+
+    @staticmethod
+    def deserialise_json(json_data: dict):
+        roll = None
+        pitch = None
+        yaw = None
+        if "roll" in json_data:
+            roll = Quantity.deserialise_json(json_data["roll"])
+        if "pitch" in json_data:
+            pitch = Quantity.deserialise_json(json_data["pitch"])
+        if "yaw" in json_data:
+            yaw = Quantity.deserialise_json(json_data["yaw"])
+        return Rot3(roll=roll, pitch=pitch, yaw=yaw)
 
     def serialise_json(self):
         data = {
@@ -78,6 +104,40 @@ class Detector:
                 f"   Beam center:  {self.beam_center}\n"
                 f"   Pixel size:   {self.pixel_size}\n"
                 f"   Slit length:  {self.slit_length}\n")
+
+    @staticmethod
+    def deserialise_json(json_data: dict):
+        name = None
+        distance = None
+        offset = None
+        orientation = None
+        beam_center = None
+        pixel_size = None
+        slit_length = None
+        if "name" in json_data:
+            name = json_data["name"]
+        if "distance" in json_data:
+            distance = Quantity.deserialise_json(json_data["distance"])
+        if "offset" in json_data:
+            offset = Vec3.deserialise_json(json_data["offset"])
+        if "orientation" in json_data:
+            orientation = Rot3.deserialise_json(json_data["orientation"])
+        if "beam_center" in json_data:
+            beam_center = Vec3.deserialise_json(json_data["beam_center"])
+        if "pixel_size" in json_data:
+            pixel_size = Vec3.deserialise_json(json_data["pixel_size"])
+        if "slit_length" in json_data:
+            slit_length = Quantity.deserialise_json(json_data["slit_length"])
+        return Detector(
+            name=name,
+            distance=distance,
+            offset=offset,
+            orientation=orientation,
+            beam_center=beam_center,
+            pixel_size=pixel_size,
+            slit_length=slit_length
+        )
+
 
     def serialise_json(self):
         data = {
@@ -118,6 +178,27 @@ class Aperture:
                 f"  Aperture size: {self.size}\n"
                 f"  Aperture distance: {self.distance}\n")
 
+    @staticmethod
+    def deserialise_json(json_data: dict):
+        distance = None
+        size = None
+        size_name = None
+        name = None
+        type_ = None
+        if "distance" in json_data:
+            distance = Quantity.deserialise_json(json_data["distance"])
+        if "size" in json_data:
+            size = Vec3.deserialise_json(json_data["size"])
+        if "size_name" in json_data:
+            size_name = json_data["size_name"]
+        if "name" in json_data:
+            name = json_data["name"]
+        if "type" in json_data:
+            type_ = json_data["type"]
+        return Aperture(
+            distance=distance, size=size, size_name=size_name, name=name, type_=type_
+        )
+
     def serialise_json(self):
         data = {
             "distance": None,
@@ -147,6 +228,15 @@ class Collimation:
             f"Collimation:\n"
             f"   Length: {self.length}\n")
 
+    @staticmethod
+    def deserialise_json(json_data: dict):
+        length = None
+        apertures = []
+        if "length" in json_data:
+            length = Quantity.deserialise_json(json_data["length"])
+        if "apertures" in json_data:
+            apertures = [Aperture.deserialise_json(a) for a in json_data["apertures"]]
+
     def serialise_json(self):
         data = {
             "length": None,
@@ -160,6 +250,16 @@ class Collimation:
 class BeamSize:
     name: str | None
     size: Vec3 | None
+
+    @staticmethod
+    def deserialise_json(json_data: dict):
+        name = None
+        size = None
+        if "name" in json_data:
+            name = json_data["name"]
+        if "size" in json_data:
+            size = Vec3.deserialise_json(json_data["size"])
+        return BeamSize(name=name, size=size)
 
     def serialise_json(self):
         data = {
@@ -190,6 +290,39 @@ class Source:
             f"    Max. Wavelength:   {self.wavelength_max}\n"
             f"    Wavelength Spread: {self.wavelength_spread}\n"
             f"    Beam Size:         {self.beam_size}\n"
+        )
+
+    @staticmethod
+    def deserialise_json(json_data: dict):
+        radiation = None
+        beam_shape = None
+        beam_size = None
+        wavelength = None
+        wavelength_min = None
+        wavelength_max = None
+        wavelength_spread = None
+        if "radiation" in json_data:
+            radiation = json_data["radiation"]
+        if "beam_shape" in json_data:
+            beam_shape = json_data["beam_shape"]
+        if "beam_size" in json_data:
+            beam_size = BeamSize.deserialise_json(json_data["beam_size"])
+        if "wavelength" in json_data:
+            wavelength = Quantity.deserialise_json(json_data["wavelength"])
+        if "wavelength_min" in json_data:
+            wavelength_min = Quantity.deserialise_json(json_data["wavelength_min"])
+        if "wavelength_max" in json_data:
+            wavelength_max = Quantity.deserialise_json(json_data["wavelength_max"])
+        if "wavelength_spread" in json_data:
+            wavelength_spread = Quantity.deserialise_json(json_data["wavelength_spread"])
+        return Source(
+            radiation=radiation,
+            beam_shape=beam_shape,
+            beam_size=beam_size,
+            wavelength=wavelength,
+            wavelength_min=wavelength_min,
+            wavelength_max=wavelength_max,
+            wavelength_spread=wavelength_spread
         )
 
     def serialise_json(self):
@@ -236,6 +369,40 @@ class Sample:
                 f"   Temperature:  {self.temperature}\n"
                 f"   Position:     {self.position}\n"
                 f"   Orientation:  {self.orientation}\n")
+
+    @staticmethod
+    def deserialise_json(json_data):
+        name = None
+        sample_id = None
+        thickness = None
+        transmission = None
+        temperature = None
+        position = None
+        orientation = None
+        details = []
+        if "name" in json_data:
+            name = json_data["name"]
+        if "sample_id" in json_data:
+            sample_id = json_data["sample_id"]
+        if "thickness" in json_data:
+            thickness = Quantity.deserialise_json(json_data["thickness"])
+        if "temperature" in json_data:
+            temperature = Quantity.deserialise_json(json_data["temperature"])
+        if "position" in json_data:
+            position = Vec3.deserialise_json(json_data["position"])
+        if "orientation" in json_data:
+            orientation = Rot3.deserialise_json(json_data["orientation"])
+        return Sample(
+            name=name,
+            sample_id=sample_id,
+            thickness=thickness,
+            transmission=transmission,
+            temperature=temperature,
+            position=position,
+            orientation=orientation,
+            details=details
+        )
+
 
     def serialise_json(self):
         data = {
@@ -284,6 +451,22 @@ class Process:
                 f"    Term: {self.term}\n"
                 )
 
+    @staticmethod
+    def deserialise_json(json_data: dict):
+        name = None
+        date = None
+        description = None
+        term = None
+        if "name" in json_data:
+            name = json_data["name"]
+        if "date" in json_data:
+            date = json_data["date"]
+        if "description" in json_data:
+            description = json_data["description"]
+        if "term" in json_data:
+            term = json_data["term"]
+        return Process(name=name, date=date, description=description, term=term)
+
     def serialise_json(self):
         return {
             "name": self.name,
@@ -304,6 +487,19 @@ class Instrument:
             "\n".join([c.summary() for c in self.collimations]) +
             "".join([d.summary() for d in self.detector]) +
             self.source.summary())
+
+    @staticmethod
+    def deserialize_json(json_data: dict):
+        collimations = []
+        source = None
+        detector= []
+        if "collimations" in json_data:
+            collimations = [Collimation.deserialise_json(c) for c in json_data["collimations"]]
+        if "source" in json_data:
+            source = Source.deserialise_json(json_data["source"])
+        if "detector" in json_data:
+            detector = [Detector.deserialise_json(d) for d in json_data["detector"]]
+        return Instrument(collimations=collimations, source=source, detector=detector)
 
     def serialise_json(self):
         data = {
@@ -335,6 +531,22 @@ class Metadata:
             "".join([p.summary() for p in self.process]) +
             self.sample.summary() +
             (self.instrument.summary() if self.instrument else ""))
+
+    @staticmethod
+    def deserialize_json(json_data: dict):
+        title = json_data["title"]
+        run = json_data["run"]
+        definition = json_data["definition"]
+        process = [Process.deserialise_json(p) for p in json_data["process"]]
+        sample = None
+        instrument = None
+        if json_data["sample"] is not None:
+            sample = Sample.deserialise_json(json_data["sample"])
+        if json_data["instrument"] is not None:
+            instrument = Instrument.deserialize_json(json_data["instrument"])
+        return Metadata(
+            title=title, run=run, definition=definition, process=process, sample=sample, instrument=instrument
+        )
 
     def serialise_json(self):
         serialized = {

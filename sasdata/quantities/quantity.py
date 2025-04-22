@@ -1223,11 +1223,11 @@ class Quantity[QuantityType]:
     @staticmethod
     def deserialise_json(json_data: dict) -> "Quantity":
         value = numerical_decode(json_data["value"])
-        units = Unit.parse(json_data["units"])
+        units_ = Unit.parse(json_data["units"])
         standard_error = numerical_decode(json_data["variance"]) ** 0.5
         hash_seed = json_data["hash_seed"]
         history = QuantityHistory.deserialise_json(json_data["history"])
-        quantity = Quantity(value, units, standard_error, hash_seed)
+        quantity = Quantity(value, units_, standard_error, hash_seed)
         quantity.history = history
         return quantity
 
@@ -1492,11 +1492,11 @@ class NamedQuantity[QuantityType](Quantity[QuantityType]):
     @staticmethod
     def deserialise_json(json_data: dict) -> "NamedQuantity":
         name = json_data["name"]
-        value = None # TODO: figure out QuantityType deserialization
-        units = Unit.deserialise_json(json_data["units"])
-        standard_error = None # TODO: QuantityType deserialization
+        value = numerical_decode(json_data["value"])
+        units_ = Unit.parse(json_data["units"])
+        standard_error = numerical_decode(json_data["variance"]) ** 0.5
         history = QuantityHistory.deserialise_json(json_data["history"])
-        quantity = NamedQuantity(name, value, units, standard_error)
+        quantity = NamedQuantity(name, value, units_, standard_error)
         quantity.history = history
         return quantity
 
@@ -1539,8 +1539,8 @@ class DerivedQuantity[QuantityType](Quantity[QuantityType]):
 
     @staticmethod
     def deserialise_json(json_data: dict) -> "DerivedQuantity":
-        value = None # TODO: figure out QuantityType
-        units = Unit.deserialise_json(json_data["units"])
+        value = numerical_decode(json_data["value"])
+        units_ = Unit.parse(json_data["units"])
         history = QuantityHistory.deserialise_json(json_data["history"])
-        quantity = DerivedQuantity(value, units, history)
+        quantity = DerivedQuantity(value, units_, history)
         return quantity
