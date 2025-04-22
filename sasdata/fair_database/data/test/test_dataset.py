@@ -554,6 +554,12 @@ class TestSingleDataSet(APITestCase):
         self.public_dataset.files.add(self.file)
         self.public_dataset.files.remove(file)
 
+    def test_update_dataset_clear_files(self):
+        request = self.auth_client1.put("/v1/data/set/1/", data={"files": [""]})
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(DataSet.objects.get(id=1).files.all()), 0)
+        self.public_dataset.files.add(self.file)
+
     # Test that a dataset cannot be updated to be private and unowned
     def test_update_dataset_no_private_unowned(self):
         request1 = self.auth_client1.put("/v1/data/set/2/", data={"current_user": ""})

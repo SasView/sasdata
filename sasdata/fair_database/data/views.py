@@ -300,8 +300,18 @@ class SingleDataSetView(APIView):
         serializer = DataSetSerializer(
             db, request.data, context={"request": request}, partial=True
         )
+        clear_files = "files" in request.data and not request.data["files"]
+        if clear_files:
+            data_copy = request.data.copy()
+            data_copy.pop("files")
+            serializer = DataSetSerializer(
+                db, data_copy, context={"request": request}, partial=True
+            )
         if serializer.is_valid(raise_exception=True):
             serializer.save()
+        if clear_files:
+            db.files.clear()
+            db.save()
         data = {"data_id": db.id, "name": db.name, "is_public": db.is_public}
         return Response(data)
 
