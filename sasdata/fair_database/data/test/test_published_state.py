@@ -11,26 +11,7 @@ def doi_generator(id: int):
     return "http://127.0.0.1:8000/v1/data/session/" + str(id) + "/"
 
 
-class TestSessionWithPublishedState(APITestCase):
-    @classmethod
-    def setUpTestData(cls):
-        pass
-
-    # Test creating a session with a published state
-    # Should this just be a part of sessions testing?
-
-    # Test GET on a session with a published state
-
-    # Test PUT on nested published state
-
-    # Test cascading delete
-
-    @classmethod
-    def tearDownClass(cls):
-        pass
-
-
-class TestPublishedStateView(APITestCase):
+class TestPublishedState(APITestCase):
     """Test HTTP methods of PublishedStateView."""
 
     @classmethod
@@ -176,6 +157,92 @@ class TestPublishedStateView(APITestCase):
             },
         )
 
+    # Test listing a user's own published states
+    def test_list_user_published_states_private(self):
+        request = self.auth_client1.get(
+            "/v1/data/published/", data={"username": "testUser1"}
+        )
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            request.data,
+            {
+                "published_state_ids": {
+                    1: {
+                        "title": "Public Session",
+                        "published": True,
+                        "doi": doi_generator(1),
+                    },
+                    2: {
+                        "title": "Private Session",
+                        "published": False,
+                        "doi": doi_generator(2),
+                    },
+                }
+            },
+        )
+
+    # Test listing another user's published states
+    def test_list_user_published_states_public(self):
+        request = self.auth_client2.get(
+            "/v1/data/published/", data={"username": "testUser1"}
+        )
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            request.data,
+            {
+                "published_state_ids": {
+                    1: {
+                        "title": "Public Session",
+                        "published": True,
+                        "doi": doi_generator(1),
+                    }
+                }
+            },
+        )
+
+    # Test listing another user's published states with access granted
+    def test_list_user_published_states_shared(self):
+        self.private_session.users.add(self.user2)
+        request = self.auth_client2.get(
+            "/v1/data/published/", data={"username": "testUser1"}
+        )
+        self.private_session.users.remove(self.user2)
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            request.data,
+            {
+                "published_state_ids": {
+                    1: {
+                        "title": "Public Session",
+                        "published": True,
+                        "doi": doi_generator(1),
+                    },
+                    2: {
+                        "title": "Private Session",
+                        "published": False,
+                        "doi": doi_generator(2),
+                    },
+                }
+            },
+        )
+
+    # Test listing a user's published states while unauthenticated
+    def test_list_user_published_states_unauthenticated(self):
+        request = self.client.get("/v1/data/published/", data={"username": "testUser1"})
+        self.assertEqual(request.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            request.data,
+            {
+                "published_state_ids": {
+                    1: {
+                        "title": "Public Session",
+                        "published": True,
+                        "doi": doi_generator(1),
+                    }
+                }
+            },
+        )
+
     # Test creating a published state for a private session
     def test_published_state_created_private(self):
         self.unpublished_session.is_public = False
@@ -268,7 +335,7 @@ class TestPublishedStateView(APITestCase):
         cls.user2.delete()
 
 
-class TestSinglePublishedStateView(APITestCase):
+class TestSinglePublishedState(APITestCase):
     """Test HTTP methods of SinglePublishedStateView."""
 
     @classmethod
