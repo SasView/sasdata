@@ -368,6 +368,7 @@ class TestSingleDataSet(APITestCase):
                 "files": [],
                 "metadata": None,
                 "data_contents": [],
+                "session": None,
             },
         )
 
@@ -398,6 +399,7 @@ class TestSingleDataSet(APITestCase):
                     "sample": "none",
                 },
                 "data_contents": [],
+                "session": None,
             },
         )
         self.assertEqual(request1.data, request2.data)
@@ -420,6 +422,7 @@ class TestSingleDataSet(APITestCase):
                     "sample": "none",
                 },
                 "data_contents": [],
+                "session": None,
             },
         )
 
@@ -440,6 +443,7 @@ class TestSingleDataSet(APITestCase):
                 "files": [],
                 "metadata": None,
                 "data_contents": [],
+                "session": None,
             },
         )
 

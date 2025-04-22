@@ -281,8 +281,6 @@ class DataSetSerializer(serializers.ModelSerializer):
     # Serialize a DataSet instance
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        if "session" in data:
-            data.pop("session")
         if "request" in self.context:
             files = [
                 file.id
@@ -298,7 +296,7 @@ class DataSetSerializer(serializers.ModelSerializer):
     # Check that files exist and user has access to them
     def validate_files(self, value):
         for file in value:
-            if not file.is_public or permissions.has_access(
+            if not file.is_public and not permissions.has_access(
                 self.context["request"], file
             ):
                 raise serializers.ValidationError(
@@ -314,9 +312,11 @@ class DataSetSerializer(serializers.ModelSerializer):
             and not data["is_public"]
         ):
             raise serializers.ValidationError("private data must have an owner")
-        if "current_user" in data and data["current_user"] == "":
+        if "current_user" in data and (
+            data["current_user"] == "" or data["current_user"] is None
+        ):
             if "is_public" in data:
-                if not "is_public":
+                if not data["is_public"]:
                     raise serializers.ValidationError("private data must have an owner")
             else:
                 if not self.instance.is_public:
@@ -351,10 +351,7 @@ class DataSetSerializer(serializers.ModelSerializer):
             )
             instance.metadata = new_metadata
             instance.save()
-        instance.is_public = validated_data.get("is_public", instance.is_public)
-        instance.name = validated_data.get("name", instance.name)
-        instance.save()
-        return instance
+        return super().update(instance, validated_data)
 
 
 class PublishedStateSerializer(serializers.ModelSerializer):
@@ -444,6 +441,12 @@ class SessionSerializer(serializers.ModelSerializer):
                 for dataset in data_copy["datasets"]:
                     dataset["is_public"] = data["is_public"]
         return super().to_internal_value(data_copy)
+
+    def to_representation(self, instance):
+        session = super().to_representation(instance)
+        for dataset in session["datasets"]:
+            dataset.pop("session")
+        return session
 
     # Create a Session instance
     def create(self, validated_data):
