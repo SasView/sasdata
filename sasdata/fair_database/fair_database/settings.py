@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     "dj_rest_auth.registration",
     "knox",
     "user_app.apps.UserAppConfig",
+    "drf_spectacular",
 ]
 
 SITE_ID = 1
@@ -96,9 +97,7 @@ REST_FRAMEWORK = {
         "knox.auth.TokenAuthentication",
         "rest_framework.authentication.SessionAuthentication",
     ],
-    #'DEFAULT_PERMISSION_CLASSES': [
-    #    'fair_database.permissions.DataPermission',
-    # ],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 REST_AUTH = {
@@ -106,6 +105,13 @@ REST_AUTH = {
     "USER_DETAILS_SERIALIZER": "dj_rest_auth.serializers.UserDetailsSerializer",
     "TOKEN_MODEL": "knox.models.AuthToken",
     "TOKEN_CREATOR": "user_app.util.create_knox_token",
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "SasView Database",
+    "DESCRIPTION": "A database following the FAIR data principles for SasView,"
+    " a small angle scattering analysis application.",
+    "VERSION": "0.1.0",
 }
 
 # allauth settings

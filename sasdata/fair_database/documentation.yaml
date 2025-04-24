@@ -1,0 +1,1104 @@
+openapi: 3.0.3
+info:
+  title: SasView Database
+  version: 0.1.0
+  description: A database following the FAIR data principles for SasView, a small angle
+    scattering analysis application.
+paths:
+  /{version}/data/file/:
+    get:
+      operationId: data_file_retrieve
+      description: |-
+        View associated with the DataFile model.
+
+        Functionality for viewing a list of files and uploading a new file.
+      parameters:
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: data_file_create
+      description: |-
+        View associated with the DataFile model.
+
+        Functionality for viewing a list of files and uploading a new file.
+      parameters:
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+    put:
+      operationId: data_file_update
+      description: |-
+        View associated with the DataFile model.
+
+        Functionality for viewing a list of files and uploading a new file.
+      parameters:
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /{version}/data/file/{data_id}/:
+    get:
+      operationId: data_file_retrieve_2
+      description: |-
+        View associated with a single DataFile.
+
+        Functionality for viewing, modifying, or deleting a DataFile.
+      parameters:
+      - in: path
+        name: data_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+    put:
+      operationId: data_file_update_2
+      description: |-
+        View associated with a single DataFile.
+
+        Functionality for viewing, modifying, or deleting a DataFile.
+      parameters:
+      - in: path
+        name: data_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: data_file_destroy
+      description: |-
+        View associated with a single DataFile.
+
+        Functionality for viewing, modifying, or deleting a DataFile.
+      parameters:
+      - in: path
+        name: data_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '204':
+          description: No response body
+  /{version}/data/file/{data_id}/users/:
+    get:
+      operationId: data_file_users_retrieve
+      description: |-
+        View for the users that have access to a datafile.
+
+        Functionality for accessing a list of users with access and granting or
+        revoking access.
+      parameters:
+      - in: path
+        name: data_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+    put:
+      operationId: data_file_users_update
+      description: |-
+        View for the users that have access to a datafile.
+
+        Functionality for accessing a list of users with access and granting or
+        revoking access.
+      parameters:
+      - in: path
+        name: data_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /{version}/data/published/:
+    get:
+      operationId: data_published_retrieve
+      description: |-
+        View associated with the PublishedState model.
+
+        Functionality for viewing a list of session published states and for
+        creating a published state.
+      parameters:
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: data_published_create
+      description: |-
+        View associated with the PublishedState model.
+
+        Functionality for viewing a list of session published states and for
+        creating a published state.
+      parameters:
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+    put:
+      operationId: data_published_update
+      description: |-
+        View associated with the PublishedState model.
+
+        Functionality for viewing a list of session published states and for
+        creating a published state.
+      parameters:
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /{version}/data/published/{ps_id}/:
+    get:
+      operationId: data_published_retrieve_2
+      description: |-
+        View associated with specific session published states.
+
+        Functionality for viewing, modifying, and deleting individual published states.
+      parameters:
+      - in: path
+        name: ps_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+    put:
+      operationId: data_published_update_2
+      description: |-
+        View associated with specific session published states.
+
+        Functionality for viewing, modifying, and deleting individual published states.
+      parameters:
+      - in: path
+        name: ps_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: data_published_destroy
+      description: |-
+        View associated with specific session published states.
+
+        Functionality for viewing, modifying, and deleting individual published states.
+      parameters:
+      - in: path
+        name: ps_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '204':
+          description: No response body
+  /{version}/data/session/:
+    get:
+      operationId: data_session_retrieve
+      description: |-
+        View associated with the Session model.
+
+        Functionality for viewing a list of sessions and for creating a session.
+      parameters:
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: data_session_create
+      description: |-
+        View associated with the Session model.
+
+        Functionality for viewing a list of sessions and for creating a session.
+      parameters:
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+    put:
+      operationId: data_session_update
+      description: |-
+        View associated with the Session model.
+
+        Functionality for viewing a list of sessions and for creating a session.
+      parameters:
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /{version}/data/session/{data_id}/:
+    get:
+      operationId: data_session_retrieve_2
+      description: |-
+        View associated with single sessions.
+
+        Functionality for viewing, modifying, and deleting individual sessions.
+      parameters:
+      - in: path
+        name: data_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+    put:
+      operationId: data_session_update_2
+      description: |-
+        View associated with single sessions.
+
+        Functionality for viewing, modifying, and deleting individual sessions.
+      parameters:
+      - in: path
+        name: data_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: data_session_destroy
+      description: |-
+        View associated with single sessions.
+
+        Functionality for viewing, modifying, and deleting individual sessions.
+      parameters:
+      - in: path
+        name: data_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '204':
+          description: No response body
+  /{version}/data/session/{data_id}/users/:
+    get:
+      operationId: data_session_users_retrieve
+      description: |-
+        View for the users that have access to a session.
+
+        Functionality for accessing a list of users with access and granting or
+        revoking access.
+      parameters:
+      - in: path
+        name: data_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+    put:
+      operationId: data_session_users_update
+      description: |-
+        View for the users that have access to a session.
+
+        Functionality for accessing a list of users with access and granting or
+        revoking access.
+      parameters:
+      - in: path
+        name: data_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /{version}/data/set/:
+    get:
+      operationId: data_set_retrieve
+      description: |-
+        View associated with the DataSet model.
+
+        Functionality for viewing a list of datasets and creating a dataset.
+      parameters:
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: data_set_create
+      description: |-
+        View associated with the DataSet model.
+
+        Functionality for viewing a list of datasets and creating a dataset.
+      parameters:
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+    put:
+      operationId: data_set_update
+      description: |-
+        View associated with the DataSet model.
+
+        Functionality for viewing a list of datasets and creating a dataset.
+      parameters:
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /{version}/data/set/{data_id}/:
+    get:
+      operationId: data_set_retrieve_2
+      description: |-
+        View associated with single datasets.
+
+        Functionality for accessing a dataset in a format intended to be loaded
+        into SasView, modifying a dataset, or deleting a dataset.
+      parameters:
+      - in: path
+        name: data_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+    put:
+      operationId: data_set_update_2
+      description: |-
+        View associated with single datasets.
+
+        Functionality for accessing a dataset in a format intended to be loaded
+        into SasView, modifying a dataset, or deleting a dataset.
+      parameters:
+      - in: path
+        name: data_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: data_set_destroy
+      description: |-
+        View associated with single datasets.
+
+        Functionality for accessing a dataset in a format intended to be loaded
+        into SasView, modifying a dataset, or deleting a dataset.
+      parameters:
+      - in: path
+        name: data_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /{version}/data/set/{data_id}/users/:
+    get:
+      operationId: data_set_users_retrieve
+      description: |-
+        View for the users that have access to a dataset.
+
+        Functionality for accessing a list of users with access and granting or
+        revoking access.
+      parameters:
+      - in: path
+        name: data_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+    put:
+      operationId: data_set_users_update
+      description: |-
+        View for the users that have access to a dataset.
+
+        Functionality for accessing a list of users with access and granting or
+        revoking access.
+      parameters:
+      - in: path
+        name: data_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /auth/login/:
+    post:
+      operationId: auth_login_create
+      description: |-
+        Check the credentials and return the REST Token
+        if the credentials are valid and authenticated.
+        Calls Django Auth login method to register User ID
+        in Django session framework
+
+        Accept the following POST parameters: username, password
+        Return the REST Framework Token Object's key.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Login'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Login'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Login'
+        required: true
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Login'
+          description: ''
+  /auth/logout/:
+    post:
+      operationId: auth_logout_create
+      description: |-
+        Calls Django logout method and delete the Token object
+        assigned to the current User object.
+
+        Accepts/Returns nothing.
+      tags:
+      - auth
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestAuthDetail'
+          description: ''
+  /auth/password/change/:
+    post:
+      operationId: auth_password_change_create
+      description: |-
+        Calls Django Auth SetPasswordForm save method.
+
+        Accepts the following POST parameters: new_password1, new_password2
+        Returns the success/fail message.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordChange'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PasswordChange'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PasswordChange'
+        required: true
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestAuthDetail'
+          description: ''
+  /auth/register/:
+    post:
+      operationId: auth_register_create
+      description: |-
+        Registers a new user.
+
+        Accepts the following POST parameters: username, email, password1, password2.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Register'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Register'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Register'
+        required: true
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Register'
+          description: ''
+  /auth/user/:
+    get:
+      operationId: auth_user_retrieve
+      description: |-
+        Reads and updates UserModel fields
+        Accepts GET, PUT, PATCH methods.
+
+        Default accepted fields: username, first_name, last_name
+        Default display fields: pk, username, email, first_name, last_name
+        Read-only fields: pk, email
+
+        Returns UserModel fields.
+      tags:
+      - auth
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDetails'
+          description: ''
+    put:
+      operationId: auth_user_update
+      description: |-
+        Reads and updates UserModel fields
+        Accepts GET, PUT, PATCH methods.
+
+        Default accepted fields: username, first_name, last_name
+        Default display fields: pk, username, email, first_name, last_name
+        Read-only fields: pk, email
+
+        Returns UserModel fields.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserDetails'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserDetails'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserDetails'
+        required: true
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDetails'
+          description: ''
+    patch:
+      operationId: auth_user_partial_update
+      description: |-
+        Reads and updates UserModel fields
+        Accepts GET, PUT, PATCH methods.
+
+        Default accepted fields: username, first_name, last_name
+        Default display fields: pk, username, email, first_name, last_name
+        Read-only fields: pk, email
+
+        Returns UserModel fields.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUserDetails'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUserDetails'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUserDetails'
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDetails'
+          description: ''
+components:
+  schemas:
+    Login:
+      type: object
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+      required:
+      - password
+    PasswordChange:
+      type: object
+      properties:
+        new_password1:
+          type: string
+          maxLength: 128
+        new_password2:
+          type: string
+          maxLength: 128
+      required:
+      - new_password1
+      - new_password2
+    PatchedUserDetails:
+      type: object
+      description: User model w/o password
+      properties:
+        pk:
+          type: integer
+          readOnly: true
+          title: ID
+        username:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          readOnly: true
+          title: Email address
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+    Register:
+      type: object
+      properties:
+        username:
+          type: string
+          maxLength: 150
+          minLength: 1
+        email:
+          type: string
+          format: email
+        password1:
+          type: string
+          writeOnly: true
+        password2:
+          type: string
+          writeOnly: true
+      required:
+      - password1
+      - password2
+      - username
+    RestAuthDetail:
+      type: object
+      properties:
+        detail:
+          type: string
+          readOnly: true
+      required:
+      - detail
+    UserDetails:
+      type: object
+      description: User model w/o password
+      properties:
+        pk:
+          type: integer
+          readOnly: true
+          title: ID
+        username:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          readOnly: true
+          title: Email address
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+      required:
+      - email
+      - pk
+      - username
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid
+    knoxApiToken:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: Token-based authentication with required prefix "Token"
