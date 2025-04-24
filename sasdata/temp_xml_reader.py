@@ -124,21 +124,14 @@ def parse_beam_size(node: etree._Element, version: str) -> BeamSize:
 
 def parse_source(node: etree._Element, version: str) -> Source:
     """Parse a radiation source"""
-    radiation = opt_parse(node, "radiation", version, parse_string)
-    beam_shape = opt_parse(node, "beam_shape", version, parse_string)
-    beam_size = opt_parse(node, "beam_size", version, parse_beam_size)
-    wavelength = opt_parse(node, "wavelength", version, parse_quantity)
-    wavelength_min = opt_parse(node, "wavelength_min", version, parse_quantity)
-    wavelength_max = opt_parse(node, "wavelength_max", version, parse_quantity)
-    wavelength_spread = opt_parse(node, "wavelength_spread", version, parse_quantity)
     return Source(
-        radiation=radiation,
-        beam_size=beam_size,
-        beam_shape=beam_shape,
-        wavelength=wavelength,
-        wavelength_min=wavelength_min,
-        wavelength_max=wavelength_max,
-        wavelength_spread=wavelength_spread,
+        radiation=opt_parse(node, "radiation", version, parse_string)
+        beam_size=opt_parse(node, "beam_size", version, parse_string)
+        beam_shape=opt_parse(node, "beam_shape", version, parse_beam_size)
+        wavelength=opt_parse(node, "wavelength", version, parse_quantity)
+        wavelength_min=opt_parse(node, "wavelength_min", version, parse_quantity)
+        wavelength_max=opt_parse(node, "wavelength_max", version, parse_quantity)
+        wavelength_spread=opt_parse(node, "wavelength_spread", version, parse_quantity)
     )
 
 
