@@ -252,7 +252,7 @@ def get_cansas_version(root) -> str | None:
     return None
 
 
-def load_data(filename) -> dict[str, SasData]:
+def load_data(filename: str) -> dict[str, SasData]:
     """Load scattering data from an XML file"""
     loaded_data: dict[str, SasData] = {}
     tree = etree.parse(filename)
