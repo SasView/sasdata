@@ -152,7 +152,7 @@ def parse_aperture(node: etree._Element, version: str) -> Aperture:
     """Parse an aperture description"""
     size = opt_parse(node, "size", version, parse_vec3)
     if size and (innerSize := node.find(f"{version}:size", ns)) is not None:
-            size_name = attr_parse(innerSize, "name")
+        size_name = attr_parse(innerSize, "name")
     else:
         size_name = None
     return Aperture(
