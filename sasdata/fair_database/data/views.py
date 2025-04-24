@@ -13,6 +13,7 @@ from django.http import (
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
+from drf_spectacular.utils import extend_schema
 
 from sasdata.dataloader.loader import Loader
 from data.serializers import (
@@ -37,6 +38,9 @@ class DataFileView(APIView):
     """
 
     # List of datafiles
+    @extend_schema(
+        description="Retrieve a list of accessible data files by id and filename."
+    )
     def get(self, request, version=None):
         if "username" in request.GET:
             search_user = get_object_or_404(User, username=request.GET["username"])
@@ -54,6 +58,7 @@ class DataFileView(APIView):
         return Response(data_list)
 
     # Create a datafile
+    @extend_schema(description="Upload a data file.")
     def post(self, request, version=None):
         form = DataFileForm(request.data, request.FILES)
         if form.is_valid():
@@ -83,6 +88,7 @@ class DataFileView(APIView):
         return Response(return_data, status=status.HTTP_201_CREATED)
 
     # Create a datafile
+    @extend_schema(description="Upload a data file.")
     def put(self, request, version=None):
         return self.post(request, version)
 
@@ -95,6 +101,9 @@ class SingleDataFileView(APIView):
     """
 
     # Load the contents of a datafile or download the file to a device
+    @extend_schema(
+        description="Retrieve the contents of a data file or download a file."
+    )
     def get(self, request, data_id, version=None):
         data = get_object_or_404(DataFile, id=data_id)
         if "download" in request.GET and request.GET["download"]:
@@ -123,6 +132,7 @@ class SingleDataFileView(APIView):
             return Response(return_data)
 
     # Modify a datafile
+    @extend_schema(description="Make changes to a data file that you own.")
     def put(self, request, data_id, version=None):
         db = get_object_or_404(DataFile, id=data_id)
         if not permissions.check_permissions(request, db):
@@ -153,6 +163,7 @@ class SingleDataFileView(APIView):
         return Response(return_data)
 
     # Delete a datafile
+    @extend_schema(description="Delete a data file that you own.")
     def delete(self, request, data_id, version=None):
         db = get_object_or_404(DataFile, id=data_id)
         if not permissions.is_owner(request, db):
@@ -172,6 +183,10 @@ class DataFileUsersView(APIView):
     """
 
     # View users with access to a datafile
+    @extend_schema(
+        description="Retrieve a list of users that have been granted access to"
+        " a data file and the file's publicity status."
+    )
     def get(self, request, data_id, version=None):
         db = get_object_or_404(DataFile, id=data_id)
         if not permissions.is_owner(request, db):
@@ -189,6 +204,7 @@ class DataFileUsersView(APIView):
         return Response(response_data)
 
     # Grant or revoke access to a datafile
+    @extend_schema(description="Grant or revoke a user's access to a data file.")
     def put(self, request, data_id, version=None):
         db = get_object_or_404(DataFile, id=data_id)
         if not permissions.is_owner(request, db):
@@ -223,6 +239,7 @@ class DataSetView(APIView):
     permission_classes = [DataPermission]
 
     # get a list of accessible datasets
+    @extend_schema(description="Retrieve a list of accessible datasets by id and name.")
     def get(self, request, version=None):
         data_list = {"dataset_ids": {}}
         data = DataSet.objects.all()
@@ -236,6 +253,7 @@ class DataSetView(APIView):
 
     # TODO: enable uploading files as part of dataset creation, not just associating dataset with existing files
     # create a dataset
+    @extend_schema(description="Upload a dataset.")
     def post(self, request, version=None):
         # TODO: revisit request data format
         if isinstance(request.data, str):
@@ -259,6 +277,7 @@ class DataSetView(APIView):
         return Response(data=response, status=status.HTTP_201_CREATED)
 
     # create a dataset
+    @extend_schema(description="Upload a dataset.")
     def put(self, request, version=None):
         return self.post(request, version)
 
@@ -274,6 +293,7 @@ class SingleDataSetView(APIView):
     permission_classes = [DataPermission]
 
     # get a specific dataset
+    @extend_schema(description="Retrieve a dataset.")
     def get(self, request, data_id, version=None):
         db = get_object_or_404(DataSet, id=data_id)
         if not permissions.check_permissions(request, db):
@@ -289,6 +309,7 @@ class SingleDataSetView(APIView):
         return Response(response_data)
 
     # edit a specific dataset
+    @extend_schema(description="Make changes to a dataset that you own.")
     def put(self, request, data_id, version=None):
         db = get_object_or_404(DataSet, id=data_id)
         if not permissions.check_permissions(request, db):
@@ -316,6 +337,7 @@ class SingleDataSetView(APIView):
         return Response(data)
 
     # delete a dataset
+    @extend_schema(description="Delete a dataset that you own.")
     def delete(self, request, data_id, version=None):
         db = get_object_or_404(DataSet, id=data_id)
         if not permissions.check_permissions(request, db):
@@ -339,6 +361,10 @@ class DataSetUsersView(APIView):
     permission_classes = [DataPermission]
 
     # get a list of users with access to dataset data_id
+    @extend_schema(
+        description="Retrieve a list of users that have been granted access to"
+        " a dataset and the dataset's publicity status."
+    )
     def get(self, request, data_id, version=None):
         db = get_object_or_404(DataSet, id=data_id)
         if not permissions.is_owner(request, db):
@@ -354,6 +380,7 @@ class DataSetUsersView(APIView):
         return Response(response_data)
 
     # grant or revoke a user's access to dataset data_id
+    @extend_schema(description="Grant or revoke a user's access to a dataset.")
     def put(self, request, data_id, version=None):
         db = get_object_or_404(DataSet, id=data_id)
         if not permissions.is_owner(request, db):
@@ -386,6 +413,9 @@ class SessionView(APIView):
     """
 
     # View a list of accessible sessions
+    @extend_schema(
+        description="Retrieve a list of accessible sessions by name and title."
+    )
     def get(self, request, version=None):
         session_list = {"session_ids": {}}
         sessions = Session.objects.all()
@@ -399,6 +429,7 @@ class SessionView(APIView):
 
     # Create a session
     # TODO: revisit response data
+    @extend_schema(description="Upload a session.")
     def post(self, request, version=None):
         if isinstance(request.data, str):
             serializer = SessionSerializer(
@@ -421,6 +452,7 @@ class SessionView(APIView):
         return Response(data=response, status=status.HTTP_201_CREATED)
 
     # Create a session
+    @extend_schema(description="Upload a session.")
     def put(self, request, version=None):
         return self.post(request, version)
 
@@ -433,6 +465,7 @@ class SingleSessionView(APIView):
     """
 
     # get a specific session
+    @extend_schema(description="Retrieve a session.")
     def get(self, request, data_id, version=None):
         db = get_object_or_404(Session, id=data_id)
         if not permissions.check_permissions(request, db):
@@ -448,6 +481,7 @@ class SingleSessionView(APIView):
         return Response(response_data)
 
     # modify a session
+    @extend_schema(description="Make changes to a session that you own.")
     def put(self, request, data_id, version=None):
         db = get_object_or_404(Session, id=data_id)
         if not permissions.check_permissions(request, db):
@@ -465,6 +499,7 @@ class SingleSessionView(APIView):
         return Response(data)
 
     # delete a session
+    @extend_schema(description="Delete a session that you own.")
     def delete(self, request, data_id, version=None):
         db = get_object_or_404(Session, id=data_id)
         if not permissions.check_permissions(request, db):
@@ -486,6 +521,10 @@ class SessionUsersView(APIView):
     """
 
     # view the users that have access to a specific session
+    @extend_schema(
+        description="Retrieve a list of users that have been granted access to"
+        " a session and the session's publicity status."
+    )
     def get(self, request, data_id, version=None):
         db = get_object_or_404(Session, id=data_id)
         if not permissions.is_owner(request, db):
@@ -501,6 +540,7 @@ class SessionUsersView(APIView):
         return Response(response_data)
 
     # grant or revoke access to a session
+    @extend_schema(description="Grant or revoke a user's access to a data file.")
     def put(self, request, data_id, version=None):
         db = get_object_or_404(Session, id=data_id)
         if not permissions.is_owner(request, db):
@@ -538,6 +578,9 @@ class PublishedStateView(APIView):
     """
 
     # View a list of accessible sessions' published states
+    @extend_schema(
+        description="Retrieve a list of published states of accessible sessions."
+    )
     def get(self, request, version=None):
         ps_list = {"published_state_ids": {}}
         published_states = PublishedState.objects.all()
@@ -554,6 +597,7 @@ class PublishedStateView(APIView):
         return Response(data=ps_list)
 
     # Create a published state for an existing session
+    @extend_schema(description="Create a published state for an existing session.")
     def post(self, request, version=None):
         if isinstance(request.data, str):
             serializer = PublishedStateSerializer(
@@ -587,6 +631,7 @@ class PublishedStateView(APIView):
         return Response(data=response, status=status.HTTP_201_CREATED)
 
     # Create a published state for an existing session
+    @extend_schema(description="Create a published state for an existing session.")
     def put(self, request, version=None):
         return self.post(request, version)
 
@@ -599,6 +644,7 @@ class SinglePublishedStateView(APIView):
     """
 
     # View a specific published state
+    @extend_schema(description="Retrieve a published state.")
     def get(self, request, ps_id, version=None):
         db = get_object_or_404(PublishedState, id=ps_id)
         if not permissions.check_permissions(request, db.session):
@@ -620,6 +666,9 @@ class SinglePublishedStateView(APIView):
         return Response(response_data)
 
     # Modify a published state
+    @extend_schema(
+        description="Make changes to the published state of a session that you own."
+    )
     def put(self, request, ps_id, version=None):
         db = get_object_or_404(PublishedState, id=ps_id)
         if not permissions.check_permissions(request, db.session):
@@ -645,6 +694,7 @@ class SinglePublishedStateView(APIView):
         return Response(data)
 
     # Delete a published state
+    @extend_schema(description="Delete the published state of a session that you own.")
     def delete(self, request, ps_id, version=None):
         db = get_object_or_404(PublishedState, id=ps_id)
         if not permissions.check_permissions(request, db.session):

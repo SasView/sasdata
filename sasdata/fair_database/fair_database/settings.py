@@ -112,6 +112,7 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "A database following the FAIR data principles for SasView,"
     " a small angle scattering analysis application.",
     "VERSION": "0.1.0",
+    "SERVE_INCLUDE_SCHEMA": False,
 }
 
 # allauth settings
