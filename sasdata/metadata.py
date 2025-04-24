@@ -209,13 +209,7 @@ class MetaNode:
         return f"\n{header}{self.name}:{attributes}{children}"
     def filter(self, name: str) -> list[ndarray | Quantity | str]:
         match self.contents:
-            case str():
-                if name == self.name:
-                    return [self.contents]
-            case ndarray():
-                if name == self.name:
-                    return [self.contents]
-            case Quantity():
+            case str() | ndarray() | Quantity():
                 if name == self.name:
                     return [self.contents]
             case list():
