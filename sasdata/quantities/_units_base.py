@@ -12,11 +12,11 @@ class DimensionError(Exception):
 class Dimensions:
     """
 
-    Note that some SI Base units are not useful from the perspecive of the sasview project, and make things
+    Note that some SI Base units are not useful from the perspective of the sasview project, and make things
     behave badly. In particular: moles and angular measures are dimensionless, and candelas are really a weighted
     measure of power.
 
-    We do however track angle and amount, because its really useful for formatting units
+    We do however track angle and amount, because it's really useful for formatting units
 
     """
     def __init__(self,
@@ -264,6 +264,7 @@ class Unit:
     @staticmethod
     def parse(unit_string: str) -> "Unit":
         pass
+
 
 class NamedUnit(Unit):
     """ Units, but they have a name, and a symbol

@@ -63,6 +63,6 @@ def test_numpy_dtypes_encode_decode(dtype):
 ])
 def test_coo_matrix_encode_decode(shape, n, m, dtype):
 
-    i_indices =
+    #i_indices =
     
     values = np.arange(10)

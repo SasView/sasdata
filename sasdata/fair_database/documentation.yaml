@@ -1,0 +1,1172 @@
+openapi: 3.0.3
+info:
+  title: SasView Database
+  version: 0.1.0
+  description: A database following the FAIR data principles for SasView, a small
+    angle scattering analysis application.
+paths:
+  /{version}/data/file/:
+    get:
+      operationId: data_file_list
+      description: Retrieve a list of accessible data files by id and filename.
+      parameters:
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#components/schemas/DataFileList"
+    post:
+      operationId: data_file_create
+      description: Upload a data file.
+      parameters:
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#components/schemas/DataFileCreate"
+      responses:
+        '201':
+          description: CREATED
+          content:
+            application/json:
+              schema:
+                $ref: "#components/schemas/DataFileCreated"
+    put:
+      operationId: data_file_create_2
+      description: Upload a data file.
+      parameters:
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "components/schemas/DataFileCreate"
+      responses:
+        '201':
+          description: CREATED
+          content:
+            application/json:
+              schema:
+                $ref: "#components/schemas/DataFileCreated"
+  /{version}/data/file/{data_id}/:
+    get:
+      operationId: data_file_retrieve
+      description: Retrieve the contents of a data file or download a file.
+      parameters:
+      - in: path
+        name: data_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      requestBlock:
+        schema:
+          $ref: "#components/schemas/DataFileGet"
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#components/schemas/DataFile"
+                  - $ref: "components/schemas/DataFileDownload"
+    put:
+      operationId: data_file_update_2
+      description: Make changes to a data file that you own.
+      parameters:
+      - in: path
+        name: data_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "components/schemas/DataFileCreate"
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#components/schemas/DataFileCreated"
+    delete:
+      operationId: data_file_destroy
+      description: Delete a data file that you own.
+      parameters:
+      - in: path
+        name: data_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#components/schemas/Delete"
+  /{version}/data/file/{data_id}/users/:
+    get:
+      operationId: data_file_users_retrieve
+      description: Retrieve a list of users that have been granted access to a data
+        file and the file's publicity status.
+      parameters:
+      - in: path
+        name: data_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#components/schemas/UsersList"
+                  - type: object
+                    properties:
+                      file:
+                        type: integer
+                      file_name:
+                        type: string
+    put:
+      operationId: data_file_users_update
+      description: Grant or revoke a user's access to a data file.
+      parameters:
+      - in: path
+        name: data_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#components/schemas/ManageAccess"
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#components/schemas/ManageAccess"
+                  - type: object
+                    properties:
+                      file:
+                        type: integer
+                      file_name:
+                        type: string
+  /{version}/data/published/:
+    get:
+      operationId: data_published_retrieve
+      description: Retrieve a list of published states of accessible sessions.
+      parameters:
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: OK
+    post:
+      operationId: data_published_create
+      description: Create a published state for an existing session.
+      parameters:
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '201':
+          description: CREATED
+    put:
+      operationId: data_published_update
+      description: Create a published state for an existing session.
+      parameters:
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '201':
+          description: CREATED
+  /{version}/data/published/{ps_id}/:
+    get:
+      operationId: data_published_retrieve_2
+      description: Retrieve a published state.
+      parameters:
+      - in: path
+        name: ps_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: OK
+    put:
+      operationId: data_published_update_2
+      description: Make changes to the published state of a session that you own.
+      parameters:
+      - in: path
+        name: ps_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: OK
+    delete:
+      operationId: data_published_destroy
+      description: Delete the published state of a session that you own.
+      parameters:
+      - in: path
+        name: ps_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: OK
+  /{version}/data/session/:
+    get:
+      operationId: data_session_retrieve
+      description: Retrieve a list of accessible sessions by name and title.
+      parameters:
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: OK
+    post:
+      operationId: data_session_create
+      description: Upload a session.
+      parameters:
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '201':
+          description: CREATED
+    put:
+      operationId: data_session_update
+      description: Upload a session.
+      parameters:
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '201':
+          description: CREATED
+  /{version}/data/session/{data_id}/:
+    get:
+      operationId: data_session_retrieve_2
+      description: Retrieve a session.
+      parameters:
+      - in: path
+        name: data_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: OK
+    put:
+      operationId: data_session_update_2
+      description: Make changes to a session that you own.
+      parameters:
+      - in: path
+        name: data_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: OK
+    delete:
+      operationId: data_session_destroy
+      description: Delete a session that you own.
+      parameters:
+      - in: path
+        name: data_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: OK
+  /{version}/data/session/{data_id}/users/:
+    get:
+      operationId: data_session_users_retrieve
+      description: Retrieve a list of users that have been granted access to a session
+        and the session's publicity status.
+      parameters:
+      - in: path
+        name: data_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: OK
+    put:
+      operationId: data_session_users_update
+      description: Grant or revoke a user's access to a data file.
+      parameters:
+      - in: path
+        name: data_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: OK
+  /{version}/data/set/:
+    get:
+      operationId: data_set_retrieve
+      description: Retrieve a list of accessible datasets by id and name.
+      parameters:
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: OK
+    post:
+      operationId: data_set_create
+      description: Upload a dataset.
+      parameters:
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '201':
+          description: CREATED
+    put:
+      operationId: data_set_update
+      description: Upload a dataset.
+      parameters:
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '201':
+          description: CREATED
+  /{version}/data/set/{data_id}/:
+    get:
+      operationId: data_set_retrieve_2
+      description: Retrieve a dataset.
+      parameters:
+      - in: path
+        name: data_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: OK
+    put:
+      operationId: data_set_update_2
+      description: Make changes to a dataset that you own.
+      parameters:
+      - in: path
+        name: data_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: OK
+    delete:
+      operationId: data_set_destroy
+      description: Delete a dataset that you own.
+      parameters:
+      - in: path
+        name: data_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: OK
+  /{version}/data/set/{data_id}/users/:
+    get:
+      operationId: data_set_users_retrieve
+      description: Retrieve a list of users that have been granted access to a dataset
+        and the dataset's publicity status.
+      parameters:
+      - in: path
+        name: data_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: OK
+    put:
+      operationId: data_set_users_update
+      description: Grant or revoke a user's access to a dataset.
+      parameters:
+      - in: path
+        name: data_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: version
+        schema:
+          type: string
+          pattern: ^(v1)$
+        required: true
+      tags:
+      - data
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: OK
+  /auth/login/:
+    post:
+      operationId: auth_login_create
+      description: |-
+        Check the credentials and return the REST Token
+        if the credentials are valid and authenticated.
+        Calls Django Auth login method to register User ID
+        in Django session framework
+
+        Accept the following POST parameters: username, password
+        Return the REST Framework Token Object's key.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Login'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Login'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Login'
+        required: true
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Login'
+          description: ''
+  /auth/logout/:
+    post:
+      operationId: auth_logout_create
+      description: |-
+        Calls Django logout method and delete the Token object
+        assigned to the current User object.
+
+        Accepts/Returns nothing.
+      tags:
+      - auth
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestAuthDetail'
+          description: ''
+  /auth/password/change/:
+    post:
+      operationId: auth_password_change_create
+      description: |-
+        Calls Django Auth SetPasswordForm save method.
+
+        Accepts the following POST parameters: new_password1, new_password2
+        Returns the success/fail message.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordChange'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PasswordChange'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PasswordChange'
+        required: true
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestAuthDetail'
+          description: ''
+  /auth/register/:
+    post:
+      operationId: auth_register_create
+      description: |-
+        Registers a new user.
+
+        Accepts the following POST parameters: username, email, password1, password2.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Register'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Register'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Register'
+        required: true
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Register'
+          description: ''
+  /auth/user/:
+    get:
+      operationId: auth_user_retrieve
+      description: |-
+        Reads and updates UserModel fields
+        Accepts GET, PUT, PATCH methods.
+
+        Default accepted fields: username, first_name, last_name
+        Default display fields: pk, username, email, first_name, last_name
+        Read-only fields: pk, email
+
+        Returns UserModel fields.
+      tags:
+      - auth
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDetails'
+          description: ''
+    put:
+      operationId: auth_user_update
+      description: |-
+        Reads and updates UserModel fields
+        Accepts GET, PUT, PATCH methods.
+
+        Default accepted fields: username, first_name, last_name
+        Default display fields: pk, username, email, first_name, last_name
+        Read-only fields: pk, email
+
+        Returns UserModel fields.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserDetails'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserDetails'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserDetails'
+        required: true
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDetails'
+          description: ''
+    patch:
+      operationId: auth_user_partial_update
+      description: |-
+        Reads and updates UserModel fields
+        Accepts GET, PUT, PATCH methods.
+
+        Default accepted fields: username, first_name, last_name
+        Default display fields: pk, username, email, first_name, last_name
+        Read-only fields: pk, email
+
+        Returns UserModel fields.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUserDetails'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUserDetails'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUserDetails'
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDetails'
+          description: ''
+components:
+  schemas:
+    Delete:
+      type: object
+      properties:
+        success:
+          type: boolean
+    UsersList:
+      type: object
+      properties:
+        is_public:
+          type: boolean
+        users:
+          type: array
+          items:
+            type: string
+    ManageAccess:
+      type: object
+      properties:
+        username:
+          type: string
+        access:
+          type: boolean
+    DataFileList:
+      type: object
+      properties:
+        data_ids:
+          type: object
+          additionalProperties:
+            filename:
+              type: string
+    DataFileCreate:
+      type: object
+      properties:
+        filename:
+          type: string
+        file:
+          type: string
+          format: binary
+    DataFileCreated:
+      type: object
+      properties:
+        current_user:
+          type: string
+        authenticated:
+          type: boolean
+        file_id:
+          type: integer
+        file_alternative_name:
+          type: string
+        is_public:
+          type: boolean
+    DataFileGet:
+      type: object
+      properties:
+        download:
+          type: boolean
+    DataFile:
+      type: object
+      properties:
+        filename:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+    DataFileDownload:
+      type: string
+      format: binary
+    Login:
+      type: object
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+      required:
+      - password
+    DataSetList:
+      type: object
+      properties:
+        dataset_ids:
+          type: object
+          additionalProperties:
+            name:
+              type: string
+    DataSetCreate:
+      type: object
+      properties:
+        name:
+          type: string
+        is_public:
+          type: boolean
+        data_contents:
+          type: array
+          items:
+            type: object
+            properties:
+              label:
+                type: string
+              value:
+                type: object
+                additionalProperties: true
+    PasswordChange:
+      type: object
+      properties:
+        new_password1:
+          type: string
+          maxLength: 128
+        new_password2:
+          type: string
+          maxLength: 128
+      required:
+      - new_password1
+      - new_password2
+    PatchedUserDetails:
+      type: object
+      description: User model w/o password
+      properties:
+        pk:
+          type: integer
+          readOnly: true
+          title: ID
+        username:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          readOnly: true
+          title: Email address
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+    Register:
+      type: object
+      properties:
+        username:
+          type: string
+          maxLength: 150
+          minLength: 1
+        email:
+          type: string
+          format: email
+        password1:
+          type: string
+          writeOnly: true
+        password2:
+          type: string
+          writeOnly: true
+      required:
+      - password1
+      - password2
+      - username
+    RestAuthDetail:
+      type: object
+      properties:
+        detail:
+          type: string
+          readOnly: true
+      required:
+      - detail
+    UserDetails:
+      type: object
+      description: User model w/o password
+      properties:
+        pk:
+          type: integer
+          readOnly: true
+          title: ID
+        username:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          readOnly: true
+          title: Email address
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+      required:
+      - email
+      - pk
+      - username
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid
+    knoxApiToken:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: Token-based authentication with required prefix "Token"
