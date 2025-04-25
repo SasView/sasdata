@@ -7,7 +7,7 @@ info:
 paths:
   /{version}/data/file/:
     get:
-      operationId: data_file_retrieve
+      operationId: data_file_list
       description: Retrieve a list of accessible data files by id and filename.
       parameters:
       - in: path
@@ -25,6 +25,10 @@ paths:
       responses:
         '200':
           description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#components/schemas/DataFileList"
     post:
       operationId: data_file_create
       description: Upload a data file.
@@ -41,11 +45,21 @@ paths:
       - knoxApiToken: []
       - cookieAuth: []
       - {}
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#components/schemas/DataFileCreate"
       responses:
         '201':
           description: CREATED
+          content:
+            application/json:
+              schema:
+                $ref: "#components/schemas/DataFileCreated"
     put:
-      operationId: data_file_update
+      operationId: data_file_create_2
       description: Upload a data file.
       parameters:
       - in: path
@@ -60,12 +74,22 @@ paths:
       - knoxApiToken: []
       - cookieAuth: []
       - {}
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "components/schemas/DataFileCreate"
       responses:
         '201':
           description: CREATED
+          content:
+            application/json:
+              schema:
+                $ref: "#components/schemas/DataFileCreated"
   /{version}/data/file/{data_id}/:
     get:
-      operationId: data_file_retrieve_2
+      operationId: data_file_retrieve
       description: Retrieve the contents of a data file or download a file.
       parameters:
       - in: path
@@ -85,9 +109,18 @@ paths:
       - knoxApiToken: []
       - cookieAuth: []
       - {}
+      requestBlock:
+        schema:
+          $ref: "#components/schemas/DataFileGet"
       responses:
         '200':
           description: OK
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#components/schemas/DataFile"
+                  - $ref: "components/schemas/DataFileDownload"
     put:
       operationId: data_file_update_2
       description: Make changes to a data file that you own.
@@ -109,9 +142,19 @@ paths:
       - knoxApiToken: []
       - cookieAuth: []
       - {}
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "components/schemas/DataFileCreate"
       responses:
         '200':
           description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#components/schemas/DataFileCreated"
     delete:
       operationId: data_file_destroy
       description: Delete a data file that you own.
@@ -136,6 +179,10 @@ paths:
       responses:
         '200':
           description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#components/schemas/Delete"
   /{version}/data/file/{data_id}/users/:
     get:
       operationId: data_file_users_retrieve
@@ -162,6 +209,17 @@ paths:
       responses:
         '200':
           description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#components/schemas/UsersList"
+                  - type: object
+                    properties:
+                      file:
+                        type: integer
+                      file_name:
+                        type: string
     put:
       operationId: data_file_users_update
       description: Grant or revoke a user's access to a data file.
@@ -183,9 +241,26 @@ paths:
       - knoxApiToken: []
       - cookieAuth: []
       - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#components/schemas/ManageAccess"
       responses:
         '200':
           description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#components/schemas/ManageAccess"
+                  - type: object
+                    properties:
+                      file:
+                        type: integer
+                      file_name:
+                        type: string
   /{version}/data/published/:
     get:
       operationId: data_published_retrieve
@@ -887,6 +962,73 @@ paths:
           description: ''
 components:
   schemas:
+    Delete:
+      type: object
+      properties:
+        success:
+          type: boolean
+    UsersList:
+      type: object
+      properties:
+        is_public:
+          type: boolean
+        users:
+          type: array
+          items:
+            type: string
+    ManageAccess:
+      type: object
+      properties:
+        username:
+          type: string
+        access:
+          type: boolean
+    DataFileList:
+      type: object
+      properties:
+        data_ids:
+          type: object
+          additionalProperties:
+            filename:
+              type: string
+    DataFileCreate:
+      type: object
+      properties:
+        filename:
+          type: string
+        file:
+          type: string
+          format: binary
+    DataFileCreated:
+      type: object
+      properties:
+        current_user:
+          type: string
+        authenticated:
+          type: boolean
+        file_id:
+          type: integer
+        file_alternative_name:
+          type: string
+        is_public:
+          type: boolean
+    DataFileGet:
+      type: object
+      properties:
+        download:
+          type: boolean
+    DataFile:
+      type: object
+      properties:
+        filename:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+    DataFileDownload:
+      type: string
+      format: binary
     Login:
       type: object
       properties:
