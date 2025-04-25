@@ -24,7 +24,7 @@ paths:
       - {}
       responses:
         '200':
-          description: No response body
+          description: OK
     post:
       operationId: data_file_create
       description: Upload a data file.
@@ -42,8 +42,8 @@ paths:
       - cookieAuth: []
       - {}
       responses:
-        '200':
-          description: No response body
+        '201':
+          description: CREATED
     put:
       operationId: data_file_update
       description: Upload a data file.
@@ -61,8 +61,8 @@ paths:
       - cookieAuth: []
       - {}
       responses:
-        '200':
-          description: No response body
+        '201':
+          description: CREATED
   /{version}/data/file/{data_id}/:
     get:
       operationId: data_file_retrieve_2
@@ -87,7 +87,7 @@ paths:
       - {}
       responses:
         '200':
-          description: No response body
+          description: OK
     put:
       operationId: data_file_update_2
       description: Make changes to a data file that you own.
@@ -111,7 +111,7 @@ paths:
       - {}
       responses:
         '200':
-          description: No response body
+          description: OK
     delete:
       operationId: data_file_destroy
       description: Delete a data file that you own.
@@ -134,8 +134,8 @@ paths:
       - cookieAuth: []
       - {}
       responses:
-        '204':
-          description: No response body
+        '200':
+          description: OK
   /{version}/data/file/{data_id}/users/:
     get:
       operationId: data_file_users_retrieve
@@ -161,7 +161,7 @@ paths:
       - {}
       responses:
         '200':
-          description: No response body
+          description: OK
     put:
       operationId: data_file_users_update
       description: Grant or revoke a user's access to a data file.
@@ -185,7 +185,7 @@ paths:
       - {}
       responses:
         '200':
-          description: No response body
+          description: OK
   /{version}/data/published/:
     get:
       operationId: data_published_retrieve
@@ -205,7 +205,7 @@ paths:
       - {}
       responses:
         '200':
-          description: No response body
+          description: OK
     post:
       operationId: data_published_create
       description: Create a published state for an existing session.
@@ -223,8 +223,8 @@ paths:
       - cookieAuth: []
       - {}
       responses:
-        '200':
-          description: No response body
+        '201':
+          description: CREATED
     put:
       operationId: data_published_update
       description: Create a published state for an existing session.
@@ -242,8 +242,8 @@ paths:
       - cookieAuth: []
       - {}
       responses:
-        '200':
-          description: No response body
+        '201':
+          description: CREATED
   /{version}/data/published/{ps_id}/:
     get:
       operationId: data_published_retrieve_2
@@ -268,7 +268,7 @@ paths:
       - {}
       responses:
         '200':
-          description: No response body
+          description: OK
     put:
       operationId: data_published_update_2
       description: Make changes to the published state of a session that you own.
@@ -292,7 +292,7 @@ paths:
       - {}
       responses:
         '200':
-          description: No response body
+          description: OK
     delete:
       operationId: data_published_destroy
       description: Delete the published state of a session that you own.
@@ -315,8 +315,8 @@ paths:
       - cookieAuth: []
       - {}
       responses:
-        '204':
-          description: No response body
+        '200':
+          description: OK
   /{version}/data/session/:
     get:
       operationId: data_session_retrieve
@@ -336,7 +336,7 @@ paths:
       - {}
       responses:
         '200':
-          description: No response body
+          description: OK
     post:
       operationId: data_session_create
       description: Upload a session.
@@ -354,8 +354,8 @@ paths:
       - cookieAuth: []
       - {}
       responses:
-        '200':
-          description: No response body
+        '201':
+          description: CREATED
     put:
       operationId: data_session_update
       description: Upload a session.
@@ -373,8 +373,8 @@ paths:
       - cookieAuth: []
       - {}
       responses:
-        '200':
-          description: No response body
+        '201':
+          description: CREATED
   /{version}/data/session/{data_id}/:
     get:
       operationId: data_session_retrieve_2
@@ -399,7 +399,7 @@ paths:
       - {}
       responses:
         '200':
-          description: No response body
+          description: OK
     put:
       operationId: data_session_update_2
       description: Make changes to a session that you own.
@@ -423,7 +423,7 @@ paths:
       - {}
       responses:
         '200':
-          description: No response body
+          description: OK
     delete:
       operationId: data_session_destroy
       description: Delete a session that you own.
@@ -446,8 +446,8 @@ paths:
       - cookieAuth: []
       - {}
       responses:
-        '204':
-          description: No response body
+        '200':
+          description: OK
   /{version}/data/session/{data_id}/users/:
     get:
       operationId: data_session_users_retrieve
@@ -473,7 +473,7 @@ paths:
       - {}
       responses:
         '200':
-          description: No response body
+          description: OK
     put:
       operationId: data_session_users_update
       description: Grant or revoke a user's access to a data file.
@@ -497,7 +497,7 @@ paths:
       - {}
       responses:
         '200':
-          description: No response body
+          description: OK
   /{version}/data/set/:
     get:
       operationId: data_set_retrieve
@@ -516,7 +516,7 @@ paths:
       - cookieAuth: []
       responses:
         '200':
-          description: No response body
+          description: OK
     post:
       operationId: data_set_create
       description: Upload a dataset.
@@ -533,8 +533,8 @@ paths:
       - knoxApiToken: []
       - cookieAuth: []
       responses:
-        '200':
-          description: No response body
+        '201':
+          description: CREATED
     put:
       operationId: data_set_update
       description: Upload a dataset.
@@ -551,8 +551,8 @@ paths:
       - knoxApiToken: []
       - cookieAuth: []
       responses:
-        '200':
-          description: No response body
+        '201':
+          description: CREATED
   /{version}/data/set/{data_id}/:
     get:
       operationId: data_set_retrieve_2
@@ -576,7 +576,7 @@ paths:
       - cookieAuth: []
       responses:
         '200':
-          description: No response body
+          description: OK
     put:
       operationId: data_set_update_2
       description: Make changes to a dataset that you own.
@@ -599,7 +599,7 @@ paths:
       - cookieAuth: []
       responses:
         '200':
-          description: No response body
+          description: OK
     delete:
       operationId: data_set_destroy
       description: Delete a dataset that you own.
@@ -621,8 +621,8 @@ paths:
       - knoxApiToken: []
       - cookieAuth: []
       responses:
-        '204':
-          description: No response body
+        '200':
+          description: OK
   /{version}/data/set/{data_id}/users/:
     get:
       operationId: data_set_users_retrieve
@@ -647,7 +647,7 @@ paths:
       - cookieAuth: []
       responses:
         '200':
-          description: No response body
+          description: OK
     put:
       operationId: data_set_users_update
       description: Grant or revoke a user's access to a dataset.
@@ -670,7 +670,7 @@ paths:
       - cookieAuth: []
       responses:
         '200':
-          description: No response body
+          description: OK
   /auth/login/:
     post:
       operationId: auth_login_create
