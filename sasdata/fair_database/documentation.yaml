@@ -1041,6 +1041,31 @@ components:
           type: string
       required:
       - password
+    DataSetList:
+      type: object
+      properties:
+        dataset_ids:
+          type: object
+          additionalProperties:
+            name:
+              type: string
+    DataSetCreate:
+      type: object
+      properties:
+        name:
+          type: string
+        is_public:
+          type: boolean
+        data_contents:
+          type: array
+          items:
+            type: object
+            properties:
+              label:
+                type: string
+              value:
+                type: object
+                additionalProperties: true
     PasswordChange:
       type: object
       properties:
