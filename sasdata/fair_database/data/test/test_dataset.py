@@ -10,6 +10,7 @@ from rest_framework import status
 from data.models import DataFile, DataSet, MetaData, OperationTree, Quantity
 
 
+# path to a file in example_data/1d_data
 def find(filename):
     return os.path.join(
         os.path.dirname(__file__), "../../../example_data/1d_data", filename
@@ -245,6 +246,7 @@ class TestDataSet(APITestCase):
         request = self.client.post("/v1/data/set/", data=dataset, format="json")
         self.assertEqual(request.status_code, status.HTTP_400_BAD_REQUEST)
 
+    # Test that a dataset cannot be created without metadata
     def test_metadata_required(self):
         dataset = {
             "name": "No metadata",
@@ -536,12 +538,14 @@ class TestSingleDataSet(APITestCase):
         metadata.title = "Metadata"
         metadata.save()
 
+    # Test updating a dataset's files
     def test_update_dataset_files(self):
         request = self.auth_client1.put("/v1/data/set/2/", data={"files": [1]})
         self.assertEqual(request.status_code, status.HTTP_200_OK)
         self.assertEqual(len(DataSet.objects.get(id=2).files.all()), 1)
         self.private_dataset.files.remove(self.file)
 
+    # Test replacing a dataset's files
     def test_update_dataset_replace_files(self):
         file = DataFile.objects.create(
             id=2, file_name="cyl_testdata1.txt", is_public=True, current_user=self.user1
@@ -554,6 +558,7 @@ class TestSingleDataSet(APITestCase):
         self.public_dataset.files.add(self.file)
         self.public_dataset.files.remove(file)
 
+    # Test updating a dataset to have no files
     def test_update_dataset_clear_files(self):
         request = self.auth_client1.put("/v1/data/set/1/", data={"files": [""]})
         self.assertEqual(request.status_code, status.HTTP_200_OK)

@@ -9,6 +9,16 @@ from fair_database import permissions
 # TODO: custom update methods for nested structures
 
 
+# Determine if an operation does not have parent operations
+def constant_or_variable(operation: str):
+    return operation in ["zero", "one", "constant", "variable"]
+
+
+# Determine if an operation has two parent operations
+def binary(operation: str):
+    return operation in ["add", "sub", "mul", "div", "dot", "matmul", "tensor_product"]
+
+
 class DataFileSerializer(serializers.ModelSerializer):
     """Serialization, deserialization, and validation for the DataFile model."""
 
@@ -39,6 +49,7 @@ class AccessManagementSerializer(serializers.Serializer):
 class MetaDataSerializer(serializers.ModelSerializer):
     """Serialization, deserialization, and validation for the MetaData model."""
 
+    # associated dataset
     dataset = serializers.PrimaryKeyRelatedField(
         queryset=models.DataSet, required=False, allow_null=True
     )
@@ -58,12 +69,15 @@ class MetaDataSerializer(serializers.ModelSerializer):
 class OperationTreeSerializer(serializers.ModelSerializer):
     """Serialization, deserialization, and validation for the OperationTree model."""
 
+    # associated quantity, for root operation
     quantity = serializers.PrimaryKeyRelatedField(
         queryset=models.Quantity, required=False, allow_null=True
     )
+    # operation this operation is a parameter for, for non-root operations
     child_operation = serializers.PrimaryKeyRelatedField(
         queryset=models.OperationTree, required=False, allow_null=True
     )
+    # parameter label, for non-root operations
     label = serializers.CharField(max_length=10, required=False)
 
     class Meta:
@@ -142,6 +156,9 @@ class OperationTreeSerializer(serializers.ModelSerializer):
 
 
 class ReferenceQuantitySerializer(serializers.ModelSerializer):
+    """Serialization, deserialization, and validation for the ReferenceQuantity model."""
+
+    # quantity whose operation tree this is a reference for
     derived_quantity = serializers.PrimaryKeyRelatedField(
         queryset=models.Quantity, required=False
     )
@@ -150,12 +167,14 @@ class ReferenceQuantitySerializer(serializers.ModelSerializer):
         model = models.ReferenceQuantity
         fields = ["value", "variance", "units", "hash", "derived_quantity"]
 
+    # serialize a ReferenceQuantity instance
     def to_representation(self, instance):
         data = super().to_representation(instance)
         if "derived_quantity" in data:
             data.pop("derived_quantity")
         return data
 
+    # create a ReferenceQuantity instance
     def create(self, validated_data):
         if "label" in validated_data:
             validated_data.pop("label")
@@ -167,12 +186,17 @@ class ReferenceQuantitySerializer(serializers.ModelSerializer):
 class QuantitySerializer(serializers.ModelSerializer):
     """Serialization, deserialization, and validation for the Quantity model."""
 
+    # associated operation tree
     operation_tree = OperationTreeSerializer(read_only=False, required=False)
+    # references for the operation tree
     references = ReferenceQuantitySerializer(many=True, read_only=False, required=False)
+    # quantity label
     label = serializers.CharField(max_length=20)
+    # dataset this is a part of
     dataset = serializers.PrimaryKeyRelatedField(
         queryset=models.DataSet, required=False, allow_null=True
     )
+    # serialized JSON form of operation tree and references
     history = serializers.JSONField(required=False, allow_null=True)
 
     class Meta:
@@ -189,6 +213,7 @@ class QuantitySerializer(serializers.ModelSerializer):
             "history",
         ]
 
+    # validate references
     def validate_history(self, value):
         if "references" in value:
             for ref in value["references"]:
@@ -254,11 +279,15 @@ class QuantitySerializer(serializers.ModelSerializer):
 class DataSetSerializer(serializers.ModelSerializer):
     """Serialization, deserialization, and validation for the DataSet model."""
 
+    # associated metadata
     metadata = MetaDataSerializer(read_only=False)
+    # associated files
     files = serializers.PrimaryKeyRelatedField(
         required=False, many=True, allow_null=True, queryset=models.DataFile.objects
     )
+    # quantities that make up the dataset
     data_contents = QuantitySerializer(many=True, read_only=False)
+    # session the dataset is a part of, if any
     session = serializers.PrimaryKeyRelatedField(
         queryset=models.Session, required=False, allow_null=True
     )
@@ -357,6 +386,7 @@ class DataSetSerializer(serializers.ModelSerializer):
 class PublishedStateSerializer(serializers.ModelSerializer):
     """Serialization, deserialization, and validation for the PublishedState model."""
 
+    # associated session
     session = serializers.PrimaryKeyRelatedField(
         queryset=models.Session.objects, required=False, allow_null=True
     )
@@ -365,6 +395,7 @@ class PublishedStateSerializer(serializers.ModelSerializer):
         model = models.PublishedState
         fields = "__all__"
 
+    # check that session does not already have a published state
     def validate_session(self, value):
         try:
             published = value.published_state
@@ -375,11 +406,13 @@ class PublishedStateSerializer(serializers.ModelSerializer):
         except models.Session.published_state.RelatedObjectDoesNotExist:
             return value
 
+    # set a placeholder DOI
     def to_internal_value(self, data):
         data_copy = data.copy()
         data_copy["doi"] = "http://127.0.0.1:8000/v1/data/session/"
         return super().to_internal_value(data_copy)
 
+    # create a PublishedState instance
     def create(self, validated_data):
         # TODO: generate DOI
         validated_data["doi"] = (
@@ -391,6 +424,8 @@ class PublishedStateSerializer(serializers.ModelSerializer):
 
 
 class PublishedStateUpdateSerializer(serializers.ModelSerializer):
+    """Serialization for PublishedState updates. Restricts changes to published field."""
+
     class Meta:
         model = models.PublishedState
         fields = ["published"]
@@ -399,7 +434,9 @@ class PublishedStateUpdateSerializer(serializers.ModelSerializer):
 class SessionSerializer(serializers.ModelSerializer):
     """Serialization, deserialization, and validation for the Session model."""
 
+    # datasets that make up the session
     datasets = DataSetSerializer(read_only=False, many=True)
+    # associated published state, if any
     published_state = PublishedStateSerializer(read_only=False, required=False)
 
     class Meta:
@@ -414,6 +451,7 @@ class SessionSerializer(serializers.ModelSerializer):
             "users",
         ]
 
+    # disallow private unowned sessions
     def validate(self, data):
         if (
             not self.context["request"].user.is_authenticated
@@ -434,6 +472,7 @@ class SessionSerializer(serializers.ModelSerializer):
                     )
         return data
 
+    # propagate is_public to datasets
     def to_internal_value(self, data):
         data_copy = data.copy()
         if "is_public" in data:
@@ -442,6 +481,7 @@ class SessionSerializer(serializers.ModelSerializer):
                     dataset["is_public"] = data["is_public"]
         return super().to_internal_value(data_copy)
 
+    # serialize a session instance
     def to_representation(self, instance):
         session = super().to_representation(instance)
         for dataset in session["datasets"]:
@@ -469,6 +509,7 @@ class SessionSerializer(serializers.ModelSerializer):
             )
         return session
 
+    # update a session instance
     def update(self, instance, validated_data):
         if "is_public" in validated_data:
             for dataset in instance.datasets.all():
@@ -488,13 +529,3 @@ class SessionSerializer(serializers.ModelSerializer):
                     PublishedStateSerializer(), validated_data=pb_raw
                 )
         return super().update(instance, validated_data)
-
-
-# Determine if an operation does not have parent operations
-def constant_or_variable(operation: str):
-    return operation in ["zero", "one", "constant", "variable"]
-
-
-# Determine if an operation has two parent operations
-def binary(operation: str):
-    return operation in ["add", "sub", "mul", "div", "dot", "matmul", "tensor_product"]
