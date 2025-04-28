@@ -12,6 +12,7 @@ name = "sasdata"
 dynamic = [
   "version",
   "dependencies",
+  "optional-dependencies",
 ]
 description = "Sas Data Loader application"
 readme = "README.md"
@@ -37,14 +38,14 @@ keywords = [
 [project.urls]
 homepage = "http://sasview.org"
 
-
-[project.optional-dependencies]
-test = [
-    "pytest",
-]
+[tool.hatch.metadata]
+allow-direct-references = true
 
 [tool.hatch.metadata.hooks.requirements_txt]
 files = [ "requirements.txt" ]
+
+[tool.hatch.metadata.hooks.requirements_txt.optional-dependencies]
+test = [ "requirements-test.txt" ]
 
 [tool.hatch.version]
 path = "sasdata/__init__.py"
