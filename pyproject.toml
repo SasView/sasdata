@@ -3,6 +3,9 @@ requires = [
   "hatchling",
   "hatch-requirements-txt",
   "hatch-sphinx",
+  "h5py",
+  "lxml",
+  "numpy",
 ]
 build-backend = "hatchling.build"
 
