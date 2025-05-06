@@ -6,8 +6,8 @@ from sasdata.data import SasData
 from sasdata.data_util.loader_exceptions import FileContentsException
 from sasdata.dataset_types import one_dim
 from sasdata.quantities.quantity import Quantity
-from sasdata.metadata import Metadata, Sample
-from sasdata.quantities import unit_parser
+from sasdata.metadata import Metadata, Sample, Instrument, Collimation, Aperture, Vec3
+from sasdata.quantities import unit_parser, units
 from itertools import groupby
 import re
 
@@ -42,6 +42,12 @@ def parse_kvs_quantity(key: str, kvs: dict[str, str]) -> Quantity | None:
     return Quantity(value=float(kvs[key]), units=unit_parser.parse(kvs[key + "_unit"]))
 
 
+def parse_kvs_text(key: str, kvs: dict[str, str]) -> str | None:
+    if key not in kvs:
+        return None
+    return kvs[key]
+
+
 def parse_sample(kvs: dict[str, str]) -> Sample:
     """Get the sample info from the key value store"""
 
@@ -52,7 +58,7 @@ def parse_sample(kvs: dict[str, str]) -> Sample:
         )
 
     return Sample(
-        name=parse_kvs_quantity("Sample", kvs),
+        name=parse_kvs_text("Sample", kvs),
         sample_id=None,
         thickness=thickness,
         transmission=None,
@@ -61,6 +67,43 @@ def parse_sample(kvs: dict[str, str]) -> Sample:
         orientation=None,
         details=[],
     )
+
+
+def parse_instrument(kvs: dict[str, str]) -> Instrument:
+    """Get the instrument info from the key value store
+
+    The collimation aperture is used to keep the acceptance angle of the instrument.
+    To ensure that this is obviously a virtual aperture, the size is set in kilometers.
+
+    """
+    from math import atan
+
+    ymax = parse_kvs_quantity("Theta_ymax", kvs)
+    zmax = parse_kvs_quantity("Theta_zmax", kvs)
+
+    if ymax is None:
+        raise FileContentsException("SES file must specify Theta_ymax")
+    if zmax is None:
+        raise FileContentsException("SES file must specify Theta_zmax")
+
+    y : float = atan(ymax.in_units_of(units.radians))
+    z : float = atan(ymax.in_units_of(units.radians))
+
+    size = Vec3(
+        x=Quantity(0, units.meters),
+        y=Quantity(1000*y, units.meters),
+        z=Quantity(1000*z, units.meters),
+    )
+
+    aperture = Aperture(
+        distance=Quantity(value=1, units=units.kilometers),
+        size=size,
+        size_name=None,
+        name="Virtual Acceptance",
+        type_="Virtual",
+    )
+    collimation = Collimation(length=None, apertures=[aperture])
+    return Instrument(collimations=[collimation], source=None, detector=[])
 
 
 def parse_metadata(lines: list[str]) -> tuple[Metadata, list[str]]:
@@ -83,7 +126,7 @@ def parse_metadata(lines: list[str]) -> tuple[Metadata, list[str]]:
     return (
         Metadata(
             process=[],
-            instrument=None,
+            instrument=parse_instrument(kvs),
             sample=parse_sample(kvs),
             title=parse_title(kvs),
             run=[],
