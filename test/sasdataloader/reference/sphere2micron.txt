@@ -12,3 +12,9 @@ Sample:
    Temperature:  None
    Position:     None
    Orientation:  None
+Collimation:
+   Length: None
+   Aperture:
+     Name: Virtual Acceptance
+     Aperture size: Vec3(x=0 m, y=16.798419723601693 m, z=16.798419723601693 m)
+     Aperture distance: 1 km
