@@ -1,26 +1,14 @@
 Sesans
-  Wavelength
-  SpinEchoLength
-  Polarisation
-  Depolarisation
 Metadata:
 
-  Polystyrene of Markus Strobl,  Full Sine, ++ only, Run: []
-  ==========================================================
+  Title, Run: []
+  ============
 
-Definition: Polystyrene of Markus Strobl,  Full Sine, ++ only
-Process:
-    Name: SESANS Processing
-    Date: None
-    Description: Polarisation measurement through a SESANS instrument
-    Terms:
-        ymax: 0.0168 rad
-        zmax: 0.0168 rad
-        orientation: Z
+Definition: Title
 Sample:
    ID:           None
    Transmission: None
-   Thickness:    0.2 cm
+   Thickness:    None
    Temperature:  None
    Position:     None
    Orientation:  None
