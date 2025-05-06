@@ -7,20 +7,51 @@ from sasdata.data_util.loader_exceptions import FileContentsException
 from sasdata.dataset_types import one_dim
 from sasdata.quantities.quantity import Quantity
 from sasdata.metadata import Metadata, Sample
+from itertools import groupby
+import re
 
 
 def parse_version(lines: list[str]) -> tuple[str, list[str]]:
-    import re
-
     header = lines[0]
     m = re.search("FileFormatVersion\s+(\S+)", header)
 
     if m is None:
-        raise FileContentsException("Alleged Sesans file does not contain File Format Version header")
+        raise FileContentsException(
+            "Alleged Sesans file does not contain File Format Version header"
+        )
 
     return (m.group(0), lines[1:])
 
+
+def parse_title(kvs: dict[str, str]) -> str:
+    """Get the title from the key value store"""
+    if "Title" in kvs:
+        return kvs["Title"]
+    elif "DataFileTitle" in kvs:
+        return kvs["DataFileTitle"]
+    for k, v in kvs.items():
+        if "Title" in k:
+            return v
+    return ""
+
+
 def parse_metadata(lines: list[str]) -> tuple[Metadata, list[str]]:
+    parts = [
+        [y for y in x]
+        for (_, x) in groupby(lines, lambda x: x.startswith("BEGIN_DATA"))
+    ]
+
+    if len(parts) != 3:
+        raise FileContentsException("SES file should have exactly one data section")
+
+    # Parse key value store
+    kvs: dict[str, str] = {}
+    for line in parts[0]:
+        m = re.search("(\S+)\s+(.+)\n", line)
+        if not m:
+            continue
+        kvs[m.group(1)] = m.group(2)
+
     sample = Sample(
         name=None,
         sample_id=None,
@@ -37,11 +68,11 @@ def parse_metadata(lines: list[str]) -> tuple[Metadata, list[str]]:
             process=[],
             instrument=None,
             sample=sample,
-            title="Title",
+            title=parse_title(kvs),
             run=[],
             definition=None,
         ),
-        lines,
+        parts[2],
     )
 
 
