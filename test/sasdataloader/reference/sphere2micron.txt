@@ -8,7 +8,7 @@ Definition: Polystyrene of Markus Strobl,  Full Sine, ++ only
 Sample:
    ID:           None
    Transmission: None
-   Thickness:    None
+   Thickness:    0.2 cm
    Temperature:  None
    Position:     None
    Orientation:  None
