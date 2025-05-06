@@ -1,0 +1,14 @@
+Sesans
+Metadata:
+
+  Title, Run: []
+  ============
+
+Definition: Title
+Sample:
+   ID:           None
+   Transmission: None
+   Thickness:    None
+   Temperature:  None
+   Position:     None
+   Orientation:  None
