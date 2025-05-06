@@ -4,12 +4,13 @@ Import SESANS data in SasData format
 
 from sasdata.data import SasData
 from sasdata.data_util.loader_exceptions import FileContentsException
-from sasdata.dataset_types import one_dim
+from sasdata.dataset_types import sesans
 from sasdata.quantities.quantity import Quantity
 from sasdata.metadata import Metadata, Sample, Instrument, Collimation, Aperture, Vec3
 from sasdata.quantities import unit_parser, units
 from itertools import groupby
 import re
+import numpy as np
 
 
 def parse_version(lines: list[str]) -> tuple[str, list[str]]:
@@ -86,13 +87,13 @@ def parse_instrument(kvs: dict[str, str]) -> Instrument:
     if zmax is None:
         raise FileContentsException("SES file must specify Theta_zmax")
 
-    y : float = atan(ymax.in_units_of(units.radians))
-    z : float = atan(ymax.in_units_of(units.radians))
+    y: float = atan(ymax.in_units_of(units.radians))
+    z: float = atan(ymax.in_units_of(units.radians))
 
     size = Vec3(
         x=Quantity(0, units.meters),
-        y=Quantity(1000*y, units.meters),
-        z=Quantity(1000*z, units.meters),
+        y=Quantity(1000 * y, units.meters),
+        z=Quantity(1000 * z, units.meters),
     )
 
     aperture = Aperture(
@@ -106,7 +107,7 @@ def parse_instrument(kvs: dict[str, str]) -> Instrument:
     return Instrument(collimations=[collimation], source=None, detector=[])
 
 
-def parse_metadata(lines: list[str]) -> tuple[Metadata, list[str]]:
+def parse_metadata(lines: list[str]) -> tuple[Metadata, dict[str, str], list[str]]:
     parts = [
         [y for y in x]
         for (_, x) in groupby(lines, lambda x: x.startswith("BEGIN_DATA"))
@@ -132,22 +133,60 @@ def parse_metadata(lines: list[str]) -> tuple[Metadata, list[str]]:
             run=[],
             definition=None,
         ),
+        kvs,
         parts[2],
     )
 
 
-def parse_data(lines: list[str]) -> dict[str, Quantity]:
+def parse_data(lines: list[str], kvs: dict[str, str]) -> dict[str, Quantity]:
+    from collections import defaultdict
+
     data_contents: dict[str, Quantity] = {}
+    headers = lines[0].split()
+    points = defaultdict(list)
+    for line in lines[1:]:
+        values = line.split()
+        for idx, v in enumerate(values):
+            points[headers[idx]].append(float(v))
+
+    for h in points.keys():
+        if h.endswith("_error") and h[:-6] in headers:
+            # This was an error line
+            continue
+        unit = units.none
+        if h+"_unit" in kvs:
+            unit=unit_parser.parse(kvs[h+"_unit"])
+
+        error = None
+        if h + "_error" in headers:
+            error = Quantity(
+                value=np.asarray(points[h + "_error"]),
+                units=unit,
+            )
+
+        data_contents[h] = Quantity(
+            value=np.asarray(points[h]),
+            units=unit,
+            standard_error=error,
+        )
+
+    if "SpinEchoLength" not in data_contents:
+        raise FileContentsException("SES file missing Spin Echo Length")
+    if "Depolarisation" not in data_contents:
+        raise FileContentsException("SES file missing Depolarisation")
+    if "Wavelength" not in data_contents:
+        raise FileContentsException("SES file missing Wavelength")
+
     return data_contents
 
 
 def parse_sesans(lines: list[str]) -> SasData:
     version, lines = parse_version(lines)
-    metadata, lines = parse_metadata(lines)
-    data_contents = parse_data(lines)
+    metadata, kvs, lines = parse_metadata(lines)
+    data_contents = parse_data(lines, kvs)
     return SasData(
         name="Sesans",
-        dataset_type=one_dim,
+        dataset_type=sesans,
         data_contents=data_contents,
         metadata=metadata,
         verbose=False,
