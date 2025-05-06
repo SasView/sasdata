@@ -63,10 +63,10 @@ class Aperture:
     type_: str | None
 
     def summary(self):
-        return (f"Aperture:\n"
-                f"  Name: {self.name}\n"
-                f"  Aperture size: {self.size}\n"
-                f"  Aperture distance: {self.distance}\n")
+        return (f"   Aperture:\n"
+                f"     Name: {self.name}\n"
+                f"     Aperture size: {self.size}\n"
+                f"     Aperture distance: {self.distance}\n")
 
 @dataclass(kw_only=True)
 class Collimation:
@@ -82,7 +82,8 @@ class Collimation:
         #TODO collimation stuff
         return (
             f"Collimation:\n"
-            f"   Length: {self.length}\n")
+            f"   Length: {self.length}\n"+
+            "".join([a.summary() for a in self.apertures]))
 
 @dataclass(kw_only=True)
 class BeamSize:
@@ -185,7 +186,7 @@ class Instrument:
         return (
             "\n".join([c.summary() for c in self.collimations]) +
             "".join([d.summary() for d in self.detector]) +
-            self.source.summary())
+            (self.source.summary() if self.source is not None else ""))
 
 @dataclass(kw_only=True)
 class MetaNode:
