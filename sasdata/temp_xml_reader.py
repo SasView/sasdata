@@ -16,6 +16,7 @@ from sasdata.metadata import (
     Rot3,
     Sample,
     Process,
+    MetaNode,
     Metadata,
 )
 from sasdata.quantities.quantity import Quantity
@@ -103,6 +104,7 @@ def parse_term(node: etree._Element, version: str) -> str | Quantity[float]:
     else:
         return parse_string(node, version)
 
+
 def parse_process(node: etree._Element, version: str) -> Process:
     """Parse an experimental process"""
     name = opt_parse(node, "name", version, parse_string)
@@ -112,9 +114,14 @@ def parse_process(node: etree._Element, version: str) -> Process:
         t.attrib["name"]: parse_term(t, version)
         for t in node.findall(f"{version}:term", ns)
     }
-    notes = [parse_string(note, version) for note in node.findall(f"{version}:SASprocessnote", ns)]
+    notes = [
+        parse_string(note, version)
+        for note in node.findall(f"{version}:SASprocessnote", ns)
+    ]
     notes = [n.strip() for n in notes if n is not None and n.strip()]
-    return Process(name=name, date=date, description=description, terms=terms, notes=notes)
+    return Process(
+        name=name, date=date, description=description, terms=terms, notes=notes
+    )
 
 
 def parse_beam_size(node: etree._Element, version: str) -> BeamSize:
@@ -244,12 +251,33 @@ def parse_data(node: etree._Element, version: str) -> dict[str, Quantity]:
     return result
 
 
-def get_cansas_version(root) -> str | None:
+def get_cansas_version(root: etree._Element) -> str | None:
     """Find the cansas version of a file"""
     for n, v in ns.items():
         if root.tag == "{" + v + "}SASroot":
             return n
     return None
+
+
+def load_raw(node: etree._Element, version: str) -> MetaNode:
+    attrib = {k: v for k, v in node.attrib.items()}
+    nodes = [n for n in node if not isinstance(n, etree._Comment)]
+    contents: Quantity[float] | str | list[MetaNode] = ""
+    if nodes:
+        contents = [load_raw(n, version) for n in nodes]
+    else:
+        if "unit" in attrib and attrib["unit"]:
+            value = parse_string(node, version)
+            if value:
+                try:
+                    contents = Quantity(float(value), unit_parser.parse(attrib["unit"]))
+                except ValueError:
+                    contents = value
+            else:
+                contents = value
+        else:
+            contents = parse_string(node, version)
+    return MetaNode(name=etree.QName(node).localname, attrs=attrib, contents=contents)
 
 
 def load_data(filename: str) -> dict[str, SasData]:
@@ -285,6 +313,7 @@ def load_data(filename: str) -> dict[str, SasData]:
             process=all_parse(entry, "SASprocess", version, parse_process),
             sample=opt_parse(entry, "SASsample", version, parse_sample),
             definition=opt_parse(entry, "SASdefinition", version, parse_string),
+            raw=load_raw(root, version),
         )
 
         data = {}

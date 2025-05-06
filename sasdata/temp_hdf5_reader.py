@@ -16,7 +16,7 @@ from sasdata.data import SasData
 from sasdata.dataset_types import one_dim
 from sasdata.data_backing import Dataset as SASDataDataset, Group as SASDataGroup
 from sasdata.metadata import Instrument, Collimation, Aperture, Source, BeamSize, Detector, Vec3, \
-    Rot3, Sample, Process, Metadata
+    Rot3, Sample, Process, MetaNode, Metadata
 
 from sasdata.quantities.quantity import NamedQuantity, Quantity
 from sasdata.quantities import units
@@ -257,6 +257,29 @@ def parse_process(node : HDF5Group) -> Process:
     notes = [parse_string(node[n]) for n in node if "note" in n]
     return Process(name=name, date=date, description=description, terms=terms, notes=notes)
 
+def load_raw(node: HDF5Group | HDF5Dataset) -> MetaNode:
+    name = node.name.split("/")[-1]
+    match node:
+        case HDF5Group():
+            attrib = {a: node.attrs[a] for a in node.attrs}
+            contents = [load_raw(node[v]) for v in node]
+            return MetaNode(name=name, attrs=attrib, contents=contents)
+        case HDF5Dataset(dtype=dt):
+            attrib = {a: node.attrs[a] for a in node.attrs}
+            if (str(dt).startswith("|S")):
+                if "units" in attrib:
+                    contents = Quantity(float(node.asstr()[0]), parse(attrib["units"]))
+                else:
+                    contents = node.asstr()[0]
+            else:
+                if "units" in attrib and attrib["units"]:
+                    contents = Quantity(node[:], parse(attrib["units"]))
+                else:
+                    contents = node[:]
+            return MetaNode(name=name, attrs=attrib, contents=contents)
+        case _:
+            raise RuntimeError(f"Cannot load raw data of type {type(node)}")
+
 def parse_metadata(node : HDF5Group) -> Metadata:
     instrument = opt_parse(node, "sasinstrument", parse_instrument)
     sample = opt_parse(node, "sassample", parse_sample)
@@ -264,11 +287,13 @@ def parse_metadata(node : HDF5Group) -> Metadata:
     title = opt_parse(node, "title", parse_string)
     run = [parse_string(node[r]) for r in node if "run" in r]
     definition = opt_parse(node, "definition", parse_string)
+    raw =  load_raw(node)
     return Metadata(process=process,
                     instrument=instrument,
                     sample=sample,
                     title=title,
                     run=run,
+                    raw=raw,
                     definition=definition)
 
 ### End Metadata parsing code

@@ -12,6 +12,8 @@ Any useful metadata which cannot be included in these classes represent a bug in
 from dataclasses import dataclass
 
 from sasdata.quantities.quantity import Quantity
+from sasdata.quantities import unit_parser
+from numpy import ndarray
 
 @dataclass(kw_only=True)
 class Vec3:
@@ -186,6 +188,38 @@ class Instrument:
             self.source.summary())
 
 @dataclass(kw_only=True)
+class MetaNode:
+    name: str
+    attrs: dict[str, str]
+    contents: str | Quantity | ndarray | list["MetaNode"]
+    def to_string(self, header=""):
+        """Convert node to pretty printer string"""
+        if self.attrs:
+            attributes = f"\n{header}  Attributes:\n" + "\n".join([f"{header}    {k}: {v}" for k, v in self.attrs.items()])
+        else:
+            attributes = ""
+        if self.contents:
+            if type(self.contents) is str:
+                children = f"\n{header}  {self.contents}"
+            else:
+                children = "".join([n.to_string(header + "  ") for n in self.contents])
+        else:
+            children = ""
+
+        return f"\n{header}{self.name}:{attributes}{children}"
+    def filter(self, name: str) -> list[ndarray | Quantity | str]:
+        match self.contents:
+            case str() | ndarray() | Quantity():
+                if name == self.name:
+                    return [self.contents]
+            case list():
+                return [y for x in self.contents for y in x.filter(name)]
+            case _:
+                raise RuntimeError(f"Cannot filter contents of type {type(self.contents)}: {self.contents}")
+        return []
+
+
+@dataclass(kw_only=True)
 class Metadata:
     title: str | None
     run: list[str]
@@ -193,6 +227,7 @@ class Metadata:
     process: list[Process]
     sample: Sample | None
     instrument: Instrument | None
+    raw: MetaNode
 
     def summary(self):
         run_string = self.run[0] if len(self.run) == 1 else self.run
