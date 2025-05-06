@@ -9,6 +9,8 @@ named_units_for_testing = [
     ('A-1', units.per_angstrom),
     ('1/A', units.per_angstrom),
     ('1/angstroms', units.per_angstrom),
+    ('micrometer', units.micrometers),
+    ('micron', units.micrometers),
     ('kmh-2', units.kilometers_per_square_hour),
     ('km/h2', units.kilometers_per_square_hour),
     ('kgm/s2', units.newtons),

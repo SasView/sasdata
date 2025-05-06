@@ -1,16 +1,21 @@
-sasentry01
+TK49 c10_SANS
+  Q
+  I
 Metadata:
 
-  MH4_5deg_16T_SLOW, Run: 33837
-  =============================
+  TK49 c10_SANS, Run: 79680
+  =========================
 
-Definition: MH4_5deg_16T_SLOW
+Definition: TK49 c10_SANS
 Process:
     Name: Mantid generated CanSAS1D XML
-    Date: 11-May-2016 12:15:34
-    Description: None
+    Date: 02-Aug-2013 16:53:56
+    Description: 
+    Terms:
+        svn: 2.5.3
+        user_file: K:/masks/MASKLOQ_MAN_132E_Lu_Banjo_12mm.txt
 Sample:
-   ID:           
+   ID:           TK49 c10_SANS
    Transmission: None
    Thickness:    None
    Temperature:  None
@@ -19,23 +24,23 @@ Sample:
 Collimation:
    Length: None
 Detector:
-   Name:         front-detector
-   Distance:     2845.260009765625 mm
+   Name:         HAB
+   Distance:     575.0 mm
    Offset:       None
    Orientation:  None
    Beam center:  None
    Pixel size:   None
    Slit length:  None
 Detector:
-   Name:         rear-detector
-   Distance:     4385.27978515625 mm
+   Name:         main-detector-bank
+   Distance:     4145.02 mm
    Offset:       None
    Orientation:  None
    Beam center:  None
    Pixel size:   None
    Slit length:  None
 Source:
-    Radiation:         Spallation Neutron Source
+    Radiation:         neutron
     Shape:             None
     Wavelength:        None
     Min. Wavelength:   None

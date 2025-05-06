@@ -142,7 +142,8 @@ class Process:
     name :  str  | None
     date :  str  | None
     description :  str  | None
-    term :  str  | None
+    terms :  dict[str, str | Quantity[float]]
+    notes: list[str]
 
     def single_line_desc(self):
         """
@@ -151,11 +152,24 @@ class Process:
         return f"{self.name.value} {self.date.value} {self.description.value}"
 
     def summary(self):
+        if self.terms:
+            termInfo = "    Terms:\n" + "\n".join(
+                [f"        {k}: {v}" for k, v in self.terms.items()]) + "\n"
+        else:
+            termInfo = ""
+
+        if self.notes:
+            noteInfo = "    Notes:\n" + "\n".join(
+                [f"        {note}" for note in self.notes]) + "\n"
+        else:
+            noteInfo = ""
+
         return (f"Process:\n"
                 f"    Name: {self.name}\n"
                 f"    Date: {self.date}\n"
                 f"    Description: {self.description}\n"
-                f"    Term: {self.term}\n"
+                f"{termInfo}"
+                f"{noteInfo}"
                 )
 
 
@@ -184,10 +198,10 @@ class Metadata:
         run_string = self.run[0] if len(self.run) == 1 else self.run
         return (
             f"  {self.title}, Run: {run_string}\n" +
-            "  " + "="*len(self.title) +
+            "  " + "="*len(self.title if self.title else "") +
                            "=======" +
             "="*len(run_string) + "\n\n" +
             f"Definition: {self.title}\n" +
             "".join([p.summary() for p in self.process]) +
-            self.sample.summary() +
+            (self.sample.summary() if self.sample else "") +
             (self.instrument.summary() if self.instrument else ""))

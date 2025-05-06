@@ -60,6 +60,7 @@ derived_si_units = [
 
 non_si_dimensioned_units: list[tuple[str, str | None, str, str, float, int, int, int, int, int, int, int, list]] = [
     UnitData("Ang", "Å", r"\AA", "angstrom", "angstroms", 1e-10, 1, 0, 0, 0, 0, 0, 0, []),
+    UnitData("micron", None, None, "micron", "microns", 1e-6, 1, 0, 0, 0, 0, 0, 0, []),
     UnitData("min", None, None, "minute", "minutes", 60, 0, 1, 0, 0, 0, 0, 0, []),
     UnitData("h", None, None, "hour", "hours", 360, 0, 1, 0, 0, 0, 0, 0, []),
     UnitData("d", None, None, "day", "days", 360*24, 0, 1, 0, 0, 0, 0, 0, []),
@@ -108,7 +109,7 @@ aliases_2 = {
     "Ang": ["A", "Å"],
     "au": ["amu"],
     "percent": ["%"],
-    "deg": ["degr", "Deg", "degrees", "Degrees"],
+    "deg": ["degr", "Deg", "degree", "degrees", "Degrees"],
     "none": ["Counts", "counts", "cnts", "Cnts", "a.u.", "fraction", "Fraction"],
     "K": ["C"] # Ugh, cansas
 }

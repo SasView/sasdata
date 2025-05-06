@@ -66,7 +66,7 @@ class SasData:
     def summary(self, indent = "  "):
         s = f"{self.name}\n"
 
-        for data in self._data_contents:
+        for data in sorted(self._data_contents, reverse=True):
             s += f"{indent}{data}\n"
 
         s += f"Metadata:\n"
