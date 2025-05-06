@@ -1,10 +1,10 @@
 Sesans
 Metadata:
 
-  Title, Run: []
-  ============
+  Polystyrene of Markus Strobl,  Full Sine, ++ only, Run: []
+  ========================================================
 
-Definition: Title
+Definition: Polystyrene of Markus Strobl,  Full Sine, ++ only
 Sample:
    ID:           None
    Transmission: None
