@@ -44,8 +44,8 @@ three_dim = DatasetType(
 
 sesans = DatasetType(
     name="SESANS",
-    required=["z", "G"],
-    optional=["stuff", "other stuff", "more stuff"],
+    required=["SpinEchoLength", "Depolarisation", "Wavelength"],
+    optional=["Transmission", "Polarisation"],
     expected_orders=[["z", "G"]])
 
 dataset_types = {dataset.name for dataset in [one_dim, two_dim, sesans]}

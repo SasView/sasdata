@@ -1,4 +1,8 @@
 Sesans
+  SpinEchoLength
+  Depolarisation
+  Wavelength
+  Polarisation
 Metadata:
 
   Polystyrene of Markus Strobl,  Full Sine, ++ only, Run: []
