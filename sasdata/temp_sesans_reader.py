@@ -7,6 +7,7 @@ from sasdata.data_util.loader_exceptions import FileContentsException
 from sasdata.dataset_types import one_dim
 from sasdata.quantities.quantity import Quantity
 from sasdata.metadata import Metadata, Sample
+from sasdata.quantities import unit_parser
 from itertools import groupby
 import re
 
@@ -35,6 +36,33 @@ def parse_title(kvs: dict[str, str]) -> str:
     return ""
 
 
+def parse_kvs_quantity(key: str, kvs: dict[str, str]) -> Quantity | None:
+    if key not in kvs or key + "_unit" not in kvs:
+        return None
+    return Quantity(value=float(kvs[key]), units=unit_parser.parse(kvs[key + "_unit"]))
+
+
+def parse_sample(kvs: dict[str, str]) -> Sample:
+    """Get the sample info from the key value store"""
+
+    thickness = parse_kvs_quantity("Thickness", kvs)
+    if thickness is None:
+        raise FileContentsException(
+            "SES format must include sample thickness to normalise calculations"
+        )
+
+    return Sample(
+        name=parse_kvs_quantity("Sample", kvs),
+        sample_id=None,
+        thickness=thickness,
+        transmission=None,
+        temperature=None,
+        position=None,
+        orientation=None,
+        details=[],
+    )
+
+
 def parse_metadata(lines: list[str]) -> tuple[Metadata, list[str]]:
     parts = [
         [y for y in x]
@@ -52,22 +80,11 @@ def parse_metadata(lines: list[str]) -> tuple[Metadata, list[str]]:
             continue
         kvs[m.group(1)] = m.group(2)
 
-    sample = Sample(
-        name=None,
-        sample_id=None,
-        thickness=None,
-        transmission=None,
-        temperature=None,
-        position=None,
-        orientation=None,
-        details=[],
-    )
-
     return (
         Metadata(
             process=[],
             instrument=None,
-            sample=sample,
+            sample=parse_sample(kvs),
             title=parse_title(kvs),
             run=[],
             definition=None,
