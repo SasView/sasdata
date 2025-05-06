@@ -1,4 +1,7 @@
 Sesans
+  SpinEchoLength
+  Depolarisation
+  Wavelength
 Metadata:
 
   PMMA in Mixed Deuterated decalin, Run: []
