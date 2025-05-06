@@ -1,0 +1,20 @@
+Sesans
+Metadata:
+
+  PMMA in Mixed Deuterated decalin, Run: []
+  =======================================
+
+Definition: PMMA in Mixed Deuterated decalin
+Sample:
+   ID:           None
+   Transmission: None
+   Thickness:    2.0 mm
+   Temperature:  None
+   Position:     None
+   Orientation:  None
+Collimation:
+   Length: None
+   Aperture:
+     Name: Virtual Acceptance
+     Aperture size: Vec3(x=0 m, y=89.75817418995052 m, z=89.75817418995052 m)
+     Aperture distance: 1 km
