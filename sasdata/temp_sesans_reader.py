@@ -14,6 +14,7 @@ from sasdata.metadata import (
     Aperture,
     Vec3,
     MetaNode,
+    Process,
 )
 from sasdata.quantities import unit_parser, units
 from itertools import groupby
@@ -78,41 +79,31 @@ def parse_sample(kvs: dict[str, str]) -> Sample:
     )
 
 
-def parse_instrument(kvs: dict[str, str]) -> Instrument:
-    """Get the instrument info from the key value store
-
-    The collimation aperture is used to keep the acceptance angle of the instrument.
-    To ensure that this is obviously a virtual aperture, the size is set in kilometers.
-
-    """
-    from math import atan
-
+def parse_process(kvs: dict[str, str]) -> Process:
     ymax = parse_kvs_quantity("Theta_ymax", kvs)
     zmax = parse_kvs_quantity("Theta_zmax", kvs)
+    orientation = parse_kvs_text("Orientation", kvs)
 
     if ymax is None:
         raise FileContentsException("SES file must specify Theta_ymax")
     if zmax is None:
         raise FileContentsException("SES file must specify Theta_zmax")
+    if orientation is None:
+        raise FileContentsException("SES file must include encoding orientation")
 
-    y: float = atan(ymax.in_units_of(units.radians))
-    z: float = atan(ymax.in_units_of(units.radians))
+    terms: dict[str, str | Quantity[float]] = {
+        "ymax": ymax,
+        "zmax": zmax,
+        "orientation": orientation,
+    }
 
-    size = Vec3(
-        x=Quantity(0, units.meters),
-        y=Quantity(1000 * y, units.meters),
-        z=Quantity(1000 * z, units.meters),
+    return Process(
+        name="SESANS Processing",
+        date=None,
+        description="Polarisation measurement through a SESANS instrument",
+        terms=terms,
+        notes=[],
     )
-
-    aperture = Aperture(
-        distance=Quantity(value=1, units=units.kilometers),
-        size=size,
-        size_name=None,
-        name="Virtual Acceptance",
-        type_="Virtual",
-    )
-    collimation = Collimation(length=None, apertures=[aperture])
-    return Instrument(collimations=[collimation], source=None, detector=[])
 
 
 def parse_metanode(kvs: dict[str, str]) -> MetaNode:
@@ -135,9 +126,7 @@ def parse_metanode(kvs: dict[str, str]) -> MetaNode:
                 )
             )
         else:
-            contents.append(
-                MetaNode(name=k, attrs={}, contents=v)
-            )
+            contents.append(MetaNode(name=k, attrs={}, contents=v))
 
     return MetaNode(name=title, attrs={}, contents=contents)
 
@@ -161,8 +150,8 @@ def parse_metadata(lines: list[str]) -> tuple[Metadata, dict[str, str], list[str
 
     return (
         Metadata(
-            process=[],
-            instrument=parse_instrument(kvs),
+            process=[parse_process(kvs)],
+            instrument=None,
             sample=parse_sample(kvs),
             title=parse_title(kvs),
             run=[],
