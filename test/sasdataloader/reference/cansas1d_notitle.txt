@@ -48,6 +48,14 @@ Sample:
    Orientation:  Rot3(roll=22.5 deg, pitch=0.02 deg, yaw=None)
 Collimation:
    Length: 123.0 mm
+   Aperture:
+     Name: source
+     Aperture size: Vec3(x=50.0 mm, y=None, z=None)
+     Aperture distance: 11.0 m
+   Aperture:
+     Name: sample
+     Aperture size: Vec3(x=1.0 mm, y=None, z=None)
+     Aperture distance: None
 Detector:
    Name:         fictional hybrid
    Distance:     4.15 m
