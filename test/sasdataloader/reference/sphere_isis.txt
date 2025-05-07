@@ -8,6 +8,14 @@ Metadata:
   =======================================
 
 Definition: PMMA in Mixed Deuterated decalin
+Process:
+    Name: SESANS Processing
+    Date: None
+    Description: Polarisation measurement through a SESANS instrument
+    Terms:
+        ymax: 0.09 rad
+        zmax: 0.09 rad
+        orientation: Z
 Sample:
    ID:           None
    Transmission: None
@@ -15,9 +23,3 @@ Sample:
    Temperature:  None
    Position:     None
    Orientation:  None
-Collimation:
-   Length: None
-   Aperture:
-     Name: Virtual Acceptance
-     Aperture size: Vec3(x=0 m, y=89.75817418995052 m, z=89.75817418995052 m)
-     Aperture distance: 1 km
