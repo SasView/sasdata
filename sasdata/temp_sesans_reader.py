@@ -9,10 +9,6 @@ from sasdata.quantities.quantity import Quantity
 from sasdata.metadata import (
     Metadata,
     Sample,
-    Instrument,
-    Collimation,
-    Aperture,
-    Vec3,
     MetaNode,
     Process,
 )
@@ -24,7 +20,7 @@ import numpy as np
 
 def parse_version(lines: list[str]) -> tuple[str, list[str]]:
     header = lines[0]
-    m = re.search("FileFormatVersion\s+(\S+)", header)
+    m = re.search(r"FileFormatVersion\s+(\S+)", header)
 
     if m is None:
         raise FileContentsException(
@@ -91,7 +87,7 @@ def parse_process(kvs: dict[str, str]) -> Process:
     if orientation is None:
         raise FileContentsException("SES file must include encoding orientation")
 
-    terms: dict[str, str | Quantity[float]] = {
+    terms: dict[str, str | Quantity] = {
         "ymax": ymax,
         "zmax": zmax,
         "orientation": orientation,
@@ -143,7 +139,7 @@ def parse_metadata(lines: list[str]) -> tuple[Metadata, dict[str, str], list[str
     # Parse key value store
     kvs: dict[str, str] = {}
     for line in parts[0]:
-        m = re.search("(\S+)\s+(.+)\n", line)
+        m = re.search(r"(\S+)\s+(.+)\n", line)
         if not m:
             continue
         kvs[m.group(1)] = m.group(2)

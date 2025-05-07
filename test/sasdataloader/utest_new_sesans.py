@@ -6,7 +6,6 @@ import os
 import pytest
 
 
-from sasdata.temp_hdf5_reader import load_data
 from sasdata.temp_sesans_reader import load_data
 
 test_file_names = ["sphere2micron", "sphere_isis"]
