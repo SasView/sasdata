@@ -6,7 +6,20 @@ from sasdata.data import SasData
 from sasdata.data_util.loader_exceptions import FileContentsException
 from sasdata.dataset_types import one_dim
 from sasdata.quantities.quantity import Quantity
-from sasdata.metadata import Metadata, Sample
+from sasdata.metadata import (
+    Metadata,
+    Sample,
+    Instrument,
+    Collimation,
+    Aperture,
+    Vec3,
+    MetaNode,
+    Process,
+)
+from sasdata.quantities import unit_parser, units
+from itertools import groupby
+import re
+import numpy as np
 
 
 def parse_version(lines: list[str]) -> tuple[str, list[str]]:
@@ -32,12 +45,82 @@ def parse_metadata(lines: list[str]) -> tuple[Metadata, list[str]]:
         details=[],
     )
 
+
+def parse_process(kvs: dict[str, str]) -> Process:
+    ymax = parse_kvs_quantity("Theta_ymax", kvs)
+    zmax = parse_kvs_quantity("Theta_zmax", kvs)
+    orientation = parse_kvs_text("Orientation", kvs)
+
+    if ymax is None:
+        raise FileContentsException("SES file must specify Theta_ymax")
+    if zmax is None:
+        raise FileContentsException("SES file must specify Theta_zmax")
+    if orientation is None:
+        raise FileContentsException("SES file must include encoding orientation")
+
+    terms: dict[str, str | Quantity[float]] = {
+        "ymax": ymax,
+        "zmax": zmax,
+        "orientation": orientation,
+    }
+
+    return Process(
+        name="SESANS Processing",
+        date=None,
+        description="Polarisation measurement through a SESANS instrument",
+        terms=terms,
+        notes=[],
+    )
+
+
+def parse_metanode(kvs: dict[str, str]) -> MetaNode:
+    """Convert header into metanode"""
+    contents: list[MetaNode] = []
+    title = parse_title(kvs)
+
+    for k, v in kvs.items():
+        if v.endswith("_unit") and v[:-5] in kvs:
+            # This is the unit for another term
+            continue
+        if v + "_unit" in kvs:
+            contents.append(
+                MetaNode(
+                    name=k,
+                    attrs={},
+                    contents=Quantity(
+                        value=float(v), units=unit_parser.parse(kvs[k + "_unit"])
+                    ),
+                )
+            )
+        else:
+            contents.append(MetaNode(name=k, attrs={}, contents=v))
+
+    return MetaNode(name=title, attrs={}, contents=contents)
+
+
+def parse_metadata(lines: list[str]) -> tuple[Metadata, dict[str, str], list[str]]:
+    parts = [
+        [y for y in x]
+        for (_, x) in groupby(lines, lambda x: x.startswith("BEGIN_DATA"))
+    ]
+
+    if len(parts) != 3:
+        raise FileContentsException("SES file should have exactly one data section")
+
+    # Parse key value store
+    kvs: dict[str, str] = {}
+    for line in parts[0]:
+        m = re.search("(\S+)\s+(.+)\n", line)
+        if not m:
+            continue
+        kvs[m.group(1)] = m.group(2)
+
     return (
         Metadata(
-            process=[],
+            process=[parse_process(kvs)],
             instrument=None,
-            sample=sample,
-            title="Title",
+            sample=parse_sample(kvs),
+            title=parse_title(kvs),
             run=[],
             definition=None,
         ),
