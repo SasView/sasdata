@@ -6,7 +6,15 @@ from sasdata.data import SasData
 from sasdata.data_util.loader_exceptions import FileContentsException
 from sasdata.dataset_types import sesans
 from sasdata.quantities.quantity import Quantity
-from sasdata.metadata import Metadata, Sample, Instrument, Collimation, Aperture, Vec3
+from sasdata.metadata import (
+    Metadata,
+    Sample,
+    Instrument,
+    Collimation,
+    Aperture,
+    Vec3,
+    MetaNode,
+)
 from sasdata.quantities import unit_parser, units
 from itertools import groupby
 import re
@@ -107,6 +115,33 @@ def parse_instrument(kvs: dict[str, str]) -> Instrument:
     return Instrument(collimations=[collimation], source=None, detector=[])
 
 
+def parse_metanode(kvs: dict[str, str]) -> MetaNode:
+    """Convert header into metanode"""
+    contents: list[MetaNode] = []
+    title = parse_title(kvs)
+
+    for k, v in kvs.items():
+        if v.endswith("_unit") and v[:-5] in kvs:
+            # This is the unit for another term
+            continue
+        if v + "_unit" in kvs:
+            contents.append(
+                MetaNode(
+                    name=k,
+                    attrs={},
+                    contents=Quantity(
+                        value=float(v), units=unit_parser.parse(kvs[k + "_unit"])
+                    ),
+                )
+            )
+        else:
+            contents.append(
+                MetaNode(name=k, attrs={}, contents=v)
+            )
+
+    return MetaNode(name=title, attrs={}, contents=contents)
+
+
 def parse_metadata(lines: list[str]) -> tuple[Metadata, dict[str, str], list[str]]:
     parts = [
         [y for y in x]
@@ -132,6 +167,7 @@ def parse_metadata(lines: list[str]) -> tuple[Metadata, dict[str, str], list[str
             title=parse_title(kvs),
             run=[],
             definition=None,
+            raw=parse_metanode(kvs),
         ),
         kvs,
         parts[2],
@@ -154,8 +190,8 @@ def parse_data(lines: list[str], kvs: dict[str, str]) -> dict[str, Quantity]:
             # This was an error line
             continue
         unit = units.none
-        if h+"_unit" in kvs:
-            unit=unit_parser.parse(kvs[h+"_unit"])
+        if h + "_unit" in kvs:
+            unit = unit_parser.parse(kvs[h + "_unit"])
 
         error = None
         if h + "_error" in headers:
