@@ -49,7 +49,7 @@ def parse_single_unit(unit_str: str, unit_group: UnitGroup | None = None, longes
     matching_types = [unit for symbol, unit in lookup_dict.items()
                       if symbol == current_unit or unit == current_unit]
     if not matching_types:
-        raise ValueError(f"No known type matching {current_unit}")
+        raise KeyError(f"No known type matching {current_unit}")
     final_unit = matching_types[0]
     remaining_str = unit_str[string_pos::]
     return final_unit, remaining_str
