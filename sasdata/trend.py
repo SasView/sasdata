@@ -76,10 +76,12 @@ class Trend:
                     continue
                 new_quantities[name] = quantity @ mat
 
-            new_datum = SasData(datum.name,
-                                new_quantities,
-                                datum.dataset_type,
-                                datum._raw_metadata)
+            new_datum = SasData(
+                name=datum.name,
+                data_contents=new_quantities,
+                dataset_type=datum.dataset_type,
+                metadata=datum.metadata,
+            )
             new_data.append(new_datum)
         new_trend = Trend(new_data,
                           self.trend_axis)
