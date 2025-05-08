@@ -27,8 +27,8 @@ def test_ascii_1():
     params.columns = [('Q', per_angstrom), ('I', per_centimeter), ('dI', per_centimeter), ('<ignore>', None), ('<ignore>', None), ('<ignore>', None)]
     loaded_data = load_data(params)[0]
     # Check the first, and last rows to see if they are correct.
-    for datum in loaded_data._data_contents:
-        match datum.name:
+    for name, datum in loaded_data._data_contents.items():
+        match name:
             case 'Q':
                 assert datum.value[0] == pytest.approx(0.002618)
                 assert datum.value[-1] == pytest.approx(0.0497)
@@ -44,8 +44,8 @@ def test_ascii_2():
     params = guess_params_from_filename(filename, one_dim)
     loaded_data = load_data(params)[0]
 
-    for datum in loaded_data._data_contents:
-        match datum.name:
+    for name, datum in loaded_data._data_contents.items():
+        match name:
             case 'Q':
                 assert datum.value[0] == pytest.approx(0)
                 assert datum.value[-1] == pytest.approx(1.22449)
