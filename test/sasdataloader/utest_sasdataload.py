@@ -61,7 +61,7 @@ def local_load(path: str):
 def test_hdf_load_file(f):
     data = hdf_load_data(local_load(f"data/{f}.h5"))
 
-    with open(local_load(f"reference/{f}.txt")) as infile:
+    with open(local_load(f"reference/{f}.txt"), encoding="utf-8") as infile:
         expected = "".join(infile.readlines())
     keys = sorted([d for d in data])
     assert "".join(data[k].summary() for k in keys) == expected
@@ -72,7 +72,7 @@ def test_hdf_load_file(f):
 def test_xml_load_file(f):
     data = xml_load_data(local_load(f"data/{f}.xml"))
 
-    with open(local_load(f"reference/{f}.txt")) as infile:
+    with open(local_load(f"reference/{f}.txt"), encoding="utf-8") as infile:
         expected = "".join(infile.readlines())
     keys = sorted([d for d in data])
     assert "".join(data[k].summary() for k in keys) == expected
