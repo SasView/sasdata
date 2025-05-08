@@ -1,12 +1,11 @@
 from sasdata.ascii_reader_metadata import AsciiMetadataCategory, AsciiReaderMetadata, pairings, bidirectional_pairings
 from sasdata.data import SasData
-from sasdata.dataset_types import DatasetType
+from sasdata.dataset_types import DatasetType, one_dim, unit_kinds
 from sasdata.guess import guess_column_count, guess_columns, guess_starting_position
 from sasdata.quantities.units import NamedUnit
-from sasdata.quantities.quantity import NamedQuantity, Quantity
-from sasdata.quantities.accessors import AccessorTarget, Group
-from sasdata.metadata import Metadata
-from sasdata.data_backing import Dataset, Group
+from sasdata.quantities.quantity import Quantity
+from sasdata.quantities.accessors import Group
+from sasdata.data_backing import Dataset 
 from enum import Enum
 from dataclasses import dataclass, field
 import numpy as np
@@ -51,7 +50,7 @@ class AsciiReaderParams:
 
     @property
     def columns_included(self) -> list[tuple[str, NamedUnit]]:
-        return [column for column in self.columns if column[0] == '<ignore>' and isinstance(column[1], NamedUnit)]
+        return [column for column in self.columns if column[0] != '<ignore>' and isinstance(column[1], NamedUnit)]
 
 # TODO: Should I make this work on a list of filenames as well?
 def guess_params_from_filename(filename: str, dataset_type: DatasetType) -> AsciiReaderParams:
@@ -63,7 +62,7 @@ def guess_params_from_filename(filename: str, dataset_type: DatasetType) -> Asci
         lines_split = [split_line(separator_dict, line) for line in lines]
         startpos = guess_starting_position(lines_split)
         colcount = guess_column_count(lines_split, startpos)
-        columns = guess_columns(colcount, dataset_type)
+        columns = [(x, unit_kinds[x]) for x in guess_columns(colcount, dataset_type) if x in unit_kinds]
         params = AsciiReaderParams([filename], columns, starting_line=startpos, separator_dict=separator_dict)
         return params
 
@@ -113,7 +112,7 @@ def load_quantities(params: AsciiReaderParams, filename: str) -> dict[str, Quant
                 # should be ignored entirely.
                 print(f'Line {i + 1} skipped.')
                 continue
-    file_quantities = [NamedQuantity(name, arrays[i], unit) for i, (name, unit) in enumerate(params.columns_included)]
+    file_quantities = {name: Quantity(arrays[i], unit) for i, (name, unit) in enumerate(params.columns_included) }
     return file_quantities
 
 def metadata_to_data_backing(metadata: dict[str, AsciiMetadataCategory[str]]) -> Group:
