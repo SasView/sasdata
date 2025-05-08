@@ -386,6 +386,8 @@ class NamedUnit(Unit):
             case NamedUnit():
                 return self.name == other.name \
                     and self.ascii_symbol == other.ascii_symbol and self.symbol == other.symbol
+            case Unit():
+                return self.equivalent(other) and np.abs(np.log(self.scale/other.scale)) < 1e-5
             case _:
                 return False
 
