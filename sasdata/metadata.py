@@ -79,7 +79,6 @@ class Collimation:
 
     def summary(self):
 
-        #TODO collimation stuff
         return (
             f"Collimation:\n"
             f"   Length: {self.length}\n"+
