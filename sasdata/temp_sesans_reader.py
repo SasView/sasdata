@@ -13,6 +13,7 @@ from sasdata.metadata import (
     Process,
 )
 from sasdata.quantities import unit_parser, units
+from collections import defaultdict
 from itertools import groupby
 import re
 import numpy as np
@@ -24,7 +25,7 @@ def parse_version(lines: list[str]) -> tuple[str, list[str]]:
 
     if m is None:
         raise FileContentsException(
-            "Alleged Sesans file does not contain File Format Version header"
+            "Sesans file does not contain File Format Version header"
         )
 
     return (m.group(0), lines[1:])
@@ -48,12 +49,6 @@ def parse_kvs_quantity(key: str, kvs: dict[str, str]) -> Quantity | None:
     return Quantity(value=float(kvs[key]), units=unit_parser.parse(kvs[key + "_unit"]))
 
 
-def parse_kvs_text(key: str, kvs: dict[str, str]) -> str | None:
-    if key not in kvs:
-        return None
-    return kvs[key]
-
-
 def parse_sample(kvs: dict[str, str]) -> Sample:
     """Get the sample info from the key value store"""
 
@@ -64,7 +59,7 @@ def parse_sample(kvs: dict[str, str]) -> Sample:
         )
 
     return Sample(
-        name=parse_kvs_text("Sample", kvs),
+        name=kvs.get("Sample"),
         sample_id=None,
         thickness=thickness,
         transmission=None,
@@ -78,7 +73,7 @@ def parse_sample(kvs: dict[str, str]) -> Sample:
 def parse_process(kvs: dict[str, str]) -> Process:
     ymax = parse_kvs_quantity("Theta_ymax", kvs)
     zmax = parse_kvs_quantity("Theta_zmax", kvs)
-    orientation = parse_kvs_text("Orientation", kvs)
+    orientation = kvs.get("Orientation")
 
     if ymax is None:
         raise FileContentsException("SES file must specify Theta_ymax")
@@ -160,7 +155,6 @@ def parse_metadata(lines: list[str]) -> tuple[Metadata, dict[str, str], list[str
 
 
 def parse_data(lines: list[str], kvs: dict[str, str]) -> dict[str, Quantity]:
-    from collections import defaultdict
 
     data_contents: dict[str, Quantity] = {}
     headers = lines[0].split()
@@ -191,12 +185,9 @@ def parse_data(lines: list[str], kvs: dict[str, str]) -> dict[str, Quantity]:
             standard_error=error,
         )
 
-    if "SpinEchoLength" not in data_contents:
-        raise FileContentsException("SES file missing Spin Echo Length")
-    if "Depolarisation" not in data_contents:
-        raise FileContentsException("SES file missing Depolarisation")
-    if "Wavelength" not in data_contents:
-        raise FileContentsException("SES file missing Wavelength")
+    for required in ["SpinEchoLEngth", "Depolarisation", "Wavelength"]:
+        if required not in data_contents:
+            raise FileContentsException(f"SES file missing {required}")
 
     return data_contents
 
