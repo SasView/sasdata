@@ -1,4 +1,3 @@
-
 import numpy as np
 
 from sasdata import dataset_types
@@ -79,3 +78,7 @@ class SasData:
         s += self.metadata.summary()
 
         return s
+
+    @property
+    def json(self) -> dict:
+        return {}
