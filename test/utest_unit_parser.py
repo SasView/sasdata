@@ -23,6 +23,16 @@ named_units_for_testing = [
     ('%', units.percent)
 ]
 
+latex_units_for_testing = [
+    (r"\Omega", units.ohms), # Test omega is Ω
+    (r"\AA", units.angstroms), # Test angstrom is Å
+    (r"\%", units.percent), # Test percent is NOT a comment
+    (r"{\mu}A", units.microamperes), # Test µ with an ASCII unit
+    (r"{\mu}\Omega", units.microohms), # Test µ with LaTeX unit
+    (r"mm", units.millimeters) # Test that most units just use ASCII in LaTeX
+]
+
+
 unnamed_units_for_testing = [
     ('m13', units.meters**13),
     ('kW/sr', units.kilowatts/units.stradians)
