@@ -185,7 +185,7 @@ def parse_data(lines: list[str], kvs: dict[str, str]) -> dict[str, Quantity]:
             standard_error=error,
         )
 
-    for required in ["SpinEchoLEngth", "Depolarisation", "Wavelength"]:
+    for required in ["SpinEchoLength", "Depolarisation", "Wavelength"]:
         if required not in data_contents:
             raise FileContentsException(f"SES file missing {required}")
 
