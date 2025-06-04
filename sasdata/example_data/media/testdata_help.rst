@@ -58,6 +58,10 @@ OR:
 98929
   - Simple two-column text variant of ISIS_98929 (see below).
 
+Alumina_usaxs
+  - Data from a mixture of two Alumina powders collected on the APS USAXS
+    instrument. The two powders have different pore sizes.
+  - Suitable for testing :ref:`_Size_Distribution` .
 Anton-Paar
   - Example of the Anton-Paar XML format.
 
