@@ -44,10 +44,16 @@ EQUAL_TERMS = {
     ],
 }
 
+class EqualUnits:
+    def __init__(self, test_name: str, *units):
+        self.test_name = "Equality: " + test_name
+        self.units: list[Unit] = list(units)
 
-@pytest.fixture(params=EQUAL_TERMS)
-def equal_term(request):
-    return EQUAL_TERMS[request.param]
+    def run_test(self):
+        for i, unit_1 in enumerate(self.units):
+            for unit_2 in self.units[i + 1 :]:
+                assert unit_1.equivalent(unit_2), "Units should be equivalent"
+                assert unit_1 == unit_2, "Units should be equal"
 
 
 def test_unit_equality(equal_term):

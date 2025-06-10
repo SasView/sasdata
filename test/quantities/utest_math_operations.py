@@ -1,18 +1,17 @@
 """Tests for math operations"""
 
-import numpy as np
 import pytest
 
+import numpy as np
+from sasdata.quantities.quantity import NamedQuantity, tensordot, transpose
 from sasdata.quantities import units
-from sasdata.quantities.quantity import NamedQuantity, matinv, tensordot, trace, transpose
 
 order_list = [[0, 1, 2, 3], [0, 2, 1], [1, 0], [0, 1], [2, 0, 1], [3, 1, 2, 0]]
 
 
 @pytest.mark.parametrize("order", order_list)
-def test_transpose(order: list[int]):
-    """Check that the transpose operation changes the order of indices correctly for raw data and quantities - uses sizes as way of tracking"""
-
+def test_transpose_raw(order: list[int]):
+    """ Check that the transpose operation changes the order of indices correctly - uses sizes as way of tracking"""
     input_shape = tuple([i + 1 for i in range(len(order))])
     expected_shape = tuple([i + 1 for i in order])
 
