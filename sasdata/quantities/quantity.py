@@ -1187,6 +1187,10 @@ class Quantity[QuantityType]:
         else:
             return self.in_si(), None
 
+    def __eq__(self: Self, other: Self) -> bool | np.ndarray:
+        return self.value == other.in_units_of(self.units)
+
+
     def __mul__(self: Self, other: ArrayLike | Self ) -> Self:
         if isinstance(other, Quantity):
             return DerivedQuantity(

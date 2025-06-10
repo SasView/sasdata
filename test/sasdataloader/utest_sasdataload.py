@@ -22,6 +22,7 @@ from sasdata.dataloader.readers.cansas_reader import Reader
 from sasdata.dataloader.readers.cansas_constants import CansasConstants
 from sasdata.quantities.quantity import Quantity
 import sasdata.quantities.unit_parser as unit_parser
+import sasdata.quantities.units as units
 from sasdata.temp_hdf5_reader import load_data as hdf_load_data
 from sasdata.temp_xml_reader import load_data as xml_load_data
 
@@ -83,14 +84,12 @@ def test_filter_data():
     data = xml_load_data(local_load("data/cansas1d_notitle.xml"))
     for k, v in data.items():
         assert v.metadata.raw.filter("transmission") == ["0.327"]
-        assert v.metadata.raw.filter("wavelength") == [
-            Quantity(6.0, unit_parser.parse("A"))
-        ]
-        assert v.metadata.raw.filter("SDD") == [Quantity(4.15, unit_parser.parse("m"))]
+        assert v.metadata.raw.filter("wavelength")[0] == Quantity(6.0, units.angstroms) 
+        assert v.metadata.raw.filter("SDD")[0] == Quantity(4.15, units.meters)
     data = hdf_load_data(local_load("data/nxcansas_1Dand2D_multisasentry.h5"))
     for k, v in data.items():
         assert v.metadata.raw.filter("radiation") == ["Spallation Neutron Source"]
         assert v.metadata.raw.filter("SDD") == [
-            Quantity(np.array([2845.26], dtype=np.float32), unit_parser.parse("mm")),
-            Quantity(np.array([4385.28], dtype=np.float32), unit_parser.parse("mm")),
+            Quantity(np.array([2845.26], dtype=np.float32), units.millimeters),
+            Quantity(np.array([4385.28], dtype=np.float32), units.millimeters)
         ]
