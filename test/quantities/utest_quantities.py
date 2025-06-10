@@ -122,3 +122,10 @@ def test_conversion_errors(unit_1, unit_2):
         with pytest.raises(UnitError):
             Quantity(1, units.seconds).in_units_of(units.meters)
 
+
+@pytest.mark.quantity
+def test_equality():
+    assert Quantity(1.0, units.angstroms) == Quantity(1.0, units.angstroms)
+    assert Quantity(1.0, units.angstroms) == Quantity(0.1, units.nanometers)
+    assert Quantity(1.0, units.angstroms) != Quantity(0.1, units.angstroms)
+    assert Quantity(1.0, units.angstroms) == Quantity(1.0e-10, units.meters)
