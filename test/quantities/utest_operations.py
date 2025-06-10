@@ -3,32 +3,10 @@ import math
 import numpy as np
 import pytest
 
-from sasdata.quantities.quantity import (
-    Add,
-    AdditiveIdentity,
-    ArcCos,
-    ArcSin,
-    ArcTan,
-    Constant,
-    Cos,
-    Div,
-    Dot,
-    Exp,
-    Inv,
-    Ln,
-    Log,
-    MatMul,
-    Mul,
-    MultiplicativeIdentity,
-    Neg,
-    Operation,
-    Pow,
-    Sin,
-    Sub,
-    Tan,
-    Transpose,
-    Variable,
-)
+from sasdata.quantities.quantity import Operation, \
+    Neg, Inv, \
+    Add, Sub, Mul, Div, Pow, \
+    Variable, Constant, AdditiveIdentity, MultiplicativeIdentity
 
 x = Variable("x")
 y = Variable("y")
