@@ -1,9 +1,7 @@
-import numpy as np
-import pytest
-
 from sasdata.quantities import units
 from sasdata.quantities.quantity import NamedQuantity
-
+import pytest
+import numpy as np
 
 @pytest.mark.parametrize("x_err, y_err, x_units, y_units",
                          [(1, 1, units.meters, units.meters),
