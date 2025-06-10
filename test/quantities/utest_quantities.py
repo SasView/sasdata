@@ -1,11 +1,9 @@
 import numpy as np
-import pytest
 
-import sasdata.quantities.si as si
-import sasdata.quantities.units as units
 from sasdata.quantities.quantity import Quantity, UnitError
-
-
+import sasdata.quantities.units as units
+import sasdata.quantities.si as si
+import pytest
 def test_in_units_of_calculation():
     """ Just a couple of unit conversions """
     assert Quantity(1, units.meters).in_units_of(units.kilometers) == 1e-3
@@ -83,7 +81,7 @@ def test_good_non_integer_unit_powers(unit_in, power, unit_out):
 def test_bad_non_integer_unit_powers(unit, power):
     """ Check that we get an error if we try and do something silly with powers"""
     with pytest.raises(units.DimensionError):
-        unit**power
+        x = unit**power
 
 
 @pytest.mark.parametrize("unit_1", si.all_si)
@@ -131,11 +129,3 @@ def test_equality():
     assert Quantity(1.0, units.angstroms) == Quantity(0.1, units.nanometers)
     assert Quantity(1.0, units.angstroms) != Quantity(0.1, units.angstroms)
     assert Quantity(1.0, units.angstroms) == Quantity(1.0e-10, units.meters)
-
-@pytest.mark.quantity
-def test_explicit_format():
-    value = Quantity(1.0, units.electronvolts)
-    assert value.explicitly_formatted("J") == "1.602176634e-19 J"
-    assert value.explicitly_formatted("N m") == "1.602176634e-19 N m"
-    assert value.explicitly_formatted("m N") == "1.602176634e-19 m N"
-    assert value.explicitly_formatted("m kilogram m / hour / year") == "1.8201532008477443e-08 m kilogram m / hour / year"

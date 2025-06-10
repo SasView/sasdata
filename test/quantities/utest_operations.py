@@ -1,19 +1,9 @@
 import pytest
 
-from sasdata.quantities.quantity import (
-    Add,
-    AdditiveIdentity,
-    Constant,
-    Div,
-    Inv,
-    Mul,
-    MultiplicativeIdentity,
-    Neg,
-    Operation,
-    Pow,
-    Sub,
-    Variable,
-)
+from sasdata.quantities.quantity import Operation, \
+    Neg, Inv, \
+    Add, Sub, Mul, Div, Pow, \
+    Variable, Constant, AdditiveIdentity, MultiplicativeIdentity
 
 operation_with_everything = \
     Div(

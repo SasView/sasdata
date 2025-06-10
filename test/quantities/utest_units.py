@@ -3,7 +3,6 @@ import math
 import sasdata.quantities.units as units
 from sasdata.quantities.units import Unit
 
-
 class EqualUnits:
     def __init__(self, test_name: str, *units):
         self.test_name = "Equality: " + test_name
