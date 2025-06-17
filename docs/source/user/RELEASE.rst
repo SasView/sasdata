@@ -17,10 +17,10 @@ Wheel, egg, and tar.gz files are available on `pypi <https://pypi.org/project/sa
 New in Version 0.10.0
 ---------------------
 
-This release, designed to coincide with SasView 6.1.0, includes changes by @llimeht to the
-pyproject.toml file to use hatchling as the build backend. There have also been
-some minor changes which provide compatibility for new project structure of
-SasView.
+This release, which coincides with SasView 6.1.0, includes changes by @llimeht
+to the pyproject.toml file to use hatchling as the build backend. There have
+also been some minor changes which provide compatibility for the new project
+structure of SasView.
 
 Test data has also been added by @butlerpd for use with the Size Distribution perspective.
 
