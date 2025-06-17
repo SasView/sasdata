@@ -67,7 +67,18 @@ def meshmerge(mesh_a: Mesh, mesh_b: Mesh) -> tuple[Mesh, np.ndarray, np.ndarray]
 
     non_singular = np.linalg.det(deltas) != 0
 
-    st = np.linalg.solve(deltas[non_singular], start_point_diff[non_singular])
+    st = np.linalg.solve(
+        deltas[non_singular],
+        # Reshape is required because solve accepts matrices of shape
+        # (M) or (..., M, K) for the second parameter, but ours shape
+        # is (..., M).  We add an extra dimension to force our matrix
+        # into the shape (..., M, 1), which meets the expectations.
+        #
+        #
+        # Due to the reshaping work mentioned above, the final result
+        # has an extra element of length 1.  We then index this extra
+        # dimension to get back to the result we wanted.
+        np.expand_dims(start_point_diff[non_singular], axis=2))[:, :, 0]
 
     # Find the points where s and t are in (0, 1)
 
