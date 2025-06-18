@@ -111,3 +111,8 @@ def compose(
 
     """
     return ComposeRequirements(first, second)
+
+
+@compose.register
+def _(second: NullModel, first: ModellingRequirements) -> ModellingRequirements:
+    return first
