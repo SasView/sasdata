@@ -61,16 +61,58 @@ class ComposeRequirements(ModellingRequirements):
 class SesansModel(ModellingRequirements):
     """Perform Hankel transform for SESANS"""
 
-    def from_qi_transformation(
-        self, data: np.ndarray, metadata: Metadata
-    ) -> np.ndarray:
-        """Perform Hankel transform"""
+    def preprocess_q(self, SElengths: np.ndarray, metadata: Metadata) -> np.ndarray:
+        """Calculate the q values needed to perform the Hankel transform
+
+        Note: this is undefined for the case when SElengths contains
+        exactly one element and that values is zero.
+
+        """
         # FIXME: Actually do the Hankel transform
-        return data
+        SElength = np.asarray(SElength)
+        if len(SElength) == 1:
+            q_min, q_max = 0.01 * 2 * pi / SElength[-1], 10 * 2 * pi / SElength[0]
+        else:
+            # TODO: Why does q_min depend on the number of correlation lengths?
+            # TODO: Why does q_max depend on the correlation step size?
+            q_min = 0.1 * 2 * pi / (np.size(SElength) * SElength[-1])
+            q_max = 2 * pi / (SElength[1] - SElength[0])
+
+        self.q = np.exp(
+            np.arange(np.log(q_min), np.log(q_max), np.log(self.log_spacing))
+        )
+
+        dq = np.diff(self.q)
+        dq = np.insert(dq, 0, dq[0])
+
+        self.H0 = dq / (2 * pi) * self.q
+
+        self.H = np.outer(q, SElength)
+        j0(self.H, out=self.H)
+        self.H *= (dq * q / (2 * pi)).reshape((-1, 1))
+
+        reptheta = np.outer(q, lam / (2 * pi))
+        # Note: Using inplace update with reptheta => arcsin(reptheta).
+        # When q L / 2 pi > 1 that means wavelength is too large to
+        # reach that q value at any angle. These should produce theta = NaN
+        # without any warnings.
+        with np.errstate(invalid="ignore"):
+            np.arcsin(reptheta, out=reptheta)
+        # Reverse the condition to protect against NaN. We can't use
+        # theta > zaccept since all comparisons with NaN return False.
+        mask = ~(reptheta <= zaccept)
+        self.H[mask] = 0
+
+        return self.q
+
     def postprocess_iq(self, data: np.ndarray, metadata: Metadata) -> np.ndarray:
         """
         Apply the SESANS transform to the computed I(q)
         """
+        G0 = np.dot(self.H0, data)
+        G = np.dot(self.H.T, Iq)
+        P = G - G0
+        return P
 
 
 class SmearModel(ModellingRequirements):
