@@ -76,6 +76,9 @@ class SmearModel(ModellingRequirements):
 class NullModel(ModellingRequirements):
     """A model that does nothing"""
 
+    def compose(self, other: ModellingRequirements) -> ModellingRequirements:
+        return other
+
     def from_qi_transformation(
         self, data: np.ndarray, _metadata: Metadata
     ) -> np.ndarray:
