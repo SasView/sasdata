@@ -7,7 +7,7 @@ import pytest
 
 
 from sasdata.temp_sesans_reader import load_data
-from sasdata.model_requirements import guess_requirements, ComposeRequirements
+from sasdata.model_requirements import guess_requirements, ComposeRequirements, SmearModel, SesansModel, NullModel
 
 test_file_names = ["sphere2micron", "sphere_isis"]
 
@@ -31,3 +31,16 @@ def test_sesans_modelling():
     data = load_data(local_load("sesans_data/sphere_isis.ses"))
     req = guess_requirements(data)
     assert type(guess_requirements(data)) is ComposeRequirements
+    ses = SesansModel()
+    sme = SmearModel()
+    null = NullModel()
+
+    assert type(ses) is SesansModel
+    assert type(sme) is SmearModel
+    assert type(null) is NullModel
+
+    assert type(ses + sme) is ComposeRequirements
+    assert type(null + ses) is SesansModel
+    assert type(null + sme) is SmearModel
+    assert type(ses + null) is SesansModel
+    assert type(sme + null) is SmearModel
