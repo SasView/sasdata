@@ -7,6 +7,7 @@ import pytest
 
 
 from sasdata.temp_sesans_reader import load_data
+from sasdata.model_requirements import guess_requirements, ComposeRequirements
 
 test_file_names = ["sphere2micron", "sphere_isis"]
 
@@ -24,3 +25,9 @@ def test_load_file(f):
     with open(local_load(f"reference/{f}.txt")) as infile:
         expected = "".join(infile.readlines())
     assert data.summary() == expected
+
+@pytest.mark.sesans
+def test_sesans_modelling():
+    data = load_data(local_load("sesans_data/sphere_isis.ses"))
+    req = guess_requirements(data)
+    assert type(guess_requirements(data)) is ComposeRequirements
