@@ -30,7 +30,8 @@ def test_load_file(f):
 def test_sesans_modelling():
     data = load_data(local_load("sesans_data/sphere_isis.ses"))
     req = guess_requirements(data)
-    assert type(guess_requirements(data)) is ComposeRequirements
+    assert type(guess_requirements(data)) is SesansModel
+
     ses = SesansModel()
     sme = SmearModel()
     null = NullModel()
