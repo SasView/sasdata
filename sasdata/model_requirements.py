@@ -21,7 +21,8 @@ class ModellingRequirements(ABC):
 
     @singledispatch
     def compose(self, other: Self) -> Self:
-        return compose(self, other)
+        # Compose uses the reversed order
+        return compose(other, self)
 
     @abstractmethod
     def from_qi_transformation(
@@ -97,6 +98,13 @@ def guess_requirements(data: SasData) -> ModellingRequirements:
 
 @singledispatch
 def compose(
-    first: ModellingRequirements, second: ModellingRequirements
+    second: ModellingRequirements, first: ModellingRequirements
 ) -> ModellingRequirements:
+    """Compose to models together
+
+    This function uses a reverse order so that it can perform dispatch on
+    the *second* term, since the classes already had a chance to dispatch
+    on the first parameter
+
+    """
     return ComposeRequirements(first, second)
