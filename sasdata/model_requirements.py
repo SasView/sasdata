@@ -25,10 +25,13 @@ class ModellingRequirements(ABC):
         return compose(other, self)
 
     @abstractmethod
-    def from_qi_transformation(
-        self, data: np.ndarray, metadata: Metadata
-    ) -> np.ndarray:
-        """Transformation for going from qi to this data"""
+    def preprocess_q(self, data: np.ndarray, metadata: Metadata) -> np.ndarray:
+        """Transform the Q values before processing in the model"""
+        pass
+
+    @abstractmethod
+    def postprocess_iq(self, data: np.ndarray, metadata: Metadata) -> np.ndarray:
+        """Transform the I(Q) values after running the model"""
         pass
 
 
@@ -42,12 +45,16 @@ class ComposeRequirements(ModellingRequirements):
         self.first = fst
         self.second = snd
 
-    def from_qi_transformation(
-        self, data: np.ndarray, metadata: Metadata
-    ) -> np.ndarray:
+    def preprocess_q(self, data: np.ndarray, metadata: Metadata) -> np.ndarray:
         """Perform both transformations in order"""
-        return self.second.from_qi_transformation(
-            self.first.from_qi_transformation(data, metadata), metadata
+        return self.second.preprocess_q(
+            self.first.preprocess_q(data, metadata), metadata
+        )
+
+    def postprocess_iq(self, data: np.ndarray, metadata: Metadata) -> np.ndarray:
+        """Perform both transformations in order"""
+        return self.second.postprocess_iq(
+            self.first.postprocess_iq(data, metadata), metadata
         )
 
 
@@ -60,15 +67,22 @@ class SesansModel(ModellingRequirements):
         """Perform Hankel transform"""
         # FIXME: Actually do the Hankel transform
         return data
+    def postprocess_iq(self, data: np.ndarray, metadata: Metadata) -> np.ndarray:
+        """
+        Apply the SESANS transform to the computed I(q)
+        """
 
 
 class SmearModel(ModellingRequirements):
     """Perform a slit smearing"""
 
-    def from_qi_transformation(
-        self, data: np.ndarray, metadata: Metadata
-    ) -> np.ndarray:
-        """Perform smearing transfor"""
+    def preprocess_q(self, data: np.ndarray, metadata: Metadata) -> np.ndarray:
+        """Perform smearing transform"""
+        # FIXME: Actually do the smearing transform
+        return data
+
+    def postprocess_iq(self, data: np.ndarray, metadata: Metadata) -> np.ndarray:
+        """Perform smearing transform"""
         # FIXME: Actually do the smearing transform
         return data
 
@@ -79,9 +93,11 @@ class NullModel(ModellingRequirements):
     def compose(self, other: ModellingRequirements) -> ModellingRequirements:
         return other
 
-    def from_qi_transformation(
-        self, data: np.ndarray, _metadata: Metadata
-    ) -> np.ndarray:
+    def preprocess_q(self, data: np.ndarray, _metadata: Metadata) -> np.ndarray:
+        """Do nothing"""
+        return data
+
+    def postprocess_iq(self, data: np.ndarray, metadata: Metadata) -> np.ndarray:
         """Do nothing"""
         return data
 
