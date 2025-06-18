@@ -92,7 +92,7 @@ def compose(
 def guess_requirements(data: SasData) -> ModellingRequirements:
     """Use names of axes and units to guess what kind of processing needs to be done"""
     if data.dataset_type == dataset_types.sesans:
-        return SmearModel() + SesansModel()
+        return SesansModel()
     pass
 
 
