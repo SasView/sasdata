@@ -40,6 +40,10 @@ def test_sesans_modelling():
     assert type(sme) is SmearModel
     assert type(null) is NullModel
 
+    # Ignore slit smearing if we perform a sesans transform afterwards
+    assert type(sme + ses) is SesansModel
+    # However, it is possible for the spin echo lengths to have some
+    # smearing between them.
     assert type(ses + sme) is ComposeRequirements
     assert type(null + ses) is SesansModel
     assert type(null + sme) is SmearModel
