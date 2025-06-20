@@ -30,7 +30,6 @@ def test_load_file(f):
 
 @pytest.mark.sesans
 def test_sesans_modelling():
-    import matplotlib.pyplot as plt
     data = load_data(local_load("sesans_data/sphere2micron.ses"))
     req = guess_requirements(data)
     assert type(req) is SesansModel
@@ -67,10 +66,6 @@ def test_model_algebra():
     ses = SesansModel()
     sme = SmearModel()
     null = NullModel()
-
-    assert type(ses) is SesansModel
-    assert type(sme) is SmearModel
-    assert type(null) is NullModel
 
     # Ignore slit smearing if we perform a sesans transform afterwards
     assert type(sme + ses) is SesansModel
