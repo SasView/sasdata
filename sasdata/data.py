@@ -4,7 +4,8 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from sasdata.dataset_types import DatasetType, one_dim, two_dim
+from sasdata import dataset_types
+from sasdata.dataset_types import DatasetType
 from sasdata.quantities.quantity import NamedQuantity, Quantity
 from sasdata.metadata import Metadata
 from sasdata.quantities.accessors import AccessorTarget
@@ -37,29 +38,37 @@ class SasData:
     # TODO: Handle the other data types.
     @property
     def ordinate(self) -> Quantity:
-        if self.dataset_type == one_dim or self.dataset_type == two_dim:
-            return self._data_contents['I']
-        # TODO: seesans
-        # Let's ignore that this method can return None for now.
-        return None
+        match self.dataset_type:
+            case dataset_types.one_dim:
+                return self._data_contents["I"]
+            case dataset_types.two_dim:
+                return self._data_contents["I"]
+            case dataset_types.sesans:
+                return self._data_contents["Depolarisation"]
+            case _:
+                return None
 
     @property
     def abscissae(self) -> Quantity:
-        if self.dataset_type == one_dim:
-            return self._data_contents['Q']
-        elif self.dataset_type == two_dim:
-            # Type hinting is a bit lacking. Assume each part of the zip is a scalar value.
-            data_contents = np.array(list(zip(self._data_contents['Qx'].value, self._data_contents['Qy'].value)))
-            # Use this value to extract units etc. Assume they will be the same for Qy.
-            reference_data_content = self._data_contents['Qx']
-            # TODO: If this is a derived quantity then we are going to lose that
-            # information.
-            #
-            # TODO: Won't work when there's errors involved. On reflection, we
-            # probably want to avoid creating a new Quantity but at the moment I
-            # can't see a way around it.
-            return Quantity(data_contents, reference_data_content.units)
-        return None
+        match self.dataset_type:
+            case dataset_types.one_dim:
+                return self._data_contents['Q']
+            case dataset_types.two_dim:
+                # Type hinting is a bit lacking. Assume each part of the zip is a scalar value.
+                data_contents = np.array(list(zip(self._data_contents['Qx'].value, self._data_contents['Qy'].value)))
+                # Use this value to extract units etc. Assume they will be the same for Qy.
+                reference_data_content = self._data_contents['Qx']
+                # TODO: If this is a derived quantity then we are going to lose that
+                # information.
+                #
+                # TODO: Won't work when there's errors involved. On reflection, we
+                # probably want to avoid creating a new Quantity but at the moment I
+                # can't see a way around it.
+                return Quantity(data_contents, reference_data_content.units)
+            case dataset_types.sesans:
+                return self._data_contents["SpinEchoLength"]
+            case _:
+                None
 
     def __getitem__(self, item: str):
         return self._data_contents[item]
