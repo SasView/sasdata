@@ -118,9 +118,10 @@ class SesansModel(ModellingRequirements):
         """
         Apply the SESANS transform to the computed I(q)
         """
-        G0 = np.dot(self.H0, data)
-        G = np.dot(self.H.T, data)
+        G0 = self.H0 @ data
+        G = self.H.T @ data
         P = G - G0
+
         return P
 
 
