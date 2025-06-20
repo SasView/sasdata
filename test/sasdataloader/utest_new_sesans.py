@@ -2,6 +2,7 @@
 Unit tests for the new recursive cansas reader
 """
 
+import numpy as np
 import os
 import pytest
 
@@ -28,12 +29,26 @@ def test_load_file(f):
 
 @pytest.mark.sesans
 def test_sesans_modelling():
+    import matplotlib.pyplot as plt
     data = load_data(local_load("sesans_data/sphere_isis.ses"))
     req = guess_requirements(data)
     assert type(req) is SesansModel
 
-    inner_q = req.preprocess_q(data.abscissae.value, data)
-    req.postprocess_iq(inner_q, data.metadata)
+    # The Hankel transform of x is -r^-3
+    x = np.arange(0.0, len(data._data_contents["Wavelength"].value))
+    inner_q = req.preprocess_q(x, data)
+    # Just use y=1/x as our model
+    iq = inner_q[:]**-1.0
+    result = req.postprocess_iq(iq, data)
+
+    # plt.loglog()
+    # plt.plot(x, 1/(2 * np.pi) * x**-1, label="Expected")
+    # plt.plot(x, result, label="Computed")
+    # plt.legend(loc=0)
+    # plt.show()
+    assert x.shape == result.shape
+    for (expected, computed) in zip(-x**-3, result):
+        assert expected == computed
 
 
 
