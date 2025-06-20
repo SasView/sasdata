@@ -1177,7 +1177,7 @@ class Quantity[QuantityType]:
 
         if variance.units.equivalent(units_squared):
 
-            return self.in_units_of(units), np.sqrt(self.variance.in_units_of(units_squared))
+            return self.in_units_of(units), np.sqrt(self.variance.in_units_of(units_squared).value)
         else:
             raise UnitError(f"Target units ({units}) not compatible with existing units ({variance.units}).")
 
