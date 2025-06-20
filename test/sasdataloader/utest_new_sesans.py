@@ -30,8 +30,15 @@ def test_load_file(f):
 def test_sesans_modelling():
     data = load_data(local_load("sesans_data/sphere_isis.ses"))
     req = guess_requirements(data)
-    assert type(guess_requirements(data)) is SesansModel
+    assert type(req) is SesansModel
 
+    inner_q = req.preprocess_q(data.abscissae.value, data)
+    req.postprocess_iq(inner_q, data.metadata)
+
+
+
+@pytest.mark.sesans
+def test_model_algebra():
     ses = SesansModel()
     sme = SmearModel()
     null = NullModel()
