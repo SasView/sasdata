@@ -173,4 +173,15 @@ def compose(
 
 @compose.register
 def _(second: NullModel, first: ModellingRequirements) -> ModellingRequirements:
+    """Null model is the identity element of composition"""
     return first
+
+
+@compose.register
+def _(second: SesansModel, first: ModellingRequirements) -> ModellingRequirements:
+    match first:
+        case SmearModel():
+            # To the first approximation, there is no slit smearing in SESANS data
+            return second
+        case _:
+            return ComposeRequirements(first, second)
