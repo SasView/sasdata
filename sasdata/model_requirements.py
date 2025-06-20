@@ -6,7 +6,6 @@ from typing import Self
 from scipy.special import j0
 
 from sasdata.data import SasData
-from sasdata.metadata import Metadata
 from sasdata.quantities import units
 from sasdata import dataset_types
 from sasdata.quantities.quantity import Operation
@@ -63,22 +62,22 @@ class ComposeRequirements(ModellingRequirements):
 class SesansModel(ModellingRequirements):
     """Perform Hankel transform for SESANS"""
 
-    def preprocess_q(self, SElength: np.ndarray, full_data: SasData) -> np.ndarray:
+    def preprocess_q(self, spin_echo_length: np.ndarray, full_data: SasData) -> np.ndarray:
         """Calculate the q values needed to perform the Hankel transform
 
-        Note: this is undefined for the case when SElengths contains
+        Note: this is undefined for the case when spin_echo_lengths contains
         exactly one element and that values is zero.
 
         """
         # FIXME: Actually do the Hankel transform
-        SElength = np.asarray(SElength)
-        if len(SElength) == 1:
-            q_min, q_max = 0.01 * 2 * pi / SElength[-1], 10 * 2 * pi / SElength[0]
+        spin_echo_length = np.asarray(spin_echo_length)
+        if len(spin_echo_length) == 1:
+            q_min, q_max = 0.01 * 2 * np.pi / spin_echo_length[-1], 10 * 2 * np.pi / spin_echo_length[0]
         else:
             # TODO: Why does q_min depend on the number of correlation lengths?
             # TODO: Why does q_max depend on the correlation step size?
-            q_min = 0.1 * 2 * np.pi / (np.size(SElength) * SElength[-1])
-            q_max = 2 * np.pi / (SElength[1] - SElength[0])
+            q_min = 0.1 * 2 * np.pi / (np.size(spin_echo_length) * spin_echo_length[-1])
+            q_max = 2 * np.pi / (spin_echo_length[1] - spin_echo_length[0])
 
         # TODO: Possibly make this adjustable
         log_spacing = 1.0003
@@ -89,7 +88,7 @@ class SesansModel(ModellingRequirements):
 
         self.H0 = dq / (2 * np.pi) * self.q
 
-        self.H = np.outer(self.q, SElength)
+        self.H = np.outer(self.q, spin_echo_length)
         j0(self.H, out=self.H)
         self.H *= (dq * self.q / (2 * np.pi)).reshape((-1, 1))
 
