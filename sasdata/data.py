@@ -39,9 +39,7 @@ class SasData:
     @property
     def ordinate(self) -> Quantity:
         match self.dataset_type:
-            case dataset_types.one_dim:
-                return self._data_contents["I"]
-            case dataset_types.two_dim:
+            case dataset_types.one_dim | dataset_types.two_dim:
                 return self._data_contents["I"]
             case dataset_types.sesans:
                 return self._data_contents["Depolarisation"]
