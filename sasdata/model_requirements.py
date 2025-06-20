@@ -3,9 +3,11 @@ from abc import ABC, abstractmethod
 from functools import singledispatch
 import numpy as np
 from typing import Self
+from scipy.special import j0
 
 from sasdata.data import SasData
 from sasdata.metadata import Metadata
+from sasdata.quantities import units
 from sasdata import dataset_types
 from sasdata.quantities.quantity import Operation
 
@@ -25,12 +27,12 @@ class ModellingRequirements(ABC):
         return compose(other, self)
 
     @abstractmethod
-    def preprocess_q(self, data: np.ndarray, metadata: Metadata) -> np.ndarray:
+    def preprocess_q(self, data: np.ndarray, full_data: SasData) -> np.ndarray:
         """Transform the Q values before processing in the model"""
         pass
 
     @abstractmethod
-    def postprocess_iq(self, data: np.ndarray, metadata: Metadata) -> np.ndarray:
+    def postprocess_iq(self, data: np.ndarray, full_data: SasData) -> np.ndarray:
         """Transform the I(Q) values after running the model"""
         pass
 
@@ -45,13 +47,13 @@ class ComposeRequirements(ModellingRequirements):
         self.first = fst
         self.second = snd
 
-    def preprocess_q(self, data: np.ndarray, metadata: Metadata) -> np.ndarray:
+    def preprocess_q(self, data: np.ndarray, full_data: SasData) -> np.ndarray:
         """Perform both transformations in order"""
         return self.second.preprocess_q(
             self.first.preprocess_q(data, metadata), metadata
         )
 
-    def postprocess_iq(self, data: np.ndarray, metadata: Metadata) -> np.ndarray:
+    def postprocess_iq(self, data: np.ndarray, full_data: SasData) -> np.ndarray:
         """Perform both transformations in order"""
         return self.second.postprocess_iq(
             self.first.postprocess_iq(data, metadata), metadata
@@ -61,7 +63,7 @@ class ComposeRequirements(ModellingRequirements):
 class SesansModel(ModellingRequirements):
     """Perform Hankel transform for SESANS"""
 
-    def preprocess_q(self, SElengths: np.ndarray, metadata: Metadata) -> np.ndarray:
+    def preprocess_q(self, SElength: np.ndarray, full_data: SasData) -> np.ndarray:
         """Calculate the q values needed to perform the Hankel transform
 
         Note: this is undefined for the case when SElengths contains
@@ -75,42 +77,49 @@ class SesansModel(ModellingRequirements):
         else:
             # TODO: Why does q_min depend on the number of correlation lengths?
             # TODO: Why does q_max depend on the correlation step size?
-            q_min = 0.1 * 2 * pi / (np.size(SElength) * SElength[-1])
-            q_max = 2 * pi / (SElength[1] - SElength[0])
+            q_min = 0.1 * 2 * np.pi / (np.size(SElength) * SElength[-1])
+            q_max = 2 * np.pi / (SElength[1] - SElength[0])
 
-        self.q = np.exp(
-            np.arange(np.log(q_min), np.log(q_max), np.log(self.log_spacing))
-        )
+        # TODO: Possibly make this adjustable
+        log_spacing = 1.0003
+        self.q = np.exp(np.arange(np.log(q_min), np.log(q_max), np.log(log_spacing)))
 
         dq = np.diff(self.q)
         dq = np.insert(dq, 0, dq[0])
 
-        self.H0 = dq / (2 * pi) * self.q
+        self.H0 = dq / (2 * np.pi) * self.q
 
-        self.H = np.outer(q, SElength)
+        self.H = np.outer(self.q, SElength)
         j0(self.H, out=self.H)
-        self.H *= (dq * q / (2 * pi)).reshape((-1, 1))
+        self.H *= (dq * self.q / (2 * np.pi)).reshape((-1, 1))
 
-        reptheta = np.outer(q, lam / (2 * pi))
+        reptheta = np.outer(
+            self.q,
+            full_data._data_contents["Wavelength"].in_units_of(units.angstroms)
+            / (2 * np.pi),
+        )
         # Note: Using inplace update with reptheta => arcsin(reptheta).
         # When q L / 2 pi > 1 that means wavelength is too large to
         # reach that q value at any angle. These should produce theta = NaN
         # without any warnings.
-        with np.errstate(invalid="ignore"):
-            np.arcsin(reptheta, out=reptheta)
+        #
         # Reverse the condition to protect against NaN. We can't use
         # theta > zaccept since all comparisons with NaN return False.
-        mask = ~(reptheta <= zaccept)
+        zaccept = [
+            x.terms["zmax"] for x in full_data.metadata.process if "zmax" in x.terms
+        ][0]
+        with np.errstate(invalid="ignore"):
+            mask = ~(np.arcsin(reptheta) <= zaccept.in_units_of(units.radians))
         self.H[mask] = 0
 
         return self.q
 
-    def postprocess_iq(self, data: np.ndarray, metadata: Metadata) -> np.ndarray:
+    def postprocess_iq(self, data: np.ndarray, full_data: SasData) -> np.ndarray:
         """
         Apply the SESANS transform to the computed I(q)
         """
         G0 = np.dot(self.H0, data)
-        G = np.dot(self.H.T, Iq)
+        G = np.dot(self.H.T, data)
         P = G - G0
         return P
 
@@ -118,12 +127,12 @@ class SesansModel(ModellingRequirements):
 class SmearModel(ModellingRequirements):
     """Perform a slit smearing"""
 
-    def preprocess_q(self, data: np.ndarray, metadata: Metadata) -> np.ndarray:
+    def preprocess_q(self, data: np.ndarray, full_data: SasData) -> np.ndarray:
         """Perform smearing transform"""
         # FIXME: Actually do the smearing transform
         return data
 
-    def postprocess_iq(self, data: np.ndarray, metadata: Metadata) -> np.ndarray:
+    def postprocess_iq(self, data: np.ndarray, full_data: SasData) -> np.ndarray:
         """Perform smearing transform"""
         # FIXME: Actually do the smearing transform
         return data
@@ -135,11 +144,11 @@ class NullModel(ModellingRequirements):
     def compose(self, other: ModellingRequirements) -> ModellingRequirements:
         return other
 
-    def preprocess_q(self, data: np.ndarray, _metadata: Metadata) -> np.ndarray:
+    def preprocess_q(self, data: np.ndarray, _full_data: SasData) -> np.ndarray:
         """Do nothing"""
         return data
 
-    def postprocess_iq(self, data: np.ndarray, metadata: Metadata) -> np.ndarray:
+    def postprocess_iq(self, data: np.ndarray, _full_data: SasData) -> np.ndarray:
         """Do nothing"""
         return data
 
