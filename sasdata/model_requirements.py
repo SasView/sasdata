@@ -49,13 +49,13 @@ class ComposeRequirements(ModellingRequirements):
     def preprocess_q(self, data: np.ndarray, full_data: SasData) -> np.ndarray:
         """Perform both transformations in order"""
         return self.second.preprocess_q(
-            self.first.preprocess_q(data, metadata), metadata
+            self.first.preprocess_q(data, full_data), full_data
         )
 
     def postprocess_iq(self, data: np.ndarray, full_data: SasData) -> np.ndarray:
         """Perform both transformations in order"""
         return self.second.postprocess_iq(
-            self.first.postprocess_iq(data, metadata), metadata
+            self.first.postprocess_iq(data, full_data), full_data
         )
 
 
