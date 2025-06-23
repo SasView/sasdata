@@ -72,7 +72,6 @@ class AsciiReaderParams:
 def guess_params_from_filename(
     filename: str, dataset_type: DatasetType
 ) -> AsciiReaderParams:
-    # Lets assume that all the separators are to be enabled.
     # Lets just assume we want all of the seaprators on. This seems to work for most files.
     separator_dict = initialise_separator_dict(True)
     with open(filename) as file:
