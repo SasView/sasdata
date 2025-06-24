@@ -2,10 +2,8 @@ from typing import Literal
 import pytest
 import os
 
-from sasdata.guess import guess_column_count, guess_columns
 from sasdata.temp_ascii_reader import (
     load_data,
-    AsciiReaderParams,
     guess_params_from_filename,
 )
 from sasdata.dataset_types import one_dim
