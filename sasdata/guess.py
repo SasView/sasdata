@@ -1,4 +1,4 @@
-from sasdata.dataset_types import DatasetType
+from sasdata.dataset_types import DatasetType, two_dim, one_dim
 from scipy.stats import mode
 
 
@@ -54,5 +54,8 @@ def guess_starting_position(split_csv: list[list[str]]) -> int:
     return 0
 
 
-def guess_dataset_type() -> DatasetType:
-    print()
+def guess_dataset_type(filename: str) -> DatasetType:
+    if filename.lower().endswith(".dat"):
+        return two_dim
+    else:
+        return one_dim
