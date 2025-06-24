@@ -6,7 +6,12 @@ from sasdata.ascii_reader_metadata import (
 )
 from sasdata.data import SasData
 from sasdata.dataset_types import DatasetType, one_dim, unit_kinds
-from sasdata.guess import guess_column_count, guess_columns, guess_starting_position
+from sasdata.guess import (
+    guess_column_count,
+    guess_columns,
+    guess_starting_position,
+    guess_dataset_type,
+)
 from sasdata.quantities.units import NamedUnit
 from sasdata.quantities.quantity import Quantity
 from sasdata.quantities.accessors import Group
@@ -199,3 +204,8 @@ def load_data(params: AsciiReaderParams) -> list[SasData]:
         )
         loaded_data.append(data)
     return loaded_data
+
+
+def load_data_default_params(filename: str) -> list[SasData]:
+    params = guess_params_from_filename(filename, guess_dataset_type(filename))
+    return load_data(params)
