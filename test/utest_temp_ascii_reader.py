@@ -55,8 +55,7 @@ def test_ascii_1():
 
 def test_ascii_2():
     filename = find("test_3_columns.txt", "sasdataloader")
-    params = guess_params_from_filename(filename, one_dim)
-    loaded_data = load_data(params)[0]
+    loaded_data = load_data_default_params(filename)[0]
 
     for name, datum in loaded_data._data_contents.items():
         match name:
