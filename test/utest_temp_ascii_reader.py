@@ -5,6 +5,7 @@ import os
 from sasdata.temp_ascii_reader import (
     load_data,
     guess_params_from_filename,
+    load_data_default_params,
 )
 from sasdata.dataset_types import one_dim
 from sasdata.quantities.units import per_angstrom, per_centimeter
@@ -68,3 +69,24 @@ def test_ascii_2():
             case "dI":
                 assert datum.value[0] == pytest.approx(0.6)
                 assert datum.value[-1] == pytest.approx(1.05918)
+
+
+def test_ascii_2d():
+    filename = find("detector_rectangular.DAT")
+    # Make sure that the dataset type is guessed as 2D data.
+    loaded_data = load_data_default_params(filename)[0]
+
+    for name, datum in loaded_data._data_contents.items():
+        match name:
+            case "Qx":
+                assert datum.value[0] == pytest.approx(-0.009160664)
+                assert datum.value[-1] == pytest.approx(0.2908819)
+            case "Qy":
+                assert datum.value[0] == pytest.approx(-0.1683881)
+                assert datum.value[-1] == pytest.approx(0.1634992)
+            case "I":
+                assert datum.value[0] == pytest.approx(16806.79)
+                assert datum.value[-1] == pytest.approx(8147.779)
+            case "dI":
+                assert datum.value[0] == pytest.approx(0.01366757)
+                assert datum.value[-1] == pytest.approx(0.05458562)
