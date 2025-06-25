@@ -21,6 +21,7 @@ from dataclasses import dataclass, field
 import numpy as np
 import re
 from os import path
+from os.path import basename
 from dataclasses import replace
 
 
@@ -200,7 +201,10 @@ def load_data(params: AsciiReaderParams) -> list[SasData]:
             params.metadata.all_file_metadata(path.basename(filename))
         )
         data = SasData(
-            filename, merge_uncertainties(quantities), params.dataset_type, metadata
+            basename(filename),
+            merge_uncertainties(quantities),
+            params.dataset_type,
+            metadata,
         )
         loaded_data.append(data)
     return loaded_data
