@@ -14,6 +14,16 @@ Features
 ========
 Wheel, egg, and tar.gz files are available on `pypi <https://pypi.org/project/sasdata/>`_.
 
+New in Version 0.10.0
+---------------------
+
+This release, which coincides with SasView 6.1.0, includes changes by @llimeht
+to the pyproject.toml file to use hatchling as the build backend. There have
+also been some minor changes which provide compatibility for the new project
+structure of SasView.
+
+Test data has also been added by @butlerpd for use with the Size Distribution perspective.
+
 New in Version 0.9.0
 --------------------
 This is an enhancement release with updates to the unit conversion routines, the ability to load data from URIs, the

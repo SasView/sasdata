@@ -9,23 +9,18 @@ The easiest way to use sasdata is by using [SasView](http://www.sasview.org).
 
 View the latest release on the [sasdata pypi page](https://pypi.org/project/sasdata/) and install using `pip install sasdata`.
 
-To run sasdata from the source, create a python environment using python 3.8 or higher and install all dependencies
+To run sasdata from the source, create a python environment using python 3.10 or higher and install all dependencies
  - Using a [python virtual environment](https://packaging.python.org/en/latest/guides/installing-using-pip-and-virtual-environments/)::
 
        $ python -m venv sasdata
        $ .\sasdata\Scripts\activate (Windows) -or- source sasdata/bin/activate (Mac/Linux)
-       (sasdata) $ python -m pip install -r requirements.txt
-       (sasdata) $ python /path/to/sasdata/setup.py clean build
-       (sasdata) $ python -m pip install .
+       (sasdata) $ python -m pip install -e .
  
- - Using [miniconda](https://docs.conda.io/en/latest/miniconda.html)
-or [anaconda](https://www.anaconda.com/)::
+ - Using any [anaconda](https://www.anaconda.com/) distribution::
    
        $ conda create -n sasdata
        $ conda activate sasdata
-       (sasdata) $ python -m pip install -r requirements.txt
-       (sasdata) $ python /path/to/sasdata/setup.py clean build
-       (sasdata) $ python -m pip install .
+       (sasdata) $ python -m pip install -e .
 
 ## Data Formats
 
