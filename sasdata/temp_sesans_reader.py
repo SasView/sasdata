@@ -174,10 +174,7 @@ def parse_data(lines: list[str], kvs: dict[str, str]) -> dict[str, Quantity]:
 
         error = None
         if h + "_error" in headers:
-            error = Quantity(
-                value=np.asarray(points[h + "_error"]),
-                units=unit,
-            )
+            error = np.asarray(points[h + "_error"])
 
         data_contents[h] = Quantity(
             value=np.asarray(points[h]),
