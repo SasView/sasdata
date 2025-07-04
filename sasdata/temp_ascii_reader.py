@@ -49,9 +49,8 @@ class AsciiReaderParams:
     starting_line: int = 0
     excluded_lines: set[int] = field(default_factory=set)
     separator_dict: dict[str, bool] = field(default_factory=initialise_separator_dict)
-    dataset_type: DatasetType = field(
-        default_factory=lambda: replace(one_dim)
-    )  # Take a copy in case its mutated (which it shouldn't be)
+    # Take a copy in case its mutated (which it shouldn't be)
+    dataset_type: DatasetType = field(default_factory=lambda: replace(one_dim))
 
     def __post_init__(self):
         self.initialise_metadata()
