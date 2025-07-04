@@ -71,7 +71,7 @@ def test_ascii_2():
 
 
 def test_ascii_2d():
-    filename = find("detector_rectangular.DAT")
+    filename = find("detector_rectangular.DAT", "sasdataloader")
     # Make sure that the dataset type is guessed as 2D data.
     loaded_data = load_data_default_params(filename)[0]
 
