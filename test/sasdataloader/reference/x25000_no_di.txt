@@ -1,0 +1,32 @@
+sasentry01
+Metadata:
+
+  , Run: 
+  =======
+
+Definition: 
+Sample:
+   ID:           
+   Transmission: None
+   Thickness:    None
+   Temperature:  None
+   Position:     None
+   Orientation:  None
+Collimation:
+   Length: None
+Detector:
+   Name:         
+   Distance:     None
+   Offset:       None
+   Orientation:  None
+   Beam center:  None
+   Pixel size:   None
+   Slit length:  None
+Source:
+    Radiation:         neutron
+    Shape:             None
+    Wavelength:        None
+    Min. Wavelength:   None
+    Max. Wavelength:   None
+    Wavelength Spread: None
+    Beam Size:         None
