@@ -14,7 +14,7 @@ from sasdata.guess import (
 )
 from sasdata.quantities.units import NamedUnit
 from sasdata.quantities.quantity import Quantity
-from sasdata.metadata import MetaNode
+from sasdata.metadata import MetaNode, Metadata
 from enum import Enum
 from dataclasses import dataclass, field
 import numpy as np
@@ -189,9 +189,10 @@ def load_data(params: AsciiReaderParams) -> list[SasData]:
     loaded_data: list[SasData] = []
     for filename in params.filenames:
         quantities = load_quantities(params, filename)
-        metadata = import_metadata(
+        raw_metadata = import_metadata(
             params.metadata.all_file_metadata(path.basename(filename))
         )
+        metadata = Metadata(raw=raw_metadata)
         data = SasData(
             path.basename(filename),
             merge_uncertainties(quantities),
