@@ -89,7 +89,7 @@ class AsciiReaderMetadata:
         # Conflicts shouldn't really be happening anyway but if they do, we're gonna go with the master metadata taking
         # precedence for now.
         return_metadata: dict[str, AsciiMetadataCategory[str]] = {}
-        for category_name, category in set(file_metadata.items() + self.master_metadata.items()) :
+        for category_name, category in (file_metadata | self.master_metadata).items():
             combined_category_dict = category.values | self.master_metadata[category_name].values
             new_category_dict: dict[str, str] = {}
             for key, value in combined_category_dict.items():
