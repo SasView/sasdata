@@ -151,13 +151,13 @@ def import_metadata(metadata: dict[str, AsciiMetadataCategory[str]]) -> MetaNode
     for top_level_key, top_level_item in metadata.items():
         children = []
         for metadatum_name, metadatum in top_level_item.values.items():
-            children.append(MetaNode(metadatum_name, {}, metadatum))
+            children.append(MetaNode(name=metadatum_name, attrs={}, contents=metadatum))
         if top_level_key == "other":
             root_contents.extend(children)
         else:
-            group = MetaNode(top_level_key, {}, children)
+            group = MetaNode(name=top_level_key, attrs={}, contents=children)
             root_contents.append(group)
-    return MetaNode("root", {}, root_contents)
+    return MetaNode(name="root", attrs={}, contents=root_contents)
 
 
 def merge_uncertainties(quantities: dict[str, Quantity]) -> dict[str, Quantity]:
