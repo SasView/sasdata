@@ -148,24 +148,6 @@ def load_quantities(params: AsciiReaderParams, filename: str) -> dict[str, Quant
     return file_quantities
 
 
-def metadata_to_data_backing(metadata: dict[str, AsciiMetadataCategory[str]]) -> Group:
-    """This converts the ASCII reader's internal metadata structures into the
-    backing data structure defined in data_backing.py"""
-    root_children = {}
-    for top_level_key, top_level_item in metadata.items():
-        children = {}
-        for metadatum_name, metadatum in top_level_item.values.items():
-            children[metadatum_name] = Dataset(metadatum_name, metadatum, {})
-        # This is a special set which needs to live at the root of the group.
-        # TODO: the 'other' name will probably need to change.
-        if top_level_key == "other":
-            root_children = root_children | children
-        else:
-            group = Group(top_level_key, children)
-            root_children[top_level_key] = group
-    return Group("root", root_children)
-
-
 def import_metadata(metadata: dict[str, AsciiMetadataCategory[str]]) -> MetaNode:
     root_contents = []
     for top_level_key, top_level_item in metadata.items():
