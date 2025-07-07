@@ -16,6 +16,7 @@ from sasdata.quantities.units import NamedUnit
 from sasdata.quantities.quantity import Quantity
 from sasdata.quantities.accessors import Group
 from sasdata.data_backing import Dataset
+from sasdata.metadata import MetaNode
 from enum import Enum
 from dataclasses import dataclass, field
 import numpy as np
@@ -163,6 +164,20 @@ def metadata_to_data_backing(metadata: dict[str, AsciiMetadataCategory[str]]) ->
             group = Group(top_level_key, children)
             root_children[top_level_key] = group
     return Group("root", root_children)
+
+
+def import_metadata(metadata: dict[str, AsciiMetadataCategory[str]]) -> MetaNode:
+    root_contents = []
+    for top_level_key, top_level_item in metadata.items():
+        children = []
+        for metadatum_name, metadatum in top_level_item.values.items():
+            children.append(MetaNode(metadatum_name, {}, metadatum))
+        if top_level_key == "other":
+            root_contents.extend(children)
+        else:
+            group = MetaNode(top_level_key, {}, children)
+            root_contents.append(group)
+    return MetaNode("root", {}, root_contents)
 
 
 def merge_uncertainties(quantities: dict[str, Quantity]) -> dict[str, Quantity]:
