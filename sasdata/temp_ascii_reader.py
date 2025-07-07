@@ -192,7 +192,14 @@ def load_data(params: AsciiReaderParams) -> list[SasData]:
         raw_metadata = import_metadata(
             params.metadata.all_file_metadata(path.basename(filename))
         )
-        metadata = Metadata(raw=raw_metadata)
+        metadata = Metadata(
+            title=None,
+            run=[],
+            definition=None,
+            sample=None,
+            instrument=None,
+            raw=raw_metadata,
+        )
         data = SasData(
             path.basename(filename),
             merge_uncertainties(quantities),
