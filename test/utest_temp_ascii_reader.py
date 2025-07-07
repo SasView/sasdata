@@ -16,12 +16,19 @@ from sasdata.quantities.units import per_angstrom, per_centimeter
 # TODO: Look into parameterizing this, although its not trivial due to the setup, and tests being a bit different.
 
 
-def find(filename: str, locations: Literal["sasdataloader"]) -> str:
+def find(filename: str, locations: Literal["sasdataloader", "mumag"]) -> str:
     # This match statement is here in case we want to pull data out of other locations.
     match locations:
         case "sasdataloader":
             return os.path.join(
                 os.path.dirname(__file__), "sasdataloader", "data", filename
+            )
+        case "mumag":
+            return os.path.join(
+                os.path.dirname(__file__),
+                "mumag",
+                "Nanoperm_perpendicular_Honecker_et_al",
+                filename,
             )
 
 
