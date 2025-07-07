@@ -14,8 +14,6 @@ from sasdata.guess import (
 )
 from sasdata.quantities.units import NamedUnit
 from sasdata.quantities.quantity import Quantity
-from sasdata.quantities.accessors import Group
-from sasdata.data_backing import Dataset
 from sasdata.metadata import MetaNode
 from enum import Enum
 from dataclasses import dataclass, field
