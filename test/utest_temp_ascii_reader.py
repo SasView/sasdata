@@ -140,9 +140,9 @@ def test_mumag_metadata():
                 assert datum.metadata.raw.filter("counting_index") == ["1"]
                 assert datum.metadata.raw.filter("applied_magnetic_field") == ["33"]
                 assert datum.metadata.raw.filter("saturation_magnetization") == ["1640"]
-                assert datum.metadata.raw.filter("demagnetizing_field") == ["22.874115"]
+                assert datum.metadata.raw.filter("demagnetizing_field") == ["22"]
             case "6_1270_1640_24.331065.csv":
                 assert datum.metadata.raw.filter("counting_index") == ["6"]
                 assert datum.metadata.raw.filter("applied_magnetic_field") == ["1270"]
                 assert datum.metadata.raw.filter("saturation_magnetization") == ["1640"]
-                assert datum.metadata.raw.filter("demagnetizing_field") == ["24.331065"]
+                assert datum.metadata.raw.filter("demagnetizing_field") == ["24"]
