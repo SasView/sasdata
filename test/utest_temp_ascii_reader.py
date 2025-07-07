@@ -6,9 +6,12 @@ from sasdata.temp_ascii_reader import (
     load_data,
     guess_params_from_filename,
     load_data_default_params,
+    AsciiReaderParams,
 )
+from sasdata.ascii_reader_metadata import AsciiReaderMetadata, AsciiMetadataCategory
 from sasdata.dataset_types import one_dim
 from sasdata.quantities.units import per_angstrom, per_centimeter
+from sasdata.guess import guess_columns
 
 # TODO: These are using the private _data_contents temporarily. Later, there will be a public way of accessing these,
 # and that should be used instead.
@@ -96,3 +99,50 @@ def test_ascii_2d():
             case "dI":
                 assert datum.value[0] == pytest.approx(0.01366757)
                 assert datum.value[-1] == pytest.approx(0.05458562)
+
+
+def test_mumag_metadata():
+    filenames = [
+        "1_33_1640_22.874115.csv",
+        "1_33_1640_22.874115.csv"
+        "2_42_1640_23.456895.csv"
+        "3_61_1640_23.748285.csv"
+        "4_103_1640_24.039675.csv"
+        "5_312_1640_24.331065.csv"
+        "6_1270_1640_24.331065.csv",
+    ]
+    param_filenames = []
+    for filename in filenames:
+        param_filenames.append(find(filename, "mumag"))
+
+    metadata = AsciiReaderMetadata(
+        master_metadata={
+            "magnetic": AsciiMetadataCategory(
+                values={
+                    "counting_index": 0,
+                    "applied_magnetic_field": 1,
+                    "saturation_magnetization": 2,
+                    "demagnetizing_field": 3,
+                }
+            ),
+        },
+    )
+    params = AsciiReaderParams(
+        filenames=filenames,
+        columns=guess_columns(3, one_dim),
+        separator_dict={"Comma": True},
+        metadata=metadata,
+    )
+    data = load_data(params)
+    for datum in data:
+        match datum.name:
+            case "1_33_1640_22.874115.csv":
+                assert datum.metadata.raw.filter("counting_index") == "1"
+                assert datum.metadata.raw.filter("applied_magnetic_field") == "33"
+                assert datum.metadata.raw.filter("saturation_magnetization") == "1640"
+                assert datum.metadata.raw.filter("demagnetizing_field") == "22.874115"
+            case "6_1270_1640_24.331065.csv":
+                assert datum.metadata.raw.filter("counting_index") == "6"
+                assert datum.metadata.raw.filter("applied_magnetic_field") == "1270"
+                assert datum.metadata.raw.filter("saturation_magnetization") == "1640"
+                assert datum.metadata.raw.filter("demagnetizing_field") == "24.331065"
