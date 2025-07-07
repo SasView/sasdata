@@ -128,7 +128,7 @@ def test_mumag_metadata():
         },
     )
     params = AsciiReaderParams(
-        filenames=filenames,
+        filenames=param_filenames,
         columns=guess_columns(3, one_dim),
         separator_dict={"Comma": True},
         metadata=metadata,
