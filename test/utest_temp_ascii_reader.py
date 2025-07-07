@@ -129,7 +129,7 @@ def test_mumag_metadata():
     )
     params = AsciiReaderParams(
         filenames=param_filenames,
-        columns=guess_columns(3, one_dim),
+        columns=[(column, per_angstrom) for column in guess_columns(3, one_dim)],
         separator_dict={"Comma": True},
         metadata=metadata,
     )
