@@ -198,6 +198,7 @@ def load_data(params: AsciiReaderParams) -> list[SasData]:
             definition=None,
             sample=None,
             instrument=None,
+            process=None,
             raw=raw_metadata,
         )
         data = SasData(
