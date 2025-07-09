@@ -14,8 +14,7 @@ from sasdata.guess import (
 )
 from sasdata.quantities.units import NamedUnit
 from sasdata.quantities.quantity import Quantity
-from sasdata.quantities.accessors import Group
-from sasdata.data_backing import Dataset
+from sasdata.metadata import MetaNode, Metadata
 from enum import Enum
 from dataclasses import dataclass, field
 import numpy as np
@@ -147,22 +146,18 @@ def load_quantities(params: AsciiReaderParams, filename: str) -> dict[str, Quant
     return file_quantities
 
 
-def metadata_to_data_backing(metadata: dict[str, AsciiMetadataCategory[str]]) -> Group:
-    """This converts the ASCII reader's internal metadata structures into the
-    backing data structure defined in data_backing.py"""
-    root_children = {}
+def import_metadata(metadata: dict[str, AsciiMetadataCategory[str]]) -> MetaNode:
+    root_contents = []
     for top_level_key, top_level_item in metadata.items():
-        children = {}
+        children = []
         for metadatum_name, metadatum in top_level_item.values.items():
-            children[metadatum_name] = Dataset(metadatum_name, metadatum, {})
-        # This is a special set which needs to live at the root of the group.
-        # TODO: the 'other' name will probably need to change.
+            children.append(MetaNode(name=metadatum_name, attrs={}, contents=metadatum))
         if top_level_key == "other":
-            root_children = root_children | children
+            root_contents.extend(children)
         else:
-            group = Group(top_level_key, children)
-            root_children[top_level_key] = group
-    return Group("root", root_children)
+            group = MetaNode(name=top_level_key, attrs={}, contents=children)
+            root_contents.append(group)
+    return MetaNode(name="root", attrs={}, contents=root_contents)
 
 
 def merge_uncertainties(quantities: dict[str, Quantity]) -> dict[str, Quantity]:
@@ -194,8 +189,17 @@ def load_data(params: AsciiReaderParams) -> list[SasData]:
     loaded_data: list[SasData] = []
     for filename in params.filenames:
         quantities = load_quantities(params, filename)
-        metadata = metadata_to_data_backing(
+        raw_metadata = import_metadata(
             params.metadata.all_file_metadata(path.basename(filename))
+        )
+        metadata = Metadata(
+            title=None,
+            run=[],
+            definition=None,
+            sample=None,
+            instrument=None,
+            process=None,
+            raw=raw_metadata,
         )
         data = SasData(
             path.basename(filename),
