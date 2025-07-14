@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from functools import singledispatch
 import numpy as np
 from typing import Self
-from scipy.special import j0
+from scipy.special import j0, erf
 
 from sasdata.data import SasData
 from sasdata.quantities import units
@@ -125,18 +125,46 @@ class SesansModel(ModellingRequirements):
         return P
 
 
-class SmearModel(ModellingRequirements):
-    """Perform a slit smearing"""
+MINIMUM_RESOLUTION = 1e-8
+MINIMUM_ABSOLUTE_Q = 0.02  # relative to the minimum q in the data
+# According to (Barker & Pedersen 1995 JAC), 2.5 sigma is a good limit.
+# According to simulations with github.com:scattering/sansresolution.git
+# it is better to use asymmetric bounds (2.5, 3.0)
+PINHOLE_N_SIGMA = (2.5, 3.0)
+
+class PinholeModel(ModellingRequirements):
+    """Perform a pin hole smearing"""
+
+    def __init__(self, nsigma: (float, float) = PINHOLE_N_SIGMA):
+        self.nsigma_low, self.nsigma_high = nsigma
 
     def preprocess_q(self, q: Quantity[np.ndarray], full_data: SasData) -> np.ndarray:
         """Perform smearing transform"""
         # FIXME: Actually do the smearing transform
-        return data
+        self.q, self.q_width = q.in_units_of_with_standard_error(units.per_angstrom)
+        q_min = np.min(self.q - self.nsigma_low * self.q_width)
+        q_max = np.max(self.q + self.nsigma_high * self.q_width)
+
+
+        self.q_calc = linear_extrapolation(self.q, q_min, q_max)
+
+        # Protect against models which are not defined for very low q.  Limit
+        # the smallest q value evaluated (in absolute) to 0.02*min
+        cutoff = MINIMUM_ABSOLUTE_Q*np.min(self.q)
+        self.q_calc = self.q_calc[abs(self.q_calc) >= cutoff]
+
+        # Build weight matrix from calculated q values
+        self.weight_matrix = pinhole_resolution(
+            self.q_calc, self.q, np.maximum(self.q_width, MINIMUM_RESOLUTION),
+            nsigma=(self.nsigma_low, self.nsigma_high))
+
+        return np.abs(self.q_calc)
+
 
     def postprocess_iq(self, data: np.ndarray, full_data: SasData) -> np.ndarray:
         """Perform smearing transform"""
-        # FIXME: Actually do the smearing transform
-        return data
+        print(self.weight_matrix.shape)
+        return self.weight_matrix.T @ data
 
 
 class NullModel(ModellingRequirements):
@@ -152,13 +180,6 @@ class NullModel(ModellingRequirements):
     def postprocess_iq(self, data: np.ndarray, _full_data: SasData) -> np.ndarray:
         """Do nothing"""
         return data
-
-
-def compose(
-    a: ModellingRequirements, b: ModellingRequirements
-) -> ModellingRequirements:
-    return ComposeRequirements(a, b)
-
 
 def guess_requirements(data: SasData) -> ModellingRequirements:
     """Use names of axes and units to guess what kind of processing needs to be done"""
@@ -190,8 +211,91 @@ def _(second: NullModel, first: ModellingRequirements) -> ModellingRequirements:
 @compose.register
 def _(second: SesansModel, first: ModellingRequirements) -> ModellingRequirements:
     match first:
-        case SmearModel():
+        case PinholeModel():
             # To the first approximation, there is no slit smearing in SESANS data
             return second
         case _:
             return ComposeRequirements(first, second)
+
+
+def linear_extrapolation(q, q_min, q_max):
+    """
+    Extrapolate *q* out to [*q_min*, *q_max*] using the step size in *q* as
+    a guide.  Extrapolation below uses about the same size as the first
+    interval.  Extrapolation above uses about the same size as the final
+    interval.
+
+    Note that extrapolated values may be negative.
+    """
+    q = np.sort(q)
+    if q_min + 2*MINIMUM_RESOLUTION < q[0]:
+        delta = q[1] - q[0] if len(q) > 1 else 0
+        n_low = int(np.ceil((q[0]-q_min) / delta)) if delta > 0 else 15
+        q_low = np.linspace(q_min, q[0], n_low+1)[:-1]
+    else:
+        q_low = []
+    if q_max - 2*MINIMUM_RESOLUTION > q[-1]:
+        delta = q[-1] - q[-2] if len(q) > 1 else 0
+        n_high = int(np.ceil((q_max-q[-1]) / delta)) if delta > 0 else 15
+        q_high = np.linspace(q[-1], q_max, n_high+1)[1:]
+    else:
+        q_high = []
+    return np.concatenate([q_low, q, q_high])
+
+
+def pinhole_resolution(q_calc: np.ndarray, q: np.ndarray, q_width: np.ndarray, nsigma=PINHOLE_N_SIGMA) -> np.ndarray:
+    r"""
+    Compute the convolution matrix *W* for pinhole resolution 1-D data.
+
+    Each row *W[i]* determines the normalized weight that the corresponding
+    points *q_calc* contribute to the resolution smeared point *q[i]*.  Given
+    *W*, the resolution smearing can be computed using *dot(W,q)*.
+
+    Note that resolution is limited to $\pm 2.5 \sigma$.[1]  The true resolution
+    function is a broadened triangle, and does not extend over the entire
+    range $(-\infty, +\infty)$.  It is important to impose this limitation
+    since some models fall so steeply that the weighted value in gaussian
+    tails would otherwise dominate the integral.
+
+    *q_calc* must be increasing.  *q_width* must be greater than zero.
+
+    [1] Barker, J. G., and J. S. Pedersen. 1995. Instrumental Smearing Effects
+    in Radially Symmetric Small-Angle Neutron Scattering by Numerical and
+    Analytical Methods. Journal of Applied Crystallography 28 (2): 105--14.
+    https://doi.org/10.1107/S0021889894010095.
+    """
+    # The current algorithm is a midpoint rectangle rule.  In the test case,
+    # neither trapezoid nor Simpson's rule improved the accuracy.
+    edges = bin_edges(q_calc)
+    #edges[edges < 0.0] = 0.0 # clip edges below zero
+    cdf = erf((edges[:, None] - q[None, :]) / (np.sqrt(2.0)*q_width)[None, :])
+    weights = cdf[1:] - cdf[:-1]
+    # Limit q range to (-2.5,+3) sigma
+    try:
+        nsigma_low, nsigma_high = nsigma
+    except TypeError:
+        nsigma_low = nsigma_high = nsigma
+    qhigh = q + nsigma_high*q_width
+    qlow = q - nsigma_low*q_width  # linear limits
+    ##qlow = q*q/qhigh  # log limits
+    weights[q_calc[:, None] < qlow[None, :]] = 0.
+    weights[q_calc[:, None] > qhigh[None, :]] = 0.
+    weights /= np.sum(weights, axis=0)[None, :]
+    return weights
+
+def bin_edges(x):
+    """
+    Determine bin edges from bin centers, assuming that edges are centered
+    between the bins.
+
+    Note: this uses the arithmetic mean, which may not be appropriate for
+    log-scaled data.
+    """
+    if len(x) < 2 or (np.diff(x) < 0).any():
+        raise ValueError("Expected bins to be an increasing set")
+    edges = np.hstack([
+        x[0]  - 0.5*(x[1]  - x[0]),  # first point minus half first interval
+        0.5*(x[1:] + x[:-1]),        # mid points of all central intervals
+        x[-1] + 0.5*(x[-1] - x[-2]), # last point plus half last interval
+        ])
+    return edges
