@@ -49,8 +49,7 @@ def test_sesans_modelling():
         return f2
 
     # The Hankel transform of x is -r^-3
-    x = data._data_contents["SpinEchoLength"].in_units_of(units.angstroms)
-    q = req.preprocess_q(x, data)
+    q = req.preprocess_q(data._data_contents["SpinEchoLength"], data)
     result = req.postprocess_iq(sphere(q), data)
 
     y, yerr = data._data_contents["Depolarisation"].in_units_of_with_standard_error(unit_parser.parse("A-2 cm-1"))
