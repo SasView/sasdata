@@ -7,6 +7,7 @@ from scipy.special import j0
 
 from sasdata.data import SasData
 from sasdata.quantities import units
+from sasdata.quantities.quantity import Quantity
 from sasdata import dataset_types
 from sasdata.quantities.quantity import Operation
 
@@ -26,12 +27,12 @@ class ModellingRequirements(ABC):
         return compose(other, self)
 
     @abstractmethod
-    def preprocess_q(self, data: np.ndarray, full_data: SasData) -> np.ndarray:
+    def preprocess_q(self, data: Quantity[np.ndarray], full_data: SasData) -> np.ndarray:
         """Transform the Q values before processing in the model"""
         pass
 
     @abstractmethod
-    def postprocess_iq(self, data: np.ndarray, full_data: SasData) -> np.ndarray:
+    def postprocess_iq(self, data: Quantity[np.ndarray], full_data: SasData) -> np.ndarray:
         """Transform the I(Q) values after running the model"""
         pass
 
@@ -46,13 +47,13 @@ class ComposeRequirements(ModellingRequirements):
         self.first = fst
         self.second = snd
 
-    def preprocess_q(self, data: np.ndarray, full_data: SasData) -> np.ndarray:
+    def preprocess_q(self, data: Quantity[np.ndarray], full_data: SasData) -> np.ndarray:
         """Perform both transformations in order"""
         return self.second.preprocess_q(
             self.first.preprocess_q(data, full_data), full_data
         )
 
-    def postprocess_iq(self, data: np.ndarray, full_data: SasData) -> np.ndarray:
+    def postprocess_iq(self, data: Quantity[np.ndarray], full_data: SasData) -> np.ndarray:
         """Perform both transformations in order"""
         return self.second.postprocess_iq(
             self.first.postprocess_iq(data, full_data), full_data
@@ -62,7 +63,7 @@ class ComposeRequirements(ModellingRequirements):
 class SesansModel(ModellingRequirements):
     """Perform Hankel transform for SESANS"""
 
-    def preprocess_q(self, spin_echo_length: np.ndarray, full_data: SasData) -> np.ndarray:
+    def preprocess_q(self, spin_echo_length: Quantity[np.ndarray], full_data: SasData) -> np.ndarray:
         """Calculate the q values needed to perform the Hankel transform
 
         Note: this is undefined for the case when spin_echo_lengths contains
@@ -70,7 +71,7 @@ class SesansModel(ModellingRequirements):
 
         """
         # FIXME: Actually do the Hankel transform
-        spin_echo_length = np.asarray(spin_echo_length)
+        spin_echo_length = spin_echo_length.in_units_of(units.angstroms)
         if len(spin_echo_length) == 1:
             q_min, q_max = 0.01 * 2 * np.pi / spin_echo_length[-1], 10 * 2 * np.pi / spin_echo_length[0]
         else:
@@ -113,7 +114,7 @@ class SesansModel(ModellingRequirements):
 
         return self.q
 
-    def postprocess_iq(self, data: np.ndarray, full_data: SasData) -> np.ndarray:
+    def postprocess_iq(self, data: Quantity[np.ndarray], full_data: SasData) -> np.ndarray:
         """
         Apply the SESANS transform to the computed I(q)
         """
@@ -127,12 +128,12 @@ class SesansModel(ModellingRequirements):
 class SmearModel(ModellingRequirements):
     """Perform a slit smearing"""
 
-    def preprocess_q(self, data: np.ndarray, full_data: SasData) -> np.ndarray:
+    def preprocess_q(self, q: Quantity[np.ndarray], full_data: SasData) -> np.ndarray:
         """Perform smearing transform"""
         # FIXME: Actually do the smearing transform
         return data
 
-    def postprocess_iq(self, data: np.ndarray, full_data: SasData) -> np.ndarray:
+    def postprocess_iq(self, data: Quantity[np.ndarray], full_data: SasData) -> np.ndarray:
         """Perform smearing transform"""
         # FIXME: Actually do the smearing transform
         return data
@@ -144,11 +145,11 @@ class NullModel(ModellingRequirements):
     def compose(self, other: ModellingRequirements) -> ModellingRequirements:
         return other
 
-    def preprocess_q(self, data: np.ndarray, _full_data: SasData) -> np.ndarray:
+    def preprocess_q(self, data: Quantity[np.ndarray], _full_data: SasData) -> np.ndarray:
         """Do nothing"""
         return data
 
-    def postprocess_iq(self, data: np.ndarray, _full_data: SasData) -> np.ndarray:
+    def postprocess_iq(self, data: Quantity[np.ndarray], _full_data: SasData) -> np.ndarray:
         """Do nothing"""
         return data
 
