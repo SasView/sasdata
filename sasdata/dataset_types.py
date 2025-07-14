@@ -59,8 +59,11 @@ unit_kinds = {
     "dQx": units.inverse_length,
     "dQy": units.inverse_length,
     "dQz": units.inverse_length,
-    "z": units.length,
-    "G": units.area,
+    "SpinEchoLength": units.length,
+    "Depolarisation": units.inverse_volume,
+    "Wavelength": units.length,
+    "Transmission": units.dimensionless,
+    "Polarisation": units.dimensionless,
     "shadow": units.dimensionless,
     "temperature": units.temperature,
     "magnetic field": units.magnetic_flux_density
