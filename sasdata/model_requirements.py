@@ -32,7 +32,7 @@ class ModellingRequirements(ABC):
         pass
 
     @abstractmethod
-    def postprocess_iq(self, data: Quantity[np.ndarray], full_data: SasData) -> np.ndarray:
+    def postprocess_iq(self, data: np.ndarray, full_data: SasData) -> np.ndarray:
         """Transform the I(Q) values after running the model"""
         pass
 
@@ -53,7 +53,7 @@ class ComposeRequirements(ModellingRequirements):
             self.first.preprocess_q(data, full_data), full_data
         )
 
-    def postprocess_iq(self, data: Quantity[np.ndarray], full_data: SasData) -> np.ndarray:
+    def postprocess_iq(self, data: np.ndarray, full_data: SasData) -> np.ndarray:
         """Perform both transformations in order"""
         return self.second.postprocess_iq(
             self.first.postprocess_iq(data, full_data), full_data
@@ -114,7 +114,7 @@ class SesansModel(ModellingRequirements):
 
         return self.q
 
-    def postprocess_iq(self, data: Quantity[np.ndarray], full_data: SasData) -> np.ndarray:
+    def postprocess_iq(self, data: np.ndarray, full_data: SasData) -> np.ndarray:
         """
         Apply the SESANS transform to the computed I(q)
         """
@@ -133,7 +133,7 @@ class SmearModel(ModellingRequirements):
         # FIXME: Actually do the smearing transform
         return data
 
-    def postprocess_iq(self, data: Quantity[np.ndarray], full_data: SasData) -> np.ndarray:
+    def postprocess_iq(self, data: np.ndarray, full_data: SasData) -> np.ndarray:
         """Perform smearing transform"""
         # FIXME: Actually do the smearing transform
         return data
@@ -149,7 +149,7 @@ class NullModel(ModellingRequirements):
         """Do nothing"""
         return data
 
-    def postprocess_iq(self, data: Quantity[np.ndarray], _full_data: SasData) -> np.ndarray:
+    def postprocess_iq(self, data: np.ndarray, _full_data: SasData) -> np.ndarray:
         """Do nothing"""
         return data
 
