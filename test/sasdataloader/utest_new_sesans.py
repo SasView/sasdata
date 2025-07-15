@@ -7,7 +7,7 @@ import os
 import pytest
 
 
-from sasdata.model_requirements import guess_requirements, ComposeRequirements, PinholeModel, SesansModel, NullModel
+from sasdata.model_requirements import guess_requirements, ComposeRequirements, PinholeModel, SesansModel, NullModel, ModellingRequirements
 from sasdata.temp_sesans_reader import load_data
 from sasdata.quantities.quantity import Quantity
 from sasdata.quantities import units, unit_parser
@@ -61,33 +61,11 @@ def test_sesans_modelling():
 
 @pytest.mark.sesans
 def test_pinhole_zero():
-    data = Quantity(np.linspace(1e-4, 1e-1, 1000), units.per_angstrom)
-    req = PinholeModel()
-
-
-    def sphere(qr):
-        def sas_3j1x_x(x):
-            return (np.sin(x) - x * np.cos(x))/x**3
-        def form_volume(x):
-            return np.pi * 4.0 / 3.0 * x**3
-        radius = 10000 # 1 micron
-
-        bes = sas_3j1x_x(q*radius)
-        contrast = 5.4e-7 # Contrast is hard coded for best fit
-        form = contrast * form_volume(radius) * bes
-        f2 = 1.0e-4*form*form
-        return f2
-
-    # The Hankel transform of x is -r^-3
-    q = req.preprocess_q(data, None)
-    result = req.postprocess_iq(sphere(q), data)
-
-    for actual, expected in zip(result, sphere(q)):
-        assert actual == expected
+    assert pinhole_smear(0) == 0
 
 @pytest.mark.sesans
 def test_pinhole_smear():
-    smearing = [1000, 100, 20, 15, 10, 2, 1, 0.5, 0.2]
+    smearing = [1e-3, 1e-2, 2e-1, 1.5e-1, 0.1, 0.5, 1, 2, 5]
     smears = [pinhole_smear(x) for x in smearing]
     old = 0
     for factor, smear in zip(smearing, smears):
@@ -99,10 +77,12 @@ def test_pinhole_smear():
 
 def pinhole_smear(smearing: float):
     data = Quantity(np.linspace(1e-4, 1e-1, 1000), units.per_angstrom)
-    data = data.with_standard_error(data / smearing)
+    data = data.with_standard_error(data * smearing)
     req = PinholeModel()
+    return smear(req, data)
 
 
+def smear(req: ModellingRequirements, data: np.ndarray, y=None):
     def sphere(qr):
         def sas_3j1x_x(x):
             return (np.sin(x) - x * np.cos(x))/x**3
