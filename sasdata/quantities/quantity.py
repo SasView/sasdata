@@ -217,7 +217,7 @@ class Operation:
 
     @staticmethod
     def _deserialise(parameters: dict) -> "Operation":
-        raise NotImplementedError(f"Deserialise not implemented for this class")
+        raise NotImplementedError("Deserialise not implemented for this class")
 
     def serialise(self) -> str:
         return json.dumps(self._serialise_json())
