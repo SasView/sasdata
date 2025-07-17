@@ -1,15 +1,10 @@
-from enum import Enum
-from typing import TypeVar, Any, Self
-from dataclasses import dataclass
 
 import numpy as np
 
 from sasdata import dataset_types
 from sasdata.dataset_types import DatasetType
-from sasdata.quantities.quantity import NamedQuantity, Quantity
+from sasdata.quantities.quantity import Quantity
 from sasdata.metadata import Metadata
-from sasdata.quantities.accessors import AccessorTarget
-from sasdata.data_backing import Group, key_tree
 
 
 class SasData:
@@ -77,7 +72,7 @@ class SasData:
         for data in sorted(self._data_contents, reverse=True):
             s += f"{indent}{data}\n"
 
-        s += f"Metadata:\n"
+        s += "Metadata:\n"
         s += "\n"
         s += self.metadata.summary()
 
