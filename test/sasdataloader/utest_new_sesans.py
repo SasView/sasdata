@@ -65,7 +65,7 @@ def test_pinhole_zero():
 
 @pytest.mark.sesans
 def test_pinhole_smear():
-    smearing = [1e-3, 1e-2, 2e-1, 1.5e-1, 0.1, 0.5, 1, 2, 5]
+    smearing = [1e-3, 1e-2, 2e-1, 1.5e-1, 0.1, 0.25, 0.3, 0.5, 1, 2, 5]
     smears = [pinhole_smear(x) for x in smearing]
     old = 0
     for factor, smear in zip(smearing, smears):
@@ -76,27 +76,24 @@ def test_pinhole_smear():
 
 
 def pinhole_smear(smearing: float):
-    data = Quantity(np.linspace(1e-4, 1e-1, 1000), units.per_angstrom)
+    data = Quantity(np.linspace(1e-5, 1e-3, 1000), units.per_angstrom)
     data = data.with_standard_error(data * smearing)
     req = PinholeModel()
     return smear(req, data)
 
 
-def smear(req: ModellingRequirements, data: np.ndarray, y=None):
+def smear(req: ModellingRequirements, data: np.ndarray, y=None, radius=200):
     def sphere(qr):
         def sas_3j1x_x(x):
             return (np.sin(x) - x * np.cos(x))/x**3
         def form_volume(x):
             return np.pi * 4.0 / 3.0 * x**3
-        radius = 10000 # 1 micron
 
-        bes = sas_3j1x_x(qr)
+        bes = sas_3j1x_x(qr * radius)
         contrast = 5.4e-7 # Contrast is hard coded for best fit
         form = contrast * form_volume(radius) * bes
         f2 = 1.0e-4*form*form
         return f2
-
-    radius = 200
 
     # The Hankel transform of x is -r^-3
     inner_q = req.preprocess_q(data, None)
@@ -105,7 +102,8 @@ def smear(req: ModellingRequirements, data: np.ndarray, y=None):
     # for actual, expected in zip(result, sphere(data.value * radius)):
     #     assert actual != expected
 
-    y = sphere(data.value * radius)
+    if y is None:
+        y = sphere(data.value * radius)
 
     xi_squared = np.sum( ((y - result)/result )**2 ) / len(y)
     return xi_squared
