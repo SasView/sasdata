@@ -5,7 +5,6 @@
 
     Jurrian Bakker
 """
-import os
 
 import numpy as np
 
