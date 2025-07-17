@@ -12,7 +12,6 @@ Any useful metadata which cannot be included in these classes represent a bug in
 from dataclasses import dataclass
 
 from sasdata.quantities.quantity import Quantity
-from sasdata.quantities import unit_parser
 from numpy import ndarray
 
 @dataclass(kw_only=True)
