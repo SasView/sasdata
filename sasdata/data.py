@@ -72,7 +72,7 @@ class SasData:
         for data in sorted(self._data_contents, reverse=True):
             s += f"{indent}{data}\n"
 
-        s += f"Metadata:\n"
+        s += "Metadata:\n"
         s += "\n"
         s += self.metadata.summary()
 
