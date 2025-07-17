@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.spatial import Voronoi, Delaunay
+from scipy.spatial import Voronoi
 import matplotlib.pyplot as plt
 from matplotlib import cm
 
