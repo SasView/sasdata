@@ -1,4 +1,4 @@
-from sasdata.quantities.quantity import Quantity, NamedQuantity
+from sasdata.quantities.quantity import NamedQuantity
 from sasdata.quantities import units
 
 x = NamedQuantity("x", 1, units.meters, standard_error=1)
