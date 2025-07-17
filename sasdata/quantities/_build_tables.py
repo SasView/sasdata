@@ -4,7 +4,7 @@ Builds a data file containing details of units
 
 import numpy as np
 from collections import defaultdict, namedtuple
-from _units_base import Dimensions, Unit
+from _units_base import Dimensions
 from _autogen_warning import warning_text
 
 Magnitude = namedtuple("Magnitude", ["symbol", "special_symbol", "latex_symbol", "name", "scale"])
