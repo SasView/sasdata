@@ -11,7 +11,6 @@
 #This work benefited from DANSE software developed under NSF award DMR-0520547.
 #copyright 2008, University of Tennessee
 #############################################################################
-import math
 import os
 import logging
 

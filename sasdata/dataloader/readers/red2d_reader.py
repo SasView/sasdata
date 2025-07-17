@@ -8,7 +8,6 @@
 #See the license text in license.txt
 #copyright 2008, University of Tennessee
 ######################################################################
-import os
 import time
 from typing import Any
 

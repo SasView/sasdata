@@ -13,7 +13,6 @@
 #############################################################################
 
 import logging
-import os
 from typing import Optional
 
 from sasdata.dataloader.filereader import FileReader
