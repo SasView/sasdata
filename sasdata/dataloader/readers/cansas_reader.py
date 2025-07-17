@@ -84,7 +84,7 @@ class Reader(XMLreader):
         try:
             # Raises FileContentsException
             is_valid_cansas = self.load_file_and_schema(xml_file, '')
-        except FileContentsException as fc_exc:
+        except FileContentsException:
             msg = "CanSAS Reader could not load {}".format(xml_file)
             if self.extension not in self.ext:
                 # If the file has no associated loader
@@ -523,7 +523,7 @@ class Reader(XMLreader):
         elif tagname == 'date' and self.parent_class == 'SASprocess':
             try:
                 self.process.date = datetime.datetime.fromtimestamp(data_point)
-            except Exception as e:
+            except Exception:
                 self.process.date = data_point
         elif tagname == 'SASprocessnote':
             self.process.notes.append(data_point)

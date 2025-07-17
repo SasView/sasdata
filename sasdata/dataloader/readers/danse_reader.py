@@ -11,7 +11,6 @@
 #This work benefited from DANSE software developed under NSF award DMR-0520547.
 #copyright 2008, University of Tennessee
 #############################################################################
-import math
 import os
 import logging
 
@@ -101,7 +100,7 @@ class Reader(FileReader):
                     size_x = int(toks[1])
                 elif toks[0] == "SIZE_Y":
                     size_y = int(toks[1])
-            except ValueError as e:
+            except ValueError:
                 error_message += "Unable to parse {}. Default value used.\n".format(toks[0])
                 loaded_correctly = False
 
@@ -119,7 +118,7 @@ class Reader(FileReader):
                 err = float(toks[1])
                 data.append(val)
                 error.append(err)
-            except ValueError as exc:
+            except ValueError:
                 msg = "Unable to parse line {}: {}".format(line_num + data_start_line, data_str.strip())
                 raise FileContentsException(msg)
 
