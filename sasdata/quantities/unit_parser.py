@@ -16,7 +16,7 @@ def split_unit_str(unit_str: str) -> list[str]:
 def validate_unit_str(unit_str: str) -> bool:
     """Validate whether unit_str is valid. This doesn't mean that the unit specified in unit_str exists but rather it
     only consists of letters, and numbers as a unit string should."""
-    return not fullmatch(r'[A-Za-zΩ%Å^1-9\-\+/\ \.]+', unit_str) is None
+    return fullmatch(r'[A-Za-zΩ%Å^1-9\-\+/\ \.]+', unit_str) is not None
 
 def parse_single_unit(unit_str: str, unit_group: UnitGroup | None = None, longest_unit: bool = True) -> tuple[Unit | None, str]:
     """Attempts to find a single unit for unit_str. Return this unit, and the remaining string in a tuple. If a unit
