@@ -35,28 +35,15 @@ def test_sesans_modelling():
     req = guess_requirements(data)
     assert type(req) is SesansModel
 
+    def form_volume(x):
+        return np.pi * 4.0 / 3.0 * x**3
 
-    def sphere(qr):
-        def sas_3j1x_x(x):
-            return (np.sin(x) - x * np.cos(x))/x**3
-        def form_volume(x):
-            return np.pi * 4.0 / 3.0 * x**3
-        radius = 10000 # 1 micron
+    radius = 10000
+    contrast = 5.4e-7 # Contrast is hard coded for best fit
+    form = contrast * form_volume(radius)
+    f2 = 1.0e-4*form*form
 
-        bes = sas_3j1x_x(q*radius)
-        contrast = 5.4e-7 # Contrast is hard coded for best fit
-        form = contrast * form_volume(radius) * bes
-        f2 = 1.0e-4*form*form
-        return f2
-
-    # The Hankel transform of x is -r^-3
-    q = req.preprocess_q(data._data_contents["SpinEchoLength"], data)
-    result = req.postprocess_iq(sphere(q), data)
-
-    y, yerr = data._data_contents["Depolarisation"].in_units_of_with_standard_error(unit_parser.parse("A-2 cm-1"))
-    assert y.shape == result.shape
-
-    xi_squared = np.sum( ((y - result) / yerr)**2 ) / len(y)
+    xi_squared = smear(req, data._data_contents["SpinEchoLength"], full_data=data, y = data._data_contents["Depolarisation"].in_units_of(unit_parser.parse("A-2 cm-1")) / f2, radius=radius)
     assert 1.0 < xi_squared < 1.5
 
 @pytest.mark.sesans
@@ -76,34 +63,24 @@ def test_pinhole_smear():
 
 
 def pinhole_smear(smearing: float):
-    data = Quantity(np.linspace(1e-5, 1e-3, 1000), units.per_angstrom)
+    data = Quantity(np.linspace(1e-4, 1e-1, 1000), units.per_angstrom)
     data = data.with_standard_error(Quantity(np.diff(data.value, prepend=0) * smearing, units.per_angstrom))
     req = PinholeModel()
     return smear(req, data)
 
 
-def smear(req: ModellingRequirements, data: np.ndarray, y=None, radius=200):
-    def sphere(qr):
+def smear(req: ModellingRequirements, data: np.ndarray, y=None, full_data=None, radius=200):
+    def sphere(q):
         def sas_3j1x_x(x):
             return (np.sin(x) - x * np.cos(x))/x**3
-        def form_volume(x):
-            return np.pi * 4.0 / 3.0 * x**3
 
-        bes = sas_3j1x_x(qr * radius)
-        contrast = 5.4e-7 # Contrast is hard coded for best fit
-        form = contrast * form_volume(radius) * bes
-        f2 = 1.0e-4*form*form
-        return f2
+        return sas_3j1x_x(q * radius)**2
 
-    # The Hankel transform of x is -r^-3
-    inner_q = req.preprocess_q(data, None)
-    result = req.postprocess_iq(sphere(inner_q * radius), data)
-
-    # for actual, expected in zip(result, sphere(data.value * radius)):
-    #     assert actual != expected
+    inner_q = req.preprocess_q(data, full_data)
+    result = req.postprocess_iq(sphere(inner_q), data)
 
     if y is None:
-        y = sphere(data.value * radius)
+        y = sphere(data.value)
 
     xi_squared = np.sum( ((y - result)/result )**2 ) / len(y)
     return xi_squared
