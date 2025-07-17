@@ -174,7 +174,7 @@ def merge_uncertainties(quantities: dict[str, Quantity]) -> dict[str, Quantity]:
         for other_name, other_quantity in quantities.items():
             if other_name == pairing:
                 error_quantity = other_quantity
-        if not error_quantity is None:
+        if error_quantity is not None:
             to_add = quantity.with_standard_error(error_quantity)
         else:
             to_add = quantity
