@@ -3,22 +3,7 @@ Unit tests for the new recursive cansas reader
 """
 
 import os
-import unittest
 import pytest
-import logging
-import warnings
-from io import StringIO
-
-from lxml import etree
-from lxml.etree import XMLSyntaxError
-from xml.dom import minidom
-
-from sasdata.dataloader.filereader import decode
-from sasdata.dataloader.loader import Loader
-from sasdata.dataloader.data_info import Data1D, Data2D
-from sasdata.dataloader.readers.xml_reader import XMLreader
-from sasdata.dataloader.readers.cansas_reader import Reader
-from sasdata.dataloader.readers.cansas_constants import CansasConstants
 from sasdata.temp_hdf5_reader import load_data as hdf_load_data
 from sasdata.temp_xml_reader import load_data as xml_load_data
 
