@@ -43,7 +43,7 @@ def test_sesans_modelling():
     form = contrast * form_volume(radius)
     f2 = 1.0e-4*form*form
 
-    xi_squared = smear(req, data._data_contents["SpinEchoLength"], full_data=data, y = data._data_contents["Depolarisation"].in_units_of(unit_parser.parse("A-2 cm-1")) / f2, radius=radius)
+    xi_squared = smear(req, data._data_contents["SpinEchoLength"].value, full_data=data, y = data._data_contents["Depolarisation"].in_units_of(unit_parser.parse("A-2 cm-1")) / f2, radius=radius)
     assert 1.0 < xi_squared < 1.5
 
 @pytest.mark.sesans
@@ -64,9 +64,8 @@ def test_pinhole_smear():
 
 def pinhole_smear(smearing: float):
     data = Quantity(np.linspace(1e-4, 1e-1, 1000), units.per_angstrom)
-    data = data.with_standard_error(Quantity(np.diff(data.value, prepend=0) * smearing, units.per_angstrom))
-    req = PinholeModel()
-    return smear(req, data)
+    req = PinholeModel(np.diff(data.value, prepend=0) * smearing)
+    return smear(req, data.value)
 
 
 def smear(req: ModellingRequirements, data: np.ndarray, y=None, full_data=None, radius=200):
@@ -80,7 +79,7 @@ def smear(req: ModellingRequirements, data: np.ndarray, y=None, full_data=None, 
     result = req.postprocess_iq(sphere(inner_q), data)
 
     if y is None:
-        y = sphere(data.value)
+        y = sphere(data)
 
     xi_squared = np.sum( ((y - result)/result )**2 ) / len(y)
     return xi_squared
@@ -90,7 +89,7 @@ def smear(req: ModellingRequirements, data: np.ndarray, y=None, full_data=None, 
 @pytest.mark.sesans
 def test_model_algebra():
     ses = SesansModel()
-    pin = PinholeModel()
+    pin = PinholeModel(np.linspace(1e-3, 1, 1000))
     null = NullModel()
 
     # Ignore slit smearing if we perform a sesans transform afterwards
