@@ -7,7 +7,7 @@ import os
 import pytest
 
 
-from sasdata.model_requirements import guess_requirements, ComposeRequirements, PinholeModel, SesansModel, NullModel, ModellingRequirements
+from sasdata.model_requirements import guess_requirements, ComposeRequirements, PinholeModel, SlitModel, SesansModel, NullModel, ModellingRequirements
 from sasdata.temp_sesans_reader import load_data
 from sasdata.quantities.quantity import Quantity
 from sasdata.quantities import units, unit_parser
@@ -60,6 +60,26 @@ def test_pinhole_smear():
         assert old < smear < 1.2
         old = smear
     assert pinhole_smear(3**6) > 1.2
+
+@pytest.mark.sesans
+def test_slit_zero():
+    assert slit_smear(0, 0) == 0
+
+@pytest.mark.sesans
+def test_slit_smear():
+    smears = [(length, width, slit_smear(3**length, 3**width)) for length in range(-1, 6) for width in range(-1, 6) if length + width == 6]
+    for length, width, smear in smears:
+        print(length, width, smear)
+        assert smear < 1.2
+    assert slit_smear(3**6, 1) > 1.2
+    assert slit_smear(1, 3**6) > 1.2
+
+
+def slit_smear(length: float, width):
+    data = Quantity(np.linspace(1e-4, 1e-1, 1000), units.per_angstrom)
+    diff = np.diff(data.value, prepend=0)
+    req = SlitModel(diff * length, diff * width)
+    return smear(req, data.value)
 
 
 def pinhole_smear(smearing: float):
