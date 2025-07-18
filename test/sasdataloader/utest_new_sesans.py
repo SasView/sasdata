@@ -65,7 +65,7 @@ def test_pinhole_zero():
 
 @pytest.mark.sesans
 def test_pinhole_smear():
-    smearing = [1e-3, 1e-2, 2e-1, 1.5e-1, 0.1, 0.25, 0.3, 0.5, 1, 2, 5]
+    smearing = [10**x for x in range(-3, 3)]
     smears = [pinhole_smear(x) for x in smearing]
     old = 0
     for factor, smear in zip(smearing, smears):
@@ -77,7 +77,7 @@ def test_pinhole_smear():
 
 def pinhole_smear(smearing: float):
     data = Quantity(np.linspace(1e-5, 1e-3, 1000), units.per_angstrom)
-    data = data.with_standard_error(data * smearing)
+    data = data.with_standard_error(Quantity(np.diff(data.value, prepend=0) * smearing, units.per_angstrom))
     req = PinholeModel()
     return smear(req, data)
 
