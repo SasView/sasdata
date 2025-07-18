@@ -28,3 +28,4 @@ def get_default_unit(column_name: str, unit_group: unit.UnitGroup):
     # Fallback to the first unit in the unit group if we don't have a default registered.
     if value is None:
         return unit_group.units[0]
+    return value
