@@ -52,7 +52,7 @@ def test_pinhole_zero():
 
 @pytest.mark.sesans
 def test_pinhole_smear():
-    smearing = [10**x for x in range(-3, 3)]
+    smearing = [3**x for x in range(-1, 6)]
     smears = [pinhole_smear(x) for x in smearing]
     old = 0
     for factor, smear in zip(smearing, smears):
