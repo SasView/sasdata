@@ -12,6 +12,7 @@ from sasdata.guess import (
     guess_starting_position,
     guess_dataset_type,
 )
+from sasdata.default_units import get_default_unit
 from sasdata.quantities.units import NamedUnit
 from sasdata.quantities.quantity import Quantity
 from sasdata.metadata import MetaNode, Metadata
@@ -82,7 +83,7 @@ def guess_params_from_filename(
         startpos = guess_starting_position(lines_split)
         colcount = guess_column_count(lines_split, startpos)
         columns = [
-            (x, unit_kinds[x])
+            (x, get_default_unit(x))
             for x in guess_columns(colcount, dataset_type)
             if x in unit_kinds
         ]
