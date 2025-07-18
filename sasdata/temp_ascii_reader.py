@@ -88,7 +88,11 @@ def guess_params_from_filename(
             if x in unit_kinds
         ]
         params = AsciiReaderParams(
-            [filename], columns, starting_line=startpos, separator_dict=separator_dict
+            [filename],
+            columns,
+            starting_line=startpos,
+            separator_dict=separator_dict,
+            dataset_type=guess_dataset_type(filename),
         )
         return params
 
