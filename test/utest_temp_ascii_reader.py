@@ -49,6 +49,7 @@ def test_ascii_1():
         ("<ignore>", None),
     ]
     loaded_data = load_data(params)[0]
+    assert len(loaded_data._data_contents) > 0
     # Check the first, and last rows to see if they are correct.
     for name, datum in loaded_data._data_contents.items():
         match name:
@@ -66,7 +67,7 @@ def test_ascii_1():
 def test_ascii_2():
     filename = find("test_3_columns.txt", "sasdataloader")
     loaded_data = load_data_default_params(filename)[0]
-
+    assert len(loaded_data._data_contents) > 0
     for name, datum in loaded_data._data_contents.items():
         match name:
             case "Q":
@@ -84,6 +85,7 @@ def test_ascii_2d():
     filename = find("detector_rectangular.DAT", "sasdataloader")
     # Make sure that the dataset type is guessed as 2D data.
     loaded_data = load_data_default_params(filename)[0]
+    assert len(loaded_data._data_contents) > 0
 
     for name, datum in loaded_data._data_contents.items():
         match name:
