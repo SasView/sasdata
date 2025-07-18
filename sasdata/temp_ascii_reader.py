@@ -83,7 +83,7 @@ def guess_params_from_filename(
         startpos = guess_starting_position(lines_split)
         colcount = guess_column_count(lines_split, startpos)
         columns = [
-            (x, get_default_unit(x))
+            (x, get_default_unit(x, unit_kinds[x]))
             for x in guess_columns(colcount, dataset_type)
             if x in unit_kinds
         ]
