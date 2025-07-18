@@ -27,7 +27,7 @@ class ModellingRequirements(ABC):
         return compose(other, self)
 
     @abstractmethod
-    def preprocess_q(self, data: Quantity[np.ndarray], full_data: SasData) -> np.ndarray:
+    def preprocess_q(self, data: np.ndarray, full_data: SasData) -> np.ndarray:
         """Transform the Q values before processing in the model"""
         pass
 
@@ -47,7 +47,7 @@ class ComposeRequirements(ModellingRequirements):
         self.first = fst
         self.second = snd
 
-    def preprocess_q(self, data: Quantity[np.ndarray], full_data: SasData) -> np.ndarray:
+    def preprocess_q(self, data: np.ndarray, full_data: SasData) -> np.ndarray:
         """Perform both transformations in order"""
         return self.second.preprocess_q(
             self.first.preprocess_q(data, full_data), full_data
@@ -63,15 +63,13 @@ class ComposeRequirements(ModellingRequirements):
 class SesansModel(ModellingRequirements):
     """Perform Hankel transform for SESANS"""
 
-    def preprocess_q(self, spin_echo_length: Quantity[np.ndarray], full_data: SasData) -> np.ndarray:
+    def preprocess_q(self, spin_echo_length: np.ndarray, full_data: SasData) -> np.ndarray:
         """Calculate the q values needed to perform the Hankel transform
 
         Note: this is undefined for the case when spin_echo_lengths contains
         exactly one element and that values is zero.
 
         """
-        # FIXME: Actually do the Hankel transform
-        spin_echo_length = spin_echo_length.in_units_of(units.angstroms)
         if len(spin_echo_length) == 1:
             q_min, q_max = 0.01 * 2 * np.pi / spin_echo_length[-1], 10 * 2 * np.pi / spin_echo_length[0]
         else:
@@ -135,13 +133,14 @@ PINHOLE_N_SIGMA = (2.5, 3.0)
 class PinholeModel(ModellingRequirements):
     """Perform a pin hole smearing"""
 
-    def __init__(self, nsigma: (float, float) = PINHOLE_N_SIGMA):
+    def __init__(self, q_width: np.ndarray, nsigma: (float, float) = PINHOLE_N_SIGMA):
+        self.q_width = q_width
         self.nsigma_low, self.nsigma_high = nsigma
 
-    def preprocess_q(self, q: Quantity[np.ndarray], full_data: SasData) -> np.ndarray:
+    def preprocess_q(self, q: np.ndarray, full_data: SasData) -> np.ndarray:
         """Perform smearing transform"""
         # FIXME: Actually do the smearing transform
-        self.q, self.q_width = q.in_units_of_with_standard_error(units.per_angstrom)
+        self.q = q
         q_min = np.min(self.q - self.nsigma_low * self.q_width)
         q_max = np.max(self.q + self.nsigma_high * self.q_width)
 
@@ -163,7 +162,6 @@ class PinholeModel(ModellingRequirements):
 
     def postprocess_iq(self, data: np.ndarray, full_data: SasData) -> np.ndarray:
         """Perform smearing transform"""
-        print(self.weight_matrix.shape)
         return self.weight_matrix.T @ data
 
 
