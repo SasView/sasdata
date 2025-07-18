@@ -477,11 +477,8 @@ def slit_resolution(q_calc, q, width, length, n_length=30):
 
     """
 
-    # np.set_printoptions(precision=6, linewidth=10000)
-
     # The current algorithm is a midpoint rectangle rule.
     q_edges = bin_edges(q_calc)  # Note: requires q > 0
-    # q_edges[q_edges < 0.0] = 0.0 # clip edges below zero
     weights = np.zeros((len(q), len(q_calc)), "d")
 
     # print(q_calc)
