@@ -258,7 +258,7 @@ def _(second: NullModel, first: ModellingRequirements) -> ModellingRequirements:
 @compose.register
 def _(second: SesansModel, first: ModellingRequirements) -> ModellingRequirements:
     match first:
-        case PinholeModel():
+        case PinholeModel() | SlitModel():
             # To the first approximation, there is no slit smearing in SESANS data
             return second
         case _:
