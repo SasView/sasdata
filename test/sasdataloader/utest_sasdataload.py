@@ -21,7 +21,7 @@ class TestCase:
     filename: str
     ascii_reader_params: AsciiReaderParams | None
     # Key is the index of the row.
-    expected_values: dict[int, dict[str, Quantity]]
+    expected_values: dict[int, dict[str, float]]
     loader: Literal["ascii", "xml", "hdf5", "sesans"]
 
 
