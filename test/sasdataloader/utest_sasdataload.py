@@ -8,12 +8,25 @@ import os
 
 import numpy as np
 import pytest
+from dataclasses import dataclass
+from typing import Literal
 
 import sasdata.quantities.units as units
 from sasdata.data import SasData, SasDataEncoder
 from sasdata.quantities.quantity import Quantity
 from sasdata.temp_hdf5_reader import load_data as hdf_load_data
 from sasdata.temp_xml_reader import load_data as xml_load_data
+from sasdata.temp_ascii_reader import AsciiReaderParams
+
+
+@dataclass
+class TestCase:
+    filename: str
+    ascii_reader_params: AsciiReaderParams | None
+    # Key is the index of the row.
+    expected_values: dict[int, dict[str, Quantity]]
+    loader: Literal["ascii", "xml", "hdf5", "sesans"]
+
 
 test_hdf_file_names = [
     "simpleexamplefile",
