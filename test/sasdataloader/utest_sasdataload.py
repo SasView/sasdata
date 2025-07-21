@@ -5,12 +5,25 @@ Unit tests for the new recursive cansas reader
 import numpy as np
 import os
 import pytest
+from dataclasses import dataclass
+from typing import Literal
 
 
 from sasdata.quantities.quantity import Quantity
 import sasdata.quantities.units as units
 from sasdata.temp_hdf5_reader import load_data as hdf_load_data
 from sasdata.temp_xml_reader import load_data as xml_load_data
+from sasdata.temp_ascii_reader import AsciiReaderParams
+
+
+@dataclass
+class TestCase:
+    filename: str
+    ascii_reader_params: AsciiReaderParams | None
+    # Key is the index of the row.
+    expected_values: dict[int, dict[str, Quantity]]
+    loader: Literal["ascii", "xml", "hdf5", "sesans"]
+
 
 test_hdf_file_names = [
     # "simpleexamplefile",
