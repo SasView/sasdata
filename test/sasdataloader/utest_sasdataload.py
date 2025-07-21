@@ -47,7 +47,7 @@ def test_load_file(test_case: TestCase):
     match test_case.loader:
         case "ascii":
             if test_case.ascii_reader_params is None:
-                loaded_data = load_data_default_params(full_filename)
+                loaded_data = load_data_default_params(full_filename)[0]
             else:
                 loaded_data = ascii_load_data(test_case.ascii_reader_params)[0]
 
