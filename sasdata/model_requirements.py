@@ -481,7 +481,6 @@ def slit_resolution(q_calc, q, width, length, n_length=30):
     q_edges = bin_edges(q_calc)  # Note: requires q > 0
     weights = np.zeros((len(q), len(q_calc)), "d")
 
-    # print(q_calc)
     for i, (qi, w, l) in enumerate(zip(q, width, length)):
         if w == 0.0 and l == 0.0:
             # Perfect resolution, so return the theory value directly.
@@ -495,28 +494,27 @@ def slit_resolution(q_calc, q, width, length, n_length=30):
         elif w == 0:
             in_x = 1.0 * ((q_calc >= qi - l) & (q_calc <= qi + l))
             abs_x = 1.0 * (q_calc < abs(qi - l)) if qi < l else 0.0
-            # print(qi - l, qi + l)
-            # print(in_x + abs_x)
             weights[i, :] = (in_x + abs_x) * np.diff(q_edges) / (2 * l)
         else:
-            for k in range(-n_length, n_length + 1):
-                weights[i, :] += _q_perp_weights(q_edges, qi + k * l / n_length, w)
+            weights[i, :] = _q_perp_weights(
+                q_edges, qi + np.arange(-n_length, n_length + 1) * l / n_length, w
+            )
             weights[i, :] /= 2 * n_length + 1
 
     return weights.T
 
 
 def _q_perp_weights(q_edges, qi, w):
+    q_edges = np.reshape(q_edges, (1, -1))
+    qi = np.reshape(qi, (-1, 1))
     # Convert bin edges from q to u
     u_limit = np.sqrt(qi**2 + w**2)
     u_edges = q_edges**2 - qi**2
     u_edges[q_edges < abs(qi)] = 0.0
-    u_edges[q_edges > u_limit] = u_limit**2 - qi**2
-    weights = np.diff(np.sqrt(u_edges)) / w
-    # print("i, qi",i,qi,qi+width)
-    # print(q_calc)
-    # print(weights)
-    return weights
+    u_edges[q_edges > u_limit] = np.repeat(
+        u_limit**2 - qi**2, u_edges.shape[1], axis=1
+    )[q_edges > u_limit]
+    return (np.diff(np.sqrt(u_edges), axis=1) / w).sum(axis=0)
 
 
 def slit_extend_q(q, width, length):
@@ -576,7 +574,6 @@ def geometric_extrapolation(q, q_min, q_max, points_per_decade=None):
     if q_min < data_min:
         if q_min <= 0:
             q_min = data_min * MINIMUM_ABSOLUTE_Q
-        print(log_delta_q, q[0], q_min, data_min, MINIMUM_ABSOLUTE_Q)
         n_low = int(np.ceil(log_delta_q * (np.log(q[0]) - np.log(q_min))))
         q_low = np.logspace(np.log10(q_min), np.log10(q[0]), n_low + 1)[:-1]
     else:
