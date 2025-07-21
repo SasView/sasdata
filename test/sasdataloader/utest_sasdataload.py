@@ -16,7 +16,7 @@ from sasdata.data import SasData, SasDataEncoder
 from sasdata.quantities.quantity import Quantity
 from sasdata.temp_hdf5_reader import load_data as hdf_load_data
 from sasdata.temp_xml_reader import load_data as xml_load_data
-from sasdata.temp_ascii_reader import AsciiReaderParams
+from sasdata.temp_ascii_reader import AsciiReaderParams, load_data_default_params
 from sasdata.temp_ascii_reader import load_data as ascii_load_data
 
 
@@ -45,8 +45,11 @@ test_cases = [
 def test_load_file(test_case: TestCase):
     match test_case.loader:
         case "ascii":
-            if test_case.ascii_reader_params is not None:
+            if test_case.ascii_reader_params is None:
+                loaded_data = load_data_default_params(test_case.filename)
+            else:
                 loaded_data = ascii_load_data(test_case.ascii_reader_params)[0]
+
         # TODO: Support other loaders
         case _:
             raise ValueError("Invalid loader")
