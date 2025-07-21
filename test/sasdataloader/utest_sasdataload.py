@@ -10,6 +10,7 @@ import numpy as np
 import pytest
 from dataclasses import dataclass
 from typing import Literal
+from math import sqrt
 
 import sasdata.quantities.units as units
 from sasdata.data import SasData, SasDataEncoder
@@ -67,9 +68,15 @@ def test_load_file(test_case: TestCase):
             raise ValueError("Invalid loader")
     for index, values in test_case.expected_values.items():
         for column, expected_value in values.items():
-            assert loaded_data._data_contents[column].value[index] == pytest.approx(
-                expected_value
-            )
+            # TODO: Handle other uncertainities.
+            if column == "dI":
+                assert loaded_data._data_contents["I"]._variance[
+                    index
+                ] == pytest.approx(expected_value**2)
+            else:
+                assert loaded_data._data_contents[column].value[index] == pytest.approx(
+                    expected_value
+                )
 
 
 test_hdf_file_names = [
