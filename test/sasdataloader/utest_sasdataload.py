@@ -17,6 +17,7 @@ from sasdata.quantities.quantity import Quantity
 from sasdata.temp_hdf5_reader import load_data as hdf_load_data
 from sasdata.temp_xml_reader import load_data as xml_load_data
 from sasdata.temp_ascii_reader import AsciiReaderParams
+from sasdata.temp_ascii_reader import load_data as ascii_load_data
 
 
 @dataclass
@@ -38,6 +39,21 @@ test_cases = [
         loader="ascii",
     )
 ]
+
+
+@pytest.mark.parametrize("test_case", test_cases)
+def test_load_file(test_case: TestCase):
+    match test_case.loader:
+        case "ascii":
+            if test_case.ascii_reader_params is not None:
+                loaded_data = ascii_load_data(test_case.ascii_reader_params)[0]
+        # TODO: Support other loaders
+        case _:
+            raise ValueError("Invalid loader")
+    for index, values in test_case.expected_values.items():
+        for column, expected_value in values.items():
+            assert loaded_data._data_contents[column] == pytest.approx(expected_value)
+
 
 test_hdf_file_names = [
     "simpleexamplefile",
