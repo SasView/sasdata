@@ -43,10 +43,11 @@ test_cases = [
 
 @pytest.mark.parametrize("test_case", test_cases)
 def test_load_file(test_case: TestCase):
+    full_filename = local_load(test_case.filename)
     match test_case.loader:
         case "ascii":
             if test_case.ascii_reader_params is None:
-                loaded_data = load_data_default_params(test_case.filename)
+                loaded_data = load_data_default_params(full_filename)
             else:
                 loaded_data = ascii_load_data(test_case.ascii_reader_params)[0]
 
