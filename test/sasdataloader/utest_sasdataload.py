@@ -28,6 +28,17 @@ class TestCase:
     loader: Literal["ascii", "xml", "hdf5", "sesans"]
 
 
+test_cases = [
+    TestCase(
+        filename="ascii_test_1.txt",
+        expected_values={
+            0: {"Q": 0.002618, "I": 0.02198, "dI": 0.002704},
+            -1: {"Q": 0.0497, "I": 8.346, "dI": 0.191},
+        },
+        loader="ascii",
+    )
+]
+
 test_hdf_file_names = [
     "simpleexamplefile",
     "nxcansas_1Dand2D_multisasentry",
