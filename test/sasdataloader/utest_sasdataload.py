@@ -37,7 +37,15 @@ test_cases = [
             -1: {"Q": 0.0497, "I": 8.346, "dI": 0.191},
         },
         loader="ascii",
-    )
+    ),
+    TestCase(
+        filename="test_3_columns.txt",
+        expected_values={
+            0: {"Q": 0, "I": 2.83954, "dI": 0.6},
+            -1: {"Q": 1.22449, "I": 7.47487, "dI": 1.05918},
+        },
+        loader="ascii",
+    ),
 ]
 
 
