@@ -110,14 +110,18 @@ def smear(req: ModellingRequirements, data: np.ndarray, y=None, full_data=None, 
 def test_model_algebra():
     ses = SesansModel()
     pin = PinholeModel(np.linspace(1e-3, 1, 1000))
+    slit = SlitModel(np.linspace(1e-3, 1, 1000), np.linspace(1e-3, 1, 1000))
     null = NullModel()
 
     # Ignore slit smearing if we perform a sesans transform afterwards
     assert type(pin + ses) is SesansModel
+    assert type(slit + ses) is SesansModel
     # However, it is possible for the spin echo lengths to have some
     # smearing between them.
     assert type(ses + pin) is ComposeRequirements
     assert type(null + ses) is SesansModel
+    assert type(null + slit) is SlitModel
     assert type(null + pin) is PinholeModel
     assert type(ses + null) is SesansModel
     assert type(pin + null) is PinholeModel
+    assert type(slit + null) is SlitModel
