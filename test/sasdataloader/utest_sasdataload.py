@@ -26,7 +26,7 @@ def local_load(path: str):
 
 
 def local_data_load(path: str):
-    return os.path.join("data", path)
+    return local_load(f"{os.path.join('data', path)}")
 
 
 @dataclass
