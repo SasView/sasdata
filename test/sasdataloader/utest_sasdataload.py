@@ -20,6 +20,15 @@ from sasdata.temp_ascii_reader import AsciiReaderParams, load_data_default_param
 from sasdata.temp_ascii_reader import load_data as ascii_load_data
 
 
+def local_load(path: str):
+    """Get local file path"""
+    return os.path.join(os.path.dirname(__file__), path)
+
+
+def local_data_load(path: str):
+    return os.path.join("data", path)
+
+
 @dataclass
 class BaseTestCase(ABC):
     expected_values: dict[int, dict[str, float]]
@@ -143,26 +152,6 @@ test_xml_file_names = [
     # "cansas_xml_multisasentry_multisasdata",
     "valid_cansas_xml",
 ]
-
-
-def local_load(path: str):
-    """Get local file path"""
-    base = os.path.join(os.path.dirname(__file__), path)
-    if (os.path.exists(f"{base}.h5")):
-        return f"{base}.h5"
-    if (os.path.exists(f"{base}.xml")):
-        return f"{base}.xml"
-    return f"{base}"
-
-def example_data_load(path: str):
-    try:
-        return xml_load_data(local_load(f"data/{path}.xml"))
-    except OSError:
-        return hdf_load_data(local_load(f"data/{path}.h5"))
-
-
-def local_data_load(path: str):
-    return os.path.join("data", path)
 
 
 @pytest.mark.sasdata
