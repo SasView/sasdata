@@ -17,8 +17,16 @@ from sasdata.data import SasData, SasDataEncoder
 from sasdata.quantities.quantity import Quantity
 from sasdata.temp_hdf5_reader import load_data as hdf_load_data
 from sasdata.temp_xml_reader import load_data as xml_load_data
-from sasdata.temp_ascii_reader import AsciiReaderParams, load_data_default_params
+from sasdata.temp_ascii_reader import (
+    AsciiReaderParams,
+    load_data_default_params,
+    AsciiReaderMetadata,
+    AsciiMetadataCategory,
+)
 from sasdata.temp_ascii_reader import load_data as ascii_load_data
+from sasdata.quantities.units import per_angstrom
+from sasdata.dataset_types import one_dim
+from sasdata.guess import guess_columns
 
 
 def local_load(path: str):
@@ -98,6 +106,36 @@ test_cases = [
         marks=pytest.mark.xfail(
             reason="Guesses for 2D ASCII files are currently wrong, so the data loaded won't be correct."
         ),
+    ),
+    AsciiTestCase(
+        reader_params=AsciiReaderParams(
+            filenames=[
+                local_data_load(filename)
+                for filename in [
+                    "1_33_1640_22.874115.csv",
+                    "1_33_1640_22.874115.csv",
+                    "2_42_1640_23.456895.csv",
+                    "3_61_1640_23.748285.csv",
+                    "4_103_1640_24.039675.csv",
+                    "5_312_1640_24.331065.csv",
+                    "6_1270_1640_24.331065.csv",
+                ]
+            ],
+            columns=[(column, per_angstrom) for column in guess_columns(3, one_dim)],
+            separator_dict={"Comma": True},
+            metadata=AsciiReaderMetadata(
+                master_metadata={
+                    "magnetic": AsciiMetadataCategory(
+                        values={
+                            "counting_index": 0,
+                            "applied_magnetic_field": 1,
+                            "saturation_magnetization": 2,
+                            "demagnetizing_field": 3,
+                        }
+                    )
+                }
+            ),
+        )
     ),
 ]
 
