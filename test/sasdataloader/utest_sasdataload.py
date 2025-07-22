@@ -10,6 +10,7 @@ import numpy as np
 import pytest
 from dataclasses import dataclass
 from typing import Literal
+from abc import ABC
 
 import sasdata.quantities.units as units
 from sasdata.data import SasData, SasDataEncoder
@@ -21,8 +22,34 @@ from sasdata.temp_ascii_reader import load_data as ascii_load_data
 
 
 @dataclass
-class TestCase:
+class BaseTestCase(ABC):
+    expected_values: dict[int, dict[str, float]]
+
+
+@dataclass
+class AsciiTestCase(BaseTestCase):
+    # If this is a string/list of strings then the other params will be guessed.
+    reader_params: AsciiReaderParams | str | list[str]
+
+
+@dataclass
+class XmlTestCase(BaseTestCase):
     filename: str
+
+
+@dataclass
+class Hdf5TestCase(BaseTestCase):
+    filename: str
+
+
+@dataclass
+class SesansTestCase(BaseTestCase):
+    filename: str
+
+
+@dataclass
+class TestCase:
+    filename: str | list[str]
     # Key is the index of the row.
     expected_values: dict[int, dict[str, float]]
     loader: Literal["ascii", "xml", "hdf5", "sesans"]
