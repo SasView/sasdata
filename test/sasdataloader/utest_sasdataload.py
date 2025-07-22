@@ -30,13 +30,18 @@ class TestCase:
 
 
 test_cases = [
-    TestCase(
-        filename="ascii_test_1.txt",
-        expected_values={
-            0: {"Q": 0.002618, "I": 0.02198, "dI": 0.002704},
-            -1: {"Q": 0.0497, "I": 8.346, "dI": 0.191},
-        },
-        loader="ascii",
+    pytest.param(
+        TestCase(
+            filename="ascii_test_1.txt",
+            expected_values={
+                0: {"Q": 0.002618, "I": 0.02198, "dI": 0.002704},
+                -1: {"Q": 0.0497, "I": 8.346, "dI": 0.191},
+            },
+            loader="ascii",
+        ),
+        marks=pytest.mark.xfail(
+            reason="The ASCII reader cannot make the right guesses for this file."
+        ),
     ),
     TestCase(
         filename="test_3_columns.txt",
@@ -46,20 +51,27 @@ test_cases = [
         },
         loader="ascii",
     ),
-    TestCase(
-        filename="detector_rectangular.DAT",
-        expected_values={
-            0: {"Qx": -0.009160664, "Qy": -0.1683881, "I": 16806.79, "dI": 0.01366757},
-            -1: {"Qx": 0.2908819, "Qy": 0.1634992, "I": 8147.779, "dI": 0.05458562},
-        },
-        loader="ascii",
+    pytest.param(
+        TestCase(
+            filename="detector_rectangular.DAT",
+            expected_values={
+                0: {
+                    "Qx": -0.009160664,
+                    "Qy": -0.1683881,
+                    "I": 16806.79,
+                    "dI": 0.01366757,
+                },
+                -1: {"Qx": 0.2908819, "Qy": 0.1634992, "I": 8147.779, "dI": 0.05458562},
+            },
+            loader="ascii",
+        ),
+        marks=pytest.mark.xfail(
+            "Guesses for 2D ASCII files are currently wrong, so the data loaded won't be correct."
+        ),
     ),
 ]
 
 
-@pytest.mark.xfail(
-    reason="ASCII reader currently cannot read some files (correctly) with the default parameters"
-)
 @pytest.mark.parametrize("test_case", test_cases)
 def test_load_file(test_case: TestCase):
     full_filename = local_load(os.path.join("data", test_case.filename))
