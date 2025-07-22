@@ -158,6 +158,9 @@ def example_data_load(path: str):
     except OSError:
         return hdf_load_data(local_load(f"data/{path}.h5"))
 
+def local_data_load(path: str):
+    return os.path.join("data", path)
+
 
 @pytest.mark.sasdata
 @pytest.mark.parametrize("f", test_hdf_file_names)
