@@ -9,7 +9,6 @@ import os
 import numpy as np
 import pytest
 from dataclasses import dataclass
-from typing import Literal
 from abc import ABC
 
 import sasdata.quantities.units as units
@@ -47,40 +46,29 @@ class SesansTestCase(BaseTestCase):
     filename: str
 
 
-@dataclass
-class TestCase:
-    filename: str | list[str]
-    # Key is the index of the row.
-    expected_values: dict[int, dict[str, float]]
-    loader: Literal["ascii", "xml", "hdf5", "sesans"]
-    ascii_reader_params: AsciiReaderParams | None = None
-
-
 test_cases = [
     pytest.param(
-        TestCase(
-            filename="ascii_test_1.txt",
+        AsciiTestCase(
+            reader_params="ascii_test_1.txt",
             expected_values={
                 0: {"Q": 0.002618, "I": 0.02198, "dI": 0.002704},
                 -1: {"Q": 0.0497, "I": 8.346, "dI": 0.191},
             },
-            loader="ascii",
         ),
         marks=pytest.mark.xfail(
             reason="The ASCII reader cannot make the right guesses for this file."
         ),
     ),
-    TestCase(
-        filename="test_3_columns.txt",
+    AsciiTestCase(
+        reader_params="test_3_columns.txt",
         expected_values={
             0: {"Q": 0, "I": 2.83954, "dI": 0.6},
             -1: {"Q": 1.22449, "I": 7.47487, "dI": 1.05918},
         },
-        loader="ascii",
     ),
     pytest.param(
-        TestCase(
-            filename="detector_rectangular.DAT",
+        AsciiTestCase(
+            reader_params="detector_rectangular.DAT",
             expected_values={
                 0: {
                     "Qx": -0.009160664,
@@ -88,9 +76,13 @@ test_cases = [
                     "I": 16806.79,
                     "dI": 0.01366757,
                 },
-                -1: {"Qx": 0.2908819, "Qy": 0.1634992, "I": 8147.779, "dI": 0.05458562},
+                -1: {
+                    "Qx": 0.2908819,
+                    "Qy": 0.1634992,
+                    "I": 8147.779,
+                    "dI": 0.05458562,
+                },
             },
-            loader="ascii",
         ),
         marks=pytest.mark.xfail(
             reason="Guesses for 2D ASCII files are currently wrong, so the data loaded won't be correct."
