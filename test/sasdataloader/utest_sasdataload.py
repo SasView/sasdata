@@ -63,7 +63,7 @@ test_cases = [
             loader="ascii",
         ),
         marks=pytest.mark.xfail(
-            "Guesses for 2D ASCII files are currently wrong, so the data loaded won't be correct."
+            reason="Guesses for 2D ASCII files are currently wrong, so the data loaded won't be correct."
         ),
     ),
 ]
