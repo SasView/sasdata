@@ -41,7 +41,7 @@ def local_data_load(path: str):
 @dataclass
 class BaseTestCase(ABC):
     expected_values: dict[int, dict[str, float]]
-    expected_metadata: dict[str, Any] | None = None
+    expected_metadata: dict[str, Any] = {}
 
 
 @dataclass
@@ -166,9 +166,8 @@ def test_load_file(test_case: BaseTestCase):
                 assert loaded_data._data_contents[column].value[index] == pytest.approx(
                     expected_value
                 )
-    if test_case.expected_metadata is not None:
-        for metadata_key, value in test_case.expected_metadata.items():
-            assert loaded_data.metadata.raw.filter(metadata_key) == value
+    for metadata_key, value in test_case.expected_metadata.items():
+        assert loaded_data.metadata.raw.filter(metadata_key) == value
 
 
 test_hdf_file_names = [
