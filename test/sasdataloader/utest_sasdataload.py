@@ -41,7 +41,7 @@ def local_data_load(path: str):
 @dataclass
 class BaseTestCase(ABC):
     expected_values: dict[int, dict[str, float]]
-    expected_metadata: dict[str, Any] | None
+    expected_metadata: dict[str, Any] | None = None
 
 
 @dataclass
