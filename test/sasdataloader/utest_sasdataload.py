@@ -7,7 +7,6 @@ import os
 import pytest
 from dataclasses import dataclass
 from typing import Literal
-from math import sqrt
 
 
 from sasdata.quantities.quantity import Quantity
