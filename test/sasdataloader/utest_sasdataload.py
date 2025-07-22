@@ -92,15 +92,17 @@ test_cases = [
 
 
 @pytest.mark.parametrize("test_case", test_cases)
-def test_load_file(test_case: TestCase):
-    full_filename = local_load(os.path.join("data", test_case.filename))
-    match test_case.loader:
-        case "ascii":
-            if test_case.ascii_reader_params is None:
-                loaded_data = load_data_default_params(full_filename)[0]
+def test_load_file(test_case: BaseTestCase):
+    match test_case:
+        case AsciiTestCase():
+            if isinstance(test_case.reader_params, str):
+                loaded_data = load_data_default_params(test_case.reader_params)[0]
+            elif isinstance(test_case.reader_params, list[str]):
+                pass  # TODO: Handle.
+            elif isinstance(test_case.reader_params, AsciiReaderParams):
+                loaded_data = ascii_load_data(test_case.reader_params)
             else:
-                loaded_data = ascii_load_data(test_case.ascii_reader_params)[0]
-
+                raise TypeError("Invalid type for reader_params.")
         # TODO: Support other loaders
         case _:
             raise ValueError("Invalid loader")
@@ -157,6 +159,7 @@ def example_data_load(path: str):
         return xml_load_data(local_load(f"data/{path}.xml"))
     except OSError:
         return hdf_load_data(local_load(f"data/{path}.h5"))
+
 
 def local_data_load(path: str):
     return os.path.join("data", path)
