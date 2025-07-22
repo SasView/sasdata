@@ -144,6 +144,9 @@ def local_load(path: str):
     """Get local file path"""
     return os.path.join(os.path.dirname(__file__), path)
 
+def local_data_load(path: str):
+    return os.path.join("data", path)
+
 
 @pytest.mark.sasdata
 @pytest.mark.parametrize("f", test_hdf_file_names)
