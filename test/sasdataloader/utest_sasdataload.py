@@ -49,7 +49,7 @@ class SesansTestCase(BaseTestCase):
 test_cases = [
     pytest.param(
         AsciiTestCase(
-            reader_params="ascii_test_1.txt",
+            reader_params=local_data_load("ascii_test_1.txt"),
             expected_values={
                 0: {"Q": 0.002618, "I": 0.02198, "dI": 0.002704},
                 -1: {"Q": 0.0497, "I": 8.346, "dI": 0.191},
@@ -60,7 +60,7 @@ test_cases = [
         ),
     ),
     AsciiTestCase(
-        reader_params="test_3_columns.txt",
+        reader_params=local_data_load("test_3_columns.txt"),
         expected_values={
             0: {"Q": 0, "I": 2.83954, "dI": 0.6},
             -1: {"Q": 1.22449, "I": 7.47487, "dI": 1.05918},
@@ -68,7 +68,7 @@ test_cases = [
     ),
     pytest.param(
         AsciiTestCase(
-            reader_params="detector_rectangular.DAT",
+            reader_params=local_data_load("detector_rectangular.DAT"),
             expected_values={
                 0: {
                     "Qx": -0.009160664,
