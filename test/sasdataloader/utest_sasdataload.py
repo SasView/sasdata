@@ -10,7 +10,6 @@ import numpy as np
 import pytest
 from dataclasses import dataclass
 from typing import Literal
-from math import sqrt
 
 import sasdata.quantities.units as units
 from sasdata.data import SasData, SasDataEncoder
