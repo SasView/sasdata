@@ -8,7 +8,7 @@ import os
 
 import numpy as np
 import pytest
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from abc import ABC
 from typing import Any
 
@@ -41,7 +41,7 @@ def local_data_load(path: str):
 @dataclass
 class BaseTestCase(ABC):
     expected_values: dict[int, dict[str, float]]
-    expected_metadata: dict[str, Any] = {}
+    expected_metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
