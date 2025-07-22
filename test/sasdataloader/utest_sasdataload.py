@@ -46,6 +46,14 @@ test_cases = [
         },
         loader="ascii",
     ),
+    TestCase(
+        filename="detector_rectangular.DAT",
+        expected_values={
+            0: {"Qx": -0.009160664, "Qy": -0.1683881, "I": 16806.79, "dI": 0.01366757},
+            -1: {"Qx": 0.2908819, "Qy": 0.1634992, "I": 8147.779, "dI": 0.05458562},
+        },
+        loader="ascii",
+    ),
 ]
 
 
