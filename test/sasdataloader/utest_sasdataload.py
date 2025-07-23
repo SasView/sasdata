@@ -40,7 +40,7 @@ def local_data_load(path: str):
 
 
 @dataclass
-class BaseTestCase(ABC):
+class BaseTestCase:
     expected_values: dict[int, dict[str, float]]
     expected_metadata: dict[str, Any] = field(default_factory=dict)
 
