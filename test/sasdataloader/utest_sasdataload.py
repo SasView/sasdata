@@ -39,35 +39,35 @@ def local_data_load(path: str):
     return local_load(f"{os.path.join('data', path)}")
 
 
-@dataclass
+@dataclass(kw_only=True)
 class BaseTestCase:
     expected_values: dict[int, dict[str, float]]
     expected_metadata: dict[str, Any] = field(default_factory=dict)
 
 
-@dataclass
+@dataclass(kw_only=True)
 class AsciiTestCase(BaseTestCase):
     # If this is a string of strings then the other params will be guessed.
     reader_params: AsciiReaderParams | str
 
 
-@dataclass
+@dataclass(kw_only=True)
 class BulkAsciiTestCase(AsciiTestCase):
     reader_params: AsciiReaderParams
     expected_values: dict[str, dict[int, dict[str, float]]]
 
 
-@dataclass
+@dataclass(kw_only=True)
 class XmlTestCase(BaseTestCase):
     filename: str
 
 
-@dataclass
+@dataclass(kw_only=True)
 class Hdf5TestCase(BaseTestCase):
     filename: str
 
 
-@dataclass
+@dataclass(kw_only=True)
 class SesansTestCase(BaseTestCase):
     filename: str
 
