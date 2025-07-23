@@ -46,7 +46,7 @@ class BaseTestCase(ABC):
 
 @dataclass
 class AsciiTestCase(BaseTestCase):
-    # If this is a string/list of strings then the other params will be guessed.
+    # If this is a string of strings then the other params will be guessed.
     reader_params: AsciiReaderParams | str
 
 
