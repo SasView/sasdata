@@ -49,11 +49,11 @@ class AsciiTestCase(BaseTestCase):
     # If this is a string/list of strings then the other params will be guessed.
     reader_params: AsciiReaderParams | str
 
+
 @dataclass
 class BulkAsciiTestCase(AsciiTestCase):
     reader_params: AsciiReaderParams | list[str]
     expected_values: dict[str, dict[int, dict[str, float]]]
-
 
 
 @dataclass
