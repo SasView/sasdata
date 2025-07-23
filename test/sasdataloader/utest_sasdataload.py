@@ -52,7 +52,7 @@ class AsciiTestCase(BaseTestCase):
 
 @dataclass
 class BulkAsciiTestCase(AsciiTestCase):
-    reader_params: AsciiReaderParams | list[str]
+    reader_params: AsciiReaderParams
     expected_values: dict[str, dict[int, dict[str, float]]]
 
 
