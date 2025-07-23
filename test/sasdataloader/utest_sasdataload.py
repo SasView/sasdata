@@ -27,6 +27,7 @@ from sasdata.temp_ascii_reader import load_data as ascii_load_data
 from sasdata.quantities.units import per_angstrom
 from sasdata.dataset_types import one_dim
 from sasdata.guess import guess_columns
+from sasdata.data import SasData
 
 
 def local_load(path: str):
@@ -146,34 +147,51 @@ test_cases = [
 ]
 
 
+def join_actual_expected(
+    actual: list[SasData], expected: dict[str, dict[int, dict[str, float]]]
+) -> list[tuple[SasData, dict[int, dict[str, float]]]]:
+    return_value = []
+    for actual_datum in actual:
+        matching_expected_datum = expected[actual_datum.name]
+        return_value.append((actual_datum, matching_expected_datum))
+    return return_value
+
+
 @pytest.mark.parametrize("test_case", test_cases)
 def test_load_file(test_case: BaseTestCase):
     match test_case:
         case AsciiTestCase():
             if isinstance(test_case.reader_params, str):
                 loaded_data = load_data_default_params(test_case.reader_params)[0]
-            elif isinstance(test_case.reader_params, list[str]):
-                pass  # TODO: Handle.
             elif isinstance(test_case.reader_params, AsciiReaderParams):
-                loaded_data = ascii_load_data(test_case.reader_params)
+                loaded_data = ascii_load_data(test_case.reader_params)[0]
             else:
                 raise TypeError("Invalid type for reader_params.")
+        case BulkAsciiTestCase():
+            loaded_data = load_data_default_params(test_case.reader_params)
         # TODO: Support other loaders
         case _:
             raise ValueError("Invalid loader")
-    for index, values in test_case.expected_values.items():
-        for column, expected_value in values.items():
-            # TODO: Handle other uncertainities.
-            if column == "dI":
-                assert loaded_data._data_contents["I"]._variance[
-                    index
-                ] == pytest.approx(expected_value**2)
-            else:
-                assert loaded_data._data_contents[column].value[index] == pytest.approx(
-                    expected_value
-                )
-    for metadata_key, value in test_case.expected_metadata.items():
-        assert loaded_data.metadata.raw.filter(metadata_key) == value
+    if isinstance(test_case, BulkAsciiTestCase):
+        loaded_expected_pairs = join_actual_expected(
+            loaded_data, test_case.expected_values
+        )
+    else:
+        loaded_expected_pairs = [(loaded_data, test_case.expected_values)]
+    for loaded, expected in loaded_expected_pairs:
+        for index, values in expected.items():
+            for column, expected_value in values.items():
+                # TODO: Handle other uncertainities.
+                if column == "dI":
+                    assert loaded._data_contents["I"]._variance[index] == pytest.approx(
+                        expected_value**2
+                    )
+                else:
+                    assert loaded._data_contents[column].value[index] == pytest.approx(
+                        expected_value
+                    )
+        for metadata_key, value in test_case.expected_metadata.items():
+            assert loaded_data.metadata.raw.filter(metadata_key) == value
 
 
 test_hdf_file_names = [
