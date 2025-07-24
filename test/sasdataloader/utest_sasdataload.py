@@ -170,7 +170,7 @@ def join_actual_expected(
     for actual_datum in actual:
         matching_expected_datum = expected.get(actual_datum.name)
         if matching_expected_datum is None:
-            return
+            continue
         return_value.append((actual_datum, matching_expected_datum))
     return return_value
 
