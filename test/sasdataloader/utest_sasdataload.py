@@ -179,7 +179,7 @@ def join_actual_expected(
 def test_load_file(test_case: BaseTestCase):
     match test_case:
         case BulkAsciiTestCase():
-            loaded_data = load_data_default_params(test_case.reader_params)
+            loaded_data = ascii_load_data(test_case.reader_params)
         case AsciiTestCase():
             if isinstance(test_case.reader_params, str):
                 loaded_data = load_data_default_params(test_case.reader_params)[0]
