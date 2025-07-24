@@ -176,6 +176,8 @@ def join_actual_expected(
 @pytest.mark.parametrize("test_case", test_cases)
 def test_load_file(test_case: BaseTestCase):
     match test_case:
+        case BulkAsciiTestCase():
+            loaded_data = load_data_default_params(test_case.reader_params)
         case AsciiTestCase():
             if isinstance(test_case.reader_params, str):
                 loaded_data = load_data_default_params(test_case.reader_params)[0]
@@ -183,8 +185,6 @@ def test_load_file(test_case: BaseTestCase):
                 loaded_data = ascii_load_data(test_case.reader_params)[0]
             else:
                 raise TypeError("Invalid type for reader_params.")
-        case BulkAsciiTestCase():
-            loaded_data = load_data_default_params(test_case.reader_params)
         # TODO: Support other loaders
         case _:
             raise ValueError("Invalid loader")
