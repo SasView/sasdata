@@ -55,6 +55,7 @@ class AsciiTestCase(BaseTestCase):
 class BulkAsciiTestCase(AsciiTestCase):
     reader_params: AsciiReaderParams
     expected_values: dict[str, dict[int, dict[str, float]]]
+    expected_metadata: dict[str, dict[str, Any]] = field(default_factory=dict)
 
 
 @dataclass(kw_only=True)
