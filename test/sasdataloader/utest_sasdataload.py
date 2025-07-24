@@ -188,6 +188,8 @@ def test_load_file(test_case: BaseTestCase):
             else:
                 raise TypeError("Invalid type for reader_params.")
         # TODO: Support other loaders
+        case XmlTestCase():
+            loaded_data = xml_load_data(test_case)
         case _:
             raise ValueError("Invalid loader")
     if isinstance(test_case, BulkAsciiTestCase):
