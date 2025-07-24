@@ -168,7 +168,9 @@ def join_actual_expected(
 ) -> list[tuple[SasData, dict[int, dict[str, float]]]]:
     return_value = []
     for actual_datum in actual:
-        matching_expected_datum = expected[actual_datum.name]
+        matching_expected_datum = expected.get(actual_datum.name)
+        if matching_expected_datum is None:
+            return
         return_value.append((actual_datum, matching_expected_datum))
     return return_value
 
