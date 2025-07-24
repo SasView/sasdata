@@ -194,8 +194,10 @@ def test_load_file(test_case: BaseTestCase):
         loaded_expected_pairs = join_actual_expected(
             loaded_data, test_case.expected_values
         )
+        metadata_filenames = test_case.expected_metadata.keys()
     else:
         loaded_expected_pairs = [(loaded_data, test_case.expected_values)]
+        metadata_filenames = [loaded_data.name]
     for loaded, expected in loaded_expected_pairs:
         for index, values in expected.items():
             for column, expected_value in values.items():
@@ -208,8 +210,18 @@ def test_load_file(test_case: BaseTestCase):
                     assert loaded._data_contents[column].value[index] == pytest.approx(
                         expected_value
                     )
-        for metadata_key, value in test_case.expected_metadata.items():
-            assert loaded_data.metadata.raw.filter(metadata_key) == value
+
+    for filename in metadata_filenames:
+        current_metadata_dict = test_case.expected_metadata.get(filename)
+        current_datum = (
+            next(filter(lambda d: d.name == filename, loaded_data))
+            if isinstance(loaded_data, list)
+            else loaded_data
+        )
+        if current_metadata_dict is None:
+            continue
+        for metadata_key, value in current_metadata_dict.items():
+            assert current_datum.metadata.raw.filter(metadata_key) == value
 
 
 test_hdf_file_names = [
