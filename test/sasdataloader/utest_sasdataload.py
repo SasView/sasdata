@@ -115,36 +115,51 @@ test_cases = [
             reason="Guesses for 2D ASCII files are currently wrong, so the data loaded won't be correct."
         ),
     ),
-    # AsciiTestCase(
-    #     reader_params=AsciiReaderParams(
-    #         filenames=[
-    #             local_data_load(filename)
-    #             for filename in [
-    #                 "1_33_1640_22.874115.csv",
-    #                 "1_33_1640_22.874115.csv",
-    #                 "2_42_1640_23.456895.csv",
-    #                 "3_61_1640_23.748285.csv",
-    #                 "4_103_1640_24.039675.csv",
-    #                 "5_312_1640_24.331065.csv",
-    #                 "6_1270_1640_24.331065.csv",
-    #             ]
-    #         ],
-    #         columns=[(column, per_angstrom) for column in guess_columns(3, one_dim)],
-    #         separator_dict={"Comma": True},
-    #         metadata=AsciiReaderMetadata(
-    #             master_metadata={
-    #                 "magnetic": AsciiMetadataCategory(
-    #                     values={
-    #                         "counting_index": 0,
-    #                         "applied_magnetic_field": 1,
-    #                         "saturation_magnetization": 2,
-    #                         "demagnetizing_field": 3,
-    #                     }
-    #                 )
-    #             }
-    #         ),
-    #     ),
-    # ),
+    BulkAsciiTestCase(
+        reader_params=AsciiReaderParams(
+            filenames=[
+                local_data_load(filename)
+                for filename in [
+                    "1_33_1640_22.874115.csv",
+                    "1_33_1640_22.874115.csv",
+                    "2_42_1640_23.456895.csv",
+                    "3_61_1640_23.748285.csv",
+                    "4_103_1640_24.039675.csv",
+                    "5_312_1640_24.331065.csv",
+                    "6_1270_1640_24.331065.csv",
+                ]
+            ],
+            columns=[(column, per_angstrom) for column in guess_columns(3, one_dim)],
+            separator_dict={"Comma": True},
+            metadata=AsciiReaderMetadata(
+                master_metadata={
+                    "magnetic": AsciiMetadataCategory(
+                        values={
+                            "counting_index": 0,
+                            "applied_magnetic_field": 1,
+                            "saturation_magnetization": 2,
+                            "demagnetizing_field": 3,
+                        }
+                    )
+                }
+            ),
+        ),
+        expected_values={},
+        expected_metadata={
+            "1_33_1640_22.874115.csv": {
+                "counting_index": ["1"],
+                "applied_magnetic_field": ["33"],
+                "saturation_magnetization": ["1640"],
+                "demagnetizing_field": ["22"],
+            },
+            "6_1270_1640_24.331065.csv": {
+                "counting_index": ["6"],
+                "applied_magnetic_field": ["1270"],
+                "saturation_magnetization": ["1640"],
+                "demagnetizing_field": ["24"],
+            },
+        },
+    ),
 ]
 
 
