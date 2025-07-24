@@ -187,7 +187,9 @@ def test_load_file(test_case: BaseTestCase):
                 loaded_data = ascii_load_data(test_case.reader_params)[0]
             else:
                 raise TypeError("Invalid type for reader_params.")
-        # TODO: Support other loaders
+        case Hdf5TestCase():
+            loaded_data = hdf_load_data(test_case.filename)
+        # TODO: Support SESANS
         case XmlTestCase():
             loaded_data = xml_load_data(test_case)
         case _:
