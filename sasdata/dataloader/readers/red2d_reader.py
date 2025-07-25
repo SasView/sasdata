@@ -80,12 +80,9 @@ class Reader(FileReader):
 
         # Defaults
         lines = buf.split('\n')
-        x = []
-        y = []
 
         wavelength = None
         distance = None
-        transmission = None
 
         pixel_x = None
         pixel_y = None
