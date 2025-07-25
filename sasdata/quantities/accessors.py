@@ -78,16 +78,15 @@ HHHHHHHHH     HHHHHHHHH  aaaaaaaaaa  aaaa nnnnnn    nnnnnn   ddddddddd   ddddd
 
 """
 
-from typing import TypeVar, Sequence
+from typing import TypeVar
 
 from sasdata.quantities.quantity import Quantity
 import sasdata.quantities.units as units
-from sasdata.quantities.units import Dimensions, Unit
-from sasdata.quantities.unit_parser import parse_unit, parse_unit_from_group
+from sasdata.quantities.units import Unit
+from sasdata.quantities.unit_parser import parse_unit
 
 from sasdata.data_backing import Group, Dataset
 
-import logging
 # logger = logging.getLogger("Accessors")
 class LoggerDummy:
     def info(self, data):
@@ -364,6 +363,14 @@ class LengthAccessor[T](QuantityAccessor[T]):
             return quantity.in_units_of(units.angstroms)
 
     @property
+    def microns(self) -> T:
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.microns)
+
+    @property
     def miles(self) -> T:
         quantity = self.quantity
         if quantity is None:
@@ -527,6 +534,14 @@ class AreaAccessor[T](QuantityAccessor[T]):
             return None
         else:
             return quantity.in_units_of(units.square_angstroms)
+
+    @property
+    def square_microns(self) -> T:
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.square_microns)
 
     @property
     def square_miles(self) -> T:
@@ -702,6 +717,14 @@ class VolumeAccessor[T](QuantityAccessor[T]):
             return quantity.in_units_of(units.cubic_angstroms)
 
     @property
+    def cubic_microns(self) -> T:
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.cubic_microns)
+
+    @property
     def cubic_miles(self) -> T:
         quantity = self.quantity
         if quantity is None:
@@ -865,6 +888,14 @@ class InverselengthAccessor[T](QuantityAccessor[T]):
             return None
         else:
             return quantity.in_units_of(units.per_angstrom)
+
+    @property
+    def per_micron(self) -> T:
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_micron)
 
     @property
     def per_mile(self) -> T:
@@ -1032,6 +1063,14 @@ class InverseareaAccessor[T](QuantityAccessor[T]):
             return quantity.in_units_of(units.per_square_angstrom)
 
     @property
+    def per_square_micron(self) -> T:
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_square_micron)
+
+    @property
     def per_square_mile(self) -> T:
         quantity = self.quantity
         if quantity is None:
@@ -1195,6 +1234,14 @@ class InversevolumeAccessor[T](QuantityAccessor[T]):
             return None
         else:
             return quantity.in_units_of(units.per_cubic_angstrom)
+
+    @property
+    def per_cubic_micron(self) -> T:
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.per_cubic_micron)
 
     @property
     def per_cubic_mile(self) -> T:
@@ -2842,6 +2889,94 @@ class SpeedAccessor[T](QuantityAccessor[T]):
             return None
         else:
             return quantity.in_units_of(units.angstroms_per_year)
+
+    @property
+    def microns_per_second(self) -> T:
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.microns_per_second)
+
+    @property
+    def microns_per_millisecond(self) -> T:
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.microns_per_millisecond)
+
+    @property
+    def microns_per_microsecond(self) -> T:
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.microns_per_microsecond)
+
+    @property
+    def microns_per_nanosecond(self) -> T:
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.microns_per_nanosecond)
+
+    @property
+    def microns_per_picosecond(self) -> T:
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.microns_per_picosecond)
+
+    @property
+    def microns_per_femtosecond(self) -> T:
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.microns_per_femtosecond)
+
+    @property
+    def microns_per_attosecond(self) -> T:
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.microns_per_attosecond)
+
+    @property
+    def microns_per_minute(self) -> T:
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.microns_per_minute)
+
+    @property
+    def microns_per_hour(self) -> T:
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.microns_per_hour)
+
+    @property
+    def microns_per_day(self) -> T:
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.microns_per_day)
+
+    @property
+    def microns_per_year(self) -> T:
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.microns_per_year)
 
     @property
     def miles_per_second(self) -> T:
@@ -4607,6 +4742,94 @@ class AccelerationAccessor[T](QuantityAccessor[T]):
             return None
         else:
             return quantity.in_units_of(units.angstroms_per_square_year)
+
+    @property
+    def microns_per_square_second(self) -> T:
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.microns_per_square_second)
+
+    @property
+    def microns_per_square_millisecond(self) -> T:
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.microns_per_square_millisecond)
+
+    @property
+    def microns_per_square_microsecond(self) -> T:
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.microns_per_square_microsecond)
+
+    @property
+    def microns_per_square_nanosecond(self) -> T:
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.microns_per_square_nanosecond)
+
+    @property
+    def microns_per_square_picosecond(self) -> T:
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.microns_per_square_picosecond)
+
+    @property
+    def microns_per_square_femtosecond(self) -> T:
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.microns_per_square_femtosecond)
+
+    @property
+    def microns_per_square_attosecond(self) -> T:
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.microns_per_square_attosecond)
+
+    @property
+    def microns_per_square_minute(self) -> T:
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.microns_per_square_minute)
+
+    @property
+    def microns_per_square_hour(self) -> T:
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.microns_per_square_hour)
+
+    @property
+    def microns_per_square_day(self) -> T:
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.microns_per_square_day)
+
+    @property
+    def microns_per_square_year(self) -> T:
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.microns_per_square_year)
 
     @property
     def miles_per_square_second(self) -> T:
@@ -7012,6 +7235,134 @@ class DensityAccessor[T](QuantityAccessor[T]):
             return None
         else:
             return quantity.in_units_of(units.ounces_per_cubic_angstrom)
+
+    @property
+    def grams_per_cubic_micron(self) -> T:
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.grams_per_cubic_micron)
+
+    @property
+    def exagrams_per_cubic_micron(self) -> T:
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.exagrams_per_cubic_micron)
+
+    @property
+    def petagrams_per_cubic_micron(self) -> T:
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.petagrams_per_cubic_micron)
+
+    @property
+    def teragrams_per_cubic_micron(self) -> T:
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.teragrams_per_cubic_micron)
+
+    @property
+    def gigagrams_per_cubic_micron(self) -> T:
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.gigagrams_per_cubic_micron)
+
+    @property
+    def megagrams_per_cubic_micron(self) -> T:
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.megagrams_per_cubic_micron)
+
+    @property
+    def kilograms_per_cubic_micron(self) -> T:
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.kilograms_per_cubic_micron)
+
+    @property
+    def milligrams_per_cubic_micron(self) -> T:
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.milligrams_per_cubic_micron)
+
+    @property
+    def micrograms_per_cubic_micron(self) -> T:
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micrograms_per_cubic_micron)
+
+    @property
+    def nanograms_per_cubic_micron(self) -> T:
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanograms_per_cubic_micron)
+
+    @property
+    def picograms_per_cubic_micron(self) -> T:
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picograms_per_cubic_micron)
+
+    @property
+    def femtograms_per_cubic_micron(self) -> T:
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtograms_per_cubic_micron)
+
+    @property
+    def attograms_per_cubic_micron(self) -> T:
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attograms_per_cubic_micron)
+
+    @property
+    def atomic_mass_units_per_cubic_micron(self) -> T:
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.atomic_mass_units_per_cubic_micron)
+
+    @property
+    def pounds_per_cubic_micron(self) -> T:
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.pounds_per_cubic_micron)
+
+    @property
+    def ounces_per_cubic_micron(self) -> T:
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.ounces_per_cubic_micron)
 
     @property
     def grams_per_cubic_mile(self) -> T:
@@ -10094,6 +10445,62 @@ class ConcentrationAccessor[T](QuantityAccessor[T]):
             return None
         else:
             return quantity.in_units_of(units.attomoles_per_cubic_angstrom)
+
+    @property
+    def moles_per_cubic_micron(self) -> T:
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.moles_per_cubic_micron)
+
+    @property
+    def millimoles_per_cubic_micron(self) -> T:
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.millimoles_per_cubic_micron)
+
+    @property
+    def micromoles_per_cubic_micron(self) -> T:
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.micromoles_per_cubic_micron)
+
+    @property
+    def nanomoles_per_cubic_micron(self) -> T:
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.nanomoles_per_cubic_micron)
+
+    @property
+    def picomoles_per_cubic_micron(self) -> T:
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.picomoles_per_cubic_micron)
+
+    @property
+    def femtomoles_per_cubic_micron(self) -> T:
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.femtomoles_per_cubic_micron)
+
+    @property
+    def attomoles_per_cubic_micron(self) -> T:
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.attomoles_per_cubic_micron)
 
     @property
     def moles_per_cubic_mile(self) -> T:

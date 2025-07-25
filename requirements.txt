@@ -3,15 +3,16 @@ h5py
 lxml
 
 # Calculation
-numpy==1.*
+numpy
 scipy
 
 # Unit testing
 pytest
 unittest-xml-reporting
 
-# Documentation
+# Documentation (future)
 sphinx
+html5lib
 
 # Other stuff
 matplotlib

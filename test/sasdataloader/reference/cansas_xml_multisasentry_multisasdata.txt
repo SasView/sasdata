@@ -1,0 +1,340 @@
+AF1410:10
+  Q
+  I
+Metadata:
+
+  AF1410-10 (AF1410 steel aged 10 h), Run: ['nuclear sector', 'nuclear+magnetic sector']
+  ===========================================
+
+Definition: AF1410-10 (AF1410 steel aged 10 h)
+Sample:
+   ID:           AF1410-10 (AF1410 steel aged 10 h)
+   Transmission: None
+   Thickness:    None
+   Temperature:  None
+   Position:     None
+   Orientation:  None
+Collimation:
+   Length: None
+Detector:
+   Name:         area
+   Distance:     None
+   Offset:       None
+   Orientation:  None
+   Beam center:  None
+   Pixel size:   None
+   Slit length:  None
+Source:
+    Radiation:         neutron
+    Shape:             None
+    Wavelength:        0.85 nm
+    Min. Wavelength:   None
+    Max. Wavelength:   None
+    Wavelength Spread: 25.0 %
+    Beam Size:         None
+AF1410:1h
+  Q
+  I
+Metadata:
+
+  AF1410-1h (AF1410 steel aged 1 h), Run: ['nuclear sector', 'nuclear+magnetic sector']
+  ==========================================
+
+Definition: AF1410-1h (AF1410 steel aged 1 h)
+Sample:
+   ID:           AF1410-1h (AF1410 steel aged 1 h)
+   Transmission: None
+   Thickness:    None
+   Temperature:  None
+   Position:     None
+   Orientation:  None
+Collimation:
+   Length: None
+Detector:
+   Name:         area
+   Distance:     None
+   Offset:       None
+   Orientation:  None
+   Beam center:  None
+   Pixel size:   None
+   Slit length:  None
+Source:
+    Radiation:         neutron
+    Shape:             None
+    Wavelength:        0.85 nm
+    Min. Wavelength:   None
+    Max. Wavelength:   None
+    Wavelength Spread: 25.0 %
+    Beam Size:         None
+AF1410:20
+  Q
+  I
+Metadata:
+
+  AF1410-20 (AF1410 steel aged 20 h), Run: nuclear+magnetic sector
+  ================================================================
+
+Definition: AF1410-20 (AF1410 steel aged 20 h)
+Sample:
+   ID:           AF1410-20 (AF1410 steel aged 20 h)
+   Transmission: None
+   Thickness:    None
+   Temperature:  None
+   Position:     None
+   Orientation:  None
+Collimation:
+   Length: None
+Detector:
+   Name:         area
+   Distance:     None
+   Offset:       None
+   Orientation:  None
+   Beam center:  None
+   Pixel size:   None
+   Slit length:  None
+Source:
+    Radiation:         neutron
+    Shape:             None
+    Wavelength:        0.85 nm
+    Min. Wavelength:   None
+    Max. Wavelength:   None
+    Wavelength Spread: 25.0 %
+    Beam Size:         None
+AF1410:2h
+  Q
+  I
+Metadata:
+
+  AF1410-2h (AF1410 steel aged 2 h), Run: ['nuclear sector', 'nuclear+magnetic sector']
+  ==========================================
+
+Definition: AF1410-2h (AF1410 steel aged 2 h)
+Sample:
+   ID:           AF1410-2h (AF1410 steel aged 2 h)
+   Transmission: None
+   Thickness:    None
+   Temperature:  None
+   Position:     None
+   Orientation:  None
+Collimation:
+   Length: None
+Detector:
+   Name:         area
+   Distance:     None
+   Offset:       None
+   Orientation:  None
+   Beam center:  None
+   Pixel size:   None
+   Slit length:  None
+Source:
+    Radiation:         neutron
+    Shape:             None
+    Wavelength:        0.85 nm
+    Min. Wavelength:   None
+    Max. Wavelength:   None
+    Wavelength Spread: 25.0 %
+    Beam Size:         None
+AF1410:50
+  Q
+  I
+Metadata:
+
+  AF1410-50 (AF1410 steel aged 50 h), Run: ['nuclear sector', 'nuclear+magnetic sector']
+  ===========================================
+
+Definition: AF1410-50 (AF1410 steel aged 50 h)
+Sample:
+   ID:           AF1410-50 (AF1410 steel aged 50 h)
+   Transmission: None
+   Thickness:    None
+   Temperature:  None
+   Position:     None
+   Orientation:  None
+Collimation:
+   Length: None
+Detector:
+   Name:         area
+   Distance:     None
+   Offset:       None
+   Orientation:  None
+   Beam center:  None
+   Pixel size:   None
+   Slit length:  None
+Source:
+    Radiation:         neutron
+    Shape:             None
+    Wavelength:        0.85 nm
+    Min. Wavelength:   None
+    Max. Wavelength:   None
+    Wavelength Spread: 25.0 %
+    Beam Size:         None
+AF1410:5h
+  Q
+  I
+Metadata:
+
+  AF1410-5h (AF1410 steel aged 5 h), Run: ['nuclear sector', 'nuclear+magnetic sector']
+  ==========================================
+
+Definition: AF1410-5h (AF1410 steel aged 5 h)
+Sample:
+   ID:           AF1410-5h (AF1410 steel aged 5 h)
+   Transmission: None
+   Thickness:    None
+   Temperature:  None
+   Position:     None
+   Orientation:  None
+Collimation:
+   Length: None
+Detector:
+   Name:         area
+   Distance:     None
+   Offset:       None
+   Orientation:  None
+   Beam center:  None
+   Pixel size:   None
+   Slit length:  None
+Source:
+    Radiation:         neutron
+    Shape:             None
+    Wavelength:        0.85 nm
+    Min. Wavelength:   None
+    Max. Wavelength:   None
+    Wavelength Spread: 25.0 %
+    Beam Size:         None
+AF1410:8h
+  Q
+  I
+Metadata:
+
+  AF1410-8h (AF1410 steel aged 8 h), Run: ['nuclear sector', 'nuclear+magnetic sector']
+  ==========================================
+
+Definition: AF1410-8h (AF1410 steel aged 8 h)
+Sample:
+   ID:           AF1410-8h (AF1410 steel aged 8 h)
+   Transmission: None
+   Thickness:    None
+   Temperature:  None
+   Position:     None
+   Orientation:  None
+Collimation:
+   Length: None
+Detector:
+   Name:         area
+   Distance:     None
+   Offset:       None
+   Orientation:  None
+   Beam center:  None
+   Pixel size:   None
+   Slit length:  None
+Source:
+    Radiation:         neutron
+    Shape:             None
+    Wavelength:        0.85 nm
+    Min. Wavelength:   None
+    Max. Wavelength:   None
+    Wavelength Spread: 25.0 %
+    Beam Size:         None
+AF1410:cc
+  Q
+  I
+Metadata:
+
+  AF1410-cc (AF1410 steel aged 100 h), Run: ['nuclear sector', 'nuclear+magnetic sector']
+  ============================================
+
+Definition: AF1410-cc (AF1410 steel aged 100 h)
+Sample:
+   ID:           AF1410-cc (AF1410 steel aged 100 h)
+   Transmission: None
+   Thickness:    None
+   Temperature:  None
+   Position:     None
+   Orientation:  None
+Collimation:
+   Length: None
+Detector:
+   Name:         area
+   Distance:     None
+   Offset:       None
+   Orientation:  None
+   Beam center:  None
+   Pixel size:   None
+   Slit length:  None
+Source:
+    Radiation:         neutron
+    Shape:             None
+    Wavelength:        0.85 nm
+    Min. Wavelength:   None
+    Max. Wavelength:   None
+    Wavelength Spread: 25.0 %
+    Beam Size:         None
+AF1410:hf
+  Q
+  I
+Metadata:
+
+  AF1410-hf (AF1410 steel aged 0.5 h), Run: ['nuclear sector', 'nuclear+magnetic sector']
+  ============================================
+
+Definition: AF1410-hf (AF1410 steel aged 0.5 h)
+Sample:
+   ID:           AF1410-hf (AF1410 steel aged 0.5 h)
+   Transmission: None
+   Thickness:    None
+   Temperature:  None
+   Position:     None
+   Orientation:  None
+Collimation:
+   Length: None
+Detector:
+   Name:         area
+   Distance:     None
+   Offset:       None
+   Orientation:  None
+   Beam center:  None
+   Pixel size:   None
+   Slit length:  None
+Source:
+    Radiation:         neutron
+    Shape:             None
+    Wavelength:        0.85 nm
+    Min. Wavelength:   None
+    Max. Wavelength:   None
+    Wavelength Spread: 25.0 %
+    Beam Size:         None
+AF1410:qu
+  Q
+  I
+Metadata:
+
+  AF1410-qu (AF1410 steel aged 0.25 h), Run: ['nuclear sector', 'nuclear+magnetic sector']
+  =============================================
+
+Definition: AF1410-qu (AF1410 steel aged 0.25 h)
+Sample:
+   ID:           AF1410-qu (AF1410 steel aged 0.25 h)
+   Transmission: None
+   Thickness:    None
+   Temperature:  None
+   Position:     None
+   Orientation:  None
+Collimation:
+   Length: None
+Detector:
+   Name:         area
+   Distance:     None
+   Offset:       None
+   Orientation:  None
+   Beam center:  None
+   Pixel size:   None
+   Slit length:  None
+Source:
+    Radiation:         neutron
+    Shape:             None
+    Wavelength:        0.85 nm
+    Min. Wavelength:   None
+    Max. Wavelength:   None
+    Wavelength Spread: 25.0 %
+    Beam Size:         None

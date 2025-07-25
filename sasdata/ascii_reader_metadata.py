@@ -10,7 +10,6 @@ initial_metadata = {
     'process': ['name', 'date', 'description', 'term', 'notes'],
     'sample': ['name', 'sample_id', 'thickness', 'transmission', 'temperature', 'position', 'orientation', 'details'],
     'transmission_spectrum': ['name', 'timestamp', 'transmission', 'transmission_deviation'],
-    # TODO: These will be elsewhere but just putting them into one category for now.
     'magnetic': ['demagnetizing_field', 'saturation_magnetization', 'applied_magnetic_field', 'counting_index'],
     'other': ['title', 'run', 'definition']
 }
@@ -90,7 +89,7 @@ class AsciiReaderMetadata:
         # Conflicts shouldn't really be happening anyway but if they do, we're gonna go with the master metadata taking
         # precedence for now.
         return_metadata: dict[str, AsciiMetadataCategory[str]] = {}
-        for category_name, category in file_metadata.items():
+        for category_name, category in (file_metadata | self.master_metadata).items():
             combined_category_dict = category.values | self.master_metadata[category_name].values
             new_category_dict: dict[str, str] = {}
             for key, value in combined_category_dict.items():

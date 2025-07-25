@@ -42,3 +42,4 @@ tests.log
 /installers/build
 /installers/dist
 *.exe
+sasdata/_version.py

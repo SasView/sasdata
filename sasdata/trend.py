@@ -1,9 +1,8 @@
 from dataclasses import dataclass
-from typing import Self
 from sasdata.data import SasData
 from sasdata.data_backing import Dataset, Group
 import numpy as np
-from sasdata.quantities.quantity import NamedQuantity, Quantity
+from sasdata.quantities.quantity import Quantity
 from sasdata.transforms.rebinning import calculate_interpolation_matrix_1d
 
 # Axis strs refer to the name of their associated NamedQuantity.
@@ -76,10 +75,12 @@ class Trend:
                     continue
                 new_quantities[name] = quantity @ mat
 
-            new_datum = SasData(datum.name,
-                                new_quantities,
-                                datum.dataset_type,
-                                datum._raw_metadata)
+            new_datum = SasData(
+                name=datum.name,
+                data_contents=new_quantities,
+                dataset_type=datum.dataset_type,
+                metadata=datum.metadata,
+            )
             new_data.append(new_datum)
         new_trend = Trend(new_data,
                           self.trend_axis)

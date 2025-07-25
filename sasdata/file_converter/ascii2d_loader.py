@@ -86,7 +86,7 @@ class ASCII2DLoader:
                 if len(dimensions) != 3: raise ValueError()
                 width = int(dimensions[0])
                 height = int(dimensions[1])
-            except ValueError as e:
+            except ValueError:
                 err_msg = "File incorrectly formatted.\n"
                 err_msg += ("Expected line {} to be of the form: <num_qx> "
                     "<num_qy> <scale>.").format(current_line + 1)

@@ -1,7 +1,6 @@
 from typing import Self
 
 import numpy as np
-from docutils.frontend import validate_ternary
 from numpy._typing import ArrayLike
 
 from sasdata.quantities import units
@@ -218,7 +217,7 @@ class Operation:
 
     @staticmethod
     def _deserialise(parameters: dict) -> "Operation":
-        raise NotImplementedError(f"Deserialise not implemented for this class")
+        raise NotImplementedError("Deserialise not implemented for this class")
 
     def serialise(self) -> str:
         return json.dumps(self._serialise_json())
@@ -996,20 +995,6 @@ def hash_data_via_numpy(*data: ArrayLike):
 
 QuantityType = TypeVar("QuantityType")
 
-# TODO: change QuantityType serialisation for greater efficiency
-def quantity_type_serialisation(var):
-    if isinstance(var, np.ndarray):
-        return {"array_contents": var.tobytes(), "shape": var.shape}
-    else:
-        return var
-
-def quantity_type_deserialisation(var):
-    if isinstance(var, dict):
-        array = np.frombuffer(var["array_contents"])
-        return np.reshape(array, shape=var["shape"])
-    else:
-        return var
-
 
 class QuantityHistory:
     """ Class that holds the information for keeping track of operations done on quantities """
@@ -1028,7 +1013,7 @@ class QuantityHistory:
         return [self.operation_tree.derivative(key) for key in self.reference_key_list]
 
     def _recalculate(self):
-        """ Recalculate the value of this object - primary use case is￼for testing """
+        """ Recalculate the value of this object - primary use case is for testing """
         return self.operation_tree.evaluate(self.references)
 
     def variance_propagate(self, quantity_units: Unit, covariances: dict[tuple[int, int]: "Quantity"] = {}):
@@ -1099,24 +1084,6 @@ class QuantityHistory:
         s += self.operation_tree.summary()
 
         return s
-
-    @staticmethod
-    def deserialise_json(json_data: dict) -> "QuantityHistory":
-        operation_tree = Operation.deserialise(json_data["operation_tree"])
-        references = {
-            key: Quantity.deserialise_json(json_data["references"][key])
-            for key in json_data["references"]
-        }
-        return QuantityHistory(operation_tree, references)
-
-    def serialise_json(self):
-        return {
-            "operation_tree": self.operation_tree.serialise(),
-            "references": [
-                ref.serialise_json_no_history() for ref in self.references.values()
-            ]
-
-        }
 
 
 class Quantity[QuantityType]:
@@ -1220,36 +1187,9 @@ class Quantity[QuantityType]:
         else:
             return self.in_si(), None
 
-    @staticmethod
-    def deserialise_json(json_data: dict) -> "Quantity":
-        value = numerical_decode(json_data["value"])
-        units_ = Unit.parse(json_data["units"])
-        standard_error = numerical_decode(json_data["variance"]) ** 0.5
-        hash_seed = json_data["hash_seed"]
-        history = QuantityHistory.deserialise_json(json_data["history"])
-        quantity = Quantity(value, units_, standard_error, hash_seed)
-        quantity.history = history
-        return quantity
+    def __eq__(self: Self, other: Self) -> bool | np.ndarray:
+        return self.value == other.in_units_of(self.units)
 
-    def serialise_json(self):
-        return {
-            "value": numerical_encode(self.value),
-            "units": str(self.units), # Unit serialisation
-            "variance": numerical_encode(self._variance),
-            "hash_seed": self._hash_seed, # is this just a string?
-            "hash_value": self.hash_value,
-            "history": self.history.serialise_json()
-        }
-
-    def serialise_json_no_history(self):
-        return {
-            "value": numerical_encode(self.value),
-            "units": str(self.units),  # Unit serialisation
-            "variance": numerical_encode(self._variance),
-            "hash_seed": self._hash_seed,  # is this just a string?
-            "hash_value": self.hash_value,
-            "history": {}
-        }
 
     def __mul__(self: Self, other: ArrayLike | Self ) -> Self:
         if isinstance(other, Quantity):
@@ -1402,9 +1342,6 @@ class Quantity[QuantityType]:
                                        other),
                                    self.history.references))
 
-    def __eq__(self, other: object) -> bool:
-        return isinstance(other, Quantity) and self.hash_value == other.hash_value
-
     @staticmethod
     def _array_repr_format(arr: np.ndarray):
         """ Format the array """
@@ -1489,21 +1426,6 @@ class NamedQuantity[QuantityType](Quantity[QuantityType]):
             raise UnitError(f"Standard error units ({standard_error.units}) "
                             f"are not compatible with value units ({self.units})")
 
-    @staticmethod
-    def deserialise_json(json_data: dict) -> "NamedQuantity":
-        name = json_data["name"]
-        value = numerical_decode(json_data["value"])
-        units_ = Unit.parse(json_data["units"])
-        standard_error = numerical_decode(json_data["variance"]) ** 0.5
-        history = QuantityHistory.deserialise_json(json_data["history"])
-        quantity = NamedQuantity(name, value, units_, standard_error)
-        quantity.history = history
-        return quantity
-
-    def serialise_json(self):
-        quantity = super().serialise_json()
-        quantity["name"] = self.name
-        return quantity
 
     @property
     def string_repr(self):
@@ -1535,12 +1457,3 @@ class DerivedQuantity[QuantityType](Quantity[QuantityType]):
             self._variance_cache = self.history.variance_propagate(self.units)
 
         return self._variance_cache
-
-
-    @staticmethod
-    def deserialise_json(json_data: dict) -> "DerivedQuantity":
-        value = numerical_decode(json_data["value"])
-        units_ = Unit.parse(json_data["units"])
-        history = QuantityHistory.deserialise_json(json_data["history"])
-        quantity = DerivedQuantity(value, units_, history)
-        return quantity

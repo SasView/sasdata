@@ -1,15 +1,11 @@
-import json
-from enum import Enum
-from typing import TypeVar, Any, Self
-from dataclasses import dataclass
 
 import numpy as np
 
-from sasdata.dataset_types import DatasetType, one_dim, two_dim
-from sasdata.quantities.quantity import NamedQuantity, Quantity
+from sasdata import dataset_types
+from sasdata.dataset_types import DatasetType
+from sasdata.quantities.quantity import Quantity
 from sasdata.metadata import Metadata
-from sasdata.quantities.accessors import AccessorTarget
-from sasdata.data_backing import Group, key_tree
+
 
 class SasData:
     def __init__(self, name: str,
@@ -37,29 +33,35 @@ class SasData:
     # TODO: Handle the other data types.
     @property
     def ordinate(self) -> Quantity:
-        if self.dataset_type == one_dim or self.dataset_type == two_dim:
-            return self._data_contents['I']
-        # TODO: seesans
-        # Let's ignore that this method can return None for now.
-        return None
+        match self.dataset_type:
+            case dataset_types.one_dim | dataset_types.two_dim:
+                return self._data_contents["I"]
+            case dataset_types.sesans:
+                return self._data_contents["Depolarisation"]
+            case _:
+                return None
 
     @property
     def abscissae(self) -> Quantity:
-        if self.dataset_type == one_dim:
-            return self._data_contents['Q']
-        elif self.dataset_type == two_dim:
-            # Type hinting is a bit lacking. Assume each part of the zip is a scalar value.
-            data_contents = np.array(list(zip(self._data_contents['Qx'].value, self._data_contents['Qy'].value)))
-            # Use this value to extract units etc. Assume they will be the same for Qy.
-            reference_data_content = self._data_contents['Qx']
-            # TODO: If this is a derived quantity then we are going to lose that
-            # information.
-            #
-            # TODO: Won't work when there's errors involved. On reflection, we
-            # probably want to avoid creating a new Quantity but at the moment I
-            # can't see a way around it.
-            return Quantity(data_contents, reference_data_content.units)
-        return None
+        match self.dataset_type:
+            case dataset_types.one_dim:
+                return self._data_contents['Q']
+            case dataset_types.two_dim:
+                # Type hinting is a bit lacking. Assume each part of the zip is a scalar value.
+                data_contents = np.array(list(zip(self._data_contents['Qx'].value, self._data_contents['Qy'].value)))
+                # Use this value to extract units etc. Assume they will be the same for Qy.
+                reference_data_content = self._data_contents['Qx']
+                # TODO: If this is a derived quantity then we are going to lose that
+                # information.
+                #
+                # TODO: Won't work when there's errors involved. On reflection, we
+                # probably want to avoid creating a new Quantity but at the moment I
+                # can't see a way around it.
+                return Quantity(data_contents, reference_data_content.units)
+            case dataset_types.sesans:
+                return self._data_contents["SpinEchoLength"]
+            case _:
+                None
 
     def __getitem__(self, item: str):
         return self._data_contents[item]
@@ -67,46 +69,11 @@ class SasData:
     def summary(self, indent = "  "):
         s = f"{self.name}\n"
 
-        for data in self._data_contents:
+        for data in sorted(self._data_contents, reverse=True):
             s += f"{indent}{data}\n"
 
-        s += f"Metadata:\n"
+        s += "Metadata:\n"
         s += "\n"
         s += self.metadata.summary()
 
         return s
-
-    @staticmethod
-    def deserialise(data: str) -> "SasData":
-        json_data = json.loads(data)
-        return SasData.deserialise_json(json_data)
-
-    @staticmethod
-    def deserialise_json(json_data: dict) -> "SasData":
-        name = json_data["name"]
-        data_contents = {}
-        dataset_type = json_data["dataset_type"] # TODO: update when DatasetType is more finalized
-        metadata = json_data["metadata"].deserialise_json()
-        for quantity in json_data["data_contents"]:
-            data_contents[quantity["label"]] = Quantity.deserialise_json(quantity)
-        return SasData(name, data_contents, dataset_type, metadata)
-
-    def serialise(self) -> str:
-        return json.dumps(self._serialise_json())
-
-    # TODO: fix serializers eventually
-    def _serialise_json(self) -> dict[str, Any]:
-        data = []
-        for d in self._data_contents:
-            quantity = self._data_contents[d]
-            quantity["label"] = d
-            data.append(quantity)
-        return {
-            "name": self.name,
-            "data_contents": data,
-            "dataset_type": None, # TODO: update when DatasetType is more finalized
-            "verbose": self._verbose,
-            "metadata": self.metadata.serialise_json(),
-            "mask": {},
-            "model_requirements": {}
-        }

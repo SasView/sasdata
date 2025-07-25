@@ -40,7 +40,6 @@ class Reader:
         """
         try:
             import Image
-            import TiffImagePlugin
             Image._initialized=2
         except:
             msg = "tiff_reader: could not load file. Missing Image module."

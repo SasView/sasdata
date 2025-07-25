@@ -83,7 +83,7 @@ HHHHHHHHH     HHHHHHHHH  aaaaaaaaaa  aaaa nnnnnn    nnnnnn   ddddddddd   ddddd
 #
 
 from dataclasses import dataclass
-from typing import Sequence, Self, TypeVar
+from typing import Sequence, Self
 from fractions import Fraction
 
 import numpy as np
@@ -363,15 +363,38 @@ class NamedUnit(Unit):
                  dimensions: Dimensions,
                  name: str | None = None,
                  ascii_symbol: str | None = None,
+                 latex_symbol: str | None = None,
                  symbol: str | None = None):
 
         super().__init__(si_scaling_factor, dimensions)
         self.name = name
         self.ascii_symbol = ascii_symbol
         self.symbol = symbol
+        self.latex_symbol = latex_symbol if latex_symbol is not None else ascii_symbol
 
     def __repr__(self):
         return self.name
+
+    def __eq__(self, other):
+        """Match other units exactly or match strings against ANY of our names"""
+        match other:
+            case str():
+                return self.name == other or self.name == f"{other}s" or self.ascii_symbol == other or self.symbol == other
+            case NamedUnit():
+                return self.name == other.name \
+                    and self.ascii_symbol == other.ascii_symbol and self.symbol == other.symbol
+            case Unit():
+                return self.equivalent(other) and np.abs(np.log(self.scale/other.scale)) < 1e-5
+            case _:
+                return False
+
+
+    def startswith(self, prefix: str) -> bool:
+        """Check if any representation of the unit begins with the prefix string"""
+        prefix = prefix.lower()
+        return (self.name is not None and self.name.lower().startswith(prefix)) \
+                or (self.ascii_symbol is not None and self.ascii_symbol.lower().startswith(prefix)) \
+                or (self.symbol is not None and self.symbol.lower().startswith(prefix))
 
 #
 # Parsing plan:
@@ -437,7 +460,7 @@ gigameters = NamedUnit(1000000000.0, Dimensions(1, 0, 0, 0, 0, 0, 0),name='gigam
 megameters = NamedUnit(1000000.0, Dimensions(1, 0, 0, 0, 0, 0, 0),name='megameters',ascii_symbol='Mm',symbol='Mm')
 kilometers = NamedUnit(1000.0, Dimensions(1, 0, 0, 0, 0, 0, 0),name='kilometers',ascii_symbol='km',symbol='km')
 millimeters = NamedUnit(0.001, Dimensions(1, 0, 0, 0, 0, 0, 0),name='millimeters',ascii_symbol='mm',symbol='mm')
-micrometers = NamedUnit(1e-06, Dimensions(1, 0, 0, 0, 0, 0, 0),name='micrometers',ascii_symbol='um',symbol='µm')
+micrometers = NamedUnit(1e-06, Dimensions(1, 0, 0, 0, 0, 0, 0),name='micrometers',ascii_symbol='um',latex_symbol=r'{\mu}m',symbol='µm')
 nanometers = NamedUnit(1e-09, Dimensions(1, 0, 0, 0, 0, 0, 0),name='nanometers',ascii_symbol='nm',symbol='nm')
 picometers = NamedUnit(1e-12, Dimensions(1, 0, 0, 0, 0, 0, 0),name='picometers',ascii_symbol='pm',symbol='pm')
 femtometers = NamedUnit(1e-15, Dimensions(1, 0, 0, 0, 0, 0, 0),name='femtometers',ascii_symbol='fm',symbol='fm')
@@ -446,7 +469,7 @@ decimeters = NamedUnit(0.1, Dimensions(1, 0, 0, 0, 0, 0, 0),name='decimeters',as
 centimeters = NamedUnit(0.01, Dimensions(1, 0, 0, 0, 0, 0, 0),name='centimeters',ascii_symbol='cm',symbol='cm')
 seconds = NamedUnit(1, Dimensions(0, 1, 0, 0, 0, 0, 0),name='seconds',ascii_symbol='s',symbol='s')
 milliseconds = NamedUnit(0.001, Dimensions(0, 1, 0, 0, 0, 0, 0),name='milliseconds',ascii_symbol='ms',symbol='ms')
-microseconds = NamedUnit(1e-06, Dimensions(0, 1, 0, 0, 0, 0, 0),name='microseconds',ascii_symbol='us',symbol='µs')
+microseconds = NamedUnit(1e-06, Dimensions(0, 1, 0, 0, 0, 0, 0),name='microseconds',ascii_symbol='us',latex_symbol=r'{\mu}s',symbol='µs')
 nanoseconds = NamedUnit(1e-09, Dimensions(0, 1, 0, 0, 0, 0, 0),name='nanoseconds',ascii_symbol='ns',symbol='ns')
 picoseconds = NamedUnit(1e-12, Dimensions(0, 1, 0, 0, 0, 0, 0),name='picoseconds',ascii_symbol='ps',symbol='ps')
 femtoseconds = NamedUnit(1e-15, Dimensions(0, 1, 0, 0, 0, 0, 0),name='femtoseconds',ascii_symbol='fs',symbol='fs')
@@ -459,7 +482,7 @@ gigagrams = NamedUnit(1000000.0, Dimensions(0, 0, 1, 0, 0, 0, 0),name='gigagrams
 megagrams = NamedUnit(1000.0, Dimensions(0, 0, 1, 0, 0, 0, 0),name='megagrams',ascii_symbol='Mg',symbol='Mg')
 kilograms = NamedUnit(1.0, Dimensions(0, 0, 1, 0, 0, 0, 0),name='kilograms',ascii_symbol='kg',symbol='kg')
 milligrams = NamedUnit(1e-06, Dimensions(0, 0, 1, 0, 0, 0, 0),name='milligrams',ascii_symbol='mg',symbol='mg')
-micrograms = NamedUnit(1e-09, Dimensions(0, 0, 1, 0, 0, 0, 0),name='micrograms',ascii_symbol='ug',symbol='µg')
+micrograms = NamedUnit(1e-09, Dimensions(0, 0, 1, 0, 0, 0, 0),name='micrograms',ascii_symbol='ug',latex_symbol=r'{\mu}g',symbol='µg')
 nanograms = NamedUnit(1.0000000000000002e-12, Dimensions(0, 0, 1, 0, 0, 0, 0),name='nanograms',ascii_symbol='ng',symbol='ng')
 picograms = NamedUnit(1e-15, Dimensions(0, 0, 1, 0, 0, 0, 0),name='picograms',ascii_symbol='pg',symbol='pg')
 femtograms = NamedUnit(1e-18, Dimensions(0, 0, 1, 0, 0, 0, 0),name='femtograms',ascii_symbol='fg',symbol='fg')
@@ -472,7 +495,7 @@ gigaamperes = NamedUnit(1000000000.0, Dimensions(0, 0, 0, 1, 0, 0, 0),name='giga
 megaamperes = NamedUnit(1000000.0, Dimensions(0, 0, 0, 1, 0, 0, 0),name='megaamperes',ascii_symbol='MA',symbol='MA')
 kiloamperes = NamedUnit(1000.0, Dimensions(0, 0, 0, 1, 0, 0, 0),name='kiloamperes',ascii_symbol='kA',symbol='kA')
 milliamperes = NamedUnit(0.001, Dimensions(0, 0, 0, 1, 0, 0, 0),name='milliamperes',ascii_symbol='mA',symbol='mA')
-microamperes = NamedUnit(1e-06, Dimensions(0, 0, 0, 1, 0, 0, 0),name='microamperes',ascii_symbol='uA',symbol='µA')
+microamperes = NamedUnit(1e-06, Dimensions(0, 0, 0, 1, 0, 0, 0),name='microamperes',ascii_symbol='uA',latex_symbol=r'{\mu}A',symbol='µA')
 nanoamperes = NamedUnit(1e-09, Dimensions(0, 0, 0, 1, 0, 0, 0),name='nanoamperes',ascii_symbol='nA',symbol='nA')
 picoamperes = NamedUnit(1e-12, Dimensions(0, 0, 0, 1, 0, 0, 0),name='picoamperes',ascii_symbol='pA',symbol='pA')
 femtoamperes = NamedUnit(1e-15, Dimensions(0, 0, 0, 1, 0, 0, 0),name='femtoamperes',ascii_symbol='fA',symbol='fA')
@@ -485,7 +508,7 @@ gigakelvin = NamedUnit(1000000000.0, Dimensions(0, 0, 0, 0, 1, 0, 0),name='gigak
 megakelvin = NamedUnit(1000000.0, Dimensions(0, 0, 0, 0, 1, 0, 0),name='megakelvin',ascii_symbol='MK',symbol='MK')
 kilokelvin = NamedUnit(1000.0, Dimensions(0, 0, 0, 0, 1, 0, 0),name='kilokelvin',ascii_symbol='kK',symbol='kK')
 millikelvin = NamedUnit(0.001, Dimensions(0, 0, 0, 0, 1, 0, 0),name='millikelvin',ascii_symbol='mK',symbol='mK')
-microkelvin = NamedUnit(1e-06, Dimensions(0, 0, 0, 0, 1, 0, 0),name='microkelvin',ascii_symbol='uK',symbol='µK')
+microkelvin = NamedUnit(1e-06, Dimensions(0, 0, 0, 0, 1, 0, 0),name='microkelvin',ascii_symbol='uK',latex_symbol=r'{\mu}K',symbol='µK')
 nanokelvin = NamedUnit(1e-09, Dimensions(0, 0, 0, 0, 1, 0, 0),name='nanokelvin',ascii_symbol='nK',symbol='nK')
 picokelvin = NamedUnit(1e-12, Dimensions(0, 0, 0, 0, 1, 0, 0),name='picokelvin',ascii_symbol='pK',symbol='pK')
 femtokelvin = NamedUnit(1e-15, Dimensions(0, 0, 0, 0, 1, 0, 0),name='femtokelvin',ascii_symbol='fK',symbol='fK')
@@ -498,7 +521,7 @@ gigahertz = NamedUnit(1000000000.0, Dimensions(0, -1, 0, 0, 0, 0, 0),name='gigah
 megahertz = NamedUnit(1000000.0, Dimensions(0, -1, 0, 0, 0, 0, 0),name='megahertz',ascii_symbol='MHz',symbol='MHz')
 kilohertz = NamedUnit(1000.0, Dimensions(0, -1, 0, 0, 0, 0, 0),name='kilohertz',ascii_symbol='kHz',symbol='kHz')
 millihertz = NamedUnit(0.001, Dimensions(0, -1, 0, 0, 0, 0, 0),name='millihertz',ascii_symbol='mHz',symbol='mHz')
-microhertz = NamedUnit(1e-06, Dimensions(0, -1, 0, 0, 0, 0, 0),name='microhertz',ascii_symbol='uHz',symbol='µHz')
+microhertz = NamedUnit(1e-06, Dimensions(0, -1, 0, 0, 0, 0, 0),name='microhertz',ascii_symbol='uHz',latex_symbol=r'{\mu}Hz',symbol='µHz')
 nanohertz = NamedUnit(1e-09, Dimensions(0, -1, 0, 0, 0, 0, 0),name='nanohertz',ascii_symbol='nHz',symbol='nHz')
 picohertz = NamedUnit(1e-12, Dimensions(0, -1, 0, 0, 0, 0, 0),name='picohertz',ascii_symbol='pHz',symbol='pHz')
 femtohertz = NamedUnit(1e-15, Dimensions(0, -1, 0, 0, 0, 0, 0),name='femtohertz',ascii_symbol='fHz',symbol='fHz')
@@ -511,7 +534,7 @@ giganewtons = NamedUnit(1000000000.0, Dimensions(1, -2, 1, 0, 0, 0, 0),name='gig
 meganewtons = NamedUnit(1000000.0, Dimensions(1, -2, 1, 0, 0, 0, 0),name='meganewtons',ascii_symbol='MN',symbol='MN')
 kilonewtons = NamedUnit(1000.0, Dimensions(1, -2, 1, 0, 0, 0, 0),name='kilonewtons',ascii_symbol='kN',symbol='kN')
 millinewtons = NamedUnit(0.001, Dimensions(1, -2, 1, 0, 0, 0, 0),name='millinewtons',ascii_symbol='mN',symbol='mN')
-micronewtons = NamedUnit(1e-06, Dimensions(1, -2, 1, 0, 0, 0, 0),name='micronewtons',ascii_symbol='uN',symbol='µN')
+micronewtons = NamedUnit(1e-06, Dimensions(1, -2, 1, 0, 0, 0, 0),name='micronewtons',ascii_symbol='uN',latex_symbol=r'{\mu}N',symbol='µN')
 nanonewtons = NamedUnit(1e-09, Dimensions(1, -2, 1, 0, 0, 0, 0),name='nanonewtons',ascii_symbol='nN',symbol='nN')
 piconewtons = NamedUnit(1e-12, Dimensions(1, -2, 1, 0, 0, 0, 0),name='piconewtons',ascii_symbol='pN',symbol='pN')
 femtonewtons = NamedUnit(1e-15, Dimensions(1, -2, 1, 0, 0, 0, 0),name='femtonewtons',ascii_symbol='fN',symbol='fN')
@@ -524,7 +547,7 @@ gigapascals = NamedUnit(1000000000.0, Dimensions(-1, -2, 1, 0, 0, 0, 0),name='gi
 megapascals = NamedUnit(1000000.0, Dimensions(-1, -2, 1, 0, 0, 0, 0),name='megapascals',ascii_symbol='MPa',symbol='MPa')
 kilopascals = NamedUnit(1000.0, Dimensions(-1, -2, 1, 0, 0, 0, 0),name='kilopascals',ascii_symbol='kPa',symbol='kPa')
 millipascals = NamedUnit(0.001, Dimensions(-1, -2, 1, 0, 0, 0, 0),name='millipascals',ascii_symbol='mPa',symbol='mPa')
-micropascals = NamedUnit(1e-06, Dimensions(-1, -2, 1, 0, 0, 0, 0),name='micropascals',ascii_symbol='uPa',symbol='µPa')
+micropascals = NamedUnit(1e-06, Dimensions(-1, -2, 1, 0, 0, 0, 0),name='micropascals',ascii_symbol='uPa',latex_symbol=r'{\mu}Pa',symbol='µPa')
 nanopascals = NamedUnit(1e-09, Dimensions(-1, -2, 1, 0, 0, 0, 0),name='nanopascals',ascii_symbol='nPa',symbol='nPa')
 picopascals = NamedUnit(1e-12, Dimensions(-1, -2, 1, 0, 0, 0, 0),name='picopascals',ascii_symbol='pPa',symbol='pPa')
 femtopascals = NamedUnit(1e-15, Dimensions(-1, -2, 1, 0, 0, 0, 0),name='femtopascals',ascii_symbol='fPa',symbol='fPa')
@@ -537,7 +560,7 @@ gigajoules = NamedUnit(1000000000.0, Dimensions(2, -2, 1, 0, 0, 0, 0),name='giga
 megajoules = NamedUnit(1000000.0, Dimensions(2, -2, 1, 0, 0, 0, 0),name='megajoules',ascii_symbol='MJ',symbol='MJ')
 kilojoules = NamedUnit(1000.0, Dimensions(2, -2, 1, 0, 0, 0, 0),name='kilojoules',ascii_symbol='kJ',symbol='kJ')
 millijoules = NamedUnit(0.001, Dimensions(2, -2, 1, 0, 0, 0, 0),name='millijoules',ascii_symbol='mJ',symbol='mJ')
-microjoules = NamedUnit(1e-06, Dimensions(2, -2, 1, 0, 0, 0, 0),name='microjoules',ascii_symbol='uJ',symbol='µJ')
+microjoules = NamedUnit(1e-06, Dimensions(2, -2, 1, 0, 0, 0, 0),name='microjoules',ascii_symbol='uJ',latex_symbol=r'{\mu}J',symbol='µJ')
 nanojoules = NamedUnit(1e-09, Dimensions(2, -2, 1, 0, 0, 0, 0),name='nanojoules',ascii_symbol='nJ',symbol='nJ')
 picojoules = NamedUnit(1e-12, Dimensions(2, -2, 1, 0, 0, 0, 0),name='picojoules',ascii_symbol='pJ',symbol='pJ')
 femtojoules = NamedUnit(1e-15, Dimensions(2, -2, 1, 0, 0, 0, 0),name='femtojoules',ascii_symbol='fJ',symbol='fJ')
@@ -550,7 +573,7 @@ gigawatts = NamedUnit(1000000000.0, Dimensions(2, -3, 1, 0, 0, 0, 0),name='gigaw
 megawatts = NamedUnit(1000000.0, Dimensions(2, -3, 1, 0, 0, 0, 0),name='megawatts',ascii_symbol='MW',symbol='MW')
 kilowatts = NamedUnit(1000.0, Dimensions(2, -3, 1, 0, 0, 0, 0),name='kilowatts',ascii_symbol='kW',symbol='kW')
 milliwatts = NamedUnit(0.001, Dimensions(2, -3, 1, 0, 0, 0, 0),name='milliwatts',ascii_symbol='mW',symbol='mW')
-microwatts = NamedUnit(1e-06, Dimensions(2, -3, 1, 0, 0, 0, 0),name='microwatts',ascii_symbol='uW',symbol='µW')
+microwatts = NamedUnit(1e-06, Dimensions(2, -3, 1, 0, 0, 0, 0),name='microwatts',ascii_symbol='uW',latex_symbol=r'{\mu}W',symbol='µW')
 nanowatts = NamedUnit(1e-09, Dimensions(2, -3, 1, 0, 0, 0, 0),name='nanowatts',ascii_symbol='nW',symbol='nW')
 picowatts = NamedUnit(1e-12, Dimensions(2, -3, 1, 0, 0, 0, 0),name='picowatts',ascii_symbol='pW',symbol='pW')
 femtowatts = NamedUnit(1e-15, Dimensions(2, -3, 1, 0, 0, 0, 0),name='femtowatts',ascii_symbol='fW',symbol='fW')
@@ -563,7 +586,7 @@ gigacoulombs = NamedUnit(1000000000.0, Dimensions(0, 1, 0, 1, 0, 0, 0),name='gig
 megacoulombs = NamedUnit(1000000.0, Dimensions(0, 1, 0, 1, 0, 0, 0),name='megacoulombs',ascii_symbol='MC',symbol='MC')
 kilocoulombs = NamedUnit(1000.0, Dimensions(0, 1, 0, 1, 0, 0, 0),name='kilocoulombs',ascii_symbol='kC',symbol='kC')
 millicoulombs = NamedUnit(0.001, Dimensions(0, 1, 0, 1, 0, 0, 0),name='millicoulombs',ascii_symbol='mC',symbol='mC')
-microcoulombs = NamedUnit(1e-06, Dimensions(0, 1, 0, 1, 0, 0, 0),name='microcoulombs',ascii_symbol='uC',symbol='µC')
+microcoulombs = NamedUnit(1e-06, Dimensions(0, 1, 0, 1, 0, 0, 0),name='microcoulombs',ascii_symbol='uC',latex_symbol=r'{\mu}C',symbol='µC')
 nanocoulombs = NamedUnit(1e-09, Dimensions(0, 1, 0, 1, 0, 0, 0),name='nanocoulombs',ascii_symbol='nC',symbol='nC')
 picocoulombs = NamedUnit(1e-12, Dimensions(0, 1, 0, 1, 0, 0, 0),name='picocoulombs',ascii_symbol='pC',symbol='pC')
 femtocoulombs = NamedUnit(1e-15, Dimensions(0, 1, 0, 1, 0, 0, 0),name='femtocoulombs',ascii_symbol='fC',symbol='fC')
@@ -576,24 +599,24 @@ gigavolts = NamedUnit(1000000000.0, Dimensions(2, -3, 1, -1, 0, 0, 0),name='giga
 megavolts = NamedUnit(1000000.0, Dimensions(2, -3, 1, -1, 0, 0, 0),name='megavolts',ascii_symbol='MV',symbol='MV')
 kilovolts = NamedUnit(1000.0, Dimensions(2, -3, 1, -1, 0, 0, 0),name='kilovolts',ascii_symbol='kV',symbol='kV')
 millivolts = NamedUnit(0.001, Dimensions(2, -3, 1, -1, 0, 0, 0),name='millivolts',ascii_symbol='mV',symbol='mV')
-microvolts = NamedUnit(1e-06, Dimensions(2, -3, 1, -1, 0, 0, 0),name='microvolts',ascii_symbol='uV',symbol='µV')
+microvolts = NamedUnit(1e-06, Dimensions(2, -3, 1, -1, 0, 0, 0),name='microvolts',ascii_symbol='uV',latex_symbol=r'{\mu}V',symbol='µV')
 nanovolts = NamedUnit(1e-09, Dimensions(2, -3, 1, -1, 0, 0, 0),name='nanovolts',ascii_symbol='nV',symbol='nV')
 picovolts = NamedUnit(1e-12, Dimensions(2, -3, 1, -1, 0, 0, 0),name='picovolts',ascii_symbol='pV',symbol='pV')
 femtovolts = NamedUnit(1e-15, Dimensions(2, -3, 1, -1, 0, 0, 0),name='femtovolts',ascii_symbol='fV',symbol='fV')
 attovolts = NamedUnit(1e-18, Dimensions(2, -3, 1, -1, 0, 0, 0),name='attovolts',ascii_symbol='aV',symbol='aV')
-ohms = NamedUnit(1, Dimensions(2, -3, 1, -2, 0, 0, 0),name='ohms',ascii_symbol='Ohm',symbol='Ω')
-exaohms = NamedUnit(1e+18, Dimensions(2, -3, 1, -2, 0, 0, 0),name='exaohms',ascii_symbol='EOhm',symbol='EΩ')
-petaohms = NamedUnit(1000000000000000.0, Dimensions(2, -3, 1, -2, 0, 0, 0),name='petaohms',ascii_symbol='POhm',symbol='PΩ')
-teraohms = NamedUnit(1000000000000.0, Dimensions(2, -3, 1, -2, 0, 0, 0),name='teraohms',ascii_symbol='TOhm',symbol='TΩ')
-gigaohms = NamedUnit(1000000000.0, Dimensions(2, -3, 1, -2, 0, 0, 0),name='gigaohms',ascii_symbol='GOhm',symbol='GΩ')
-megaohms = NamedUnit(1000000.0, Dimensions(2, -3, 1, -2, 0, 0, 0),name='megaohms',ascii_symbol='MOhm',symbol='MΩ')
-kiloohms = NamedUnit(1000.0, Dimensions(2, -3, 1, -2, 0, 0, 0),name='kiloohms',ascii_symbol='kOhm',symbol='kΩ')
-milliohms = NamedUnit(0.001, Dimensions(2, -3, 1, -2, 0, 0, 0),name='milliohms',ascii_symbol='mOhm',symbol='mΩ')
-microohms = NamedUnit(1e-06, Dimensions(2, -3, 1, -2, 0, 0, 0),name='microohms',ascii_symbol='uOhm',symbol='µΩ')
-nanoohms = NamedUnit(1e-09, Dimensions(2, -3, 1, -2, 0, 0, 0),name='nanoohms',ascii_symbol='nOhm',symbol='nΩ')
-picoohms = NamedUnit(1e-12, Dimensions(2, -3, 1, -2, 0, 0, 0),name='picoohms',ascii_symbol='pOhm',symbol='pΩ')
-femtoohms = NamedUnit(1e-15, Dimensions(2, -3, 1, -2, 0, 0, 0),name='femtoohms',ascii_symbol='fOhm',symbol='fΩ')
-attoohms = NamedUnit(1e-18, Dimensions(2, -3, 1, -2, 0, 0, 0),name='attoohms',ascii_symbol='aOhm',symbol='aΩ')
+ohms = NamedUnit(1, Dimensions(2, -3, 1, -2, 0, 0, 0),name='ohms',ascii_symbol='Ohm',latex_symbol=r'\Omega',symbol='Ω')
+exaohms = NamedUnit(1e+18, Dimensions(2, -3, 1, -2, 0, 0, 0),name='exaohms',ascii_symbol='EOhm',latex_symbol=r'E\Omega',symbol='EΩ')
+petaohms = NamedUnit(1000000000000000.0, Dimensions(2, -3, 1, -2, 0, 0, 0),name='petaohms',ascii_symbol='POhm',latex_symbol=r'P\Omega',symbol='PΩ')
+teraohms = NamedUnit(1000000000000.0, Dimensions(2, -3, 1, -2, 0, 0, 0),name='teraohms',ascii_symbol='TOhm',latex_symbol=r'T\Omega',symbol='TΩ')
+gigaohms = NamedUnit(1000000000.0, Dimensions(2, -3, 1, -2, 0, 0, 0),name='gigaohms',ascii_symbol='GOhm',latex_symbol=r'G\Omega',symbol='GΩ')
+megaohms = NamedUnit(1000000.0, Dimensions(2, -3, 1, -2, 0, 0, 0),name='megaohms',ascii_symbol='MOhm',latex_symbol=r'M\Omega',symbol='MΩ')
+kiloohms = NamedUnit(1000.0, Dimensions(2, -3, 1, -2, 0, 0, 0),name='kiloohms',ascii_symbol='kOhm',latex_symbol=r'k\Omega',symbol='kΩ')
+milliohms = NamedUnit(0.001, Dimensions(2, -3, 1, -2, 0, 0, 0),name='milliohms',ascii_symbol='mOhm',latex_symbol=r'm\Omega',symbol='mΩ')
+microohms = NamedUnit(1e-06, Dimensions(2, -3, 1, -2, 0, 0, 0),name='microohms',ascii_symbol='uOhm',latex_symbol=r'{\mu}\Omega',symbol='µΩ')
+nanoohms = NamedUnit(1e-09, Dimensions(2, -3, 1, -2, 0, 0, 0),name='nanoohms',ascii_symbol='nOhm',latex_symbol=r'n\Omega',symbol='nΩ')
+picoohms = NamedUnit(1e-12, Dimensions(2, -3, 1, -2, 0, 0, 0),name='picoohms',ascii_symbol='pOhm',latex_symbol=r'p\Omega',symbol='pΩ')
+femtoohms = NamedUnit(1e-15, Dimensions(2, -3, 1, -2, 0, 0, 0),name='femtoohms',ascii_symbol='fOhm',latex_symbol=r'f\Omega',symbol='fΩ')
+attoohms = NamedUnit(1e-18, Dimensions(2, -3, 1, -2, 0, 0, 0),name='attoohms',ascii_symbol='aOhm',latex_symbol=r'a\Omega',symbol='aΩ')
 farads = NamedUnit(1, Dimensions(-2, 4, -1, 2, 0, 0, 0),name='farads',ascii_symbol='F',symbol='F')
 exafarads = NamedUnit(1e+18, Dimensions(-2, 4, -1, 2, 0, 0, 0),name='exafarads',ascii_symbol='EF',symbol='EF')
 petafarads = NamedUnit(1000000000000000.0, Dimensions(-2, 4, -1, 2, 0, 0, 0),name='petafarads',ascii_symbol='PF',symbol='PF')
@@ -602,7 +625,7 @@ gigafarads = NamedUnit(1000000000.0, Dimensions(-2, 4, -1, 2, 0, 0, 0),name='gig
 megafarads = NamedUnit(1000000.0, Dimensions(-2, 4, -1, 2, 0, 0, 0),name='megafarads',ascii_symbol='MF',symbol='MF')
 kilofarads = NamedUnit(1000.0, Dimensions(-2, 4, -1, 2, 0, 0, 0),name='kilofarads',ascii_symbol='kF',symbol='kF')
 millifarads = NamedUnit(0.001, Dimensions(-2, 4, -1, 2, 0, 0, 0),name='millifarads',ascii_symbol='mF',symbol='mF')
-microfarads = NamedUnit(1e-06, Dimensions(-2, 4, -1, 2, 0, 0, 0),name='microfarads',ascii_symbol='uF',symbol='µF')
+microfarads = NamedUnit(1e-06, Dimensions(-2, 4, -1, 2, 0, 0, 0),name='microfarads',ascii_symbol='uF',latex_symbol=r'{\mu}F',symbol='µF')
 nanofarads = NamedUnit(1e-09, Dimensions(-2, 4, -1, 2, 0, 0, 0),name='nanofarads',ascii_symbol='nF',symbol='nF')
 picofarads = NamedUnit(1e-12, Dimensions(-2, 4, -1, 2, 0, 0, 0),name='picofarads',ascii_symbol='pF',symbol='pF')
 femtofarads = NamedUnit(1e-15, Dimensions(-2, 4, -1, 2, 0, 0, 0),name='femtofarads',ascii_symbol='fF',symbol='fF')
@@ -615,7 +638,7 @@ gigasiemens = NamedUnit(1000000000.0, Dimensions(-2, 3, -1, 2, 0, 0, 0),name='gi
 megasiemens = NamedUnit(1000000.0, Dimensions(-2, 3, -1, 2, 0, 0, 0),name='megasiemens',ascii_symbol='MS',symbol='MS')
 kilosiemens = NamedUnit(1000.0, Dimensions(-2, 3, -1, 2, 0, 0, 0),name='kilosiemens',ascii_symbol='kS',symbol='kS')
 millisiemens = NamedUnit(0.001, Dimensions(-2, 3, -1, 2, 0, 0, 0),name='millisiemens',ascii_symbol='mS',symbol='mS')
-microsiemens = NamedUnit(1e-06, Dimensions(-2, 3, -1, 2, 0, 0, 0),name='microsiemens',ascii_symbol='uS',symbol='µS')
+microsiemens = NamedUnit(1e-06, Dimensions(-2, 3, -1, 2, 0, 0, 0),name='microsiemens',ascii_symbol='uS',latex_symbol=r'{\mu}S',symbol='µS')
 nanosiemens = NamedUnit(1e-09, Dimensions(-2, 3, -1, 2, 0, 0, 0),name='nanosiemens',ascii_symbol='nS',symbol='nS')
 picosiemens = NamedUnit(1e-12, Dimensions(-2, 3, -1, 2, 0, 0, 0),name='picosiemens',ascii_symbol='pS',symbol='pS')
 femtosiemens = NamedUnit(1e-15, Dimensions(-2, 3, -1, 2, 0, 0, 0),name='femtosiemens',ascii_symbol='fS',symbol='fS')
@@ -628,7 +651,7 @@ gigawebers = NamedUnit(1000000000.0, Dimensions(2, -2, 1, -1, 0, 0, 0),name='gig
 megawebers = NamedUnit(1000000.0, Dimensions(2, -2, 1, -1, 0, 0, 0),name='megawebers',ascii_symbol='MWb',symbol='MWb')
 kilowebers = NamedUnit(1000.0, Dimensions(2, -2, 1, -1, 0, 0, 0),name='kilowebers',ascii_symbol='kWb',symbol='kWb')
 milliwebers = NamedUnit(0.001, Dimensions(2, -2, 1, -1, 0, 0, 0),name='milliwebers',ascii_symbol='mWb',symbol='mWb')
-microwebers = NamedUnit(1e-06, Dimensions(2, -2, 1, -1, 0, 0, 0),name='microwebers',ascii_symbol='uWb',symbol='µWb')
+microwebers = NamedUnit(1e-06, Dimensions(2, -2, 1, -1, 0, 0, 0),name='microwebers',ascii_symbol='uWb',latex_symbol=r'{\mu}Wb',symbol='µWb')
 nanowebers = NamedUnit(1e-09, Dimensions(2, -2, 1, -1, 0, 0, 0),name='nanowebers',ascii_symbol='nWb',symbol='nWb')
 picowebers = NamedUnit(1e-12, Dimensions(2, -2, 1, -1, 0, 0, 0),name='picowebers',ascii_symbol='pWb',symbol='pWb')
 femtowebers = NamedUnit(1e-15, Dimensions(2, -2, 1, -1, 0, 0, 0),name='femtowebers',ascii_symbol='fWb',symbol='fWb')
@@ -641,7 +664,7 @@ gigatesla = NamedUnit(1000000000.0, Dimensions(0, -2, 1, -1, 0, 0, 0),name='giga
 megatesla = NamedUnit(1000000.0, Dimensions(0, -2, 1, -1, 0, 0, 0),name='megatesla',ascii_symbol='MT',symbol='MT')
 kilotesla = NamedUnit(1000.0, Dimensions(0, -2, 1, -1, 0, 0, 0),name='kilotesla',ascii_symbol='kT',symbol='kT')
 millitesla = NamedUnit(0.001, Dimensions(0, -2, 1, -1, 0, 0, 0),name='millitesla',ascii_symbol='mT',symbol='mT')
-microtesla = NamedUnit(1e-06, Dimensions(0, -2, 1, -1, 0, 0, 0),name='microtesla',ascii_symbol='uT',symbol='µT')
+microtesla = NamedUnit(1e-06, Dimensions(0, -2, 1, -1, 0, 0, 0),name='microtesla',ascii_symbol='uT',latex_symbol=r'{\mu}T',symbol='µT')
 nanotesla = NamedUnit(1e-09, Dimensions(0, -2, 1, -1, 0, 0, 0),name='nanotesla',ascii_symbol='nT',symbol='nT')
 picotesla = NamedUnit(1e-12, Dimensions(0, -2, 1, -1, 0, 0, 0),name='picotesla',ascii_symbol='pT',symbol='pT')
 femtotesla = NamedUnit(1e-15, Dimensions(0, -2, 1, -1, 0, 0, 0),name='femtotesla',ascii_symbol='fT',symbol='fT')
@@ -654,12 +677,13 @@ gigahenry = NamedUnit(1000000000.0, Dimensions(2, -2, 1, -2, 0, 0, 0),name='giga
 megahenry = NamedUnit(1000000.0, Dimensions(2, -2, 1, -2, 0, 0, 0),name='megahenry',ascii_symbol='MH',symbol='MH')
 kilohenry = NamedUnit(1000.0, Dimensions(2, -2, 1, -2, 0, 0, 0),name='kilohenry',ascii_symbol='kH',symbol='kH')
 millihenry = NamedUnit(0.001, Dimensions(2, -2, 1, -2, 0, 0, 0),name='millihenry',ascii_symbol='mH',symbol='mH')
-microhenry = NamedUnit(1e-06, Dimensions(2, -2, 1, -2, 0, 0, 0),name='microhenry',ascii_symbol='uH',symbol='µH')
+microhenry = NamedUnit(1e-06, Dimensions(2, -2, 1, -2, 0, 0, 0),name='microhenry',ascii_symbol='uH',latex_symbol=r'{\mu}H',symbol='µH')
 nanohenry = NamedUnit(1e-09, Dimensions(2, -2, 1, -2, 0, 0, 0),name='nanohenry',ascii_symbol='nH',symbol='nH')
 picohenry = NamedUnit(1e-12, Dimensions(2, -2, 1, -2, 0, 0, 0),name='picohenry',ascii_symbol='pH',symbol='pH')
 femtohenry = NamedUnit(1e-15, Dimensions(2, -2, 1, -2, 0, 0, 0),name='femtohenry',ascii_symbol='fH',symbol='fH')
 attohenry = NamedUnit(1e-18, Dimensions(2, -2, 1, -2, 0, 0, 0),name='attohenry',ascii_symbol='aH',symbol='aH')
-angstroms = NamedUnit(1e-10, Dimensions(1, 0, 0, 0, 0, 0, 0),name='angstroms',ascii_symbol='Ang',symbol='Å')
+angstroms = NamedUnit(1e-10, Dimensions(1, 0, 0, 0, 0, 0, 0),name='angstroms',ascii_symbol='Ang',latex_symbol=r'\AA',symbol='Å')
+microns = NamedUnit(1e-06, Dimensions(1, 0, 0, 0, 0, 0, 0),name='microns',ascii_symbol='micron',symbol='micron')
 minutes = NamedUnit(60, Dimensions(0, 1, 0, 0, 0, 0, 0),name='minutes',ascii_symbol='min',symbol='min')
 hours = NamedUnit(360, Dimensions(0, 1, 0, 0, 0, 0, 0),name='hours',ascii_symbol='h',symbol='h')
 days = NamedUnit(8640, Dimensions(0, 1, 0, 0, 0, 0, 0),name='days',ascii_symbol='d',symbol='d')
@@ -676,7 +700,7 @@ gigaelectronvolts = NamedUnit(1.6021766339999998e-10, Dimensions(2, -2, 1, 0, 0,
 megaelectronvolts = NamedUnit(1.6021766339999998e-13, Dimensions(2, -2, 1, 0, 0, 0, 0),name='megaelectronvolts',ascii_symbol='MeV',symbol='MeV')
 kiloelectronvolts = NamedUnit(1.602176634e-16, Dimensions(2, -2, 1, 0, 0, 0, 0),name='kiloelectronvolts',ascii_symbol='keV',symbol='keV')
 millielectronvolts = NamedUnit(1.6021766339999998e-22, Dimensions(2, -2, 1, 0, 0, 0, 0),name='millielectronvolts',ascii_symbol='meV',symbol='meV')
-microelectronvolts = NamedUnit(1.602176634e-25, Dimensions(2, -2, 1, 0, 0, 0, 0),name='microelectronvolts',ascii_symbol='ueV',symbol='µeV')
+microelectronvolts = NamedUnit(1.602176634e-25, Dimensions(2, -2, 1, 0, 0, 0, 0),name='microelectronvolts',ascii_symbol='ueV',latex_symbol=r'{\mu}eV',symbol='µeV')
 nanoelectronvolts = NamedUnit(1.602176634e-28, Dimensions(2, -2, 1, 0, 0, 0, 0),name='nanoelectronvolts',ascii_symbol='neV',symbol='neV')
 picoelectronvolts = NamedUnit(1.6021766339999998e-31, Dimensions(2, -2, 1, 0, 0, 0, 0),name='picoelectronvolts',ascii_symbol='peV',symbol='peV')
 femtoelectronvolts = NamedUnit(1.602176634e-34, Dimensions(2, -2, 1, 0, 0, 0, 0),name='femtoelectronvolts',ascii_symbol='feV',symbol='feV')
@@ -684,7 +708,7 @@ attoelectronvolts = NamedUnit(1.602176634e-37, Dimensions(2, -2, 1, 0, 0, 0, 0),
 atomic_mass_units = NamedUnit(1.660538921e-27, Dimensions(0, 0, 1, 0, 0, 0, 0),name='atomic_mass_units',ascii_symbol='au',symbol='au')
 moles = NamedUnit(6.02214076e+23, Dimensions(0, 0, 0, 0, 0, 1, 0),name='moles',ascii_symbol='mol',symbol='mol')
 millimoles = NamedUnit(6.02214076e+20, Dimensions(0, 0, 0, 0, 0, 1, 0),name='millimoles',ascii_symbol='mmol',symbol='mmol')
-micromoles = NamedUnit(6.02214076e+17, Dimensions(0, 0, 0, 0, 0, 1, 0),name='micromoles',ascii_symbol='umol',symbol='µmol')
+micromoles = NamedUnit(6.02214076e+17, Dimensions(0, 0, 0, 0, 0, 1, 0),name='micromoles',ascii_symbol='umol',latex_symbol=r'{\mu}mol',symbol='µmol')
 nanomoles = NamedUnit(602214076000000.0, Dimensions(0, 0, 0, 0, 0, 1, 0),name='nanomoles',ascii_symbol='nmol',symbol='nmol')
 picomoles = NamedUnit(602214076000.0, Dimensions(0, 0, 0, 0, 0, 1, 0),name='picomoles',ascii_symbol='pmol',symbol='pmol')
 femtomoles = NamedUnit(602214076.0, Dimensions(0, 0, 0, 0, 0, 1, 0),name='femtomoles',ascii_symbol='fmol',symbol='fmol')
@@ -700,7 +724,7 @@ pounds_force = NamedUnit(4.448222, Dimensions(1, -2, 1, 0, 0, 0, 0),name='pounds
 ounces = NamedUnit(0.028349523125, Dimensions(0, 0, 1, 0, 0, 0, 0),name='ounces',ascii_symbol='oz',symbol='oz')
 pounds_force_per_square_inch = NamedUnit(6894.757889515779, Dimensions(-1, -2, 1, 0, 0, 0, 0),name='pounds_force_per_square_inch',ascii_symbol='psi',symbol='psi')
 none = NamedUnit(1, Dimensions(0, 0, 0, 0, 0, 0, 0),name='none',ascii_symbol='none',symbol='none')
-percent = NamedUnit(0.01, Dimensions(0, 0, 0, 0, 0, 0, 0),name='percent',ascii_symbol='percent',symbol='%')
+percent = NamedUnit(0.01, Dimensions(0, 0, 0, 0, 0, 0, 0),name='percent',ascii_symbol='percent',latex_symbol=r'\%',symbol='%')
 square_meters = NamedUnit(1, Dimensions(length=2), name='square_meters', ascii_symbol='m^2', symbol='m²')
 cubic_meters = NamedUnit(1, Dimensions(length=3), name='cubic_meters', ascii_symbol='m^3', symbol='m³')
 per_meter = NamedUnit(1.0, Dimensions(length=-1), name='per_meter', ascii_symbol='m^-1', symbol='m⁻¹')
@@ -781,6 +805,11 @@ cubic_angstroms = NamedUnit(1e-30, Dimensions(length=3), name='cubic_angstroms',
 per_angstrom = NamedUnit(10000000000.0, Dimensions(length=-1), name='per_angstrom', ascii_symbol='Ang^-1', symbol='Å⁻¹')
 per_square_angstrom = NamedUnit(1e+20, Dimensions(length=-2), name='per_square_angstrom', ascii_symbol='Ang^-2', symbol='Å⁻²')
 per_cubic_angstrom = NamedUnit(9.999999999999999e+29, Dimensions(length=-3), name='per_cubic_angstrom', ascii_symbol='Ang^-3', symbol='Å⁻³')
+square_microns = NamedUnit(1e-12, Dimensions(length=2), name='square_microns', ascii_symbol='micron^2', symbol='micron²')
+cubic_microns = NamedUnit(9.999999999999999e-19, Dimensions(length=3), name='cubic_microns', ascii_symbol='micron^3', symbol='micron³')
+per_micron = NamedUnit(1000000.0, Dimensions(length=-1), name='per_micron', ascii_symbol='micron^-1', symbol='micron⁻¹')
+per_square_micron = NamedUnit(1000000000000.0001, Dimensions(length=-2), name='per_square_micron', ascii_symbol='micron^-2', symbol='micron⁻²')
+per_cubic_micron = NamedUnit(1.0000000000000001e+18, Dimensions(length=-3), name='per_cubic_micron', ascii_symbol='micron^-3', symbol='micron⁻³')
 square_miles = NamedUnit(2589988.110336, Dimensions(length=2), name='square_miles', ascii_symbol='miles^2', symbol='miles²')
 cubic_miles = NamedUnit(4168181825.44058, Dimensions(length=3), name='cubic_miles', ascii_symbol='miles^3', symbol='miles³')
 per_mile = NamedUnit(0.0006213711922373339, Dimensions(length=-1), name='per_mile', ascii_symbol='miles^-1', symbol='miles⁻¹')
@@ -1153,6 +1182,28 @@ angstroms_per_day = NamedUnit(1.1574074074074074e-14, Dimensions(length=1, time=
 angstroms_per_square_day = NamedUnit(1.3395919067215363e-18, Dimensions(length=1, time=-2), name='angstroms_per_square_day', ascii_symbol='Ang/d^2', symbol='Åd⁻²')
 angstroms_per_year = NamedUnit(3.168873850681143e-17, Dimensions(length=1, time=-1), name='angstroms_per_year', ascii_symbol='Ang/y', symbol='Åy⁻¹')
 angstroms_per_square_year = NamedUnit(1.0041761481530734e-23, Dimensions(length=1, time=-2), name='angstroms_per_square_year', ascii_symbol='Ang/y^2', symbol='Åy⁻²')
+microns_per_second = NamedUnit(1e-06, Dimensions(length=1, time=-1), name='microns_per_second', ascii_symbol='micron/s', symbol='microns⁻¹')
+microns_per_square_second = NamedUnit(1e-06, Dimensions(length=1, time=-2), name='microns_per_square_second', ascii_symbol='micron/s^2', symbol='microns⁻²')
+microns_per_millisecond = NamedUnit(0.001, Dimensions(length=1, time=-1), name='microns_per_millisecond', ascii_symbol='micron/ms', symbol='micronms⁻¹')
+microns_per_square_millisecond = NamedUnit(1.0, Dimensions(length=1, time=-2), name='microns_per_square_millisecond', ascii_symbol='micron/ms^2', symbol='micronms⁻²')
+microns_per_microsecond = NamedUnit(1.0, Dimensions(length=1, time=-1), name='microns_per_microsecond', ascii_symbol='micron/us', symbol='micronµs⁻¹')
+microns_per_square_microsecond = NamedUnit(1000000.0, Dimensions(length=1, time=-2), name='microns_per_square_microsecond', ascii_symbol='micron/us^2', symbol='micronµs⁻²')
+microns_per_nanosecond = NamedUnit(999.9999999999999, Dimensions(length=1, time=-1), name='microns_per_nanosecond', ascii_symbol='micron/ns', symbol='micronns⁻¹')
+microns_per_square_nanosecond = NamedUnit(999999999999.9999, Dimensions(length=1, time=-2), name='microns_per_square_nanosecond', ascii_symbol='micron/ns^2', symbol='micronns⁻²')
+microns_per_picosecond = NamedUnit(1000000.0, Dimensions(length=1, time=-1), name='microns_per_picosecond', ascii_symbol='micron/ps', symbol='micronps⁻¹')
+microns_per_square_picosecond = NamedUnit(1e+18, Dimensions(length=1, time=-2), name='microns_per_square_picosecond', ascii_symbol='micron/ps^2', symbol='micronps⁻²')
+microns_per_femtosecond = NamedUnit(999999999.9999999, Dimensions(length=1, time=-1), name='microns_per_femtosecond', ascii_symbol='micron/fs', symbol='micronfs⁻¹')
+microns_per_square_femtosecond = NamedUnit(9.999999999999998e+23, Dimensions(length=1, time=-2), name='microns_per_square_femtosecond', ascii_symbol='micron/fs^2', symbol='micronfs⁻²')
+microns_per_attosecond = NamedUnit(999999999999.9999, Dimensions(length=1, time=-1), name='microns_per_attosecond', ascii_symbol='micron/as', symbol='micronas⁻¹')
+microns_per_square_attosecond = NamedUnit(9.999999999999999e+29, Dimensions(length=1, time=-2), name='microns_per_square_attosecond', ascii_symbol='micron/as^2', symbol='micronas⁻²')
+microns_per_minute = NamedUnit(1.6666666666666667e-08, Dimensions(length=1, time=-1), name='microns_per_minute', ascii_symbol='micron/min', symbol='micronmin⁻¹')
+microns_per_square_minute = NamedUnit(2.7777777777777777e-10, Dimensions(length=1, time=-2), name='microns_per_square_minute', ascii_symbol='micron/min^2', symbol='micronmin⁻²')
+microns_per_hour = NamedUnit(2.7777777777777776e-09, Dimensions(length=1, time=-1), name='microns_per_hour', ascii_symbol='micron/h', symbol='micronh⁻¹')
+microns_per_square_hour = NamedUnit(7.716049382716049e-12, Dimensions(length=1, time=-2), name='microns_per_square_hour', ascii_symbol='micron/h^2', symbol='micronh⁻²')
+microns_per_day = NamedUnit(1.1574074074074074e-10, Dimensions(length=1, time=-1), name='microns_per_day', ascii_symbol='micron/d', symbol='micrond⁻¹')
+microns_per_square_day = NamedUnit(1.3395919067215363e-14, Dimensions(length=1, time=-2), name='microns_per_square_day', ascii_symbol='micron/d^2', symbol='micrond⁻²')
+microns_per_year = NamedUnit(3.168873850681143e-13, Dimensions(length=1, time=-1), name='microns_per_year', ascii_symbol='micron/y', symbol='microny⁻¹')
+microns_per_square_year = NamedUnit(1.0041761481530734e-19, Dimensions(length=1, time=-2), name='microns_per_square_year', ascii_symbol='micron/y^2', symbol='microny⁻²')
 miles_per_second = NamedUnit(1609.344, Dimensions(length=1, time=-1), name='miles_per_second', ascii_symbol='miles/s', symbol='miless⁻¹')
 miles_per_square_second = NamedUnit(1609.344, Dimensions(length=1, time=-2), name='miles_per_square_second', ascii_symbol='miles/s^2', symbol='miless⁻²')
 miles_per_millisecond = NamedUnit(1609344.0, Dimensions(length=1, time=-1), name='miles_per_millisecond', ascii_symbol='miles/ms', symbol='milesms⁻¹')
@@ -1497,6 +1548,22 @@ attograms_per_cubic_angstrom = NamedUnit(1000000000.0, Dimensions(length=-3, mas
 atomic_mass_units_per_cubic_angstrom = NamedUnit(1660.5389209999996, Dimensions(length=-3, mass=1), name='atomic_mass_units_per_cubic_angstrom', ascii_symbol='au Ang^-3', symbol='auÅ⁻³')
 pounds_per_cubic_angstrom = NamedUnit(4.5359237e+29, Dimensions(length=-3, mass=1), name='pounds_per_cubic_angstrom', ascii_symbol='lb Ang^-3', symbol='lbÅ⁻³')
 ounces_per_cubic_angstrom = NamedUnit(2.8349523125e+28, Dimensions(length=-3, mass=1), name='ounces_per_cubic_angstrom', ascii_symbol='oz Ang^-3', symbol='ozÅ⁻³')
+grams_per_cubic_micron = NamedUnit(1000000000000000.1, Dimensions(length=-3, mass=1), name='grams_per_cubic_micron', ascii_symbol='g micron^-3', symbol='gmicron⁻³')
+exagrams_per_cubic_micron = NamedUnit(1.0000000000000001e+33, Dimensions(length=-3, mass=1), name='exagrams_per_cubic_micron', ascii_symbol='Eg micron^-3', symbol='Egmicron⁻³')
+petagrams_per_cubic_micron = NamedUnit(1.0000000000000002e+30, Dimensions(length=-3, mass=1), name='petagrams_per_cubic_micron', ascii_symbol='Pg micron^-3', symbol='Pgmicron⁻³')
+teragrams_per_cubic_micron = NamedUnit(1.0000000000000002e+27, Dimensions(length=-3, mass=1), name='teragrams_per_cubic_micron', ascii_symbol='Tg micron^-3', symbol='Tgmicron⁻³')
+gigagrams_per_cubic_micron = NamedUnit(1.0000000000000001e+24, Dimensions(length=-3, mass=1), name='gigagrams_per_cubic_micron', ascii_symbol='Gg micron^-3', symbol='Ggmicron⁻³')
+megagrams_per_cubic_micron = NamedUnit(1.0000000000000001e+21, Dimensions(length=-3, mass=1), name='megagrams_per_cubic_micron', ascii_symbol='Mg micron^-3', symbol='Mgmicron⁻³')
+kilograms_per_cubic_micron = NamedUnit(1.0000000000000001e+18, Dimensions(length=-3, mass=1), name='kilograms_per_cubic_micron', ascii_symbol='kg micron^-3', symbol='kgmicron⁻³')
+milligrams_per_cubic_micron = NamedUnit(1000000000000.0001, Dimensions(length=-3, mass=1), name='milligrams_per_cubic_micron', ascii_symbol='mg micron^-3', symbol='mgmicron⁻³')
+micrograms_per_cubic_micron = NamedUnit(1000000000.0000002, Dimensions(length=-3, mass=1), name='micrograms_per_cubic_micron', ascii_symbol='ug micron^-3', symbol='µgmicron⁻³')
+nanograms_per_cubic_micron = NamedUnit(1000000.0000000003, Dimensions(length=-3, mass=1), name='nanograms_per_cubic_micron', ascii_symbol='ng micron^-3', symbol='ngmicron⁻³')
+picograms_per_cubic_micron = NamedUnit(1000.0000000000002, Dimensions(length=-3, mass=1), name='picograms_per_cubic_micron', ascii_symbol='pg micron^-3', symbol='pgmicron⁻³')
+femtograms_per_cubic_micron = NamedUnit(1.0000000000000002, Dimensions(length=-3, mass=1), name='femtograms_per_cubic_micron', ascii_symbol='fg micron^-3', symbol='fgmicron⁻³')
+attograms_per_cubic_micron = NamedUnit(0.0010000000000000002, Dimensions(length=-3, mass=1), name='attograms_per_cubic_micron', ascii_symbol='ag micron^-3', symbol='agmicron⁻³')
+atomic_mass_units_per_cubic_micron = NamedUnit(1.660538921e-09, Dimensions(length=-3, mass=1), name='atomic_mass_units_per_cubic_micron', ascii_symbol='au micron^-3', symbol='aumicron⁻³')
+pounds_per_cubic_micron = NamedUnit(4.5359237000000006e+17, Dimensions(length=-3, mass=1), name='pounds_per_cubic_micron', ascii_symbol='lb micron^-3', symbol='lbmicron⁻³')
+ounces_per_cubic_micron = NamedUnit(2.8349523125000004e+16, Dimensions(length=-3, mass=1), name='ounces_per_cubic_micron', ascii_symbol='oz micron^-3', symbol='ozmicron⁻³')
 grams_per_cubic_mile = NamedUnit(2.399127585789277e-13, Dimensions(length=-3, mass=1), name='grams_per_cubic_mile', ascii_symbol='g miles^-3', symbol='gmiles⁻³')
 exagrams_per_cubic_mile = NamedUnit(239912.7585789277, Dimensions(length=-3, mass=1), name='exagrams_per_cubic_mile', ascii_symbol='Eg miles^-3', symbol='Egmiles⁻³')
 petagrams_per_cubic_mile = NamedUnit(239.9127585789277, Dimensions(length=-3, mass=1), name='petagrams_per_cubic_mile', ascii_symbol='Pg miles^-3', symbol='Pgmiles⁻³')
@@ -1673,6 +1740,13 @@ nanomoles_per_cubic_angstrom = NamedUnit(6.02214076e+44, Dimensions(length=-3, m
 picomoles_per_cubic_angstrom = NamedUnit(6.02214076e+41, Dimensions(length=-3, moles_hint=1), name='picomoles_per_cubic_angstrom', ascii_symbol='pmol Ang^-3', symbol='pmolÅ⁻³')
 femtomoles_per_cubic_angstrom = NamedUnit(6.022140759999999e+38, Dimensions(length=-3, moles_hint=1), name='femtomoles_per_cubic_angstrom', ascii_symbol='fmol Ang^-3', symbol='fmolÅ⁻³')
 attomoles_per_cubic_angstrom = NamedUnit(6.02214076e+35, Dimensions(length=-3, moles_hint=1), name='attomoles_per_cubic_angstrom', ascii_symbol='amol Ang^-3', symbol='amolÅ⁻³')
+moles_per_cubic_micron = NamedUnit(6.022140760000001e+41, Dimensions(length=-3, moles_hint=1), name='moles_per_cubic_micron', ascii_symbol='mol micron^-3', symbol='molmicron⁻³')
+millimoles_per_cubic_micron = NamedUnit(6.022140760000001e+38, Dimensions(length=-3, moles_hint=1), name='millimoles_per_cubic_micron', ascii_symbol='mmol micron^-3', symbol='mmolmicron⁻³')
+micromoles_per_cubic_micron = NamedUnit(6.0221407600000004e+35, Dimensions(length=-3, moles_hint=1), name='micromoles_per_cubic_micron', ascii_symbol='umol micron^-3', symbol='µmolmicron⁻³')
+nanomoles_per_cubic_micron = NamedUnit(6.022140760000001e+32, Dimensions(length=-3, moles_hint=1), name='nanomoles_per_cubic_micron', ascii_symbol='nmol micron^-3', symbol='nmolmicron⁻³')
+picomoles_per_cubic_micron = NamedUnit(6.022140760000001e+29, Dimensions(length=-3, moles_hint=1), name='picomoles_per_cubic_micron', ascii_symbol='pmol micron^-3', symbol='pmolmicron⁻³')
+femtomoles_per_cubic_micron = NamedUnit(6.022140760000001e+26, Dimensions(length=-3, moles_hint=1), name='femtomoles_per_cubic_micron', ascii_symbol='fmol micron^-3', symbol='fmolmicron⁻³')
+attomoles_per_cubic_micron = NamedUnit(6.0221407600000005e+23, Dimensions(length=-3, moles_hint=1), name='attomoles_per_cubic_micron', ascii_symbol='amol micron^-3', symbol='amolmicron⁻³')
 moles_per_cubic_mile = NamedUnit(144478840228220.0, Dimensions(length=-3, moles_hint=1), name='moles_per_cubic_mile', ascii_symbol='mol miles^-3', symbol='molmiles⁻³')
 millimoles_per_cubic_mile = NamedUnit(144478840228.22003, Dimensions(length=-3, moles_hint=1), name='millimoles_per_cubic_mile', ascii_symbol='mmol miles^-3', symbol='mmolmiles⁻³')
 micromoles_per_cubic_mile = NamedUnit(144478840.22822002, Dimensions(length=-3, moles_hint=1), name='micromoles_per_cubic_mile', ascii_symbol='umol miles^-3', symbol='µmolmiles⁻³')
@@ -1969,6 +2043,7 @@ symbol_lookup = {
         "aH": attohenry,
         "Ang": angstroms,
         "Å": angstroms,
+        "micron": microns,
         "min": minutes,
         "h": hours,
         "d": days,
@@ -2023,6 +2098,7 @@ symbol_lookup = {
         "amu": atomic_mass_units,
         "degr": degrees,
         "Deg": degrees,
+        "degree": degrees,
         "degrees": degrees,
         "Degrees": degrees,
         "Counts": none,
@@ -2059,6 +2135,7 @@ length = UnitGroup(
     decimeters,
     centimeters,
     angstroms,
+    microns,
     miles,
     yards,
     feet,
@@ -2084,6 +2161,7 @@ area = UnitGroup(
     square_decimeters,
     square_centimeters,
     square_angstroms,
+    square_microns,
     square_miles,
     square_yards,
     square_feet,
@@ -2110,6 +2188,7 @@ volume = UnitGroup(
     cubic_decimeters,
     cubic_centimeters,
     cubic_angstroms,
+    cubic_microns,
     cubic_miles,
     cubic_yards,
     cubic_feet,
@@ -2135,6 +2214,7 @@ inverse_length = UnitGroup(
     per_decimeter,
     per_centimeter,
     per_angstrom,
+    per_micron,
     per_mile,
     per_yard,
     per_foot,
@@ -2160,6 +2240,7 @@ inverse_area = UnitGroup(
     per_square_decimeter,
     per_square_centimeter,
     per_square_angstrom,
+    per_square_micron,
     per_square_mile,
     per_square_yard,
     per_square_foot,
@@ -2185,6 +2266,7 @@ inverse_volume = UnitGroup(
     per_cubic_decimeter,
     per_cubic_centimeter,
     per_cubic_angstrom,
+    per_cubic_micron,
     per_cubic_mile,
     per_cubic_yard,
     per_cubic_foot,
@@ -2404,6 +2486,17 @@ speed = UnitGroup(
     angstroms_per_hour,
     angstroms_per_day,
     angstroms_per_year,
+    microns_per_second,
+    microns_per_millisecond,
+    microns_per_microsecond,
+    microns_per_nanosecond,
+    microns_per_picosecond,
+    microns_per_femtosecond,
+    microns_per_attosecond,
+    microns_per_minute,
+    microns_per_hour,
+    microns_per_day,
+    microns_per_year,
     miles_per_second,
     miles_per_millisecond,
     miles_per_microsecond,
@@ -2629,6 +2722,17 @@ acceleration = UnitGroup(
     angstroms_per_square_hour,
     angstroms_per_square_day,
     angstroms_per_square_year,
+    microns_per_square_second,
+    microns_per_square_millisecond,
+    microns_per_square_microsecond,
+    microns_per_square_nanosecond,
+    microns_per_square_picosecond,
+    microns_per_square_femtosecond,
+    microns_per_square_attosecond,
+    microns_per_square_minute,
+    microns_per_square_hour,
+    microns_per_square_day,
+    microns_per_square_year,
     miles_per_square_second,
     miles_per_square_millisecond,
     miles_per_square_microsecond,
@@ -2934,6 +3038,22 @@ density = UnitGroup(
     atomic_mass_units_per_cubic_angstrom,
     pounds_per_cubic_angstrom,
     ounces_per_cubic_angstrom,
+    grams_per_cubic_micron,
+    exagrams_per_cubic_micron,
+    petagrams_per_cubic_micron,
+    teragrams_per_cubic_micron,
+    gigagrams_per_cubic_micron,
+    megagrams_per_cubic_micron,
+    kilograms_per_cubic_micron,
+    milligrams_per_cubic_micron,
+    micrograms_per_cubic_micron,
+    nanograms_per_cubic_micron,
+    picograms_per_cubic_micron,
+    femtograms_per_cubic_micron,
+    attograms_per_cubic_micron,
+    atomic_mass_units_per_cubic_micron,
+    pounds_per_cubic_micron,
+    ounces_per_cubic_micron,
     grams_per_cubic_mile,
     exagrams_per_cubic_mile,
     petagrams_per_cubic_mile,
@@ -3398,6 +3518,13 @@ concentration = UnitGroup(
     picomoles_per_cubic_angstrom,
     femtomoles_per_cubic_angstrom,
     attomoles_per_cubic_angstrom,
+    moles_per_cubic_micron,
+    millimoles_per_cubic_micron,
+    micromoles_per_cubic_micron,
+    nanomoles_per_cubic_micron,
+    picomoles_per_cubic_micron,
+    femtomoles_per_cubic_micron,
+    attomoles_per_cubic_micron,
     moles_per_cubic_mile,
     millimoles_per_cubic_mile,
     micromoles_per_cubic_mile,

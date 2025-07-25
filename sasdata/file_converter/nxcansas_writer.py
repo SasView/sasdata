@@ -48,7 +48,7 @@ class NXcanSASWriter:
             elif not isinstance(string, str):
                 string = str(string)
 
-            return np.array([np.string_(string)])
+            return np.array([np.bytes_(string)])
 
         def _write_h5_string(entry, value, key):
             entry[key] = _h5_string(value)
@@ -143,7 +143,7 @@ class NXcanSASWriter:
             and data_info.sample.details != []:
             details = None
             if len(data_info.sample.details) > 1:
-                details = [np.string_(d) for d in data_info.sample.details]
+                details = [np.bytes_(d) for d in data_info.sample.details]
                 details = np.array(details)
             elif data_info.sample.details != []:
                 details = _h5_string(data_info.sample.details[0])
@@ -288,13 +288,13 @@ class NXcanSASWriter:
 
         if np.isscalar(data_info.notes) and data_info.notes:
             # Handle scalars that aren't empty arrays, None, '', etc.
-            notes = [np.string_(data_info.notes)]
+            notes = [np.bytes_(data_info.notes)]
         elif len(data_info.notes) > 1:
             # Handle iterables that aren't empty
-            notes = [np.string_(n) for n in data_info.notes]
+            notes = [np.bytes_(n) for n in data_info.notes]
         else:
             # Notes are required in NXcanSAS format
-            notes = [np.string_('')]
+            notes = [np.bytes_('')]
         if notes is not None:
             for i, note in enumerate(notes):
                 note_entry = sasentry.create_group('sasnote{0}'.format(i))

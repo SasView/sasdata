@@ -1,10 +1,10 @@
 from dataclasses import dataclass
-from typing import Sequence, Self, TypeVar
+from typing import Sequence, Self
 from fractions import Fraction
 
 import numpy as np
 
-from sasdata.quantities.unicode_superscript import int_as_unicode_superscript
+from unicode_superscript import int_as_unicode_superscript
 
 class DimensionError(Exception):
     pass
@@ -12,11 +12,11 @@ class DimensionError(Exception):
 class Dimensions:
     """
 
-    Note that some SI Base units are not useful from the perspective of the sasview project, and make things
+    Note that some SI Base units are not useful from the perspecive of the sasview project, and make things
     behave badly. In particular: moles and angular measures are dimensionless, and candelas are really a weighted
     measure of power.
 
-    We do however track angle and amount, because it's really useful for formatting units
+    We do however track angle and amount, because its really useful for formatting units
 
     """
     def __init__(self,
@@ -265,7 +265,6 @@ class Unit:
     def parse(unit_string: str) -> "Unit":
         pass
 
-
 class NamedUnit(Unit):
     """ Units, but they have a name, and a symbol
 
@@ -280,15 +279,38 @@ class NamedUnit(Unit):
                  dimensions: Dimensions,
                  name: str | None = None,
                  ascii_symbol: str | None = None,
+                 latex_symbol: str | None = None,
                  symbol: str | None = None):
 
         super().__init__(si_scaling_factor, dimensions)
         self.name = name
         self.ascii_symbol = ascii_symbol
         self.symbol = symbol
+        self.latex_symbol = latex_symbol if latex_symbol is not None else ascii_symbol
 
     def __repr__(self):
         return self.name
+
+    def __eq__(self, other):
+        """Match other units exactly or match strings against ANY of our names"""
+        match other:
+            case str():
+                return self.name == other or self.name == f"{other}s" or self.ascii_symbol == other or self.symbol == other
+            case NamedUnit():
+                return self.name == other.name \
+                    and self.ascii_symbol == other.ascii_symbol and self.symbol == other.symbol
+            case Unit():
+                return self.equivalent(other) and np.abs(np.log(self.scale/other.scale)) < 1e-5
+            case _:
+                return False
+
+
+    def startswith(self, prefix: str) -> bool:
+        """Check if any representation of the unit begins with the prefix string"""
+        prefix = prefix.lower()
+        return (self.name is not None and self.name.lower().startswith(prefix)) \
+                or (self.ascii_symbol is not None and self.ascii_symbol.lower().startswith(prefix)) \
+                or (self.symbol is not None and self.symbol.lower().startswith(prefix))
 
 #
 # Parsing plan:
