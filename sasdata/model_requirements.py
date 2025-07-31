@@ -275,18 +275,13 @@ def linear_extrapolation(q, q_min, q_max):
     Note that extrapolated values may be negative.
     """
     q = np.sort(q)
-    if q_min + 2 * MINIMUM_RESOLUTION < q[0]:
-        delta = q[1] - q[0] if len(q) > 1 else 0
-        n_low = int(np.ceil((q[0] - q_min) / delta)) if delta > 0 else 15
-        q_low = np.linspace(q_min, q[0], n_low + 1)[:-1]
-    else:
-        q_low = []
-    if q_max - 2 * MINIMUM_RESOLUTION > q[-1]:
-        delta = q[-1] - q[-2] if len(q) > 1 else 0
-        n_high = int(np.ceil((q_max - q[-1]) / delta)) if delta > 0 else 15
-        q_high = np.linspace(q[-1], q_max, n_high + 1)[1:]
-    else:
-        q_high = []
+    delta_low = q[1] - q[0] if len(q) > 1 else 0
+    n_low = int(np.ceil((q[0] - q_min) / delta_low)) if delta_low > 0 else 15
+    q_low = np.linspace(q_min, q[0], n_low + 1)[:-1] if q_min + 2 * MINIMUM_RESOLUTION >= q[0] else []
+
+    delta_high = q[-1] - q[-2] if len(q) > 1 else 0
+    n_high = int(np.ceil((q_max - q[-1]) / delta_high)) if delta_high > 0 else 15
+    q_high = np.linspace(q[-1], q_max, n_high + 1)[1:] if q_max - 2 * MINIMUM_RESOLUTION <= q[-1] else []
     return np.concatenate([q_low, q, q_high])
 
 
