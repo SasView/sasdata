@@ -145,7 +145,6 @@ class PinholeModel(ModellingRequirements):
 
     def preprocess_q(self, q: np.ndarray, full_data: SasData) -> np.ndarray:
         """Perform smearing transform"""
-        # FIXME: Actually do the smearing transform
         self.q = q
         q_min = np.min(self.q - self.nsigma_low * self.q_width)
         q_max = np.max(self.q + self.nsigma_high * self.q_width)
@@ -187,7 +186,6 @@ class SlitModel(ModellingRequirements):
 
     def preprocess_q(self, q: np.ndarray, full_data: SasData) -> np.ndarray:
         """Perform smearing transform"""
-        # FIXME: Actually do the smearing transform
         self.q = q
         q_min = np.min(self.q - self.nsigma_low * self.q_width)
         q_max = np.max(self.q + self.nsigma_high * self.q_width)
@@ -572,8 +570,8 @@ def geometric_extrapolation(q, q_min, q_max, points_per_decade=None):
     if q_min <= 0:
         q_min = data_min * MINIMUM_ABSOLUTE_Q
     if q_min < data_min:
-        n_low = int(np.ceil(log_delta_q * (np.log(q[0]) - np.log(q_min))))
-        q_low = np.logspace(np.log10(q_min), np.log10(q[0]), n_low + 1)[:-1]
+        n_low = int(np.ceil(log_delta_q * (np.log(data_min) - np.log(q_min))))
+        q_low = np.logspace(np.log10(q_min), np.log10(data_min), n_low + 1)[:-1]
     else:
         q_low = []
     if q_max > data_max:
