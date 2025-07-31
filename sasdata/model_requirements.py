@@ -486,9 +486,12 @@ def slit_resolution(q_calc, q, width, length, n_length=30):
             weights[i, :] = q_calc == qi
         elif l == 0:
             weights[i, :] = _q_perp_weights(q_edges, qi, w)
+        elif w == 0 and qi >= l:
+            in_x = 1.0 * ((q_calc >= qi - l) & (q_calc <= qi + l))
+            weights[i, :] = in_x * np.diff(q_edges) / (2 * l)
         elif w == 0:
             in_x = 1.0 * ((q_calc >= qi - l) & (q_calc <= qi + l))
-            abs_x = 1.0 * (q_calc < abs(qi - l)) if qi < l else 0.0
+            abs_x = 1.0 * (q_calc < abs(qi - l))
             weights[i, :] = (in_x + abs_x) * np.diff(q_edges) / (2 * l)
         else:
             weights[i, :] = _q_perp_weights(
