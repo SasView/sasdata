@@ -16,8 +16,16 @@ from dataclasses import dataclass
 
 from numpy import ndarray
 
+from sasdata.quantities.unit_parser import parse_unit
 from sasdata.quantities.units import NamedUnit
 from sasdata.quantities.quantity import Quantity
+
+
+def from_json_quantity(obj: dict) -> Quantity | None:
+    if obj is None:
+        return None
+
+    return Quantity(obj["value"], parse_unit(obj["units"]))
 
 
 @dataclass(kw_only=True)
@@ -28,6 +36,16 @@ class Vec3:
     y: Quantity[float] | None
     z: Quantity[float] | None
 
+    @staticmethod
+    def from_json(obj: dict) -> Quantity | None:
+        if obj is None:
+            return None
+        return Vec3(
+            x=from_json_quantity(obj["x"]),
+            y=from_json_quantity(obj["y"]),
+            z=from_json_quantity(obj["z"]),
+        )
+
 
 @dataclass(kw_only=True)
 class Rot3:
@@ -36,6 +54,16 @@ class Rot3:
     roll: Quantity[float] | None
     pitch: Quantity[float] | None
     yaw: Quantity[float] | None
+
+    @staticmethod
+    def from_json(obj: dict) -> Quantity | None:
+        if obj is None:
+            return None
+        return Vec3(
+            roll=from_json_quantity(obj["roll"]),
+            pitch=from_json_quantity(obj["pitch"]),
+            yaw=from_json_quantity(obj["yaw"]),
+        )
 
 
 @dataclass(kw_only=True)
@@ -93,6 +121,16 @@ class Aperture:
             f"     Aperture distance: {self.distance}\n"
         )
 
+    @staticmethod
+    def from_json(obj):
+        return Aperture(
+            distance=from_json_quantity(obj["distance"]),
+            size=Vec3.from_json(obj["size"]),
+            size_name=obj["size_name"],
+            name=obj["name"],
+            type_=obj["type_"],
+        )
+
 
 @dataclass(kw_only=True)
 class Collimation:
@@ -109,8 +147,8 @@ class Collimation:
     @staticmethod
     def from_json(obj):
         return Collimation(
-            length=from_json_quantity(obj["length"]),
-            apertures=map(Aperture.from_json, obj["apertures"]),
+            length=from_json_quantity(obj["length"]) if obj["length"] else None,
+            apertures=list(map(Aperture.from_json, obj["apertures"])),
         )
 
 
@@ -265,9 +303,9 @@ class Instrument:
     @staticmethod
     def from_json(obj):
         return Instrument(
-            collimations=map(Collimation.from_json, obj["collimations"]),
+            collimations=list(map(Collimation.from_json, obj["collimations"])),
             source=Source.from_json(obj["source"]),
-            detector=map(Detector.from_json, obj["detector"]),
+            detector=list(map(Detector.from_json, obj["detector"])),
         )
 
 
@@ -306,6 +344,32 @@ class MetaNode:
                 raise RuntimeError(f"Cannot filter contents of type {type(self.contents)}: {self.contents}")
         return []
 
+    def __eq__(self, other) -> bool:
+        """Custom equality overload needed since numpy arrays don't
+        play nicely with equality"""
+        match self.contents:
+            case ndarray():
+                if not np.all(self.contents == other.contents):
+                    return False
+            case Quantity():
+                result = self.contents == other.contents
+                if type(result) is ndarray and not np.all(result):
+                    return False
+                if type(result) is bool and not result:
+                    return False
+            case _:
+                print(type(self.contents))
+                if self.contents != other.contents:
+                    return False
+        for k, v in self.attrs.items():
+            if k not in other.attrs:
+                return False
+            if type(v) is np.ndarray and np.any(v != other.attrs[k]):
+                return False
+            if type(v) is not np.ndarray and v != other.attrs[k]:
+                return False
+        return self.name == other.name
+
     @staticmethod
     def from_json(obj):
         def from_content(con):
@@ -320,9 +384,8 @@ class MetaNode:
                     "shape": shape,
                 }:
                     return np.frombuffer(base64.b64decode(contents), dtype=dtype).reshape(shape)
-
                 case {"value": value, "units": units}:
-                    return from_json_quantity(con)
+                    return from_json_quantity({"value": from_content(value), "units": from_content(units)})
                 case _:
                     return con
 
@@ -367,7 +430,7 @@ class Metadata:
             process=[Process.from_json(p) for p in obj["process"]],
             sample=Sample.from_json(obj["sample"]),
             instrument=Instrument.from_json(obj["instrument"]),
-            raw=obj["raw"],
+            raw=MetaNode.from_json(obj["raw"]),
         )
 
 
