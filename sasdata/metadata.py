@@ -295,7 +295,13 @@ class MetadataEncoder(json.JSONEncoder):
                     "details": obj.details,
                 }
             case Process():
-                return None
+                return {
+                    "name": obj.name,
+                    "date": obj.date,
+                    "description": obj.description,
+                    "terms": {k: self.default(obj.terms[k]) for k in obj.terms},
+                    "nodes": obj.notes,
+                }
             case Instrument():
                 return None
             case MetaNode():
