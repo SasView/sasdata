@@ -9,6 +9,7 @@ Any useful metadata which cannot be included in these classes represent a bug in
 
 """
 
+import json
 from dataclasses import dataclass
 
 from numpy import ndarray
@@ -16,43 +17,50 @@ from numpy import ndarray
 from sasdata.quantities.quantity import Quantity
 
 
+
 @dataclass(kw_only=True)
 class Vec3:
     """A three-vector of measured quantities"""
-    x : Quantity[float] | None
-    y : Quantity[float] | None
-    z : Quantity[float] | None
+
+    x: Quantity[float] | None
+    y: Quantity[float] | None
+    z: Quantity[float] | None
+
 
 @dataclass(kw_only=True)
 class Rot3:
     """A measured rotation in 3-space"""
-    roll : Quantity[float] | None
-    pitch : Quantity[float] | None
-    yaw : Quantity[float] | None
+
+    roll: Quantity[float] | None
+    pitch: Quantity[float] | None
+    yaw: Quantity[float] | None
+
 
 @dataclass(kw_only=True)
 class Detector:
     """
     Detector information
     """
-    name : str | None
-    distance : Quantity[float] | None
-    offset : Vec3 | None
-    orientation : Rot3 | None
-    beam_center : Vec3 | None
-    pixel_size : Vec3 | None
-    slit_length : Quantity[float] | None
 
+    name: str | None
+    distance: Quantity[float] | None
+    offset: Vec3 | None
+    orientation: Rot3 | None
+    beam_center: Vec3 | None
+    pixel_size: Vec3 | None
+    slit_length: Quantity[float] | None
 
     def summary(self):
-        return (f"Detector:\n"
-                f"   Name:         {self.name}\n"
-                f"   Distance:     {self.distance}\n"
-                f"   Offset:       {self.offset}\n"
-                f"   Orientation:  {self.orientation}\n"
-                f"   Beam center:  {self.beam_center}\n"
-                f"   Pixel size:   {self.pixel_size}\n"
-                f"   Slit length:  {self.slit_length}\n")
+        return (
+            f"Detector:\n"
+            f"   Name:         {self.name}\n"
+            f"   Distance:     {self.distance}\n"
+            f"   Offset:       {self.offset}\n"
+            f"   Orientation:  {self.orientation}\n"
+            f"   Beam center:  {self.beam_center}\n"
+            f"   Pixel size:   {self.pixel_size}\n"
+            f"   Slit length:  {self.slit_length}\n"
+        )
 
 
 @dataclass(kw_only=True)
@@ -64,10 +72,13 @@ class Aperture:
     type_: str | None
 
     def summary(self):
-        return (f"   Aperture:\n"
-                f"     Name: {self.name}\n"
-                f"     Aperture size: {self.size}\n"
-                f"     Aperture distance: {self.distance}\n")
+        return (
+            f"   Aperture:\n"
+            f"     Name: {self.name}\n"
+            f"     Aperture size: {self.size}\n"
+            f"     Aperture distance: {self.distance}\n"
+        )
+
 
 @dataclass(kw_only=True)
 class Collimation:
@@ -79,26 +90,24 @@ class Collimation:
     apertures: list[Aperture]
 
     def summary(self):
+        return f"Collimation:\n   Length: {self.length}\n" + "".join([a.summary() for a in self.apertures])
 
-        return (
-            f"Collimation:\n"
-            f"   Length: {self.length}\n"+
-            "".join([a.summary() for a in self.apertures]))
 
 @dataclass(kw_only=True)
 class BeamSize:
     name: str | None
     size: Vec3 | None
 
+
 @dataclass(kw_only=True)
 class Source:
     radiation: str | None
     beam_shape: str | None
     beam_size: BeamSize | None
-    wavelength : Quantity[float] | None
-    wavelength_min : Quantity[float] | None
-    wavelength_max : Quantity[float] | None
-    wavelength_spread : Quantity[float] | None
+    wavelength: Quantity[float] | None
+    wavelength_min: Quantity[float] | None
+    wavelength_max: Quantity[float] | None
+    wavelength_spread: Quantity[float] | None
 
     def summary(self) -> str:
         return (
@@ -112,28 +121,32 @@ class Source:
             f"    Beam Size:         {self.beam_size}\n"
         )
 
+
 @dataclass(kw_only=True)
 class Sample:
     """
     Class to hold the sample description
     """
+
     name: str | None
-    sample_id : str | None
-    thickness : Quantity[float] | None
+    sample_id: str | None
+    thickness: Quantity[float] | None
     transmission: float | None
-    temperature : Quantity[float] | None
-    position : Vec3 | None
-    orientation : Rot3 | None
-    details : list[str]
+    temperature: Quantity[float] | None
+    position: Vec3 | None
+    orientation: Rot3 | None
+    details: list[str]
 
     def summary(self) -> str:
-        return (f"Sample:\n"
-                f"   ID:           {self.sample_id}\n"
-                f"   Transmission: {self.transmission}\n"
-                f"   Thickness:    {self.thickness}\n"
-                f"   Temperature:  {self.temperature}\n"
-                f"   Position:     {self.position}\n"
-                f"   Orientation:  {self.orientation}\n")
+        return (
+            f"Sample:\n"
+            f"   ID:           {self.sample_id}\n"
+            f"   Transmission: {self.transmission}\n"
+            f"   Thickness:    {self.thickness}\n"
+            f"   Temperature:  {self.temperature}\n"
+            f"   Position:     {self.position}\n"
+            f"   Orientation:  {self.orientation}\n"
+        )
 
 
 @dataclass(kw_only=True)
@@ -142,61 +155,66 @@ class Process:
     Class that holds information about the processes
     performed on the data.
     """
-    name :  str  | None
-    date :  str  | None
-    description :  str  | None
-    terms :  dict[str, str | Quantity[float]]
+
+    name: str | None
+    date: str | None
+    description: str | None
+    terms: dict[str, str | Quantity[float]]
     notes: list[str]
 
     def single_line_desc(self):
         """
-            Return a single line string representing the process
+        Return a single line string representing the process
         """
         return f"{self.name.value} {self.date.value} {self.description.value}"
 
     def summary(self):
         if self.terms:
-            termInfo = "    Terms:\n" + "\n".join(
-                [f"        {k}: {v}" for k, v in self.terms.items()]) + "\n"
+            termInfo = "    Terms:\n" + "\n".join([f"        {k}: {v}" for k, v in self.terms.items()]) + "\n"
         else:
             termInfo = ""
 
         if self.notes:
-            noteInfo = "    Notes:\n" + "\n".join(
-                [f"        {note}" for note in self.notes]) + "\n"
+            noteInfo = "    Notes:\n" + "\n".join([f"        {note}" for note in self.notes]) + "\n"
         else:
             noteInfo = ""
 
-        return (f"Process:\n"
-                f"    Name: {self.name}\n"
-                f"    Date: {self.date}\n"
-                f"    Description: {self.description}\n"
-                f"{termInfo}"
-                f"{noteInfo}"
-                )
+        return (
+            f"Process:\n"
+            f"    Name: {self.name}\n"
+            f"    Date: {self.date}\n"
+            f"    Description: {self.description}\n"
+            f"{termInfo}"
+            f"{noteInfo}"
+        )
 
 
 @dataclass
 class Instrument:
-    collimations : list[Collimation]
-    source : Source | None
-    detector : list[Detector]
+    collimations: list[Collimation]
+    source: Source | None
+    detector: list[Detector]
 
     def summary(self):
         return (
-            "\n".join([c.summary() for c in self.collimations]) +
-            "".join([d.summary() for d in self.detector]) +
-            (self.source.summary() if self.source is not None else ""))
+            "\n".join([c.summary() for c in self.collimations])
+            + "".join([d.summary() for d in self.detector])
+            + (self.source.summary() if self.source is not None else "")
+        )
+
 
 @dataclass(kw_only=True)
 class MetaNode:
     name: str
     attrs: dict[str, str]
     contents: str | Quantity | ndarray | list["MetaNode"]
+
     def to_string(self, header=""):
         """Convert node to pretty printer string"""
         if self.attrs:
-            attributes = f"\n{header}  Attributes:\n" + "\n".join([f"{header}    {k}: {v}" for k, v in self.attrs.items()])
+            attributes = f"\n{header}  Attributes:\n" + "\n".join(
+                [f"{header}    {k}: {v}" for k, v in self.attrs.items()]
+            )
         else:
             attributes = ""
         if self.contents:
@@ -208,6 +226,7 @@ class MetaNode:
             children = ""
 
         return f"\n{header}{self.name}:{attributes}{children}"
+
     def filter(self, name: str) -> list[ndarray | Quantity | str]:
         match self.contents:
             case str() | ndarray() | Quantity():
@@ -233,11 +252,39 @@ class Metadata:
     def summary(self):
         run_string = self.run[0] if len(self.run) == 1 else self.run
         return (
-            f"  {self.title}, Run: {run_string}\n" +
-            "  " + "="*len(self.title if self.title else "") +
-                           "=======" +
-            "="*len(run_string) + "\n\n" +
-            f"Definition: {self.title}\n" +
-            "".join([p.summary() for p in self.process]) +
-            (self.sample.summary() if self.sample else "") +
-            (self.instrument.summary() if self.instrument else ""))
+            f"  {self.title}, Run: {run_string}\n"
+            + "  "
+            + "=" * len(self.title if self.title else "")
+            + "======="
+            + "=" * len(run_string)
+            + "\n\n"
+            + f"Definition: {self.title}\n"
+            + "".join([p.summary() for p in self.process])
+            + (self.sample.summary() if self.sample else "")
+            + (self.instrument.summary() if self.instrument else "")
+        )
+
+
+class MetadataEncoder(json.JSONEncoder):
+    def default(self, obj):
+        match obj:
+            case Sample():
+                return None
+            case Process():
+                return None
+            case Instrument():
+                return None
+            case MetaNode():
+                return None
+            case Metadata():
+                return {
+                    "title": obj.title,
+                    "run": obj.run,
+                    "definition": obj.definition,
+                    "process": [self.default(p) for p in obj.process],
+                    "sample": self.default(obj.sample),
+                    "instrument": self.default(obj.instrument),
+                    "raw": self.default(obj.raw),
+                }
+            case _:
+                return super().default(obj)
