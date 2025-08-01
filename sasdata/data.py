@@ -79,4 +79,6 @@ class SasData:
 
     @property
     def json(self) -> dict:
-        return {}
+        return {
+            "name": self.name
+        }
