@@ -310,7 +310,7 @@ class MetadataEncoder(json.JSONEncoder):
                     "date": obj.date,
                     "description": obj.description,
                     "terms": {k: obj.terms[k] for k in obj.terms},
-                    "nodes": obj.notes,
+                    "notes": obj.notes,
                 }
             case Aperture():
                 return {
