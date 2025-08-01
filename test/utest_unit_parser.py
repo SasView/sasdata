@@ -20,7 +20,8 @@ named_units_for_testing = [
     ('V/Amps', units.ohms),
     ('Ω', units.ohms),
     ('Å', units.angstroms),
-    ('%', units.percent)
+    ('%', units.percent),
+    ('per_centimeter', units.per_centimeter)
 ]
 
 latex_units_for_testing = [
