@@ -102,4 +102,6 @@ class SasData:
                 "optional": self.dataset_type.optional,
                 "expected_orders": self.dataset_type.expected_orders,
             },
+            "mask": self.mask,
+            "model_requirements": self.model_requirements,
         }
