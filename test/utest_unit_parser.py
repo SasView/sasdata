@@ -42,6 +42,11 @@ def test_scale_same(string: str, expected_units: Unit):
     """ Test basic parsing"""
     assert parse_unit(string).scale == pytest.approx(expected_units.scale, rel=1e-14)
 
+@pytest.mark.parametrize("latex_string, units", latex_units_for_testing)
+def test_scale_same_latex(latex_string: str, units: Unit):
+    """ Test that proper LaTeX formats for units are being generated"""
+    assert units.latex_symbol == latex_string
+
 
 def test_parse_from_group():
     """ Test group based disambiguation"""

@@ -303,9 +303,6 @@ class Constant(ConstantBase):
     def __init__(self, value):
         self.value = value
 
-    def summary(self, indent_amount: int = 0, indent: str="  "):
-        return repr(self.value)
-
     def evaluate(self, variables: dict[int, T]) -> T:
         return self.value
 
