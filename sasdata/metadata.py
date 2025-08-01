@@ -63,6 +63,18 @@ class Detector:
             f"   Slit length:  {self.slit_length}\n"
         )
 
+    @staticmethod
+    def from_json(obj):
+        return Detector(
+            name=obj["name"],
+            distance=from_json_quantity(obj["distance"]),
+            offset=Vec3.from_json(obj["offset"]),
+            orientation=Rot3.from_json(obj["orientation"]),
+            beam_center=Vec3.from_json(obj["beam_center"]),
+            pixel_size=Vec3.from_json(obj["pixel_size"]),
+            slit_length=from_json_quantity(obj["slit_length"]),
+        )
+
 
 @dataclass(kw_only=True)
 class Aperture:
@@ -93,11 +105,22 @@ class Collimation:
     def summary(self):
         return f"Collimation:\n   Length: {self.length}\n" + "".join([a.summary() for a in self.apertures])
 
+    @staticmethod
+    def from_json(obj):
+        return Collimation(
+            length=from_json_quantity(obj["length"]),
+            apertures=map(Aperture.from_json, obj["apertures"]),
+        )
+
 
 @dataclass(kw_only=True)
 class BeamSize:
     name: str | None
     size: Vec3 | None
+
+    @staticmethod
+    def from_json(obj):
+        return BeamSize(name=obj["name"], size=Vec3.from_json(obj["size"]))
 
 
 @dataclass(kw_only=True)
@@ -120,6 +143,18 @@ class Source:
             f"    Max. Wavelength:   {self.wavelength_max}\n"
             f"    Wavelength Spread: {self.wavelength_spread}\n"
             f"    Beam Size:         {self.beam_size}\n"
+        )
+
+    @staticmethod
+    def from_json(obj):
+        return Source(
+            radiation=obj["radiation"],
+            beam_shape=obj["beam_shape"],
+            beam_size=BeamSize.from_json(obj["beam_size"]) if obj["beam_size"] else None,
+            wavelength=obj["wavelength"],
+            wavelength_min=obj["wavelength_min"],
+            wavelength_max=obj["wavelength_max"],
+            wavelength_spread=obj["wavelength_spread"],
         )
 
 
@@ -147,6 +182,19 @@ class Sample:
             f"   Temperature:  {self.temperature}\n"
             f"   Position:     {self.position}\n"
             f"   Orientation:  {self.orientation}\n"
+        )
+
+    @staticmethod
+    def from_json(obj):
+        return Sample(
+            name=obj["name"],
+            sample_id=obj["sample_id"],
+            thickness=obj["thickness"],
+            transmission=obj["transmission"],
+            temperature=obj["temperature"],
+            position=obj["position"],
+            orientation=obj["orientation"],
+            details=obj["details"],
         )
 
 
@@ -189,6 +237,16 @@ class Process:
             f"{noteInfo}"
         )
 
+    @staticmethod
+    def from_json(obj):
+        return Process(
+            name=obj["name"],
+            date=obj["date"],
+            description=obj["description"],
+            terms=obj["terms"],
+            notes=obj["notes"],
+        )
+
 
 @dataclass
 class Instrument:
@@ -201,6 +259,14 @@ class Instrument:
             "\n".join([c.summary() for c in self.collimations])
             + "".join([d.summary() for d in self.detector])
             + (self.source.summary() if self.source is not None else "")
+        )
+
+    @staticmethod
+    def from_json(obj):
+        return Instrument(
+            collimations=map(Collimation.from_json, obj["collimations"]),
+            source=Source.from_json(obj["source"]),
+            detector=map(Detector.from_json, obj["detector"]),
         )
 
 
@@ -263,6 +329,18 @@ class Metadata:
             + "".join([p.summary() for p in self.process])
             + (self.sample.summary() if self.sample else "")
             + (self.instrument.summary() if self.instrument else "")
+        )
+
+    @staticmethod
+    def from_json(obj):
+        return Metadata(
+            title=obj["title"],
+            run=obj["run"],
+            definition=obj["definition"],
+            process=[Process.from_json(p) for p in obj["process"]],
+            sample=Sample.from_json(obj["sample"]),
+            instrument=Instrument.from_json(obj["instrument"]),
+            raw=obj["raw"],
         )
 
 
