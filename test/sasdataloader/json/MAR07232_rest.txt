@@ -3,9 +3,180 @@
     "mask": null,
     "metadata": {
         "definition": "NXcanSAS",
-        "instrument": null,
+        "instrument": {
+            "collimations": [
+                {
+                    "apertures": [],
+                    "length": null
+                }
+            ],
+            "detector": [
+                {
+                    "beam_center": null,
+                    "distance": null,
+                    "name": "",
+                    "offset": null,
+                    "orientation": null,
+                    "pixel_size": null,
+                    "slit_length": null
+                }
+            ],
+            "source": {
+                "beam_shape": null,
+                "beam_size": null,
+                "radiation": "neutron",
+                "wavelength": null,
+                "wavelength_max": null,
+                "wavelength_min": null,
+                "wavelength_spread": null
+            }
+        },
         "process": [],
-        "raw": null,
+        "raw": {
+            "attrs": {
+                "canSAS_class": "SASentry",
+                "version": "1.0"
+            },
+            "contents": [
+                {
+                    "attrs": {},
+                    "contents": "NXcanSAS",
+                    "name": "definition"
+                },
+                {
+                    "attrs": {
+                        "name": ""
+                    },
+                    "contents": "2",
+                    "name": "run"
+                },
+                {
+                    "attrs": {
+                        "I_axes": "Qx,Qy",
+                        "Q_indices": {
+                            "contents": "gAJjbnVtcHkuX2NvcmUubXVsdGlhcnJheQpfcmVjb25zdHJ1Y3QKcQBjbnVtcHkKbmRhcnJheQpxAUsAhXECY19jb2RlY3MKZW5jb2RlCnEDWAEAAABicQRYBgAAAGxhdGluMXEFhnEGUnEHh3EIUnEJKEsBSwKFcQpjbnVtcHkKZHR5cGUKcQtYAgAAAGk0cQyJiIdxDVJxDihLA1gBAAAAPHEPTk5OSv////9K/////0sAdHEQYoloA1gIAAAAAAAAAAEAAABxEWgFhnESUnETdHEUYi4=",
+                            "encoding": "base64",
+                            "type": "ndarray"
+                        },
+                        "canSAS_class": "SASdata",
+                        "signal": "I"
+                    },
+                    "contents": [
+                        {
+                            "attrs": {
+                                "uncertainties": "Idev",
+                                "units": "1/cm"
+                            },
+                            "contents": null,
+                            "name": "I"
+                        },
+                        {
+                            "attrs": {
+                                "units": "1/cm"
+                            },
+                            "contents": null,
+                            "name": "Idev"
+                        },
+                        {
+                            "attrs": {
+                                "units": "1/A"
+                            },
+                            "contents": null,
+                            "name": "Qx"
+                        },
+                        {
+                            "attrs": {
+                                "units": "1/A"
+                            },
+                            "contents": null,
+                            "name": "Qy"
+                        }
+                    ],
+                    "name": "sasdata01"
+                },
+                {
+                    "attrs": {
+                        "canSAS_class": "SASinstrument"
+                    },
+                    "contents": [
+                        {
+                            "attrs": {},
+                            "contents": "",
+                            "name": "name"
+                        },
+                        {
+                            "attrs": {
+                                "canSAS_class": "SAScollimation"
+                            },
+                            "contents": [],
+                            "name": "sascollimation01"
+                        },
+                        {
+                            "attrs": {
+                                "canSAS_class": "SASdetector"
+                            },
+                            "contents": [
+                                {
+                                    "attrs": {},
+                                    "contents": "",
+                                    "name": "name"
+                                }
+                            ],
+                            "name": "sasdetector01"
+                        },
+                        {
+                            "attrs": {
+                                "canSAS_class": "SASsource"
+                            },
+                            "contents": [
+                                {
+                                    "attrs": {},
+                                    "contents": "neutron",
+                                    "name": "radiation"
+                                }
+                            ],
+                            "name": "sassource"
+                        }
+                    ],
+                    "name": "sasinstrument"
+                },
+                {
+                    "attrs": {
+                        "canSAS_class": "SASnote"
+                    },
+                    "contents": [],
+                    "name": "sasnote"
+                },
+                {
+                    "attrs": {
+                        "canSAS_class": "SASsample"
+                    },
+                    "contents": [
+                        {
+                            "attrs": {},
+                            "contents": "",
+                            "name": "ID"
+                        },
+                        {
+                            "attrs": {},
+                            "contents": {
+                                "contents": "gAJjbnVtcHkuX2NvcmUubXVsdGlhcnJheQpfcmVjb25zdHJ1Y3QKcQBjbnVtcHkKbmRhcnJheQpxAUsAhXECY19jb2RlY3MKZW5jb2RlCnEDWAEAAABicQRYBgAAAGxhdGluMXEFhnEGUnEHh3EIUnEJKEsBSwGFcQpjbnVtcHkKZHR5cGUKcQtYAgAAAGY0cQyJiIdxDVJxDihLA1gBAAAAPHEPTk5OSv////9K/////0sAdHEQYoloA1gFAAAANMO0Vz9xEWgFhnESUnETdHEUYi4=",
+                                "encoding": "base64",
+                                "type": "ndarray"
+                            },
+                            "name": "transmission"
+                        }
+                    ],
+                    "name": "sassample"
+                },
+                {
+                    "attrs": {},
+                    "contents": "MAR07232_rest_out.dat",
+                    "name": "title"
+                }
+            ],
+            "name": "sasentry01"
+        },
         "run": [
             "2"
         ],
