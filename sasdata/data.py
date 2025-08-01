@@ -93,7 +93,7 @@ class SasData:
         return s
 
 
-class SasDataEncoder(json.JSONEncoder):
+class SasDataEncoder(MetadataEncoder):
     def default(self, obj):
         match obj:
             case SasData():
@@ -110,7 +110,5 @@ class SasDataEncoder(json.JSONEncoder):
                     "metadata": obj.metadata,
                     "model_requirements": obj.model_requirements,
                 }
-            case Metadata():
-                return MetadataEncoder().default(obj)
             case _:
                 return super().default(obj)
