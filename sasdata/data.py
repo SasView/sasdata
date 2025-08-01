@@ -105,7 +105,7 @@ class SasData:
                 expected_orders=obj["type"]["expected_orders"],
             ),
             data_contents=obj["data_contents"],
-            metadata=obj["metadata"],
+            metadata=Metadata.from_json(obj["metadata"]),
         )
 
 
