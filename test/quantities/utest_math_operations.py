@@ -30,7 +30,7 @@ def test_transpose_raw(order: list[int]):
 
 
 @pytest.mark.parametrize("order", order_list)
-def test_transpose_raw(order: list[int]):
+def test_transpose_raw_with_quantity(order: list[int]):
     """ Check that the transpose operation changes the order of indices correctly - uses sizes as way of tracking"""
     input_shape = tuple([i + 1 for i in range(len(order))])
     expected_shape = tuple([i + 1 for i in order])
