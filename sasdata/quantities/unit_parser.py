@@ -17,7 +17,7 @@ def split_unit_str(unit_str: str) -> list[str]:
 def validate_unit_str(unit_str: str) -> bool:
     """Validate whether unit_str is valid. This doesn't mean that the unit specified in unit_str exists but rather it
     only consists of letters, and numbers as a unit string should."""
-    return fullmatch(r'[A-Za-zΩ%Å^1-9\-\+/\ \.]+', unit_str) is not None
+    return fullmatch(r'[A-Za-zΩ%Å^1-9\-\+/\ \._]+', unit_str) is not None
 
 def parse_single_unit(unit_str: str, unit_group: UnitGroup | None = None, longest_unit: bool = True) -> tuple[Unit | None, str]:
     """Attempts to find a single unit for unit_str. Return this unit, and the remaining string in a tuple. If a unit
@@ -100,8 +100,22 @@ def parse_unit_stack(unit_str: str, longest_unit: bool = True) -> list[Unit]:
             pass
     return unit_stack
 
+
+def known_mistake(unit_str: str) -> Unit | None:
+    """Take known broken units from historical files
+    and give them a reasonible parse"""
+    import sasdata.quantities.units as units
+
+    mistakes = {"per_centimeter": units.per_centimeter, "per_angstrom": units.per_angstrom}
+    if unit_str in mistakes:
+        return mistakes[unit_str]
+    return None
+
+
 def parse_unit(unit_str: str, longest_unit: bool = True) -> Unit:
     """Parse unit_str into a unit."""
+    if result := known_mistake(unit_str):
+        return result
     try:
         if not validate_unit_str(unit_str):
             raise ValueError('unit_str contains forbidden characters.')
@@ -111,8 +125,9 @@ def parse_unit(unit_str: str, longest_unit: bool = True) -> Unit:
             # parsed_unit = combine_units(parsed_unit, unit)
             parsed_unit *= unit
         return parsed_unit
-    except KeyError:
-        raise ValueError(f'Unit string contains an unrecognised pattern: {unit_str}')
+    except KeyError as ex:
+        raise ValueError(f"Unit string contains an unrecognised pattern: {unit_str}") from ex
+
 
 def parse_unit_from_group(unit_str: str, from_group: UnitGroup) -> Unit | None:
     """Tries to use the given unit group to resolve ambiguities. Parse a unit twice with different options, and returns
