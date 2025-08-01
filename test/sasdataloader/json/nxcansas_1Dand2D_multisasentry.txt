@@ -342,6 +342,7 @@
             "orientation": null,
             "position": null,
             "sample_id": "",
+            "temperature": null,
             "thickness": null,
             "transmission": null
         },
