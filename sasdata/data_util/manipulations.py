@@ -229,8 +229,7 @@ def get_dq_data(data2d: Data2D) -> np.array:
         data2d.data)] - dq_overlap
     # def; dqx_data = dq_r dqy_data = dq_phi
     # Convert dq 2D to 1D here
-    # Is the line below a bug? Should it be: dq_data = np.sqrt(dqx_data**2 + dqy_data**2) instead?
-    dq_data = np.sqrt(dqx_data**2 + dqx_data**2)
+    dq_data = np.sqrt(dqx_data**2 + dqy_data**2)
     return dq_data
 
 ################################################################################
