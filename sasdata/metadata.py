@@ -299,6 +299,7 @@ class MetadataEncoder(json.JSONEncoder):
                     "sample_id": obj.sample_id,
                     "thickness": obj.thickness,
                     "transmission": obj.transmission,
+                    "temperature": obj.temperature,
                     "position": obj.position,
                     "orientation": obj.orientation,
                     "details": obj.details,
