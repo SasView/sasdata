@@ -9,7 +9,15 @@
         "run": [
             "2"
         ],
-        "sample": null,
+        "sample": {
+            "details": [],
+            "name": null,
+            "orientation": null,
+            "position": null,
+            "sample_id": "",
+            "thickness": null,
+            "transmission": 0.84357
+        },
         "title": "MAR07232_rest_out.dat"
     },
     "model_requirements": null,
