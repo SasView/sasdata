@@ -9,6 +9,7 @@ Any useful metadata which cannot be included in these classes represent a bug in
 
 """
 
+import base64
 import json
 from dataclasses import dataclass
 
@@ -272,6 +273,12 @@ class MetadataEncoder(json.JSONEncoder):
                 return None
             case Quantity():
                 return None
+            case ndarray():
+                return {
+                    "type": "ndarray",
+                    "encoding": "base64",
+                    "contents": base64.b64encode(obj.dumps()).decode("utf-8"),
+                }
             case Vec3():
                 return {
                     "x": self.default(obj.x),
@@ -302,10 +309,49 @@ class MetadataEncoder(json.JSONEncoder):
                     "terms": {k: self.default(obj.terms[k]) for k in obj.terms},
                     "nodes": obj.notes,
                 }
+            case Aperture():
+                return {
+                    "distance": self.default(obj.distance),
+                    "size": self.default(obj.size),
+                    "size_name": obj.size_name,
+                    "name": obj.name,
+                    "type": obj.type_,
+                }
+            case Collimation():
+                return {
+                    "length": self.default(obj.length),
+                    "apertures": [self.default(a) for a in obj.apertures],
+                }
+            case BeamSize():
+                return {"name": obj.name, "size": self.default(obj.size)}
+            case Source():
+                return {
+                    "radiation": obj.radiation,
+                    "beam_shape": obj.beam_shape,
+                    "beam_size": self.default(obj.beam_size),
+                    "wavelength": self.default(obj.wavelength),
+                    "wavelength_min": self.default(obj.wavelength_min),
+                    "wavelength_max": self.default(obj.wavelength_max),
+                    "wavelength_spread": self.default(obj.wavelength_spread),
+                }
+            case Detector():
+                return {
+                    "name": obj.name,
+                    "distance": self.default(obj.distance),
+                    "offset": self.default(obj.offset),
+                    "orientation": self.default(obj.orientation),
+                    "beam_center": self.default(obj.beam_center),
+                    "pixel_size": self.default(obj.pixel_size),
+                    "slit_length": self.default(obj.slit_length),
+                }
             case Instrument():
-                return None
+                return {
+                    "collimations": [self.default(c) for c in obj.collimations],
+                    "source": self.default(obj.source),
+                    "detector": [self.default(d) for d in obj.detector],
+                }
             case MetaNode():
-                return None
+                return {"name": obj.name, "attrs": obj.attrs, "contents": obj.contents}
             case Metadata():
                 return {
                     "title": obj.title,
