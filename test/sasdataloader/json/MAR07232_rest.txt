@@ -1,1 +1,45 @@
-{"name": "sasentry01", "data_contents": {}, "type": {"name": "1D I vs Q", "required": ["Q", "I"], "optional": ["dI", "dQ", "Shadowfactor", "Qmean", "dQl", "dQw"], "expected_orders": [["Q", "I", "dI"], ["Q", "dQ", "I", "dI"]]}, "mask": null, "model_requirements": null}
+{
+    "data_contents": {},
+    "mask": null,
+    "metadata": {
+        "definition": "NXcanSAS",
+        "instrument": null,
+        "process": [],
+        "raw": null,
+        "run": [
+            "2"
+        ],
+        "sample": null,
+        "title": "MAR07232_rest_out.dat"
+    },
+    "model_requirements": null,
+    "name": "sasentry01",
+    "type": {
+        "expected_orders": [
+            [
+                "Q",
+                "I",
+                "dI"
+            ],
+            [
+                "Q",
+                "dQ",
+                "I",
+                "dI"
+            ]
+        ],
+        "name": "1D I vs Q",
+        "optional": [
+            "dI",
+            "dQ",
+            "Shadowfactor",
+            "Qmean",
+            "dQl",
+            "dQw"
+        ],
+        "required": [
+            "Q",
+            "I"
+        ]
+    }
+}

@@ -10,6 +10,8 @@ import pytest
 
 from sasdata.data import SasData, SasDataEncoder
 import sasdata.quantities.units as units
+
+from sasdata.data import SasDataEncoder
 from sasdata.quantities.quantity import Quantity
 from sasdata.temp_hdf5_reader import load_data as hdf_load_data
 from sasdata.temp_xml_reader import load_data as xml_load_data
@@ -79,8 +81,9 @@ def test_filter_data():
         assert v.metadata.raw.filter("radiation") == ["Spallation Neutron Source"]
         assert v.metadata.raw.filter("SDD") == [
             Quantity(np.array([2845.26], dtype=np.float32), units.millimeters),
-            Quantity(np.array([4385.28], dtype=np.float32), units.millimeters)
+            Quantity(np.array([4385.28], dtype=np.float32), units.millimeters),
         ]
+
 
 @pytest.mark.sasdata2
 @pytest.mark.parametrize("f", test_hdf_file_names)
