@@ -1,1 +1,1 @@
-{"name": "sasentry01", "data_contents": {}, "type": {"name": "1D I vs Q", "required": ["Q", "I"], "optional": ["dI", "dQ", "Shadowfactor", "Qmean", "dQl", "dQw"], "expected_orders": [["Q", "I", "dI"], ["Q", "dQ", "I", "dI"]]}}
+{"name": "sasentry01", "data_contents": {}, "type": {"name": "1D I vs Q", "required": ["Q", "I"], "optional": ["dI", "dQ", "Shadowfactor", "Qmean", "dQl", "dQw"], "expected_orders": [["Q", "I", "dI"], ["Q", "dQ", "I", "dI"]]}, "mask": null, "model_requirements": null}
