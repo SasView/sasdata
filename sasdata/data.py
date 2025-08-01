@@ -92,20 +92,36 @@ class SasData:
 
         return s
 
+    @staticmethod
+    def from_json(obj):
+        return SasData(
+            name=obj["name"],
+            dataset_type=DatasetType(
+                name=obj["type"]["name"],
+                required=obj["type"]["required"],
+                optional=obj["type"]["optional"],
+                expected_orders=obj["type"]["expected_orders"],
+            ),
+            data_contents=obj["data_contents"],
+            metadata=obj["metadata"],
+        )
+
 
 class SasDataEncoder(MetadataEncoder):
     def default(self, obj):
         match obj:
+            case DatasetType():
+                return {
+                    "name": obj.name,
+                    "required": obj.required,
+                    "optional": obj.optional,
+                    "expected_orders": obj.expected_orders,
+                }
             case SasData():
                 return {
                     "name": obj.name,
                     "data_contents": {},
-                    "type": {
-                        "name": obj.dataset_type.name,
-                        "required": obj.dataset_type.required,
-                        "optional": obj.dataset_type.optional,
-                        "expected_orders": obj.dataset_type.expected_orders,
-                    },
+                    "type": obj.dataset_type,
                     "mask": obj.mask,
                     "metadata": obj.metadata,
                     "model_requirements": obj.model_requirements,
