@@ -158,7 +158,6 @@ class Uncertainty(object):
     def __floordiv__(self, other): return NotImplemented
     def __mod__(self, other): return NotImplemented
     def __divmod__(self, other): return NotImplemented
-    def __mod__(self, other): return NotImplemented
     def __lshift__(self, other): return NotImplemented
     def __rshift__(self, other): return NotImplemented
     def __and__(self, other): return NotImplemented
@@ -168,7 +167,6 @@ class Uncertainty(object):
     def __rfloordiv__(self, other): return NotImplemented
     def __rmod__(self, other): return NotImplemented
     def __rdivmod__(self, other): return NotImplemented
-    def __rmod__(self, other): return NotImplemented
     def __rlshift__(self, other): return NotImplemented
     def __rrshift__(self, other): return NotImplemented
     def __rand__(self, other): return NotImplemented
@@ -178,22 +176,21 @@ class Uncertainty(object):
     def __ifloordiv__(self, other): return NotImplemented
     def __imod__(self, other): return NotImplemented
     def __idivmod__(self, other): return NotImplemented
-    def __imod__(self, other): return NotImplemented
     def __ilshift__(self, other): return NotImplemented
     def __irshift__(self, other): return NotImplemented
     def __iand__(self, other): return NotImplemented
     def __ixor__(self, other): return NotImplemented
     def __ior__(self, other): return NotImplemented
 
-    def __invert__(self): return NotImplmented  # For ~x
-    def __complex__(self): return NotImplmented
-    def __int__(self): return NotImplmented
-    def __long__(self): return NotImplmented
-    def __float__(self): return NotImplmented
-    def __oct__(self): return NotImplmented
-    def __hex__(self): return NotImplmented
-    def __index__(self): return NotImplmented
-    def __coerce__(self): return NotImplmented
+    def __invert__(self): return NotImplemented  # For ~x
+    def __complex__(self): return NotImplemented
+    def __int__(self): return NotImplemented
+    def __long__(self): return NotImplemented
+    def __float__(self): return NotImplemented
+    def __oct__(self): return NotImplemented
+    def __hex__(self): return NotImplemented
+    def __index__(self): return NotImplemented
+    def __coerce__(self): return NotImplemented
 
     def log(self):
         return Uncertainty(*err1d.log(self.x,self.variance))
@@ -201,8 +198,10 @@ class Uncertainty(object):
     def exp(self):
         return Uncertainty(*err1d.exp(self.x,self.variance))
 
-def log(val): return self.log()
-def exp(val): return self.exp()
+def log(val):
+    return self.log()
+def exp(val):
+    return self.exp()
 
 def test():
     a = Uncertainty(5,3)
@@ -250,35 +249,44 @@ def test():
 
     # ===== Inplace operations =====
     # Scalar operations
-    y = a+0; y += 4
+    y = a+0
+    y += 4
     z = a+4
     assert y.x == z.x and abs(y.variance-z.variance) < 1e-15
-    y = a+0; y -= 4
+    y = a+0
+    y -= 4
     z = a-4
     assert y.x == z.x and abs(y.variance-z.variance) < 1e-15
-    y = a+0; y *= 4
+    y = a+0
+    y *= 4
     z = a*4
     assert y.x == z.x and abs(y.variance-z.variance) < 1e-15
-    y = a+0; y /= 4
+    y = a+0
+    y /= 4
     z = a/4
     assert y.x == z.x and abs(y.variance-z.variance) < 1e-15
 
     # Power operations
-    y = a+0; y **= 4
+    y = a+0
+    y **= 4
     z = a**4
     assert y.x == z.x and abs(y.variance-z.variance) < 1e-15
 
     # Binary operations
-    y = a+0; y += b
+    y = a+0
+    y += b
     z = a+b
     assert y.x == z.x and abs(y.variance-z.variance) < 1e-15
-    y = a+0; y -= b
+    y = a+0
+    y -= b
     z = a-b
     assert y.x == z.x and abs(y.variance-z.variance) < 1e-15
-    y = a+0; y *= b
+    y = a+0
+    y *= b
     z = a*b
     assert y.x == z.x and abs(y.variance-z.variance) < 1e-15
-    y = a+0; y /= b
+    y = a+0
+    y /= b
     z = a/b
     assert y.x == z.x and abs(y.variance-z.variance) < 1e-15
 
@@ -312,4 +320,5 @@ def test():
     assert str(Uncertainty(15,3)) == "15.0(17)"
     assert str(Uncertainty(151.23356,0.324185**2)) == "151.23(32)"
 
-if __name__ == "__main__": test()
+if __name__ == "__main__":
+    test()

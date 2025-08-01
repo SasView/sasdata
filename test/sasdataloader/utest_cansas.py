@@ -230,7 +230,6 @@ class cansas_reader_xml(unittest.TestCase):
     def get_processing_instructions(self, xml_reader_object):
         dict = {}
         pi = xml_reader_object.xmlroot.getprevious()
-        i = 0
         while pi is not None:
             attr = {}
             pi_name = ""

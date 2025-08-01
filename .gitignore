@@ -42,3 +42,6 @@ tests.log
 /installers/dist
 *.exe
 sasdata/_version.py
+
+# Local pre-commit hooks
+.pre-commit-config.yaml
