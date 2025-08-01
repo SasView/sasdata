@@ -15,8 +15,8 @@ from dataclasses import dataclass
 
 from numpy import ndarray
 
+from sasdata.quantities.units import NamedUnit
 from sasdata.quantities.quantity import Quantity
-
 
 
 @dataclass(kw_only=True)
@@ -271,8 +271,10 @@ class MetadataEncoder(json.JSONEncoder):
         match obj:
             case None:
                 return None
+            case NamedUnit():
+                return obj.name
             case Quantity():
-                return None
+                return {"value": obj.value, "units": self.default(obj.units)}
             case ndarray():
                 return {
                     "type": "ndarray",
