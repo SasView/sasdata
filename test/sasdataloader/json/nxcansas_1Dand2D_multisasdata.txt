@@ -3,7 +3,43 @@
     "mask": null,
     "metadata": {
         "definition": "NXcanSAS",
-        "instrument": null,
+        "instrument": {
+            "collimations": [
+                {
+                    "apertures": [],
+                    "length": null
+                }
+            ],
+            "detector": [
+                {
+                    "beam_center": null,
+                    "distance": null,
+                    "name": "front-detector",
+                    "offset": null,
+                    "orientation": null,
+                    "pixel_size": null,
+                    "slit_length": null
+                },
+                {
+                    "beam_center": null,
+                    "distance": null,
+                    "name": "rear-detector",
+                    "offset": null,
+                    "orientation": null,
+                    "pixel_size": null,
+                    "slit_length": null
+                }
+            ],
+            "source": {
+                "beam_shape": null,
+                "beam_size": null,
+                "radiation": "Spallation Neutron Source",
+                "wavelength": null,
+                "wavelength_max": null,
+                "wavelength_min": null,
+                "wavelength_spread": null
+            }
+        },
         "process": [
             {
                 "date": "11-May-2016 12:15:34",
@@ -13,7 +49,286 @@
                 "terms": {}
             }
         ],
-        "raw": null,
+        "raw": {
+            "attrs": {
+                "canSAS_class": "SASentry",
+                "version": "1.0"
+            },
+            "contents": [
+                {
+                    "attrs": {},
+                    "contents": "NXcanSAS",
+                    "name": "definition"
+                },
+                {
+                    "attrs": {
+                        "name": ""
+                    },
+                    "contents": "33837",
+                    "name": "run"
+                },
+                {
+                    "attrs": {
+                        "I_axes": "Q",
+                        "Q_indices": {
+                            "contents": "gAJjbnVtcHkuX2NvcmUubXVsdGlhcnJheQpfcmVjb25zdHJ1Y3QKcQBjbnVtcHkKbmRhcnJheQpxAUsAhXECY19jb2RlY3MKZW5jb2RlCnEDWAEAAABicQRYBgAAAGxhdGluMXEFhnEGUnEHh3EIUnEJKEsBSwGFcQpjbnVtcHkKZHR5cGUKcQtYAgAAAGk0cQyJiIdxDVJxDihLA1gBAAAAPHEPTk5OSv////9K/////0sAdHEQYoloA1gEAAAAAAAAAHERaAWGcRJScRN0cRRiLg==",
+                            "encoding": "base64",
+                            "type": "ndarray"
+                        },
+                        "canSAS_class": "SASdata",
+                        "signal": "I"
+                    },
+                    "contents": [
+                        {
+                            "attrs": {
+                                "uncertainties": "Idev",
+                                "units": "1/cm"
+                            },
+                            "contents": null,
+                            "name": "I"
+                        },
+                        {
+                            "attrs": {
+                                "units": "1/cm"
+                            },
+                            "contents": null,
+                            "name": "Idev"
+                        },
+                        {
+                            "attrs": {
+                                "resolutions": "dQ",
+                                "units": "1/A"
+                            },
+                            "contents": null,
+                            "name": "Q"
+                        },
+                        {
+                            "attrs": {
+                                "units": "1/A"
+                            },
+                            "contents": null,
+                            "name": "dQ"
+                        }
+                    ],
+                    "name": "sasdata01"
+                },
+                {
+                    "attrs": {
+                        "I_axes": "Qx,Qy",
+                        "Q_indices": {
+                            "contents": "gAJjbnVtcHkuX2NvcmUubXVsdGlhcnJheQpfcmVjb25zdHJ1Y3QKcQBjbnVtcHkKbmRhcnJheQpxAUsAhXECY19jb2RlY3MKZW5jb2RlCnEDWAEAAABicQRYBgAAAGxhdGluMXEFhnEGUnEHh3EIUnEJKEsBSwKFcQpjbnVtcHkKZHR5cGUKcQtYAgAAAGk0cQyJiIdxDVJxDihLA1gBAAAAPHEPTk5OSv////9K/////0sAdHEQYoloA1gIAAAAAAAAAAEAAABxEWgFhnESUnETdHEUYi4=",
+                            "encoding": "base64",
+                            "type": "ndarray"
+                        },
+                        "canSAS_class": "SASdata",
+                        "signal": "I"
+                    },
+                    "contents": [
+                        {
+                            "attrs": {
+                                "uncertainties": "Idev",
+                                "units": "1/cm"
+                            },
+                            "contents": null,
+                            "name": "I"
+                        },
+                        {
+                            "attrs": {
+                                "units": "1/cm"
+                            },
+                            "contents": null,
+                            "name": "Idev"
+                        },
+                        {
+                            "attrs": {
+                                "units": "1/A"
+                            },
+                            "contents": null,
+                            "name": "Qx"
+                        },
+                        {
+                            "attrs": {
+                                "units": "1/A"
+                            },
+                            "contents": null,
+                            "name": "Qy"
+                        }
+                    ],
+                    "name": "sasdata02"
+                },
+                {
+                    "attrs": {
+                        "canSAS_class": "SASinstrument"
+                    },
+                    "contents": [
+                        {
+                            "attrs": {},
+                            "contents": "SANS2D",
+                            "name": "name"
+                        },
+                        {
+                            "attrs": {},
+                            "contents": [],
+                            "name": "sascollimation01"
+                        },
+                        {
+                            "attrs": {
+                                "canSAS_class": "SASdetector"
+                            },
+                            "contents": [
+                                {
+                                    "attrs": {
+                                        "units": "mm"
+                                    },
+                                    "contents": null,
+                                    "name": "SDD"
+                                },
+                                {
+                                    "attrs": {},
+                                    "contents": "front-detector",
+                                    "name": "name"
+                                }
+                            ],
+                            "name": "sasdetector01"
+                        },
+                        {
+                            "attrs": {
+                                "canSAS_class": "SASdetector"
+                            },
+                            "contents": [
+                                {
+                                    "attrs": {
+                                        "units": "mm"
+                                    },
+                                    "contents": null,
+                                    "name": "SDD"
+                                },
+                                {
+                                    "attrs": {},
+                                    "contents": "rear-detector",
+                                    "name": "name"
+                                }
+                            ],
+                            "name": "sasdetector02"
+                        },
+                        {
+                            "attrs": {
+                                "canSAS_class": "SASsource"
+                            },
+                            "contents": [
+                                {
+                                    "attrs": {},
+                                    "contents": "Spallation Neutron Source",
+                                    "name": "radiation"
+                                }
+                            ],
+                            "name": "sassource"
+                        }
+                    ],
+                    "name": "sasinstrument"
+                },
+                {
+                    "attrs": {
+                        "canSAS_class": "SASnote"
+                    },
+                    "contents": [
+                        {
+                            "attrs": {},
+                            "contents": "",
+                            "name": "SASnote"
+                        }
+                    ],
+                    "name": "sasnote"
+                },
+                {
+                    "attrs": {
+                        "canSAS_class": "SASprocess"
+                    },
+                    "contents": [
+                        {
+                            "attrs": {},
+                            "contents": "11-May-2016 12:15:34",
+                            "name": "date"
+                        },
+                        {
+                            "attrs": {},
+                            "contents": "Mantid generated CanSAS1D XML",
+                            "name": "name"
+                        },
+                        {
+                            "attrs": {},
+                            "contents": "{'value': '3.6.20160510.609', 'name': 'svn', 'unit': ''}",
+                            "name": "term01"
+                        },
+                        {
+                            "attrs": {},
+                            "contents": "{'value': 'Z:/Masks/USER_SANS2D_153P_2p4_4m_M3_Hollamby_4mm_17TCryomagnet.txt', 'name': 'user_file', 'unit': ''}",
+                            "name": "term02"
+                        }
+                    ],
+                    "name": "sasprocess01"
+                },
+                {
+                    "attrs": {
+                        "canSAS_class": "SASsample"
+                    },
+                    "contents": [
+                        {
+                            "attrs": {},
+                            "contents": "",
+                            "name": "ID"
+                        }
+                    ],
+                    "name": "sassample"
+                },
+                {
+                    "attrs": {
+                        "T_axes": "T",
+                        "canSAS_class": "SAStransmission_spectrum",
+                        "name": "",
+                        "signal": "T"
+                    },
+                    "contents": [
+                        {
+                            "attrs": {
+                                "unertainties": "Tdev"
+                            },
+                            "contents": {
+                                "contents": "gAJjbnVtcHkuX2NvcmUubXVsdGlhcnJheQpfcmVjb25zdHJ1Y3QKcQBjbnVtcHkKbmRhcnJheQpxAUsAhXECY19jb2RlY3MKZW5jb2RlCnEDWAEAAABicQRYBgAAAGxhdGluMXEFhnEGUnEHh3EIUnEJKEsBSy6FcQpjbnVtcHkKZHR5cGUKcQtYAgAAAGY4cQyJiIdxDVJxDihLA1gBAAAAPHEPTk5OSv////9K/////0sAdHEQYoloA1gcAgAASGx3D8OQw73DpT9selBQworDlsOlP8KFw6/DvQ3DmsKrw6U/wpkPCHQmbcOlP8K+MQQAw4cew6U/ZcO8w7vCjAsHw6U/w6TDtsOLJysGw6U/DAQBMnTDrMOkP8O+LMKWIsO5w4rDpD/DpcOVOQZkwq/DpD9nw5ZSQMOaf8OkPw8Ow7YmwoZkw6Q/O8Ojw7vDolIVw6Q/AmHCp1g1CMOkP8OrOcOpfcOjw6vDoz/Dq8OFUE7CtMKrw6M/IMOsFMKrBmHDoz8Sw4E4wrh0TMOjP0bDk8OZw4nDoCjDoz/Dr3A7NCzDhsOiP8Ohw68XwrMlwqvDoj8rbsOcYn5uw6I/w7DCh8Kfw78ePMOiP8KiwrQ3w7jDgsOkw6E/wrNEZ8KZRcKow6E/w6DCnsOnTxtVw6E/bcOJwqoINxnDoT8rajANw4PDh8OgP8OadW9FYsKCw6A/w4bDghA5fT3DoD9PwrLDlcOlwpQAw6A/w691Ul/ClnbDnz9JZB9kWTDDnz8Tw7JBw49mw5XDnj9cAcKFesO6CMOeP8KmDsOyejApw54/bHvCuyU5YMOdP8KRw5PDl8OzNcOLw5w/asKJwpXDkcOIw6fDmz/Ctw3CoyB4fMObPwUZARXCjiDDmz/CtRg8TMO7w6bDmT8Nw4LDnMOuw6U+w5k/T8KVw68ZwonDkMOYP0ZBw7DDuMO2wq7Dlz/DvwbDrcOVw4dDw5c/cRFoBYZxElJxE3RxFGIu",
+                                "encoding": "base64",
+                                "type": "ndarray"
+                            },
+                            "name": "T"
+                        },
+                        {
+                            "attrs": {},
+                            "contents": {
+                                "contents": "gAJjbnVtcHkuX2NvcmUubXVsdGlhcnJheQpfcmVjb25zdHJ1Y3QKcQBjbnVtcHkKbmRhcnJheQpxAUsAhXECY19jb2RlY3MKZW5jb2RlCnEDWAEAAABicQRYBgAAAGxhdGluMXEFhnEGUnEHh3EIUnEJKEsBSy6FcQpjbnVtcHkKZHR5cGUKcQtYAgAAAGY4cQyJiIdxDVJxDihLA1gBAAAAPHEPTk5OSv////9K/////0sAdHEQYoloA1j0AQAAw7TCkhhnwoDDiXU/wrvDmRfCt27DlnI/DMKpaMONC8KHcD/ClFZ0w5LCmMKcbD9FUkXDkBzCgmg/bsKzZ8KFw5hPZT/Du0vDv1A4w5RiP8Osw55pwrYbEmE/AHVewr5QG2A/HTFhw5EAIF8/wp8dw5PCh8OswotdP11Jw7rDjSfCn1w/fnDCocKfZ8K7Wz/CnV85w6dMf1s/HW0kIl/Ctls/LsKzAFQOwrlbP8Kvwoo/wqPDlxNbPxnDgcKtWE/Dr1o/wq0BwqXDvMO/wpNaP1wxKy3Chh9aP8Oyw7Y5wqHChFdaP8KTw4vCucOzSMKsWj9+wpQqwrQgUls/fGjCm8OyU8OiWz8nMAABKcK5XD/CqjjDhC5AwpFdP8KKwrY6a33Csl4/SiI9PcKdw4hfP33CtR8AwqPCkWA/UcKDwoomJ0VhP8K1wrZ8ZkEPYj8kw4YAw4PDkcOZYj9GwrtEw5TDiMOXYz/CjyxHZRbDo2Q/wrbDojTCpz/CuWU/F8KXwrIlDk1nP8OsCTtaDz5oP2Aiw546w792aT8Vc8OvZcOLwodqP0fDusO+FxkubD/DgcKFAsOXwpHDum0/w50WPMK3wpbDqm4/w5wcw5/DhcKYR3A/ecK6wqk3WVlxPy4owqEuMRpyP8Klw41hwozCgsK/cz9xEWgFhnESUnETdHEUYi4=",
+                                "encoding": "base64",
+                                "type": "ndarray"
+                            },
+                            "name": "Tdev"
+                        },
+                        {
+                            "attrs": {},
+                            "contents": {
+                                "contents": "gAJjbnVtcHkuX2NvcmUubXVsdGlhcnJheQpfcmVjb25zdHJ1Y3QKcQBjbnVtcHkKbmRhcnJheQpxAUsAhXECY19jb2RlY3MKZW5jb2RlCnEDWAEAAABicQRYBgAAAGxhdGluMXEFhnEGUnEHh3EIUnEJKEsBSy6FcQpjbnVtcHkKZHR5cGUKcQtYAgAAAGY4cQyJiIdxDVJxDihLA1gBAAAAPHEPTk5OSv////9K/////0sAdHEQYoloA1j4AQAAMzMzMzPCs8O8P8OfwqY/w7vCkSLDvj/Ch8OhI2JKwqTDvz/CscOEA8OKwqbCnABAUyLCiV5GcQFAcQM+P8KMUAJAwpfDv8KQfsO7OgNAw4VyS8KrITEEQGt9wpHDkMKWMwVAw7s/wofDucOyQgZAAMOGM2jDqF8HQF7DtBXCpBnCiwhAE8Kbwo9rQ8OFCUDDpSfDlT4dDwtAwrbDs8O9w5R4aQxAaVchw6Unw5UNQBcOwoRkAVMPQMO8w57Cpj/Du3EQQMKGVcK8wpF5RBFAU8KzB1rCgSESQMOTw57DoAvCkwkTQD7Clj50QcO9E0DDjMKXF2Afw70UQAvCtcKmecOHCRZAw53DkmpIw5wjF0DCsktUbw1MGEAzw5zCgMOPD8KDGUBEwqM7wojCncOJGkBUNUHDlH0gHEBjwpzCvwnChcKIHUDCisKTw7sdwooCH0Bkwq93f8K8RyBADsKhSsONHhghQMOCw51ZwrvDrcOyIUANw70TXMKsw5giQMOuWkI+w6jDiSNASMK/fR04w4ckQMO+w5R4w6kmw5ElQA5Pwq/ClGXDqCZAwq8lw6TCg8KeDShAwqjDhks3wolBKUAwKsKpE8OQwoQqQMKcM8KiwrQ3w5grQMOpJjEIwqw8LUDDnnHCisKOw6TCsi5AImx4esKlHDBAcRFoBYZxElJxE3RxFGIu",
+                                "encoding": "base64",
+                                "type": "ndarray"
+                            },
+                            "name": "lambda"
+                        }
+                    ],
+                    "name": "sastransmission_spectrum01"
+                },
+                {
+                    "attrs": {},
+                    "contents": "MH4_5deg_16T_SLOW",
+                    "name": "title"
+                }
+            ],
+            "name": "sasentry01"
+        },
         "run": [
             "33837"
         ],
