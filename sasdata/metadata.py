@@ -268,8 +268,32 @@ class Metadata:
 class MetadataEncoder(json.JSONEncoder):
     def default(self, obj):
         match obj:
-            case Sample():
+            case None:
                 return None
+            case Quantity():
+                return None
+            case Vec3():
+                return {
+                    "x": self.default(obj.x),
+                    "y": self.default(obj.y),
+                    "z": self.default(obj.z),
+                }
+            case Rot3():
+                return {
+                    "roll": self.default(obj.roll),
+                    "pitch": self.default(obj.pitch),
+                    "yaw": self.default(obj.yaw),
+                }
+            case Sample():
+                return {
+                    "name": obj.name,
+                    "sample_id": obj.sample_id,
+                    "thickness": obj.thickness,
+                    "transmission": obj.transmission,
+                    "position": self.default(obj.position),
+                    "orientation": self.default(obj.orientation),
+                    "details": obj.details,
+                }
             case Process():
                 return None
             case Instrument():
