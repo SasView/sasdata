@@ -104,7 +104,7 @@ class FileReader:
         # Move to the desired initial file position in case of successive reads on the same handle
         self.f_open.seek(self.f_pos)
 
-        basename, extension = self.filepath.stem, self.filepath.suffix
+        _, extension = self.filepath.stem, self.filepath.suffix
         self.extension = extension.lower()
         if self.extension in self.ext or self.allow_all:
             try:
