@@ -81,7 +81,7 @@ def test_good_non_integer_unit_powers(unit_in, power, unit_out):
 def test_bad_non_integer_unit_powers(unit, power):
     """ Check that we get an error if we try and do something silly with powers"""
     with pytest.raises(units.DimensionError):
-        x = unit**power
+        unit**power
 
 
 @pytest.mark.parametrize("unit_1", si.all_si)
