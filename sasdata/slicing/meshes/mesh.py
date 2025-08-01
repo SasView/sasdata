@@ -132,8 +132,6 @@ class Mesh:
         x = x.reshape(-1)
         y = y.reshape(-1)
 
-        xy = np.concatenate(([x], [y]), axis=1)
-
         # The most simple implementation is not particularly fast, especially in python
         #
         # Less obvious, but hopefully faster strategy

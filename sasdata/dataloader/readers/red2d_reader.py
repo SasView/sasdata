@@ -82,7 +82,6 @@ class Reader(FileReader):
 
         wavelength = None
         distance = None
-        transmission = None
 
         pixel_x = None
         pixel_y = None
