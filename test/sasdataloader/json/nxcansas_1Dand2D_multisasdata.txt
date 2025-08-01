@@ -11,7 +11,15 @@
         "run": [
             "33837"
         ],
-        "sample": null,
+        "sample": {
+            "details": [],
+            "name": null,
+            "orientation": null,
+            "position": null,
+            "sample_id": "",
+            "thickness": null,
+            "transmission": null
+        },
         "title": "MH4_5deg_16T_SLOW"
     },
     "model_requirements": null,
