@@ -13,7 +13,10 @@
             "detector": [
                 {
                     "beam_center": null,
-                    "distance": null,
+                    "distance": {
+                        "units": "millimeters",
+                        "value": 2845.260009765625
+                    },
                     "name": "front-detector",
                     "offset": null,
                     "orientation": null,
@@ -22,7 +25,10 @@
                 },
                 {
                     "beam_center": null,
-                    "distance": null,
+                    "distance": {
+                        "units": "millimeters",
+                        "value": 4385.27978515625
+                    },
                     "name": "rear-detector",
                     "offset": null,
                     "orientation": null,
@@ -84,14 +90,28 @@
                                 "uncertainties": "Idev",
                                 "units": "1/cm"
                             },
-                            "contents": null,
+                            "contents": {
+                                "units": "per_centimeter",
+                                "value": {
+                                    "contents": "gAJjbnVtcHkuX2NvcmUubXVsdGlhcnJheQpfcmVjb25zdHJ1Y3QKcQBjbnVtcHkKbmRhcnJheQpxAUsAhXECY19jb2RlY3MKZW5jb2RlCnEDWAEAAABicQRYBgAAAGxhdGluMXEFhnEGUnEHh3EIUnEJKEsBS0KFcQpjbnVtcHkKZHR5cGUKcQtYAgAAAGY4cQyJiIdxDVJxDihLA1gBAAAAPHEPTk5OSv////9K/////0sAdHEQYoloA1jwAgAAQ8OFOH8TwqoVQCjDsiTDqcKaSRFASMO+YMOgwrnCtw9AT8OMejHClHMSQF3DhHdiw5YrEkAQO1PDqMK8w4YUQBvCgXhdwr/CgBdAwrR2w5vChcOmw7ocQCLCjnVxGy0mQMOrw6I2GsOAWzJAw4TCsS5uwqMxOEDDg2TCqmBUMjxAY8OuWkI+aDpAw6rClcKyDHE8OEDDssOSTWIQwrg1QGjCkcOtfD/CpTJAbxLCg8OAw4rDgS9AesOHKTrCksKrKkAfwoXDq1HCuF4nQFYOLcKywp1/I0DDiXbCvsKfGsK/IEDDrcK2C8ONdRodQMK1bMKtLxLDmhhAw7JBw49mw5VnFUDDtcK5w5rCisO9RRJAEF1Qw58yZw9AcQM+P8KMw5AKQBAGwp57D8KXBkDDgjQMHxHDkwNAQMOewqtWJsO8AEDCh8KnV8OKMsOEw70/by9pwozDllHDuj8OFcOjw7xNwqjDtz/DssONNjfCpsKnw7U/w63CtgvDjXUaw7Q/RMOdByDCtQnDsz/ChsKPwogpwpFEw7I/w7NZwp4Hd2fDsT94f8K8V8Ktw4zDsD/Cpg9dUMOfMsOwP0ASw7bDrSTCosOvP8KiwrjDo01+C8OvP8K5VMKlLcKuw7HDrj/DkSTCscKkw5x9w68/djI4Sl7CncOxPxMnw7c7FAXDtj/Di0rCk1LDkG3DtT/Cn8OkDsKbw4jDjMOuP8OSw6LCjGFOUMOrP8KTw4g+w4jCssOgw6s/wqAyw759w4YFw7E/VcKkw4LDmELCkMO0PxsNw6AtwpAgw7E/AizDssOrwofDmMOqP8Kdw5hDw7tYQcOpP8KAw7PDosOEVzvDqT/DgsKFPMKCG8Kpw6k/w4bDuDB7w5l2w6k/GsOewqzDgcO7wqrDqD9dM8O5ZsKbG8OoPzwuwqpFRDHDpz83w4XDo8KiWsOEw6U/DR07wqjDhHXDpD8cXDrDpjxjw6Q/Sg1tADbCoMOkPwkVHF4QwpHDlT9xEWgFhnESUnETdHEUYi4=",
+                                    "encoding": "base64",
+                                    "type": "ndarray"
+                                }
+                            },
                             "name": "I"
                         },
                         {
                             "attrs": {
                                 "units": "1/cm"
                             },
-                            "contents": null,
+                            "contents": {
+                                "units": "per_centimeter",
+                                "value": {
+                                    "contents": "gAJjbnVtcHkuX2NvcmUubXVsdGlhcnJheQpfcmVjb25zdHJ1Y3QKcQBjbnVtcHkKbmRhcnJheQpxAUsAhXECY19jb2RlY3MKZW5jb2RlCnEDWAEAAABicQRYBgAAAGxhdGluMXEFhnEGUnEHh3EIUnEJKEsBS0KFcQpjbnVtcHkKZHR5cGUKcQtYAgAAAGY4cQyJiIdxDVJxDihLA1gBAAAAPHEPTk5OSv////9K/////0sAdHEQYoloA1j0AgAAwqvDj8OVVsOswq/Doz8PD2HDvDTDrsOaPzTCoMOewozCmsKvw5U/w6rDqMK4GsOZwpXDkj88TWbCvMKtw7TDjj8uc8K6LCY2w4s/w6M4w7Bqwrkzw4k/wqN0w6lfwpLDisOGP8O+CwQBMnTDiD9FSMOdw47CvsOyw4o/w7DDvMKiBMO9woXDij99wpbDp8OBw51Zw4k/wq99AcK9cMOnw4Q/wqRSw6xoHMOqw4E/wqYKRiV1AsK+P8KAWMKAAGPDh8K4P3BLwprDtRjCm8K0P8OlWCjDoynDtcKwPz/DmcOewrjDlijCrT8pXMKPw4LDtSjCqD9dOGtLeMKdwqQ/PU/DssOZw7DCqsKhPyBowrvDuMKREcKeP3ovY8KvHMOGwpk/wqJRcGcVw6zClT8Gw4bCsHkLw5rCkj/CkcK/ahs1FcKQP8ORC8OSw6fDvkXCiz/CpWAyw7p2wrfChz8VFMOtw4d5QcKEP8KSw48rwp56wqTCgT/Dr33CgcKLw5vCiX4/C8OmdcOlLwR7P0o4w5t5bsOjdz8jwpRKwrpewoF1PwXCq8OidC/Cg3M/KcOSw5zCjsKZw5lxP3MpU3HCiF1wP8Ocw57DiQLCgSluPzd9w4kIwqDDv2s/Zg96V8K5J2o/w6LChSEww57CqGg/chrCogp/woZnP8KbwpnDk0Qjw4hmPxtIWcK3KFBnP1ZEwo8Qw4xuaT9RHBdAwr7CpWg/DxvDmVN6wr9kP0gGLcOiQ8KiYz8Xwr0yw7MNGmQ/wrUCwp4PKsOMZj/Cg8KzKcKRIyFqP8Kzw5lHXSFiaT82w6NVUsO+IGg/wqTChS5VJ29pP8KlJX/DhVTDmWs/bHfCkwgiw4VvP3wmXhIlKXI/w5XDnDzCm3bCrXQ/wpBIw7wGw73Ct3g/w4TCrcOENMK6IH4/IR7Di8KzecK5woM/wqnCq8KWw49Nw7bCij93w7cAw53ClzPCkz/CmMKxVw7DoyTCoz/CnznDq1PCjsOJw4g/cRFoBYZxElJxE3RxFGIu",
+                                    "encoding": "base64",
+                                    "type": "ndarray"
+                                }
+                            },
                             "name": "Idev"
                         },
                         {
@@ -99,14 +119,28 @@
                                 "resolutions": "dQ",
                                 "units": "1/A"
                             },
-                            "contents": null,
+                            "contents": {
+                                "units": "per_angstrom",
+                                "value": {
+                                    "contents": "gAJjbnVtcHkuX2NvcmUubXVsdGlhcnJheQpfcmVjb25zdHJ1Y3QKcQBjbnVtcHkKbmRhcnJheQpxAUsAhXECY19jb2RlY3MKZW5jb2RlCnEDWAEAAABicQRYBgAAAGxhdGluMXEFhnEGUnEHh3EIUnEJKEsBS0KFcQpjbnVtcHkKZHR5cGUKcQtYAgAAAGY4cQyJiIdxDVJxDihLA1gBAAAAPHEPTk5OSv////9K/////0sAdHEQYoloA1gOAwAAQ8OFOH8TCnE/KloUw5EKZ3I/wqtvaMOjw6vDn3M/WSjDoynDtXZ1P8Ohwo4eXMKNLnc/a8OjwpnDoVAJeT/CmMKbwrnDkREKez86wobClUTDlTN9P0PDkVUdw6bCiX8/wpvCqMOnw5XDpwfCgT/DvsKKDMOdwrJkwoI/wrUReMO1ZMOdwoM/L3E/Ozt0woU/bA0AwrDClSvChz/DsXMyJx4Gwok/RcKpc8O7wpsGwos/w4k0P8KjGTDCjT/CtSDDr8Kww6TChcKPP8Ktwq9kfcK5BcKRP8Kuw41rwpFZYsKSP8K+wrPChwfDnsOawpM/VhPCn8KWenHClT/DiSB3EcKmKMKXPyXCq8OHIsOyAsKZP8KiXSrDmywDwps/TmYXZ2cswp0/VMObw7I2w5vCgcKfPznDuHjDl8KPA8KhP8OIw5rClUwEYMKiP8K2w57Dim1Ww5jCoz/ChMKvw7kCw4RuwqU/w47DoMOvF8KzJcKnPwLCj17Dg8OCw7/CqD/DvhHDocK6wr3Dv8KqPyTDscOydMKuKMKtP8KjPMOzcsOYfcKvP8OGQMKNMWYBwrE/worClMOBwqzCq13Csj8Cw6DCjibDjcOVwrM/A8KlV8K5BmzCtT/Dk8KgaB7DgCLCtz8ySXbCtsKRw7zCuD/CrB/Cm8OkR8O8wro/wqIow5Anw7Ikwr0/SsOxw7EJw5l5wr8/wqZfIsOeOsO/w4A/TU7DrQxTW8OCP8O6CsOSwoxFw5PDgz/DmcOtwrPDikxpw4U/w5lgw6Ekw40fw4c/Z8KAC8KyZcO5w4g/wrd6TnrDn8O4w4o/ezApPj4hw40/wpXDlXQ9w5F1w48/M8KoNjgRw73DkD8SwoXClnXDv1jDkj/Cnl/ClMKgwr/DkMOTPy14w5FXwpBmw5U/w54gWivDmhzDlz/DgsKlY8OOM8O2w5g/Ox3DiHpqw7XDmj9UOMKCVMKKHcOdPzvCinPDlMORccOfP8K/w7BKwpLDp8O6w6A/wqrDk8KBwqzCp1bDoj9CwrRWwrQ5w47Doz9xEWgFhnESUnETdHEUYi4=",
+                                    "encoding": "base64",
+                                    "type": "ndarray"
+                                }
+                            },
                             "name": "Q"
                         },
                         {
                             "attrs": {
                                 "units": "1/A"
                             },
-                            "contents": null,
+                            "contents": {
+                                "units": "per_angstrom",
+                                "value": {
+                                    "contents": "gAJjbnVtcHkuX2NvcmUubXVsdGlhcnJheQpfcmVjb25zdHJ1Y3QKcQBjbnVtcHkKbmRhcnJheQpxAUsAhXECY19jb2RlY3MKZW5jb2RlCnEDWAEAAABicQRYBgAAAGxhdGluMXEFhnEGUnEHh3EIUnEJKEsBS0KFcQpjbnVtcHkKZHR5cGUKcQtYAgAAAGY4cQyJiIdxDVJxDihLA1gBAAAAPHEPTk5OSv////9K/////0sAdHEQYoloA1gQAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAcRFoBYZxElJxE3RxFGIu",
+                                    "encoding": "base64",
+                                    "type": "ndarray"
+                                }
+                            },
                             "name": "dQ"
                         }
                     ],
@@ -136,7 +170,14 @@
                                     "attrs": {
                                         "units": "mm"
                                     },
-                                    "contents": null,
+                                    "contents": {
+                                        "units": "millimeters",
+                                        "value": {
+                                            "contents": "gAJjbnVtcHkuX2NvcmUubXVsdGlhcnJheQpfcmVjb25zdHJ1Y3QKcQBjbnVtcHkKbmRhcnJheQpxAUsAhXECY19jb2RlY3MKZW5jb2RlCnEDWAEAAABicQRYBgAAAGxhdGluMXEFhnEGUnEHh3EIUnEJKEsBSwGFcQpjbnVtcHkKZHR5cGUKcQtYAgAAAGY0cQyJiIdxDVJxDihLA1gBAAAAPHEPTk5OSv////9K/////0sAdHEQYoloA1gFAAAAKcOUMUVxEWgFhnESUnETdHEUYi4=",
+                                            "encoding": "base64",
+                                            "type": "ndarray"
+                                        }
+                                    },
                                     "name": "SDD"
                                 },
                                 {
@@ -156,7 +197,14 @@
                                     "attrs": {
                                         "units": "mm"
                                     },
-                                    "contents": null,
+                                    "contents": {
+                                        "units": "millimeters",
+                                        "value": {
+                                            "contents": "gAJjbnVtcHkuX2NvcmUubXVsdGlhcnJheQpfcmVjb25zdHJ1Y3QKcQBjbnVtcHkKbmRhcnJheQpxAUsAhXECY19jb2RlY3MKZW5jb2RlCnEDWAEAAABicQRYBgAAAGxhdGluMXEFhnEGUnEHh3EIUnEJKEsBSwGFcQpjbnVtcHkKZHR5cGUKcQtYAgAAAGY0cQyJiIdxDVJxDihLA1gBAAAAPHEPTk5OSv////9K/////0sAdHEQYoloA1gFAAAAPQrCiUVxEWgFhnESUnETdHEUYi4=",
+                                            "encoding": "base64",
+                                            "type": "ndarray"
+                                        }
+                                    },
                                     "name": "SDD"
                                 },
                                 {
