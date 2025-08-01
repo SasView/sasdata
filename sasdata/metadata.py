@@ -274,7 +274,7 @@ class MetadataEncoder(json.JSONEncoder):
             case NamedUnit():
                 return obj.name
             case Quantity():
-                return {"value": obj.value, "units": self.default(obj.units)}
+                return {"value": obj.value, "units": obj.units}
             case ndarray():
                 return {
                     "type": "ndarray",
@@ -283,15 +283,15 @@ class MetadataEncoder(json.JSONEncoder):
                 }
             case Vec3():
                 return {
-                    "x": self.default(obj.x),
-                    "y": self.default(obj.y),
-                    "z": self.default(obj.z),
+                    "x": obj.x,
+                    "y": obj.y,
+                    "z": obj.z,
                 }
             case Rot3():
                 return {
-                    "roll": self.default(obj.roll),
-                    "pitch": self.default(obj.pitch),
-                    "yaw": self.default(obj.yaw),
+                    "roll": obj.roll,
+                    "pitch": obj.pitch,
+                    "yaw": obj.yaw,
                 }
             case Sample():
                 return {
@@ -299,8 +299,8 @@ class MetadataEncoder(json.JSONEncoder):
                     "sample_id": obj.sample_id,
                     "thickness": obj.thickness,
                     "transmission": obj.transmission,
-                    "position": self.default(obj.position),
-                    "orientation": self.default(obj.orientation),
+                    "position": obj.position,
+                    "orientation": obj.orientation,
                     "details": obj.details,
                 }
             case Process():
@@ -308,49 +308,49 @@ class MetadataEncoder(json.JSONEncoder):
                     "name": obj.name,
                     "date": obj.date,
                     "description": obj.description,
-                    "terms": {k: self.default(obj.terms[k]) for k in obj.terms},
+                    "terms": {k: obj.terms[k] for k in obj.terms},
                     "nodes": obj.notes,
                 }
             case Aperture():
                 return {
-                    "distance": self.default(obj.distance),
-                    "size": self.default(obj.size),
+                    "distance": obj.distance,
+                    "size": obj.size,
                     "size_name": obj.size_name,
                     "name": obj.name,
                     "type": obj.type_,
                 }
             case Collimation():
                 return {
-                    "length": self.default(obj.length),
-                    "apertures": [self.default(a) for a in obj.apertures],
+                    "length": obj.length,
+                    "apertures": [a for a in obj.apertures],
                 }
             case BeamSize():
-                return {"name": obj.name, "size": self.default(obj.size)}
+                return {"name": obj.name, "size": obj.size}
             case Source():
                 return {
                     "radiation": obj.radiation,
                     "beam_shape": obj.beam_shape,
-                    "beam_size": self.default(obj.beam_size),
-                    "wavelength": self.default(obj.wavelength),
-                    "wavelength_min": self.default(obj.wavelength_min),
-                    "wavelength_max": self.default(obj.wavelength_max),
-                    "wavelength_spread": self.default(obj.wavelength_spread),
+                    "beam_size": obj.beam_size,
+                    "wavelength": obj.wavelength,
+                    "wavelength_min": obj.wavelength_min,
+                    "wavelength_max": obj.wavelength_max,
+                    "wavelength_spread": obj.wavelength_spread,
                 }
             case Detector():
                 return {
                     "name": obj.name,
-                    "distance": self.default(obj.distance),
-                    "offset": self.default(obj.offset),
-                    "orientation": self.default(obj.orientation),
-                    "beam_center": self.default(obj.beam_center),
-                    "pixel_size": self.default(obj.pixel_size),
-                    "slit_length": self.default(obj.slit_length),
+                    "distance": obj.distance,
+                    "offset": obj.offset,
+                    "orientation": obj.orientation,
+                    "beam_center": obj.beam_center,
+                    "pixel_size": obj.pixel_size,
+                    "slit_length": obj.slit_length,
                 }
             case Instrument():
                 return {
-                    "collimations": [self.default(c) for c in obj.collimations],
-                    "source": self.default(obj.source),
-                    "detector": [self.default(d) for d in obj.detector],
+                    "collimations": [c for c in obj.collimations],
+                    "source": obj.source,
+                    "detector": [d for d in obj.detector],
                 }
             case MetaNode():
                 return {"name": obj.name, "attrs": obj.attrs, "contents": obj.contents}
@@ -359,10 +359,10 @@ class MetadataEncoder(json.JSONEncoder):
                     "title": obj.title,
                     "run": obj.run,
                     "definition": obj.definition,
-                    "process": [self.default(p) for p in obj.process],
-                    "sample": self.default(obj.sample),
-                    "instrument": self.default(obj.instrument),
-                    "raw": self.default(obj.raw),
+                    "process": [p for p in obj.process],
+                    "sample": obj.sample,
+                    "instrument": obj.instrument,
+                    "raw": obj.raw,
                 }
             case _:
                 return super().default(obj)
