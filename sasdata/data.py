@@ -1,8 +1,9 @@
 import numpy as np
+import json
 
 from sasdata import dataset_types
 from sasdata.dataset_types import DatasetType
-from sasdata.metadata import Metadata
+from sasdata.metadata import Metadata, MetadataEncoder
 from sasdata.quantities.quantity import Quantity
 
 
@@ -91,17 +92,25 @@ class SasData:
 
         return s
 
-    @property
-    def json(self) -> dict:
-        return {
-            "name": self.name,
-            "data_contents": {},
-            "type": {
-                "name": self.dataset_type.name,
-                "required": self.dataset_type.required,
-                "optional": self.dataset_type.optional,
-                "expected_orders": self.dataset_type.expected_orders,
-            },
-            "mask": self.mask,
-            "model_requirements": self.model_requirements,
-        }
+
+class SasDataEncoder(json.JSONEncoder):
+    def default(self, obj):
+        match obj:
+            case SasData():
+                return {
+                    "name": obj.name,
+                    "data_contents": {},
+                    "type": {
+                        "name": obj.dataset_type.name,
+                        "required": obj.dataset_type.required,
+                        "optional": obj.dataset_type.optional,
+                        "expected_orders": obj.dataset_type.expected_orders,
+                    },
+                    "mask": obj.mask,
+                    "metadata": obj.metadata,
+                    "model_requirements": obj.model_requirements,
+                }
+            case Metadata():
+                return MetadataEncoder().default(obj)
+            case _:
+                return super().default(obj)
