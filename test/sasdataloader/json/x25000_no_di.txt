@@ -9,7 +9,15 @@
         "run": [
             ""
         ],
-        "sample": null,
+        "sample": {
+            "details": [],
+            "name": null,
+            "orientation": null,
+            "position": null,
+            "sample_id": "",
+            "thickness": null,
+            "transmission": null
+        },
         "title": ""
     },
     "model_requirements": null,
