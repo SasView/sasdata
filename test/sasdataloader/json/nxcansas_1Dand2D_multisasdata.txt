@@ -5,7 +5,13 @@
         "definition": "NXcanSAS",
         "instrument": null,
         "process": [
-            null
+            {
+                "date": "11-May-2016 12:15:34",
+                "description": null,
+                "name": "Mantid generated CanSAS1D XML",
+                "nodes": [],
+                "terms": {}
+            }
         ],
         "raw": null,
         "run": [
