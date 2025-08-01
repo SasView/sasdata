@@ -7,6 +7,7 @@ from numpy._typing import ArrayLike
 
 from sasdata.quantities import units
 from sasdata.quantities.numerical_encoding import numerical_decode, numerical_encode
+from sasdata.quantities.unit_parser import parse_unit
 from sasdata.quantities.units import NamedUnit, Unit
 
 T = TypeVar("T")
@@ -1180,6 +1181,16 @@ class Quantity[QuantityType]:
         else:
             return self.in_si(), None
 
+    def explicitly_formatted(self, unit_string: str) -> str:
+        """Returns quantity as a string with specific unit formatting
+
+        Performs any necessary unit conversions, but maintains the exact unit
+        formatting provided by the user.  This can be useful if you have a
+        power expressed in horsepower and you want it expressed as "745.7 N m/s" and not as "745.7 W". """
+        unit = parse_unit(unit_string)
+        quantity = self.in_units_of(unit)
+        return f"{quantity} {unit_string}"
+
     def __eq__(self: Self, other: Self) -> bool | np.ndarray:
         return self.value == other.in_units_of(self.units)
 
@@ -1337,6 +1348,7 @@ class Quantity[QuantityType]:
 
     @staticmethod
     def _array_repr_format(arr: np.ndarray):
+
         """ Format the array """
         order = len(arr.shape)
         reshaped = arr.reshape(-1)
