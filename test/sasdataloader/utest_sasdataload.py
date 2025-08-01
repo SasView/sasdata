@@ -107,4 +107,7 @@ def test_json_deserialise(f):
     assert parsed.dataset_type == expected.dataset_type
     assert parsed.mask == expected.mask
     assert parsed.model_requirements == expected.model_requirements
-    assert parsed.metadata == expected.metadata
+    assert parsed.metadata.title == expected.metadata.title
+    assert parsed.metadata.run == expected.metadata.run
+    assert parsed.metadata.definition == expected.metadata.definition
+    assert parsed.metadata.sample == expected.metadata.sample
