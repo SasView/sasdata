@@ -115,7 +115,7 @@ class Reader(FileReader):
         """
 
         # Loop through each element of the parent and process accordingly
-        for key in data.keys():
+        for key in data:
             # Get all information for the current key
             value = data.get(key)
             class_name = h5attr(value, 'canSAS_class')
