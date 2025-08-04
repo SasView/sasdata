@@ -24,6 +24,7 @@
 **/build
 /dist
 .mplconfig
+**/db.sqlite3
 
 # doc build
 /docs/sphinx-docs/build
