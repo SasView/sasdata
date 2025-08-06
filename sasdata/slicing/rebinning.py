@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from typing import Optional
 from dataclasses import dataclass
 
 import numpy as np
@@ -24,10 +23,10 @@ class Rebinner(ABC):
     def __init__(self):
         """ Base class for rebinning methods"""
 
-        self._bin_mesh_cache: Optional[Mesh] = None # cached version of the output bin mesh
+        self._bin_mesh_cache: Mesh | None = None # cached version of the output bin mesh
 
         # Output dependent caching
-        self._input_cache: Optional[CacheData] = None
+        self._input_cache: CacheData | None = None
 
 
     @abstractmethod

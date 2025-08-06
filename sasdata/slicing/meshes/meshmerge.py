@@ -83,8 +83,8 @@ def meshmerge(mesh_a: Mesh, mesh_b: Mesh) -> tuple[Mesh, np.ndarray, np.ndarray]
     # Find the points where s and t are in (0, 1)
 
     intersection_inds = np.logical_and(
-        np.logical_and(0 < st[:, 0], st[:, 0] < 1),
-        np.logical_and(0 < st[:, 1], st[:, 1] < 1))
+        np.logical_and(0 < st[:, 0], st[:, 0] < 1), # noqa SIM300
+        np.logical_and(0 < st[:, 1], st[:, 1] < 1)) # noqa SIM300
 
     start_points_for_intersections = p1[non_singular][intersection_inds, :]
     deltas_for_intersections = delta1[non_singular][intersection_inds, :]

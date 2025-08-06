@@ -1,7 +1,7 @@
 import logging
 from lxml import etree
 import numpy as np
-from typing import Callable
+from collections.abc import Callable
 
 from sasdata.data import SasData
 from sasdata.dataset_types import one_dim
