@@ -5,6 +5,7 @@ import h5py
 import logging
 
 import numpy as np
+from collections.abc import Callable
 
 
 from h5py._hl.dataset import Dataset as HDF5Dataset
@@ -110,7 +111,373 @@ def connected_data(node: SASDataGroup, name_prefix="") -> list[NamedQuantity]:
 def load_data(filename) -> list[SasData]:
     with h5py.File(filename, 'r') as f:
 
+<<<<<<< HEAD
         loaded_data: list[SasData] = []
+||||||| parent of 7c26dcaf (Adds Pyupgrade (UP) ruleset and rules SIM118 & SIM300 to ruff linter (#144))
+def parse_string(node : HDF5Group) -> str:
+    """Access string data from a node"""
+    return node.asstr()[0]
+
+def opt_parse[T](node: HDF5Group, key: str, subparser: Callable[[HDF5Group], T]) -> T | None:
+    """Parse a subnode if it is present"""
+    if key in node:
+        return subparser(node[key])
+    return None
+
+def attr_parse(node: HDF5Group, key: str) -> str | None:
+    """Parse an attribute if it is present"""
+    if key in node.attrs:
+        return node.attrs[key]
+    return None
+
+
+def parse_apterture(node : HDF5Group) -> Aperture:
+    distance = opt_parse(node, "distance", parse_quantity)
+    name = attr_parse(node, "name")
+    size = opt_parse(node, "size", parse_vec3)
+    size_name = None
+    type_ = attr_parse(node, "type")
+    if size:
+        size_name = attr_parse(node["size"], "name")
+    else:
+        size_name = None
+    return Aperture(distance=distance, size=size, size_name=size_name, name=name, type_=type_)
+
+def parse_beam_size(node : HDF5Group) -> BeamSize:
+    name = attr_parse(node, "name")
+    size = parse_vec3(node)
+    return BeamSize(name=name, size=size)
+
+def parse_source(node : HDF5Group) -> Source:
+    radiation = opt_parse(node, "radiation", parse_string)
+    beam_shape = opt_parse(node, "beam_shape", parse_string)
+    beam_size = opt_parse(node, "beam_size", parse_beam_size)
+    wavelength = opt_parse(node, "wavelength", parse_quantity)
+    wavelength_min = opt_parse(node, "wavelength_min", parse_quantity)
+    wavelength_max = opt_parse(node, "wavelength_max", parse_quantity)
+    wavelength_spread = opt_parse(node, "wavelength_spread", parse_quantity)
+    return Source(
+        radiation=radiation,
+        beam_shape=beam_shape,
+        beam_size=beam_size,
+        wavelength=wavelength,
+        wavelength_min=wavelength_min,
+        wavelength_max=wavelength_max,
+        wavelength_spread=wavelength_spread,
+    )
+
+def parse_vec3(node : HDF5Group) -> Vec3:
+    """Parse a measured 3-vector"""
+    x = opt_parse(node, "x", parse_quantity)
+    y = opt_parse(node, "y", parse_quantity)
+    z = opt_parse(node, "z", parse_quantity)
+    return Vec3(x=x, y=y, z=z)
+
+def parse_rot3(node : HDF5Group) -> Rot3:
+    """Parse a measured rotation"""
+    roll = opt_parse(node, "roll", parse_quantity)
+    pitch = opt_parse(node, "pitch", parse_quantity)
+    yaw = opt_parse(node, "yaw", parse_quantity)
+    return Rot3(roll=roll, pitch=pitch, yaw=yaw)
+
+def parse_detector(node : HDF5Group) -> Detector:
+    name = opt_parse(node, "name", parse_string)
+    distance = opt_parse(node, "SDD", parse_quantity)
+    offset = opt_parse(node, "offset", parse_vec3)
+    orientation = opt_parse(node, "orientation", parse_rot3)
+    beam_center = opt_parse(node, "beam_center", parse_vec3)
+    pixel_size = opt_parse(node, "pixel_size", parse_vec3)
+    slit_length = opt_parse(node, "slit_length", parse_quantity)
+
+    return Detector(name=name,
+                    distance=distance,
+                    offset=offset,
+                    orientation=orientation,
+                    beam_center=beam_center,
+                    pixel_size=pixel_size,
+                    slit_length=slit_length)
+
+
+
+def parse_collimation(node : HDF5Group) -> Collimation:
+    length = opt_parse(node, "length", parse_quantity)
+    return Collimation(length=length, apertures=[parse_apterture(node[ap])
+                                                 for ap in node if "aperture" in ap])
+
+
+def parse_instrument(node : HDF5Group) -> Instrument:
+    return Instrument(
+        collimations= [parse_collimation(node[x]) for x in node if "collimation" in x],
+        detector=[parse_detector(node[d]) for d in node if "detector" in d],
+        source=parse_source(node["sassource"]),
+    )
+
+def parse_sample(node : HDF5Group) -> Sample:
+    name = attr_parse(node, "name")
+    sample_id = opt_parse(node, "ID", parse_string)
+    thickness = opt_parse(node, "thickness", parse_quantity)
+    transmission = opt_parse(node, "transmission", lambda n: float(n[0].astype(str)))
+    temperature = opt_parse(node, "temperature", parse_quantity)
+    position = opt_parse(node, "position", parse_vec3)
+    orientation = opt_parse(node, "orientation", parse_rot3)
+    details : list[str] = [node[d].asstr()[0] for d in node if "details" in d]
+    return Sample(name=name,
+                  sample_id=sample_id,
+                  thickness=thickness,
+                  transmission=transmission,
+                  temperature=temperature,
+                  position=position,
+                  orientation=orientation,
+                  details=details)
+
+def parse_term(node : HDF5Group) -> Tuple[str, str | Quantity[float]] | None:
+    name = attr_parse(node, "name")
+    unit = attr_parse(node, "unit")
+    value = attr_parse(node, "value")
+    if name is None or value is None:
+        return None
+    if unit and unit.strip():
+        return (name, Quantity(float(value), units.symbol_lookup[unit]))
+    return (name, value)
+
+
+def parse_process(node : HDF5Group) -> Process:
+    name = opt_parse(node, "name", parse_string)
+    date = opt_parse(node, "date", parse_string)
+    description = opt_parse(node, "description", parse_string)
+    term_values = [parse_term(node[n]) for n in node if "term" in n]
+    terms = {tup[0]: tup[1] for tup in term_values if tup is not None}
+    notes = [parse_string(node[n]) for n in node if "note" in n]
+    return Process(name=name, date=date, description=description, terms=terms, notes=notes)
+
+def load_raw(node: HDF5Group | HDF5Dataset) -> MetaNode:
+    name = node.name.split("/")[-1]
+    match node:
+        case HDF5Group():
+            attrib = {a: node.attrs[a] for a in node.attrs}
+            contents = [load_raw(node[v]) for v in node]
+            return MetaNode(name=name, attrs=attrib, contents=contents)
+        case HDF5Dataset(dtype=dt):
+            attrib = {a: node.attrs[a] for a in node.attrs}
+            if (str(dt).startswith("|S")):
+                if "units" in attrib:
+                    contents = Quantity(float(node.asstr()[0]), parse(attrib["units"]))
+                else:
+                    contents = node.asstr()[0]
+            else:
+                if "units" in attrib and attrib["units"]:
+                    contents = Quantity(node[:], parse(attrib["units"]))
+                else:
+                    contents = node[:]
+            return MetaNode(name=name, attrs=attrib, contents=contents)
+        case _:
+            raise RuntimeError(f"Cannot load raw data of type {type(node)}")
+
+def parse_metadata(node : HDF5Group) -> Metadata:
+    instrument = opt_parse(node, "sasinstrument", parse_instrument)
+    sample = opt_parse(node, "sassample", parse_sample)
+    process = [parse_process(node[p]) for p in node if "sasprocess" in p]
+    title = opt_parse(node, "title", parse_string)
+    run = [parse_string(node[r]) for r in node if "run" in r]
+    definition = opt_parse(node, "definition", parse_string)
+    raw =  load_raw(node)
+    return Metadata(process=process,
+                    instrument=instrument,
+                    sample=sample,
+                    title=title,
+                    run=run,
+                    raw=raw,
+                    definition=definition)
+
+### End Metadata parsing code
+
+
+def load_data(filename: str) -> dict[str, SasData]:
+    with h5py.File(filename, "r") as f:
+        loaded_data: dict[str, SasData] = {}
+=======
+def parse_string(node : HDF5Group) -> str:
+    """Access string data from a node"""
+    return node.asstr()[0]
+
+def opt_parse[T](node: HDF5Group, key: str, subparser: Callable[[HDF5Group], T]) -> T | None:
+    """Parse a subnode if it is present"""
+    if key in node:
+        return subparser(node[key])
+    return None
+
+def attr_parse(node: HDF5Group, key: str) -> str | None:
+    """Parse an attribute if it is present"""
+    if key in node.attrs:
+        return node.attrs[key]
+    return None
+
+
+def parse_apterture(node : HDF5Group) -> Aperture:
+    distance = opt_parse(node, "distance", parse_quantity)
+    name = attr_parse(node, "name")
+    size = opt_parse(node, "size", parse_vec3)
+    size_name = None
+    type_ = attr_parse(node, "type")
+    if size:
+        size_name = attr_parse(node["size"], "name")
+    else:
+        size_name = None
+    return Aperture(distance=distance, size=size, size_name=size_name, name=name, type_=type_)
+
+def parse_beam_size(node : HDF5Group) -> BeamSize:
+    name = attr_parse(node, "name")
+    size = parse_vec3(node)
+    return BeamSize(name=name, size=size)
+
+def parse_source(node : HDF5Group) -> Source:
+    radiation = opt_parse(node, "radiation", parse_string)
+    beam_shape = opt_parse(node, "beam_shape", parse_string)
+    beam_size = opt_parse(node, "beam_size", parse_beam_size)
+    wavelength = opt_parse(node, "wavelength", parse_quantity)
+    wavelength_min = opt_parse(node, "wavelength_min", parse_quantity)
+    wavelength_max = opt_parse(node, "wavelength_max", parse_quantity)
+    wavelength_spread = opt_parse(node, "wavelength_spread", parse_quantity)
+    return Source(
+        radiation=radiation,
+        beam_shape=beam_shape,
+        beam_size=beam_size,
+        wavelength=wavelength,
+        wavelength_min=wavelength_min,
+        wavelength_max=wavelength_max,
+        wavelength_spread=wavelength_spread,
+    )
+
+def parse_vec3(node : HDF5Group) -> Vec3:
+    """Parse a measured 3-vector"""
+    x = opt_parse(node, "x", parse_quantity)
+    y = opt_parse(node, "y", parse_quantity)
+    z = opt_parse(node, "z", parse_quantity)
+    return Vec3(x=x, y=y, z=z)
+
+def parse_rot3(node : HDF5Group) -> Rot3:
+    """Parse a measured rotation"""
+    roll = opt_parse(node, "roll", parse_quantity)
+    pitch = opt_parse(node, "pitch", parse_quantity)
+    yaw = opt_parse(node, "yaw", parse_quantity)
+    return Rot3(roll=roll, pitch=pitch, yaw=yaw)
+
+def parse_detector(node : HDF5Group) -> Detector:
+    name = opt_parse(node, "name", parse_string)
+    distance = opt_parse(node, "SDD", parse_quantity)
+    offset = opt_parse(node, "offset", parse_vec3)
+    orientation = opt_parse(node, "orientation", parse_rot3)
+    beam_center = opt_parse(node, "beam_center", parse_vec3)
+    pixel_size = opt_parse(node, "pixel_size", parse_vec3)
+    slit_length = opt_parse(node, "slit_length", parse_quantity)
+
+    return Detector(name=name,
+                    distance=distance,
+                    offset=offset,
+                    orientation=orientation,
+                    beam_center=beam_center,
+                    pixel_size=pixel_size,
+                    slit_length=slit_length)
+
+
+
+def parse_collimation(node : HDF5Group) -> Collimation:
+    length = opt_parse(node, "length", parse_quantity)
+    return Collimation(length=length, apertures=[parse_apterture(node[ap])
+                                                 for ap in node if "aperture" in ap])
+
+
+def parse_instrument(node : HDF5Group) -> Instrument:
+    return Instrument(
+        collimations= [parse_collimation(node[x]) for x in node if "collimation" in x],
+        detector=[parse_detector(node[d]) for d in node if "detector" in d],
+        source=parse_source(node["sassource"]),
+    )
+
+def parse_sample(node : HDF5Group) -> Sample:
+    name = attr_parse(node, "name")
+    sample_id = opt_parse(node, "ID", parse_string)
+    thickness = opt_parse(node, "thickness", parse_quantity)
+    transmission = opt_parse(node, "transmission", lambda n: float(n[0].astype(str)))
+    temperature = opt_parse(node, "temperature", parse_quantity)
+    position = opt_parse(node, "position", parse_vec3)
+    orientation = opt_parse(node, "orientation", parse_rot3)
+    details : list[str] = [node[d].asstr()[0] for d in node if "details" in d]
+    return Sample(name=name,
+                  sample_id=sample_id,
+                  thickness=thickness,
+                  transmission=transmission,
+                  temperature=temperature,
+                  position=position,
+                  orientation=orientation,
+                  details=details)
+
+def parse_term(node : HDF5Group) -> tuple[str, str | Quantity[float]] | None:
+    name = attr_parse(node, "name")
+    unit = attr_parse(node, "unit")
+    value = attr_parse(node, "value")
+    if name is None or value is None:
+        return None
+    if unit and unit.strip():
+        return (name, Quantity(float(value), units.symbol_lookup[unit]))
+    return (name, value)
+
+
+def parse_process(node : HDF5Group) -> Process:
+    name = opt_parse(node, "name", parse_string)
+    date = opt_parse(node, "date", parse_string)
+    description = opt_parse(node, "description", parse_string)
+    term_values = [parse_term(node[n]) for n in node if "term" in n]
+    terms = {tup[0]: tup[1] for tup in term_values if tup is not None}
+    notes = [parse_string(node[n]) for n in node if "note" in n]
+    return Process(name=name, date=date, description=description, terms=terms, notes=notes)
+
+def load_raw(node: HDF5Group | HDF5Dataset) -> MetaNode:
+    name = node.name.split("/")[-1]
+    match node:
+        case HDF5Group():
+            attrib = {a: node.attrs[a] for a in node.attrs}
+            contents = [load_raw(node[v]) for v in node]
+            return MetaNode(name=name, attrs=attrib, contents=contents)
+        case HDF5Dataset(dtype=dt):
+            attrib = {a: node.attrs[a] for a in node.attrs}
+            if (str(dt).startswith("|S")):
+                if "units" in attrib:
+                    contents = Quantity(float(node.asstr()[0]), parse(attrib["units"]))
+                else:
+                    contents = node.asstr()[0]
+            else:
+                if "units" in attrib and attrib["units"]:
+                    contents = Quantity(node[:], parse(attrib["units"]))
+                else:
+                    contents = node[:]
+            return MetaNode(name=name, attrs=attrib, contents=contents)
+        case _:
+            raise RuntimeError(f"Cannot load raw data of type {type(node)}")
+
+def parse_metadata(node : HDF5Group) -> Metadata:
+    instrument = opt_parse(node, "sasinstrument", parse_instrument)
+    sample = opt_parse(node, "sassample", parse_sample)
+    process = [parse_process(node[p]) for p in node if "sasprocess" in p]
+    title = opt_parse(node, "title", parse_string)
+    run = [parse_string(node[r]) for r in node if "run" in r]
+    definition = opt_parse(node, "definition", parse_string)
+    raw =  load_raw(node)
+    return Metadata(process=process,
+                    instrument=instrument,
+                    sample=sample,
+                    title=title,
+                    run=run,
+                    raw=raw,
+                    definition=definition)
+
+### End Metadata parsing code
+
+
+def load_data(filename: str) -> dict[str, SasData]:
+    with h5py.File(filename, "r") as f:
+        loaded_data: dict[str, SasData] = {}
+>>>>>>> 7c26dcaf (Adds Pyupgrade (UP) ruleset and rules SIM118 & SIM300 to ruff linter (#144))
 
         for root_key in f.keys():
 

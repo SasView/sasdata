@@ -1,5 +1,6 @@
 from dataclasses import dataclass
-from typing import Sequence, Self, TypeVar
+from typing import Self, TypeVar
+from collections.abc import Sequence
 from fractions import Fraction
 
 import numpy as np

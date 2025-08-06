@@ -19,7 +19,7 @@ PYTHONPATH=../src/ python2  -m sasmanipulations.test.utest_averaging DataInfoTes
 
 # TODO: copy the meta data from the 2D object to the resulting 1D object
 import math
-from warnings import warn
+import numpy as np
 
 import numpy as np
 

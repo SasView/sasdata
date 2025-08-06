@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 from matplotlib import pyplot as plt
 from numpy.typing import ArrayLike
-from typing import Callable
+from collections.abc import Callable
 
 from sasdata.quantities.plotting import quantity_plot
 from sasdata.quantities.quantity import NamedQuantity, Quantity
