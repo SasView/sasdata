@@ -70,7 +70,7 @@ def test_filter_data():
     data = xml_load_data(local_load("data/cansas1d_notitle.xml"))
     for k, v in data.items():
         assert v.metadata.raw.filter("transmission") == ["0.327"]
-        assert v.metadata.raw.filter("wavelength")[0] == Quantity(6.0, units.angstroms) 
+        assert v.metadata.raw.filter("wavelength")[0] == Quantity(6.0, units.angstroms)
         assert v.metadata.raw.filter("SDD")[0] == Quantity(4.15, units.meters)
     data = hdf_load_data(local_load("data/nxcansas_1Dand2D_multisasentry.h5"))
     for k, v in data.items():
