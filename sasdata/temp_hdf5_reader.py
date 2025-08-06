@@ -4,7 +4,7 @@ import h5py
 import logging
 
 import numpy as np
-from typing import Callable, Tuple
+from collections.abc import Callable
 
 
 from h5py._hl.dataset import Dataset as HDF5Dataset
@@ -236,7 +236,7 @@ def parse_sample(node : HDF5Group) -> Sample:
                   orientation=orientation,
                   details=details)
 
-def parse_term(node : HDF5Group) -> Tuple[str, str | Quantity[float]] | None:
+def parse_term(node : HDF5Group) -> tuple[str, str | Quantity[float]] | None:
     name = attr_parse(node, "name")
     unit = attr_parse(node, "unit")
     value = attr_parse(node, "value")
