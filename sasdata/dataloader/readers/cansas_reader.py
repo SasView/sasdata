@@ -3,7 +3,6 @@ import os
 import datetime
 import inspect
 from inspect import FrameInfo
-from typing import Optional, Union
 
 import numpy as np
 from xml.dom.minidom import parseString
@@ -85,7 +84,7 @@ class Reader(XMLreader):
             # Raises FileContentsException
             is_valid_cansas = self.load_file_and_schema(xml_file, '')
         except FileContentsException:
-            msg = "CanSAS Reader could not load {}".format(xml_file)
+            msg = f"CanSAS Reader could not load {xml_file}"
             if self.extension not in self.ext:
                 # If the file has no associated loader
                 raise DefaultReaderException(msg)
@@ -119,7 +118,7 @@ class Reader(XMLreader):
             # Convert all other exceptions to FileContentsExceptions
             raise FileContentsException(str(e))
 
-    def load_file_and_schema(self, xml_file: str, schema_path: Optional[str] = "") -> bool:
+    def load_file_and_schema(self, xml_file: str, schema_path: str | None = "") -> bool:
         # Try and parse the XML file
         try:
             self.set_xml(xml_file)
@@ -134,7 +133,7 @@ class Reader(XMLreader):
             self.set_default_schema()
         return self.is_cansas(self.extension)
 
-    def is_cansas(self, ext: Optional[str] = "xml"):
+    def is_cansas(self, ext: str | None = "xml"):
         """
         Checks to see if the XML file is a CanSAS file
 
@@ -173,7 +172,7 @@ class Reader(XMLreader):
         )
         self.set_schema(schema_path)
 
-    def _parse_entry(self, dom: ElementTree, recurse: Optional[bool] = False) -> (Data1D, None):
+    def _parse_entry(self, dom: ElementTree, recurse: bool | None = False) -> (Data1D, None):
         if not self._is_call_local() and not recurse:
             self.reset_state()
         if not recurse:
@@ -738,7 +737,7 @@ class Reader(XMLreader):
                     err_msg = "CanSAS reader: unexpected "
                     err_msg += "\"{0}\" unit [{1}]; "
                     err_msg = err_msg.format(tagname, local_unit)
-                    err_msg += "expecting [{0}]".format(default_unit)
+                    err_msg += f"expecting [{default_unit}]"
                 value_unit = local_unit
             except Exception:
                 err_msg = "CanSAS reader: unknown error converting "
@@ -762,7 +761,7 @@ class Reader(XMLreader):
         self.current_dataset = plottable_1D(np.array(0), np.array(0))
 
     # Writing Methods
-    def write(self, filename: str, datainfo: Union[Data1D, Data2D]):
+    def write(self, filename: str, datainfo: Data1D | Data2D):
         """
         Write the content of a Data1D as a CanSAS XML file
 
@@ -779,7 +778,7 @@ class Reader(XMLreader):
                   pretty_print=True, xml_declaration=True)
         file_ref.close()
 
-    def _to_xml_doc(self, datainfo: Union[Data1D, Data2D]):
+    def _to_xml_doc(self, datainfo: Data1D | Data2D):
         """
         Create an XML document to contain the content of a Data1D
 
@@ -835,7 +834,7 @@ class Reader(XMLreader):
         doc, entry_node = self._check_origin(entry_node, doc)
         return doc, entry_node
 
-    def write_node(self, parent: ElementTree, name: str, value: Union[float, str], attr: Optional[dict] = None) -> bool:
+    def write_node(self, parent: ElementTree, name: str, value: float | str, attr: dict | None = None) -> bool:
         """
         :param doc: document DOM
         :param parent: parent node
@@ -880,7 +879,7 @@ class Reader(XMLreader):
                                         attrib=attrib, nsmap=nsmap)
         return main_node
 
-    def _write_run_names(self, datainfo: Union[Data1D, Data2D], entry_node: ElementTree):
+    def _write_run_names(self, datainfo: Data1D | Data2D, entry_node: ElementTree):
         """
         Writes the run names to the XML file
 
@@ -897,7 +896,7 @@ class Reader(XMLreader):
                 runname = {'name': datainfo.run_name[item]}
             self.write_node(entry_node, "Run", item, runname)
 
-    def _write_data(self, datainfo: Union[Data1D, Data2D], entry_node: ElementTree):
+    def _write_data(self, datainfo: Data1D | Data2D, entry_node: ElementTree):
         """
         Writes 1D I and Q data to the XML file
 
@@ -940,7 +939,7 @@ class Reader(XMLreader):
             self.write_node(entry_node, "zacceptance", datainfo.sample.zacceptance[0],
                              {'unit': datainfo.sample.zacceptance[1]})
 
-    def _write_data_2d(self, datainfo: Union[Data1D, Data2D], entry_node: ElementTree):
+    def _write_data_2d(self, datainfo: Data1D | Data2D, entry_node: ElementTree):
         """
         Writes 2D data to the XML file
 
@@ -982,7 +981,7 @@ class Reader(XMLreader):
             mask = ','.join("1" if v else "0" for v in datainfo.mask)
             self.write_node(point, "Mask", mask)
 
-    def _write_trans_spectrum(self, datainfo: Union[Data1D, Data2D], entry_node: ElementTree):
+    def _write_trans_spectrum(self, datainfo: Data1D | Data2D, entry_node: ElementTree):
         """
         Writes the transmission spectrum data to the XML file
 
@@ -1010,7 +1009,7 @@ class Reader(XMLreader):
                     point, "Tdev", spectrum.transmission_deviation[i],
                     {'unit': spectrum.transmission_deviation_unit})
 
-    def _write_sample_info(self, datainfo: Union[Data1D, Data2D], entry_node: ElementTree):
+    def _write_sample_info(self, datainfo: Data1D | Data2D, entry_node: ElementTree):
         """
         Writes the sample information to the XML file
 
@@ -1059,7 +1058,7 @@ class Reader(XMLreader):
         for item in datainfo.sample.details:
             self.write_node(sample, "details", item)
 
-    def _write_instrument(self, datainfo: Union[Data1D, Data2D], entry_node: ElementTree):
+    def _write_instrument(self, datainfo: Data1D | Data2D, entry_node: ElementTree):
         """
         Writes the instrumental information to the XML file
 
@@ -1071,7 +1070,7 @@ class Reader(XMLreader):
         self.write_node(instr, "name", datainfo.instrument)
         return instr
 
-    def _write_source(self, datainfo: Union[Data1D, Data2D], instr: ElementTree):
+    def _write_source(self, datainfo: Data1D | Data2D, instr: ElementTree):
         """
         Writes the source information to the XML file
 
@@ -1117,7 +1116,7 @@ class Reader(XMLreader):
                         datainfo.source.wavelength_spread,
                         {"unit": datainfo.source.wavelength_spread_unit})
 
-    def _write_collimation(self, datainfo: Union[Data1D, Data2D], instr: ElementTree):
+    def _write_collimation(self, datainfo: Data1D | Data2D, instr: ElementTree):
         """
         Writes the collimation information to the XML file
 
@@ -1162,7 +1161,7 @@ class Reader(XMLreader):
                 self.write_node(apert, "distance", aperture.distance,
                                 {"unit": aperture.distance_unit})
 
-    def _write_detectors(self, datainfo: Union[Data1D, Data2D], instr: ElementTree):
+    def _write_detectors(self, datainfo: Data1D | Data2D, instr: ElementTree):
         """
         Writes the detector information to the XML file
 
@@ -1228,7 +1227,7 @@ class Reader(XMLreader):
             self.write_node(det, "slit_length", item.slit_length,
                 {"unit": item.slit_length_unit})
 
-    def _write_process_notes(self, datainfo: Union[Data1D, Data2D], entry_node: ElementTree):
+    def _write_process_notes(self, datainfo: Data1D | Data2D, entry_node: ElementTree):
         """
         Writes the process notes to the XML file
 
@@ -1257,7 +1256,7 @@ class Reader(XMLreader):
             if len(item.notes) == 0:
                 self.write_node(node, "SASprocessnote", "")
 
-    def _write_notes(self, datainfo: Union[Data1D, Data2D], entry_node: ElementTree):
+    def _write_notes(self, datainfo: Data1D | Data2D, entry_node: ElementTree):
         """
         Writes the notes to the XML file and creates an empty note if none
         exist

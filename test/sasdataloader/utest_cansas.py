@@ -58,7 +58,7 @@ class cansas_reader_xml(unittest.TestCase):
         if dictionary.get(name) is not None:
             i += 1
             name = name.split("_")[0]
-            name += "_{0}".format(i)
+            name += f"_{i}"
             name = self.get_number_of_entries(dictionary, name, i)
         return name
 
