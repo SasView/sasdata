@@ -21,7 +21,7 @@ def extract_ascii_data(filename):
         data = np.loadtxt(filename, dtype=str)
     except:
         # Check if file is a BSL or OTOKO header file
-        f = open(filename, 'r')
+        f = open(filename)
         f.readline()
         f.readline()
         bsl_metadata = f.readline().strip().split()
@@ -29,11 +29,11 @@ def extract_ascii_data(filename):
         if len(bsl_metadata) == 10:
             msg = ("Error parsing ASII data. {} looks like a BSL or OTOKO "
                    "header file.")
-            raise IOError(msg.format(os.path.split(filename)[-1]))
+            raise OSError(msg.format(os.path.split(filename)[-1]))
 
     if len(data.shape) != 1:
         msg = "Error reading {}: Only one column of data is allowed"
-        raise IOError(msg.format(filename.split('\\')[-1]))
+        raise OSError(msg.format(filename.split('\\')[-1]))
 
     is_float = True
     try:
@@ -49,7 +49,7 @@ def extract_ascii_data(filename):
         else:
             msg = ("Error reading {}: Lines must end with a digit, comma "
                    "or semi-colon").format(filename.split('\\')[-1])
-            raise IOError(msg)
+            raise OSError(msg)
 
     return np.array(data, dtype=np.float32)
 
@@ -68,7 +68,7 @@ def extract_otoko_data(qfile, ifile):
     if len(qdata) > 1:
         msg = ("Q-Axis file has multiple frames. Only 1 frame is "
                "allowed for the Q-Axis")
-        raise IOError(msg)
+        raise OSError(msg)
 
     qdata = qdata[0]
     return qdata, iqdata
