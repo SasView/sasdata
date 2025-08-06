@@ -135,7 +135,7 @@ with open("units.py", 'w', encoding=encoding) as fid:
               "# Included from _units_base.py\n"
               "#\n\n")
 
-    with open("_units_base.py", 'r') as base:
+    with open("_units_base.py") as base:
         for line in base:
             # unicode_superscript is a local module when called from
             # _unit_tables.py but a submodule of sasdata.quantities
@@ -407,7 +407,7 @@ with open("accessors.py", 'w', encoding=encoding) as fid:
 
     fid.write('"""'+(warning_text%"_build_tables.py, _accessor_base.py")+'"""\n\n')
 
-    with open("_accessor_base.py", 'r') as base:
+    with open("_accessor_base.py") as base:
         for line in base:
             fid.write(line)
 
