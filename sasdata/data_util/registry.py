@@ -5,6 +5,9 @@ This provides routines for opening files based on extension,
 and registers the built-in file extensions.
 """
 import os
+from urllib.request import urlopen
+from io import BytesIO
+from typing import Union, TYPE_CHECKING
 from collections import defaultdict
 from io import BytesIO
 from pathlib import Path
