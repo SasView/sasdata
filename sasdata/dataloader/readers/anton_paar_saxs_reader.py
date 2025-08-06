@@ -3,7 +3,6 @@
 """
 
 import numpy as np
-from typing import Optional
 from lxml.etree import Element
 
 from sasdata.dataloader.readers.xml_reader import XMLreader
@@ -127,7 +126,7 @@ class Reader(XMLreader):
         if not correctly_loaded:
             raise DataReaderException(error_message)
 
-    def _parse_child(self, dom: Element, parent: Optional[str] = ''):
+    def _parse_child(self, dom: Element, parent: str | None = ''):
         """
         Recursive method for stepping through the embedded XML
         :param dom: XML node with or without children

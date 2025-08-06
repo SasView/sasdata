@@ -101,14 +101,14 @@ class Reader(FileReader):
                 elif toks[0] == "SIZE_Y":
                     size_y = int(toks[1])
             except ValueError:
-                error_message += "Unable to parse {}. Default value used.\n".format(toks[0])
+                error_message += f"Unable to parse {toks[0]}. Default value used.\n"
                 loaded_correctly = False
 
         # Read the data
         data = []
         error = []
         if not fversion >= 1.0:
-            msg = "danse_reader can't read this file {}".format(self.f_open.name)
+            msg = f"danse_reader can't read this file {self.f_open.name}"
             raise FileContentsException(msg)
 
         for line_num, data_str in enumerate(self.nextlines()):
@@ -119,17 +119,16 @@ class Reader(FileReader):
                 data.append(val)
                 error.append(err)
             except ValueError:
-                msg = "Unable to parse line {}: {}".format(line_num + data_start_line, data_str.strip())
+                msg = f"Unable to parse line {line_num + data_start_line}: {data_str.strip()}"
                 raise FileContentsException(msg)
 
         num_pts = size_x * size_y
         if len(data) < num_pts:
-            msg = "Not enough data points provided. Expected {} but got {}".format(
-                size_x * size_y, len(data))
+            msg = f"Not enough data points provided. Expected {size_x * size_y} but got {len(data)}"
             raise FileContentsException(msg)
         elif len(data) > num_pts:
-            error_message += ("Too many data points provided. Expected {0} but"
-                " got {1}. Only the first {0} will be used.\n").format(num_pts, len(data))
+            error_message += (f"Too many data points provided. Expected {num_pts} but"
+                f" got {len(data)}. Only the first {num_pts} will be used.\n")
             loaded_correctly = False
             data = data[:num_pts]
             error = error[:num_pts]
