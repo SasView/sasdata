@@ -36,7 +36,7 @@ class AsciiMetadataCategory[T]:
     values: dict[str, T] = field(default_factory=dict)
 
 def default_categories() -> dict[str, AsciiMetadataCategory[str | int]]:
-    return {key: AsciiMetadataCategory() for key in initial_metadata.keys()}
+    return {key: AsciiMetadataCategory() for key in initial_metadata}
 
 @dataclass
 class AsciiReaderMetadata:

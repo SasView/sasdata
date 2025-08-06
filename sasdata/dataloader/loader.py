@@ -22,6 +22,7 @@ import os
 import sys
 import time
 from collections import defaultdict
+from types import ModuleType
 from itertools import zip_longest
 from pathlib import Path
 from types import ModuleType
