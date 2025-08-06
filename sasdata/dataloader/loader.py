@@ -17,15 +17,15 @@
 # copyright 2008, University of Tennessee
 ######################################################################
 
+import logging
 import os
 import sys
-import logging
 import time
-from zipfile import ZipFile
 from collections import defaultdict
-from types import ModuleType
 from itertools import zip_longest
 from pathlib import Path
+from types import ModuleType
+from zipfile import ZipFile
 
 from sasdata.data_util.registry import ExtensionRegistry
 from sasdata.data_util.util import unique_preserve_order
