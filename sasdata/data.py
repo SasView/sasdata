@@ -16,7 +16,7 @@ class SasData:
 
         self.name = name
         # validate data contents
-        if not all([key in dataset_type.optional or key in dataset_type.required for key in data_contents.keys()]):
+        if not all([key in dataset_type.optional or key in dataset_type.required for key in data_contents]):
             raise ValueError("Columns don't match the dataset type")
         self._data_contents = data_contents
         self._verbose = verbose
