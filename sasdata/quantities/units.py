@@ -83,7 +83,8 @@ HHHHHHHHH     HHHHHHHHH  aaaaaaaaaa  aaaa nnnnnn    nnnnnn   ddddddddd   ddddd
 #
 
 from dataclasses import dataclass
-from typing import Sequence, Self
+from typing import Self
+from collections.abc import Sequence
 from fractions import Fraction
 
 import numpy as np

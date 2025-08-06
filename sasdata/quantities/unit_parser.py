@@ -42,7 +42,7 @@ def parse_single_unit(unit_str: str, unit_group: UnitGroup | None = None, longes
             break
         string_pos += 1
         current_unit = potential_unit_str
-        if not longest_unit and current_unit in lookup_dict.keys():
+        if not longest_unit and current_unit in lookup_dict:
             break
     if current_unit == '':
         return None, unit_str
