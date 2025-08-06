@@ -35,7 +35,7 @@ class ASCII2DLoader:
         :raises ValueError: Raises a ValueError if the file is incorrectly
             formatted
         """
-        with open(self.data_path, 'r') as file_handle:
+        with open(self.data_path) as file_handle:
             file_buffer = file_handle.read()
             all_lines = file_buffer.splitlines()
 
@@ -70,11 +70,10 @@ class ASCII2DLoader:
                 err_msg = "File incorrectly formatted.\n"
                 if str(e).find('broadcast') != -1:
                     err_msg += "Incorrect number of q data points provided. "
-                    err_msg += "Expected {}.".format(num_qs)
+                    err_msg += f"Expected {num_qs}."
                 elif str(e).find('invalid literal') != -1:
-                    err_msg += ("Expected integer on line {}. "
-                        "Instead got '{}'").format(current_line + 1,
-                            all_lines[current_line])
+                    err_msg += (f"Expected integer on line {current_line + 1}. "
+                        f"Instead got '{all_lines[current_line]}'")
                 else:
                     err_msg += str(e)
                 raise ValueError(err_msg)
@@ -89,16 +88,15 @@ class ASCII2DLoader:
                 height = int(dimensions[1])
             except ValueError:
                 err_msg = "File incorrectly formatted.\n"
-                err_msg += ("Expected line {} to be of the form: <num_qx> "
-                    "<num_qy> <scale>.").format(current_line + 1)
-                err_msg += " Instead got '{}'.".format(all_lines[current_line])
+                err_msg += (f"Expected line {current_line + 1} to be of the form: <num_qx> "
+                    "<num_qy> <scale>.")
+                err_msg += f" Instead got '{all_lines[current_line]}'."
                 raise ValueError(err_msg)
 
             if width > len(qx) or height > len(qy):
                 err_msg = "File incorrectly formatted.\n"
-                err_msg += ("Line {} says to use {}x{} points. "
-                    "Only {}x{} provided.").format(current_line + 1, width,
-                    height, len(qx), len(qy))
+                err_msg += (f"Line {current_line + 1} says to use {width}x{height} points. "
+                    f"Only {len(qx)}x{len(qy)} provided.")
                 raise ValueError(err_msg)
 
             # More qx and/or qy points can be provided than are actually used
@@ -116,8 +114,8 @@ class ASCII2DLoader:
             except:
                 err_msg = "File incorrectly formatted.\n"
                 iflag = all_lines[current_line].strip()[0]
-                err_msg += ("Expected iflag on line {} to be 1, 2 or 3. "
-                    "Instead got '{}'.").format(current_line+1, iflag)
+                err_msg += (f"Expected iflag on line {current_line+1} to be 1, 2 or 3. "
+                    f"Instead got '{iflag}'.")
                 raise ValueError(err_msg)
 
             current_line += 1
@@ -133,8 +131,8 @@ class ASCII2DLoader:
             except Exception as e:
                 err_msg = "File incorrectly formatted.\n"
                 if str(e).find("list index") != -1:
-                    err_msg += ("Incorrect number of data points. Expected {}"
-                        " intensity").format(width * height)
+                    err_msg += (f"Incorrect number of data points. Expected {width * height}"
+                        " intensity")
                     if iflag == 3:
                         err_msg += " and error"
                     err_msg += " points."

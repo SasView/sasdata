@@ -45,13 +45,14 @@ inferring the dimension from an example unit.
 
 import math
 import re
-from typing import Dict, Union, TypeVar, Tuple, Sequence, Optional, List
+from typing import TypeVar
+from collections.abc import Sequence
 
 __all__ = ['Converter', 'standardize_units']
 T = TypeVar('T')
-ConversionType = Union[float, Tuple[float, float]]
-DIMENSIONS = {}  # type: Dict[str, Dict[str, ConversionType]]
-AMBIGUITIES = {}  # type: Dict[str, str]
+ConversionType = float | tuple[float, float]
+DIMENSIONS: dict[str, dict[str, ConversionType]] = {}
+AMBIGUITIES: dict[str, str] = {}
 PREFIX = dict(peta=1e15, tera=1e12, giga=1e9, mega=1e6, kilo=1e3, deci=1e-1, centi=1e-2, milli=1e-3, mili=1e-3,
               micro=1e-6, nano=1e-9, pico=1e-12, femto=1e-15)
 SHORT_PREFIX = dict(P=1e15, T=1e12, G=1e9, M=1e6, k=1e3, d=1e-1, c=1e-2, m=1e-3, u=1e-6, n=1e-9, p=1e-12, f=1e-15)
@@ -60,7 +61,7 @@ SHORT_PREFIX = dict(P=1e15, T=1e12, G=1e9, M=1e6, k=1e3, d=1e-1, c=1e-2, m=1e-3,
 # Limited form of units for returning objects of a specific type.
 # Maybe want to do full units handling with e.g., pyre's
 # unit class. For now lets keep it simple.  Note that
-def _build_metric_units(unit: str, abbr: str) -> Dict[str, float]:
+def _build_metric_units(unit: str, abbr: str) -> dict[str, float]:
     """
     Construct standard SI names for the given unit.
     Builds e.g.,
@@ -89,7 +90,7 @@ def _build_metric_units(unit: str, abbr: str) -> Dict[str, float]:
     return units
 
 
-def _build_plural_units(**kw: Dict[str, ConversionType]) -> Dict[str, ConversionType]:
+def _build_plural_units(**kw: dict[str, ConversionType]) -> dict[str, ConversionType]:
     """
     Construct names for the given units.  Builds singular and plural form.
     """
@@ -99,7 +100,7 @@ def _build_plural_units(**kw: Dict[str, ConversionType]) -> Dict[str, Conversion
     return units
 
 
-def _build_degree_units(name: str, symbol: str, conversion: ConversionType) -> Dict[str, ConversionType]:
+def _build_degree_units(name: str, symbol: str, conversion: ConversionType) -> dict[str, ConversionType]:
     """
     Builds variations on the temperature unit name, including the degree
     symbol or the word degree.
@@ -118,7 +119,7 @@ def _build_degree_units(name: str, symbol: str, conversion: ConversionType) -> D
 
 
 def _build_inv_n_units(names: Sequence[str], conversion: ConversionType,
-                       n: int = 2) -> Dict[str, ConversionType]:
+                       n: int = 2) -> dict[str, ConversionType]:
     """
     Builds variations on inverse x to the nth power units, including 1/x^n, invx^n, x^-n and x^{-n}.
     """
@@ -132,7 +133,7 @@ def _build_inv_n_units(names: Sequence[str], conversion: ConversionType,
     return units
 
 
-def _build_inv_n_metric_units(unit: str, abbr: str, n: int = 2) -> Dict[str, ConversionType]:
+def _build_inv_n_metric_units(unit: str, abbr: str, n: int = 2) -> dict[str, ConversionType]:
     """
     Using the return from _build_metric_units, build inverse to the nth power variations on all units
     (1/x^n, invx^n, x^{-n} and x^-n)
@@ -257,7 +258,7 @@ def _build_all_units():
     # APS files may be using 'a.u.' for 'arbitrary units'.  Other
     # facilities are leaving the units blank, using ??? or not even
     # writing the units attributes.
-    unknown = {}  # type: Dict[str, ConversionType]
+    unknown: dict[str, ConversionType] = {}
     unknown.update(
         {'None': 1, '???': 1, '': 1, 'A.U.': 1,  'a.u.': 1, 'arbitrary': 1, 'arbitrary units': 1,
          'Counts': 1, 'counts': 1, 'Cts': 1, 'cts': 1, 'unitless': 1, 'unknown': 1, 'Unknown': 1, 'Unk': 1}
@@ -265,7 +266,7 @@ def _build_all_units():
     DIMENSIONS['dimensionless'] = unknown
 
 
-def standardize_units(unit: Union[str, None]) -> List[str]:
+def standardize_units(unit: str | None) -> list[str]:
     """
     Convert supplied units to a standard format for maintainability
     :param unit: Raw unit as supplied
@@ -301,7 +302,7 @@ def standardize_units(unit: Union[str, None]) -> List[str]:
     return _format_unit_structure(unit)
 
 
-def _format_unit_structure(unit: Optional[str] = None) -> List[str]:
+def _format_unit_structure(unit: str | None = None) -> list[str]:
     """
     Format units a common way
     :param unit: Unit string to be formatted
@@ -355,15 +356,15 @@ class Converter:
     value name.
     """
     #: Name of the source units (km, Ang, us, ...)
-    _units = None  # type: List[str]
+    _units: list[str] = None
     #: Type of the source units (distance, time, frequency, ...)
-    dimension = None  # type: List[str]
+    dimension: list[str] = None
     #: Scale converter, mapping unit name to scale factor or (scale, offset)
     #: for temperature units.
-    scalemap = None  # type: List[Dict[str, ConversionType]]
+    scalemap: list[dict[str, ConversionType]] = None
     #: Scale base for the source units
-    scalebase = None  # type: float
-    scaleoffset = None  # type: float
+    scalebase: float = None
+    scaleoffset: float = None
 
     @property
     def units(self) -> str:
@@ -373,8 +374,8 @@ class Converter:
     def units(self, unit: str):
         self._units = standardize_units(unit)
 
-    def __init__(self, units: Optional[str] = None, dimension: Optional[List[str]] = None):
-        self.units = units if units is not None else 'a.u.'  # type: str
+    def __init__(self, units: str | None = None, dimension: list[str] | None = None):
+        self.units: str = units if units is not None else 'a.u.'
 
         # Lookup dimension if not given
         if dimension:
@@ -398,20 +399,20 @@ class Converter:
         self.scalebase = base[0]
         self.scaleoffset = base[1]
 
-    def scale(self, units: str = "", value: T = None) -> Union[List[float], T]:
+    def scale(self, units: str = "", value: T = None) -> list[float] | T:
         """Scale the given value using the units string supplied"""
         units = standardize_units(units) if units is not None else ['']
         base = self._get_scale_for_units(units)
         value = self._scale_with_offset(value, base)
         return value
 
-    def _scale_with_offset(self, value: float, scale_base: Tuple[float, float]) -> float:
+    def _scale_with_offset(self, value: float, scale_base: tuple[float, float]) -> float:
         """Scale the given value and add the offset using the units string supplied"""
         inscale, inoffset = self.scalebase, self.scaleoffset
         outscale, outoffset = scale_base
         return (value + outoffset) * inscale / outscale - inoffset
 
-    def _get_scale_for_units(self, units: List[str]):
+    def _get_scale_for_units(self, units: list[str]):
         """Protected method to get scale factor and scale offset as a combined value"""
         base = (1.0, 0.0)
         for scalemap, unit in zip(self.scalemap, units):
@@ -423,7 +424,7 @@ class Converter:
             base = (base[0] * unit_scale[0], base[1] + unit_scale[1])
         return base
 
-    def get_compatible_units(self) -> List[str]:
+    def get_compatible_units(self) -> list[str]:
         """Return a list of compatible units for the current Convertor object"""
         unique_units = []
         conv_list = []
@@ -436,7 +437,7 @@ class Converter:
             unique_units = [x for _, x in sorted(zip(conv_list, unique_units))]
         return unique_units
 
-    def __call__(self, value: T, units: Optional[str] = "") -> Union[List[float], T]:
+    def __call__(self, value: T, units: str | None = "") -> list[float] | T:
         # Note: calculating a*1 rather than simply returning a would produce
         # an unnecessary copy of the array, which in the case of the raw
         # counts array would be bad.  Sometimes copying and other times
