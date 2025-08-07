@@ -3,15 +3,26 @@
 """
 
 import logging
-import h5py
-import numpy as np
 import re
 import traceback
 from typing import Any
 
-from sasdata.dataloader.data_info import plottable_1D, plottable_2D, Data1D, Data2D, DataInfo, Process, Aperture,\
-    Collimation, TransmissionSpectrum, Detector
+import h5py
+import numpy as np
+
 from sasdata.data_util.loader_exceptions import FileContentsException
+from sasdata.dataloader.data_info import (
+    Aperture,
+    Collimation,
+    Data1D,
+    Data2D,
+    DataInfo,
+    Detector,
+    Process,
+    TransmissionSpectrum,
+    plottable_1D,
+    plottable_2D,
+)
 from sasdata.dataloader.filereader import FileReader, decode
 
 logger = logging.getLogger(__name__)

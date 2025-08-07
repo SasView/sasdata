@@ -11,14 +11,14 @@
 #This work benefited from DANSE software developed under NSF award DMR-0520547.
 #copyright 2008, University of Tennessee
 #############################################################################
-import os
 import logging
+import os
 
 import numpy as np
 
-from sasdata.dataloader.data_info import plottable_2D, DataInfo, Detector
+from sasdata.data_util.loader_exceptions import DataReaderException, FileContentsException
+from sasdata.dataloader.data_info import DataInfo, Detector, plottable_2D
 from sasdata.dataloader.filereader import FileReader
-from sasdata.data_util.loader_exceptions import FileContentsException, DataReaderException
 
 logger = logging.getLogger(__name__)
 

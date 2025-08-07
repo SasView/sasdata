@@ -3,13 +3,14 @@
 """
 
 import logging
-import unittest
 import os
 import shutil
+import unittest
+
 import numpy as np
 
-from sasdata.dataloader.loader import Registry as Loader
 from sasdata.dataloader.loader import Loader as LoaderMain
+from sasdata.dataloader.loader import Registry as Loader
 
 logger = logging.getLogger(__name__)
 

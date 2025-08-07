@@ -20,6 +20,7 @@ PYTHONPATH=../src/ python2  -m sasdataloader.test.utest_averaging DataInfoTests.
 
 # TODO: copy the meta data from the 2D object to the resulting 1D object
 import math
+
 import numpy as np
 
 from sasdata.dataloader.data_info import Data1D, Data2D
