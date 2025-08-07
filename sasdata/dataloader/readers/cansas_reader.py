@@ -3,6 +3,7 @@ import inspect
 import logging
 import os
 from inspect import FrameInfo
+from xml.dom.minidom import parseString
 
 import numpy as np
 from lxml import etree

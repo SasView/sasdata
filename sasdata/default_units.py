@@ -1,8 +1,8 @@
 # NOTE: This module will probably be a lot more involved once how this is getting into the configuration will be sorted.
 
-from sasdata.quantities.units import NamedUnit
 import sasdata.quantities.units as unit
 from sasdata.dataset_types import unit_kinds
+from sasdata.quantities.units import NamedUnit
 
 default_units = {
     "Q": [unit.per_nanometer, unit.per_angstrom, unit.per_meter],
