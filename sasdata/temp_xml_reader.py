@@ -1,27 +1,29 @@
 import logging
-from lxml import etree
-import numpy as np
 from collections.abc import Callable
 
+import numpy as np
+from lxml import etree
+
+import sasdata.quantities.unit_parser as unit_parser
 from sasdata.data import SasData
 from sasdata.dataset_types import one_dim
 from sasdata.metadata import (
-    Instrument,
-    Collimation,
     Aperture,
-    Source,
     BeamSize,
+    Collimation,
     Detector,
-    Vec3,
+    Instrument,
+    Metadata,
+    MetaNode,
+    Process,
     Rot3,
     Sample,
-    Process,
-    MetaNode,
-    Metadata,
+    Source,
+    Vec3,
 )
 from sasdata.quantities.quantity import Quantity
-import sasdata.quantities.unit_parser as unit_parser
-from sasdata.quantities.units import Unit, none as unitless
+from sasdata.quantities.units import Unit
+from sasdata.quantities.units import none as unitless
 
 logger = logging.getLogger(__name__)
 

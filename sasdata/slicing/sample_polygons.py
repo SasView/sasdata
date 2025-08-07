@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def wedge(q0, q1, theta0, theta1, clockwise=False, n_points_per_degree=2):
 
     # Traverse a rectangle in curvilinear coordinates (q0, theta0), (q0, theta1), (q1, theta1), (q1, theta0)
