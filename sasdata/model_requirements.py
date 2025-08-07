@@ -1,15 +1,14 @@
 from abc import ABC, abstractmethod
-
 from functools import singledispatch
-import numpy as np
 from typing import Self
-from scipy.special import j0, erf
 
+import numpy as np
+from scipy.special import erf, j0
+
+from sasdata import dataset_types
 from sasdata.data import SasData
 from sasdata.quantities import units
-from sasdata.quantities.quantity import Quantity
-from sasdata import dataset_types
-from sasdata.quantities.quantity import Operation
+from sasdata.quantities.quantity import Operation, Quantity
 
 
 class ModellingRequirements(ABC):

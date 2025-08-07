@@ -1,7 +1,9 @@
 from dataclasses import dataclass
+
+import numpy as np
+
 from sasdata.data import SasData
 from sasdata.data_backing import Dataset, Group
-import numpy as np
 from sasdata.quantities.quantity import Quantity
 from sasdata.transforms.rebinning import calculate_interpolation_matrix_1d
 

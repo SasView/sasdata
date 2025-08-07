@@ -1,8 +1,7 @@
-import numpy as np
-from scipy.spatial import Voronoi
 import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib import cm
-
+from scipy.spatial import Voronoi
 
 # Some test data
 
