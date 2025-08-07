@@ -5,10 +5,19 @@
 import numpy as np
 from lxml.etree import Element
 
+from sasdata.data_util.loader_exceptions import DataReaderException, FileContentsException
+from sasdata.dataloader.data_info import (
+    Aperture,
+    Collimation,
+    DataInfo,
+    Detector,
+    Process,
+    Sample,
+    Source,
+    TransmissionSpectrum,
+    plottable_1D,
+)
 from sasdata.dataloader.readers.xml_reader import XMLreader
-from sasdata.dataloader.data_info import plottable_1D, DataInfo, Sample, Source
-from sasdata.dataloader.data_info import Process, Aperture, Collimation, TransmissionSpectrum, Detector
-from sasdata.data_util.loader_exceptions import FileContentsException, DataReaderException
 
 
 class Reader(XMLreader):

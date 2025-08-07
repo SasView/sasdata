@@ -1,11 +1,9 @@
 """
     Unit tests for the red2d (3-7-column) reader
 """
-import warnings
-
-import unittest
-
 import os.path
+import unittest
+import warnings
 
 from sasdata.dataloader.loader import Loader
 

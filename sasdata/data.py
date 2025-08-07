@@ -3,8 +3,8 @@ import numpy as np
 
 from sasdata import dataset_types
 from sasdata.dataset_types import DatasetType
-from sasdata.quantities.quantity import Quantity
 from sasdata.metadata import Metadata
+from sasdata.quantities.quantity import Quantity
 
 
 class SasData:

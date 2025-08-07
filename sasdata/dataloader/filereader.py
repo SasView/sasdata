@@ -10,11 +10,18 @@ from abc import abstractmethod
 from pathlib import Path
 
 import numpy as np
+
 from sasdata.data_util.loader_exceptions import NoKnownLoaderException
-from sasdata.dataloader.data_info import Data1D, Data2D, DataInfo, plottable_1D, plottable_2D,\
-    combine_data_info_with_plottable
 from sasdata.data_util.nxsunit import Converter
 from sasdata.data_util.registry import CustomFileOpen
+from sasdata.dataloader.data_info import (
+    Data1D,
+    Data2D,
+    DataInfo,
+    combine_data_info_with_plottable,
+    plottable_1D,
+    plottable_2D,
+)
 
 logger = logging.getLogger(__name__)
 

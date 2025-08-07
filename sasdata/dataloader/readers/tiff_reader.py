@@ -9,12 +9,14 @@
     Image reader. Untested.
 """
 # TODO: load and check data and orientation of the image (needs rendering)
-import math
 import logging
+import math
 import os
+
 import numpy as np
-from sasdata.dataloader.data_info import Data2D
+
 from sasdata.data_util.manipulations import reader2D_converter
+from sasdata.dataloader.data_info import Data2D
 
 logger = logging.getLogger(__name__)
 

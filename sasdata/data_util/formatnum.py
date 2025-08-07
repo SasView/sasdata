@@ -37,7 +37,9 @@ UncertaintyFormatter() returns a private formatter with its own
 formatter.compact flag.
 """
 import math
+
 import numpy as np
+
 __all__ = ['format_uncertainty', 'format_uncertainty_pm',
            'format_uncertainty_compact']
 

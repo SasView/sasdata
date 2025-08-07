@@ -2,13 +2,13 @@
     Unit tests for the ascii (n-column) reader
 """
 
-import os.path
-import warnings
 import math
-
+import os.path
 import unittest
-from sasdata.dataloader.loader import Loader
+import warnings
+
 from sasdata.dataloader.data_info import Data2D
+from sasdata.dataloader.loader import Loader
 
 warnings.simplefilter("ignore")
 

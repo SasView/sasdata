@@ -9,8 +9,8 @@ import unittest
 import numpy as np
 from numpy.testing import assert_allclose
 
-from sasdata.dataloader.loader import Loader
 from sasdata.dataloader.data_info import Data1D, Data2D
+from sasdata.dataloader.loader import Loader
 
 RTOL = 1e-12
 

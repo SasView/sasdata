@@ -1,8 +1,9 @@
 """
 ASCII 2D Loader
 """
-from sasdata.dataloader.data_info import Data2D
 import numpy as np
+
+from sasdata.dataloader.data_info import Data2D
 
 # ISIS 2D ASCII File Format
 # http://www.isis.stfc.ac.uk/instruments/loq/software/colette-ascii-file-format-descriptions9808.pdf
