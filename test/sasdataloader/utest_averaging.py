@@ -1,12 +1,23 @@
 import math
 import os
 import unittest
+
 import numpy as np
 
 import sasdata.dataloader.data_info as data_info
+from sasdata.data_util.manipulations import (
+    Boxavg,
+    Boxsum,
+    CircularAverage,
+    Ring,
+    SectorPhi,
+    SectorQ,
+    SlabX,
+    SlabY,
+    position_and_wavelength_to_q,
+    reader2D_converter,
+)
 from sasdata.dataloader.loader import Loader
-from sasdata.data_util.manipulations import (Boxavg, Boxsum, CircularAverage, Ring, SectorPhi, SectorQ, SlabX,
-                                              SlabY, position_and_wavelength_to_q, reader2D_converter)
 
 
 def find(filename):

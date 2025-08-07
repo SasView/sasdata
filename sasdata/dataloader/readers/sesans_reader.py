@@ -8,9 +8,9 @@
 
 import numpy as np
 
-from sasdata.dataloader.filereader import FileReader
-from sasdata.dataloader.data_info import plottable_1D, DataInfo
 from sasdata.data_util.loader_exceptions import FileContentsException
+from sasdata.dataloader.data_info import DataInfo, plottable_1D
+from sasdata.dataloader.filereader import FileReader
 
 # Check whether we have a converter available
 has_converter = True

@@ -3,11 +3,12 @@
 Module with file loader specific static utilities.
 """
 import os
+
 import numpy as np
 
+from sasdata.file_converter.cansas_writer import CansasWriter
 from sasdata.file_converter.nxcansas_writer import NXcanSASWriter
 from sasdata.file_converter.otoko_loader import OTOKOLoader
-from sasdata.file_converter.cansas_writer import CansasWriter
 
 
 def extract_ascii_data(filename):

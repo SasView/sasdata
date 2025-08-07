@@ -1,5 +1,6 @@
-from sasdata.dataloader.loader import Loader
 import unittest
+
+from sasdata.dataloader.loader import Loader
 
 
 class testLoader(unittest.TestCase):

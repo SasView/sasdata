@@ -16,7 +16,6 @@
 
 import logging
 import os
-
 from urllib.parse import urlparse
 
 from lxml import etree
