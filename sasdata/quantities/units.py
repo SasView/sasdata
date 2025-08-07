@@ -82,10 +82,10 @@ HHHHHHHHH     HHHHHHHHH  aaaaaaaaaa  aaaa nnnnnn    nnnnnn   ddddddddd   ddddd
 # Included from _units_base.py
 #
 
-from dataclasses import dataclass
-from typing import Self
 from collections.abc import Sequence
+from dataclasses import dataclass
 from fractions import Fraction
+from typing import Self
 
 import numpy as np
 
@@ -100,6 +100,7 @@ def int_as_unicode_superscript(number: int):
         string = string.replace(old, new)
 
     return string
+
 
 class DimensionError(Exception):
     pass
