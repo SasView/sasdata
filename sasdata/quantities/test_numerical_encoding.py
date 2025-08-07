@@ -3,7 +3,7 @@
 import numpy as np
 import pytest
 
-from sasdata.quantities.numerical_encoding import numerical_encode, numerical_decode
+from sasdata.quantities.numerical_encoding import numerical_decode, numerical_encode
 
 
 @pytest.mark.parametrize("value", [-100.0, -10.0, -1.0, 0.0, 0.5, 1.0, 10.0, 100.0, 1e100])

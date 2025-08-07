@@ -1,10 +1,11 @@
 import numpy as np
 
 from sasdata.data import SasData
-from sasdata.dataset_types import one_dim, two_dim
 from sasdata.data_backing import Group
+from sasdata.dataset_types import one_dim, two_dim
 from sasdata.quantities.quantity import Quantity
 from sasdata.quantities.units import per_angstrom, per_centimeter
+
 
 def test_1d():
     q = [1, 2, 3, 4, 5]

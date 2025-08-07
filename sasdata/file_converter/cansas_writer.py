@@ -1,5 +1,5 @@
-from sasdata.dataloader.readers.cansas_reader import Reader as CansasReader
 from sasdata.dataloader.data_info import Data1D
+from sasdata.dataloader.readers.cansas_reader import Reader as CansasReader
 
 
 class CansasWriter(CansasReader):

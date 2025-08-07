@@ -1,17 +1,13 @@
-from typing import Self
+import hashlib
+import json
+from typing import Any, Self, TypeVar, Union
 
 import numpy as np
 from numpy._typing import ArrayLike
 
 from sasdata.quantities import units
 from sasdata.quantities.numerical_encoding import numerical_decode, numerical_encode
-from sasdata.quantities.units import Unit, NamedUnit
-
-import hashlib
-
-from typing import Any, TypeVar, Union
-
-import json
+from sasdata.quantities.units import NamedUnit, Unit
 
 T = TypeVar("T")
 

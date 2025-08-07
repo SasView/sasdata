@@ -1,23 +1,33 @@
-import logging
-import os
 import datetime
 import inspect
+import logging
+import os
 from inspect import FrameInfo
+from xml.dom.minidom import parseString
 
 import numpy as np
-from xml.dom.minidom import parseString
 from lxml import etree
 from lxml.etree import ElementTree
 
+import sasdata.dataloader.readers.xml_reader as xml_reader
+from sasdata.data_util.loader_exceptions import DefaultReaderException, FileContentsException
 from sasdata.data_util.nxsunit import Converter
 
 # For saving individual sections of data
-from sasdata.dataloader.data_info import Data1D, Data2D, DataInfo, plottable_1D, plottable_2D, \
-    Collimation, TransmissionSpectrum, Detector, Process, Aperture
-from sasdata.data_util.loader_exceptions import FileContentsException, DefaultReaderException
-import sasdata.dataloader.readers.xml_reader as xml_reader
-from sasdata.dataloader.readers.xml_reader import XMLreader
+from sasdata.dataloader.data_info import (
+    Aperture,
+    Collimation,
+    Data1D,
+    Data2D,
+    DataInfo,
+    Detector,
+    Process,
+    TransmissionSpectrum,
+    plottable_1D,
+    plottable_2D,
+)
 from sasdata.dataloader.readers.cansas_constants import CansasConstants
+from sasdata.dataloader.readers.xml_reader import XMLreader
 
 logger = logging.getLogger(__name__)
 

@@ -19,9 +19,9 @@
 # TODO: This module should be independent of plottables. We should write
 #        an adapter class for plottables when needed.
 
+import copy
 import math
 from math import fabs
-import copy
 
 import numpy as np
 

@@ -1,5 +1,6 @@
-from sasdata.quantities.units import Dimensions, NamedUnit, Unit, symbol_lookup, unit_groups, UnitGroup
 from re import findall, fullmatch
+
+from sasdata.quantities.units import Dimensions, NamedUnit, Unit, UnitGroup, symbol_lookup, unit_groups
 
 # TODO: This shouldn't be in this file but I don't want to edit Lucas' code before he is finished.
 

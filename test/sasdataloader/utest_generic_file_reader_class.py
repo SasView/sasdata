@@ -2,14 +2,15 @@
     Unit tests for the generic file reader class
 """
 
+import logging
 import os
 import unittest
-import logging
+
 import numpy as np
 
-from sasdata.dataloader.data_info import DataInfo, plottable_1D, Data1D
-from sasdata.dataloader.loader import Loader
+from sasdata.dataloader.data_info import Data1D, DataInfo, plottable_1D
 from sasdata.dataloader.filereader import FileReader
+from sasdata.dataloader.loader import Loader
 
 logger = logging.getLogger(__name__)
 
