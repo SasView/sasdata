@@ -1,8 +1,8 @@
-import numpy as np
-from scipy.sparse import coo_matrix, csr_matrix, csc_matrix, coo_array, csr_array, csc_array
-
 import base64
 import struct
+
+import numpy as np
+from scipy.sparse import coo_array, coo_matrix, csc_array, csc_matrix, csr_array, csr_matrix
 
 
 def numerical_encode(obj: int | float | np.ndarray | coo_matrix | coo_array | csr_matrix | csr_array | csc_matrix | csc_array):

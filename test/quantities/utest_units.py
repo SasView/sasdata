@@ -44,6 +44,7 @@ EQUAL_TERMS = {
     ],
 }
 
+
 class EqualUnits:
     def __init__(self, test_name: str, *units):
         self.test_name = "Equality: " + test_name
