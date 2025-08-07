@@ -2,11 +2,23 @@
 Import SESANS data in SasData format
 """
 
+import re
+from collections import defaultdict
+from itertools import groupby
+
+import numpy as np
+
 from sasdata.data import SasData
 from sasdata.data_util.loader_exceptions import FileContentsException
-from sasdata.dataset_types import one_dim
+from sasdata.dataset_types import sesans
+from sasdata.metadata import (
+    Metadata,
+    MetaNode,
+    Process,
+    Sample,
+)
+from sasdata.quantities import unit_parser, units
 from sasdata.quantities.quantity import Quantity
-from sasdata.metadata import Metadata, Sample
 
 
 def parse_version(lines: list[str]) -> tuple[str, list[str]]:

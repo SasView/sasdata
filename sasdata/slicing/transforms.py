@@ -1,8 +1,8 @@
-import numpy as np
-from scipy.spatial import Voronoi, Delaunay
-import matplotlib.pyplot as plt
-from matplotlib import cm
 
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib import cm
+from scipy.spatial import Voronoi, Delaunay
 
 # Some test data
 

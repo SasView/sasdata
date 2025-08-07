@@ -1,14 +1,14 @@
 """ Algorithms for interpolation and rebinning """
 from typing import TypeVar
 
+from enum import Enum
+
 import numpy as np
 from numpy._typing import ArrayLike
-from scipy.interpolate import interp1d
-
-from sasdata.quantities.quantity import Quantity
 from scipy.sparse import coo_matrix
 
-from enum import Enum
+from sasdata.quantities.quantity import Quantity
+
 
 class InterpolationOptions(Enum):
     NEAREST_NEIGHBOUR = 0

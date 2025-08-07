@@ -1,13 +1,13 @@
+import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
 import numpy as np
 
 from sasdata.slicing.meshes.mesh import Mesh
-from sasdata.slicing.meshes.voronoi_mesh import voronoi_mesh
 from sasdata.slicing.meshes.meshmerge import meshmerge
+from sasdata.slicing.meshes.voronoi_mesh import voronoi_mesh
 
-import time
 
 @dataclass
 class CacheData:

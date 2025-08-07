@@ -1,3 +1,4 @@
+import re
 from dataclasses import dataclass, field
 from typing import TypeVar
 from re import split as re_split

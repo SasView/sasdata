@@ -1,5 +1,8 @@
-from sasdata.dataset_types import DatasetType
+
 from scipy.stats import mode
+
+from sasdata.dataset_types import DatasetType, one_dim, two_dim
+
 
 def guess_column_count(split_csv: list[list[str]], starting_pos: int) -> int:
     """Guess the amount of columns present in the data."""

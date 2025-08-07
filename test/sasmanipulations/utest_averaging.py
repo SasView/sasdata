@@ -1,8 +1,7 @@
+
 import os
 import unittest
-
 import numpy as np
-
 import sasdata.dataloader.data_info as data_info
 from sasdata.data_util.manipulations import (
     Boxavg,

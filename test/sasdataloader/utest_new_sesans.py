@@ -3,10 +3,21 @@ Unit tests for the new recursive cansas reader
 """
 
 import os
+
+import numpy as np
 import pytest
 
-
-from sasdata.temp_hdf5_reader import load_data
+from sasdata.model_requirements import (
+    ComposeRequirements,
+    ModellingRequirements,
+    NullModel,
+    PinholeModel,
+    SesansModel,
+    SlitModel,
+    guess_requirements,
+)
+from sasdata.quantities import unit_parser, units
+from sasdata.quantities.quantity import Quantity
 from sasdata.temp_sesans_reader import load_data
 
 test_file_names = ["sphere2micron", "sphere_isis"]
