@@ -1,9 +1,10 @@
+import time
+
 import numpy as np
 
-from sasdata.slicing.meshes.mesh import Mesh
 from sasdata.slicing.meshes.delaunay_mesh import delaunay_mesh
+from sasdata.slicing.meshes.mesh import Mesh
 
-import time
 
 def meshmerge(mesh_a: Mesh, mesh_b: Mesh) -> tuple[Mesh, np.ndarray, np.ndarray]:
     """ Take two lists of polygons and find their intersections

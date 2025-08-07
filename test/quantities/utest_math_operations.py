@@ -1,10 +1,10 @@
 """ Tests for math operations """
 
+import numpy as np
 import pytest
 
-import numpy as np
-from sasdata.quantities.quantity import NamedQuantity, tensordot, transpose
 from sasdata.quantities import units
+from sasdata.quantities.quantity import NamedQuantity, tensordot, transpose
 
 order_list = [
     [0, 1, 2, 3],

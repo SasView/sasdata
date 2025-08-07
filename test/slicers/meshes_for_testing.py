@@ -4,9 +4,9 @@ Meshes used in testing along with some expected values
 
 import numpy as np
 
-from sasdata.slicing.meshes.voronoi_mesh import voronoi_mesh
 from sasdata.slicing.meshes.mesh import Mesh
 from sasdata.slicing.meshes.meshmerge import meshmerge
+from sasdata.slicing.meshes.voronoi_mesh import voronoi_mesh
 
 coords = np.arange(-4, 5)
 grid_mesh = voronoi_mesh(*np.meshgrid(coords, coords))

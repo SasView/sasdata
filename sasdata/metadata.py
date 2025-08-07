@@ -11,8 +11,10 @@ Any useful metadata which cannot be included in these classes represent a bug in
 
 from dataclasses import dataclass
 
-from sasdata.quantities.quantity import Quantity
 from numpy import ndarray
+
+from sasdata.quantities.quantity import Quantity
+
 
 @dataclass(kw_only=True)
 class Vec3:
