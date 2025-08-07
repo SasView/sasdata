@@ -9,9 +9,9 @@ Format values and uncertainties nicely for printing.
 where the number in parenthesis is the uncertainty in the last two digits of v.
 
 :func:`format_uncertainty` uses the compact format by default, but this
-can be changed to use the expanded +/- format by setting 
+can be changed to use the expanded +/- format by setting
 format_uncertainty.compact to False.
-    
+
 The formatted string uses only the number of digits warranted by
 the uncertainty in the measurement.
 
@@ -87,7 +87,7 @@ class UncertaintyFormatter:
     True or False.  The default is True.
     """
     compact = True
-    
+
     def __call__(self, value, uncertainty):
         """
         Given *value* and *uncertainty*, return a string representation.
@@ -142,7 +142,7 @@ def _format_uncertainty(value, uncertainty, compact):
         # Extreme cases: zeros before value or after error
         # The value is ###.###(##)e#, ##.####(##)e# or #.#####(##)e#
         pass
-    
+
     # Force engineering notation, with exponent a multiple of 3
     val_place = int(math.floor(val_place / 3.)) * 3
 
@@ -281,7 +281,7 @@ def test_compact():
     assert value_str(-np.inf,None) == "-inf"
     assert value_str(np.inf,None) == "inf"
     assert value_str(np.nan,None) == "NaN"
-    
+
     # bad or missing uncertainty
     assert value_str(-1.23567,np.nan) == "-1.23567"
     assert value_str(-1.23567,-np.inf) == "-1.23567"
@@ -412,7 +412,7 @@ def test_pm():
     assert value_str(-np.inf,None) == "-inf"
     assert value_str(np.inf,None) == "inf"
     assert value_str(np.nan,None) == "NaN"
-    
+
     # bad or missing uncertainty
     assert value_str(-1.23567,np.nan) == "-1.23567"
     assert value_str(-1.23567,-np.inf) == "-1.23567"
@@ -434,7 +434,7 @@ def main():
     test_compact()
     test_pm()
     test_default()
-    
+
     import doctest
     doctest.testmod()
 
