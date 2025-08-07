@@ -7,6 +7,9 @@ import re
 import traceback
 from typing import Any
 
+import h5py
+import numpy as np
+
 from sasdata.data_util.loader_exceptions import FileContentsException
 from sasdata.dataloader.data_info import (
     Aperture,
