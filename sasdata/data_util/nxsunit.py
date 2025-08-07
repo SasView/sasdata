@@ -45,8 +45,8 @@ inferring the dimension from an example unit.
 
 import math
 import re
-from typing import TypeVar
 from collections.abc import Sequence
+from typing import TypeVar
 
 __all__ = ['Converter', 'standardize_units']
 T = TypeVar('T')

@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 from numpy.typing import ArrayLike
 
-from sasdata.quantities.quantity import Quantity, NamedQuantity
+from sasdata.quantities.quantity import NamedQuantity, Quantity
 
 
 def quantity_plot(x: Quantity[ArrayLike], y: Quantity[ArrayLike], *args, **kwargs):

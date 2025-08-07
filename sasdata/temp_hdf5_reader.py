@@ -1,24 +1,31 @@
-import h5py
-
-
 import logging
-
-import numpy as np
 from collections.abc import Callable
 
-
+import h5py
+import numpy as np
 from h5py._hl.dataset import Dataset as HDF5Dataset
 from h5py._hl.group import Group as HDF5Group
 
-
 from sasdata.data import SasData
+from sasdata.data_backing import Dataset as SASDataDataset
+from sasdata.data_backing import Group as SASDataGroup
 from sasdata.dataset_types import one_dim
-from sasdata.data_backing import Dataset as SASDataDataset, Group as SASDataGroup
-from sasdata.metadata import Instrument, Collimation, Aperture, Source, BeamSize, Detector, Vec3, \
-    Rot3, Sample, Process, MetaNode, Metadata
-
-from sasdata.quantities.quantity import NamedQuantity, Quantity
+from sasdata.metadata import (
+    Aperture,
+    BeamSize,
+    Collimation,
+    Detector,
+    Instrument,
+    Metadata,
+    MetaNode,
+    Process,
+    Rot3,
+    Sample,
+    Source,
+    Vec3,
+)
 from sasdata.quantities import units
+from sasdata.quantities.quantity import NamedQuantity, Quantity
 from sasdata.quantities.unit_parser import parse
 
 # test_file = "./example_data/1d_data/33837rear_1D_1.75_16.5_NXcanSAS_v3.h5"
