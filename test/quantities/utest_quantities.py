@@ -131,3 +131,11 @@ def test_equality():
     assert Quantity(1.0, units.angstroms) == Quantity(0.1, units.nanometers)
     assert Quantity(1.0, units.angstroms) != Quantity(0.1, units.angstroms)
     assert Quantity(1.0, units.angstroms) == Quantity(1.0e-10, units.meters)
+
+@pytest.mark.quantity
+def test_explicit_format():
+    value = Quantity(1.0, units.electronvolts)
+    assert value.explicitly_formatted("J") == "1.602176634e-19 J"
+    assert value.explicitly_formatted("N m") == "1.602176634e-19 N m"
+    assert value.explicitly_formatted("m N") == "1.602176634e-19 m N"
+    assert value.explicitly_formatted("m kilogram m / hour / year") == "1.8201532008477443e-08 m kilogram m / hour / year"
