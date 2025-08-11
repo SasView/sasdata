@@ -58,6 +58,16 @@ OR:
 98929
   - Simple two-column text variant of ISIS_98929 (see below).
 
+Alumina_usaxs
+  - Data from a mixture of two Alumina powders of different coarseness
+    collected on the old APS USAXS instrument at 33ID. Once thoroughly mixed
+    the sample was then pressed between two pieces of Scotch tape and placed in
+    the beam.
+  - Note that, as usual for powder samples, this data is not on absolute scale.
+  - Suitable for testing :ref:`_Size_Distribution` . Also, an old video by Jan
+    Ilavsky (https://www.youtube.com/watch?v=WMd0N9_5iJo) uses this data to
+    demonstrate the use of theIrena version of Size Distribution.
+
 Anton-Paar
   - Example of the Anton-Paar XML format.
 
