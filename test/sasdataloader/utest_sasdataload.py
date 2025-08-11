@@ -90,7 +90,7 @@ def test_filter_data():
 def test_json_serialise(f):
     data = hdf_load_data(local_load(f"data/{f}.h5"))
 
-    with open(local_load(f"json/{f}.txt"), encoding="utf-8") as infile:
+    with open(local_load(f"json/{f}.json"), encoding="utf-8") as infile:
         expected = json.loads("".join(infile.readlines()))
     assert json.loads(SasDataEncoder().encode(data["sasentry01"])) == expected
 
