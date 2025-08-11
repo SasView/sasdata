@@ -401,3 +401,6 @@ class Metadata:
             self.sample.summary() +
             self.instrument.summary() +
             self.transmission_spectrum.summary())
+
+class DerivedMetadata(Metadata):
+    pass
