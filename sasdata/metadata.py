@@ -11,6 +11,7 @@ Any useful metadata which cannot be included in these classes represent a bug in
 
 import base64
 import json
+import numpy as np
 from dataclasses import dataclass
 
 from numpy import ndarray
@@ -305,6 +306,32 @@ class MetaNode:
                 raise RuntimeError(f"Cannot filter contents of type {type(self.contents)}: {self.contents}")
         return []
 
+    @staticmethod
+    def from_json(obj):
+        def from_content(con):
+            match con:
+                case list():
+                    return list(map(MetaNode.from_json, con))
+                case {
+                    "type": "ndarray",
+                    "dtype": dtype,
+                    "encoding": "base64",
+                    "contents": contents,
+                    "shape": shape,
+                }:
+                    return np.frombuffer(base64.b64decode(contents), dtype=dtype).reshape(shape)
+
+                case {"value": value, "units": units}:
+                    return from_json_quantity(con)
+                case _:
+                    return con
+
+        return MetaNode(
+            name=obj["name"],
+            attrs={k: from_content(v) for k, v in obj["attrs"].items()},
+            contents=from_content(obj["contents"]),
+        )
+
 
 @dataclass(kw_only=True)
 class Metadata:
@@ -357,7 +384,9 @@ class MetadataEncoder(json.JSONEncoder):
                 return {
                     "type": "ndarray",
                     "encoding": "base64",
-                    "contents": base64.b64encode(obj.dumps()).decode("utf-8"),
+                    "contents": base64.b64encode(obj.tobytes()).decode("utf-8"),
+                    "dtype": obj.dtype.str,
+                    "shape": obj.shape,
                 }
             case Vec3():
                 return {
