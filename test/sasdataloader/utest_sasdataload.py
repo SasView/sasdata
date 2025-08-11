@@ -70,4 +70,92 @@ def test_xml_load_file(f):
 
     with open(local_load(f"reference/{f}.txt")) as infile:
         expected = "".join(infile.readlines())
+<<<<<<< HEAD
     assert data[0].summary() == expected
+||||||| parent of 76ace63f (Use .json extension for JSON files)
+    keys = sorted([d for d in data])
+    assert "".join(data[k].summary() for k in keys) == expected
+
+
+@pytest.mark.sasdata
+def test_filter_data():
+    data = xml_load_data(local_load("data/cansas1d_notitle.xml"))
+    for k, v in data.items():
+        assert v.metadata.raw.filter("transmission") == ["0.327"]
+        assert v.metadata.raw.filter("wavelength")[0] == Quantity(6.0, units.angstroms)
+        assert v.metadata.raw.filter("SDD")[0] == Quantity(4.15, units.meters)
+    data = hdf_load_data(local_load("data/nxcansas_1Dand2D_multisasentry.h5"))
+    for k, v in data.items():
+        assert v.metadata.raw.filter("radiation") == ["Spallation Neutron Source"]
+        assert v.metadata.raw.filter("SDD") == [
+            Quantity(np.array([2845.26], dtype=np.float32), units.millimeters),
+            Quantity(np.array([4385.28], dtype=np.float32), units.millimeters),
+        ]
+
+
+@pytest.mark.sasdata2
+@pytest.mark.parametrize("f", test_hdf_file_names)
+def test_json_serialise(f):
+    data = hdf_load_data(local_load(f"data/{f}.h5"))
+
+    with open(local_load(f"json/{f}.txt"), encoding="utf-8") as infile:
+        expected = json.loads("".join(infile.readlines()))
+    assert json.loads(SasDataEncoder().encode(data["sasentry01"])) == expected
+
+
+@pytest.mark.sasdata2
+@pytest.mark.parametrize("f", test_hdf_file_names)
+def test_json_deserialise(f):
+    expected = hdf_load_data(local_load(f"data/{f}.h5"))["sasentry01"]
+
+    with open(local_load(f"json/{f}.json"), encoding="utf-8") as infile:
+        parsed = SasData.from_json(json.loads("".join(infile.readlines())))
+    assert parsed.name == expected.name
+    assert parsed._data_contents == expected._data_contents
+    assert parsed.dataset_type == expected.dataset_type
+    assert parsed.mask == expected.mask
+    assert parsed.model_requirements == expected.model_requirements
+=======
+    keys = sorted([d for d in data])
+    assert "".join(data[k].summary() for k in keys) == expected
+
+
+@pytest.mark.sasdata
+def test_filter_data():
+    data = xml_load_data(local_load("data/cansas1d_notitle.xml"))
+    for k, v in data.items():
+        assert v.metadata.raw.filter("transmission") == ["0.327"]
+        assert v.metadata.raw.filter("wavelength")[0] == Quantity(6.0, units.angstroms)
+        assert v.metadata.raw.filter("SDD")[0] == Quantity(4.15, units.meters)
+    data = hdf_load_data(local_load("data/nxcansas_1Dand2D_multisasentry.h5"))
+    for k, v in data.items():
+        assert v.metadata.raw.filter("radiation") == ["Spallation Neutron Source"]
+        assert v.metadata.raw.filter("SDD") == [
+            Quantity(np.array([2845.26], dtype=np.float32), units.millimeters),
+            Quantity(np.array([4385.28], dtype=np.float32), units.millimeters),
+        ]
+
+
+@pytest.mark.sasdata2
+@pytest.mark.parametrize("f", test_hdf_file_names)
+def test_json_serialise(f):
+    data = hdf_load_data(local_load(f"data/{f}.h5"))
+
+    with open(local_load(f"json/{f}.json"), encoding="utf-8") as infile:
+        expected = json.loads("".join(infile.readlines()))
+    assert json.loads(SasDataEncoder().encode(data["sasentry01"])) == expected
+
+
+@pytest.mark.sasdata2
+@pytest.mark.parametrize("f", test_hdf_file_names)
+def test_json_deserialise(f):
+    expected = hdf_load_data(local_load(f"data/{f}.h5"))["sasentry01"]
+
+    with open(local_load(f"json/{f}.json"), encoding="utf-8") as infile:
+        parsed = SasData.from_json(json.loads("".join(infile.readlines())))
+    assert parsed.name == expected.name
+    assert parsed._data_contents == expected._data_contents
+    assert parsed.dataset_type == expected.dataset_type
+    assert parsed.mask == expected.mask
+    assert parsed.model_requirements == expected.model_requirements
+>>>>>>> 76ace63f (Use .json extension for JSON files)
