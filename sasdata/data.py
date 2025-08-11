@@ -7,6 +7,65 @@ from sasdata.quantities.quantity import Quantity
 
 
 class SasData:
+    """ General object containing data in the SasView ecosystem"""
+
+    def __init__(self,
+                 name: str,
+                 ordinate: Quantity,
+                 mask: Quantity,
+                 abscissae: list[Quantity],
+                 dependents: list["SasData"]):
+
+        self._ordinate = ordinate
+        self._abscissae = abscissae
+        self._mask = mask
+
+    @property
+    def ordinate(self) -> Quantity:
+        return self._ordinate
+
+    @property
+    def abscissae(self) -> list[Quantity]:
+        return self._abscissae
+
+    @property
+    def mask(self) -> Quantity:
+        return self._mask
+
+    def scatter_data(self):
+        """ Return data in the coordinate/value form [(x1, x2, x3, y)...]"""
+
+
+class SasDerivedMeasurement(SasData):
+    """ General object sas measurement that has not come directly from a file,
+    for example, the difference between two datasets"""
+
+
+    def __init__(self,
+                 name: str,
+                 ordinate: Quantity,
+                 abscissae: list[Quantity],
+                 dependents: list["SasData"],
+                 metadata: DerivedMetadata):
+
+        super().__init__(
+            name=name,
+            ordinate=ordinate,
+            abscissae=abscissae,
+            dependents=dependents)
+
+        self.metadata = metadata
+
+
+
+
+class SasMeasurement(SasData):
+    def __init__(self, name: str,
+                 data_contents: dict[str, Quantity],
+                 dataset_type: DatasetType,
+                 metadata: Metadata,
+                 verbose: bool=False):
+
     def __init__(
         self,
         name: str,
