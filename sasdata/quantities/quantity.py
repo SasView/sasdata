@@ -6,8 +6,8 @@ import numpy as np
 from numpy._typing import ArrayLike
 
 from sasdata.quantities import units
-from sasdata.quantities.numerical_encoding import numerical_decode, numerical_encode
 from sasdata.quantities.unit_parser import parse_unit
+from sasdata.quantities.numerical_encoding import numerical_decode, numerical_encode
 from sasdata.quantities.units import NamedUnit, Unit
 
 T = TypeVar("T")
