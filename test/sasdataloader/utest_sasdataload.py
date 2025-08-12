@@ -2,16 +2,14 @@
 Unit tests for the new recursive cansas reader
 """
 
+import json
 import os
 
-import json
 import numpy as np
 import pytest
 
-from sasdata.data import SasData, SasDataEncoder
 import sasdata.quantities.units as units
-
-from sasdata.data import SasDataEncoder, SasData
+from sasdata.data import SasData, SasDataEncoder
 from sasdata.quantities.quantity import Quantity
 from sasdata.temp_hdf5_reader import load_data as hdf_load_data
 from sasdata.temp_xml_reader import load_data as xml_load_data
