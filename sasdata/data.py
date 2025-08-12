@@ -1,5 +1,4 @@
 import numpy as np
-import json
 
 from sasdata import dataset_types
 from sasdata.dataset_types import DatasetType
