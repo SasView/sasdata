@@ -202,7 +202,8 @@ def test_load_file(test_case: BaseTestCase):
             loaded_data = hdf_load_data(test_case.filename)
         # TODO: Support SESANS
         case XmlTestCase():
-            loaded_data = xml_load_data(test_case.filename)
+            # Not bulk, so just assume we get one dataset.
+            loaded_data = next(iter(xml_load_data(test_case.filename).items()))
         case _:
             raise ValueError("Invalid loader")
     if isinstance(test_case, BulkAsciiTestCase):
