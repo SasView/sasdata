@@ -10,16 +10,21 @@ all_units: list[NamedUnit] = []
 for group in all_units_groups:
     all_units.extend(group)
 
+
 def split_unit_str(unit_str: str) -> list[str]:
     """Separate the letters from the numbers in unit_str"""
-    return findall(r'[A-Za-zΩ%Å]+|[-\d]+|/', unit_str)
+    return findall(r"[A-Za-zΩ%Å]+|[-\d]+|/", unit_str)
+
 
 def validate_unit_str(unit_str: str) -> bool:
     """Validate whether unit_str is valid. This doesn't mean that the unit specified in unit_str exists but rather it
     only consists of letters, and numbers as a unit string should."""
-    return fullmatch(r'[A-Za-zΩ%Å^1-9\-\+/\ \._]+', unit_str) is not None
+    return fullmatch(r"[A-Za-zΩ%Å^1-9\-\+/\ \._]+", unit_str) is not None
 
-def parse_single_unit(unit_str: str, unit_group: UnitGroup | None = None, longest_unit: bool = True) -> tuple[Unit | None, str]:
+
+def parse_single_unit(
+    unit_str: str, unit_group: UnitGroup | None = None, longest_unit: bool = True
+) -> tuple[Unit | None, str]:
     """Attempts to find a single unit for unit_str. Return this unit, and the remaining string in a tuple. If a unit
     cannot be parsed, the unit will be None, and the remaining string will be the entire unit_str.
 
@@ -28,7 +33,7 @@ def parse_single_unit(unit_str: str, unit_group: UnitGroup | None = None, longes
 
     If unit_group is set, it will only try to parse units within that group. This is useful for resolving ambiguities.
     """
-    current_unit = ''
+    current_unit = ""
     string_pos = 0
     if unit_group is None:
         lookup_dict = symbol_lookup
@@ -36,40 +41,44 @@ def parse_single_unit(unit_str: str, unit_group: UnitGroup | None = None, longes
         lookup_dict = dict([(name, unit) for name, unit in symbol_lookup.items() if unit in unit_group.units])
     for next_char in unit_str:
         potential_unit_str = current_unit + next_char
-        potential_symbols = [symbol for symbol, unit in lookup_dict.items()
-                             if symbol.startswith(potential_unit_str)
-                             or unit.startswith(potential_unit_str)]
+        potential_symbols = [
+            symbol
+            for symbol, unit in lookup_dict.items()
+            if symbol.startswith(potential_unit_str) or unit.startswith(potential_unit_str)
+        ]
         if len(potential_symbols) == 0:
             break
         string_pos += 1
         current_unit = potential_unit_str
         if not longest_unit and current_unit in lookup_dict:
             break
-    if current_unit == '':
+    if current_unit == "":
         return None, unit_str
-    matching_types = [unit for symbol, unit in lookup_dict.items()
-                      if symbol == current_unit or unit == current_unit]
+    matching_types = [unit for symbol, unit in lookup_dict.items() if symbol == current_unit or unit == current_unit]
     if not matching_types:
         raise KeyError(f"No known type matching {current_unit}")
     final_unit = matching_types[0]
     remaining_str = unit_str[string_pos::]
     return final_unit, remaining_str
 
-def parse_unit_strs(unit_str: str, current_units: list[Unit] | None=None, longest_unit: bool = True) -> list[Unit]:
+
+def parse_unit_strs(unit_str: str, current_units: list[Unit] | None = None, longest_unit: bool = True) -> list[Unit]:
     """Recursively parse units from unit_str until no more characters are present."""
     if current_units is None:
         current_units = []
-    if unit_str == '':
+    if unit_str == "":
         return current_units
     parsed_unit, remaining_str = parse_single_unit(unit_str, longest_unit=longest_unit)
     if parsed_unit is not None:
         current_units += [parsed_unit]
         return parse_unit_strs(remaining_str, current_units, longest_unit)
     else:
-        raise ValueError(f'Could not interpret {remaining_str}')
+        raise ValueError(f"Could not interpret {remaining_str}")
+
 
 # Its probably useful to work out the unit first, and then later work out if a named unit exists for it. Hence why there
 # are two functions.
+
 
 def parse_unit_stack(unit_str: str, longest_unit: bool = True) -> list[Unit]:
     """Split unit_str into a stack of parsed units."""
@@ -78,12 +87,12 @@ def parse_unit_stack(unit_str: str, longest_unit: bool = True) -> list[Unit]:
     inverse_next_unit = False
     for token in split_str:
         try:
-            if token == '/':
+            if token == "/":
                 inverse_next_unit = True
                 continue
             power = int(token)
             to_modify = unit_stack[-1]
-            modified = to_modify ** power
+            modified = to_modify**power
             # modified = unit_power(to_modify, power)
             unit_stack[-1] = modified
         except ValueError:
@@ -118,7 +127,7 @@ def parse_unit(unit_str: str, longest_unit: bool = True) -> Unit:
         return result
     try:
         if not validate_unit_str(unit_str):
-            raise ValueError('unit_str contains forbidden characters.')
+            raise ValueError("unit_str contains forbidden characters.")
         parsed_unit = Unit(1, Dimensions())
         unit_stack = parse_unit_stack(unit_str, longest_unit)
         for unit in unit_stack:
@@ -141,7 +150,8 @@ def parse_unit_from_group(unit_str: str, from_group: UnitGroup) -> Unit | None:
     else:
         return None
 
-def parse_named_unit(unit_string: str, rtol: float=1e-14) -> NamedUnit:
+
+def parse_named_unit(unit_string: str, rtol: float = 1e-14) -> NamedUnit:
     """Parses unit into a named unit. Parses unit into a Unit if it is not already, and then finds an equivaelent named
     unit. Please note that this might not be the expected unit from the string itself. E.g. 'kgm/2' will become
     newtons.
@@ -156,14 +166,15 @@ def parse_named_unit(unit_string: str, rtol: float=1e-14) -> NamedUnit:
     else:
         return named_unit
 
-def find_named_unit(unit: Unit, rtol: float=1e-14) -> NamedUnit | None:
-    """ Find a named unit matching the one provided """
+
+def find_named_unit(unit: Unit, rtol: float = 1e-14) -> NamedUnit | None:
+    """Find a named unit matching the one provided"""
     dimension_hash = hash(unit.dimensions)
     if dimension_hash in unit_groups_by_dimension_hash:
         unit_group = unit_groups_by_dimension_hash[hash(unit.dimensions)]
 
         for named_unit in unit_group.units:
-            if abs(named_unit.scale - unit.scale) < rtol*named_unit.scale:
+            if abs(named_unit.scale - unit.scale) < rtol * named_unit.scale:
                 return named_unit
 
     return None
@@ -174,14 +185,11 @@ def parse_named_unit_from_group(unit_str: str, from_group: UnitGroup) -> NamedUn
     unit that is present in from_group is returned. This is useful in cases of ambiguities."""
     parsed_unit = parse_unit_from_group(unit_str, from_group)
     if parsed_unit is None:
-        raise ValueError('That unit cannot be parsed from the specified group.')
+        raise ValueError("That unit cannot be parsed from the specified group.")
     return find_named_unit(parsed_unit)
 
-def parse(string: str,
-          name_lookup: bool = True,
-          longest_unit: bool = True,
-          lookup_rtol: float = 1e-14):
 
+def parse(string: str, name_lookup: bool = True, longest_unit: bool = True, lookup_rtol: float = 1e-14):
     unit = parse_unit(string, longest_unit=longest_unit)
     if name_lookup:
         named = find_named_unit(unit, rtol=lookup_rtol)
@@ -192,11 +200,11 @@ def parse(string: str,
 
 
 if __name__ == "__main__":
-    to_parse = input('Enter a unit to parse: ')
+    to_parse = input("Enter a unit to parse: ")
     try:
         generic_unit = parse_unit(to_parse)
-        print(f'Generic Unit: {generic_unit}')
+        print(f"Generic Unit: {generic_unit}")
         named_unit = find_named_unit(generic_unit)
-        print(f'Named Unit: {named_unit}')
+        print(f"Named Unit: {named_unit}")
     except ValueError:
-        print('There is no named unit available.')
+        print("There is no named unit available.")
