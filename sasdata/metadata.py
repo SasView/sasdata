@@ -11,14 +11,14 @@ Any useful metadata which cannot be included in these classes represent a bug in
 
 import base64
 import json
-import numpy as np
 from dataclasses import dataclass
 
+import numpy as np
 from numpy import ndarray
 
+from sasdata.quantities.quantity import Quantity
 from sasdata.quantities.unit_parser import parse_unit
 from sasdata.quantities.units import NamedUnit
-from sasdata.quantities.quantity import Quantity
 
 
 def from_json_quantity(obj: dict) -> Quantity | None:
