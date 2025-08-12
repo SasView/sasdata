@@ -159,7 +159,35 @@ test_cases = [
             },
         },
     ),
+    XmlTestCase(
+        filename="ISIS_1_0.xml",
+        expected_values={
+            0: {
+                'Q': 0.009,
+                'I': 85.3333,
+                'dI': 0.852491,
+                'dQ': 0
+            },
+            -2: {
+                'Q': 0.281,
+                'I': 0.408902,
+                'dQ': 0
+            },
+            -1: {
+                'Q': 0.283,
+                'I': 0,
+                'dI': 0,
+                'dQ': 0
+            }
+        },
+        expected_metadata={
+            # TODO: Add more.
+            'radiation': 'neutron'
+        }
+    )
 ]
+
+
 
 
 def join_actual_expected(
