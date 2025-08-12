@@ -203,7 +203,7 @@ def test_load_file(test_case: BaseTestCase):
         # TODO: Support SESANS
         case XmlTestCase():
             # Not bulk, so just assume we get one dataset.
-            loaded_data = next(iter(xml_load_data(test_case.filename).items()))
+            loaded_data = next(iter(xml_load_data(test_case.filename).items()))[1]
         case _:
             raise ValueError("Invalid loader")
     if isinstance(test_case, BulkAsciiTestCase):
@@ -218,11 +218,14 @@ def test_load_file(test_case: BaseTestCase):
         for index, values in expected.items():
             for column, expected_value in values.items():
                 # TODO: Handle other uncertainities.
-                if column == "dI":
-                    assert loaded._data_contents["I"]._variance[index] == pytest.approx(
-                        expected_value**2
-                    )
-                else:
+                uncertainty_handled = False
+                for uncertainty_str in ["I", "Q"]:
+                    if column == "d" + uncertainty_str:
+                        uncertainty_handled = True
+                        assert loaded._data_contents[uncertainty_str]._variance[
+                            index
+                        ] == pytest.approx(expected_value**2)
+                if not uncertainty_handled:
                     assert loaded._data_contents[column].value[index] == pytest.approx(
                         expected_value
                     )
