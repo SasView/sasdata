@@ -9,7 +9,6 @@ import os
 import numpy as np
 import pytest
 from dataclasses import dataclass, field
-from abc import ABC
 from typing import Any
 
 import sasdata.quantities.units as units
