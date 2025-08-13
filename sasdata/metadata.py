@@ -552,8 +552,11 @@ def access_meta(obj: dataclass, key: str) -> Any | None:
                         key = accessor[len(field_string):]
                         result = getattr(result, field.name)
                         break
-            case index if matches := re.match("\[(\d+?)\](.+)", index):
+            case index if (type(result) is list) and (matches := re.match("\[(\d+?)\](.+)", index)):
                 result = result[int(matches[1])]
+                key = matches[2]
+            case index if (type(result) is dict) and (matches := re.match('\["(.+?)"\](.+)', index)):
+                result = result[matches[1]]
                 key = matches[2]
     return result
 
@@ -566,6 +569,9 @@ def meta_tags(obj: dataclass) -> list[str]:
             case list(xs):
                 for idx, x in enumerate(xs):
                     items.append((f"{path}[{idx}]", x))
+            case dict(xs):
+                for k, v in xs.items():
+                    items.append((f'{path}["{k}"]', v))
             case n if is_dataclass(n):
                 for field in fields(item):
                     items.append((f"{path}.{field.name}", getattr(item, field.name)))
