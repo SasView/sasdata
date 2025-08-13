@@ -543,7 +543,35 @@ class MetadataEncoder(json.JSONEncoder):
 
 def access_meta(obj: dataclass, key: str) -> Any | None:
     """Use a string accessor to locate a key from within the data
-    object."""
+    object.
+
+    The basic grammar of these accessors explicitly match the python
+    syntax for accessing the data.  For example, to access the `name`
+    field within the object `person`, you would call
+    `access_meta(person, ".name")`.  Similarly, lists and dicts are
+    access with square brackets.
+
+    > assert access_meta(person, '.name') == person.name
+    > assert access_meta(person, '.phone.home') == person.phone.home
+    > assert access_meta(person, '.addresses[0].postal_code') == person.address[0].postal_code
+    > assert access_meta(person, '.children["Taylor"]') == person.children["Taylor"]
+
+    Obviously, when the accessor is know ahead of time, `access_meta`
+    provides no benefit over directly retrieving the data. However,
+    when a data structure is loaded at runtime (e.g. the metadata of a
+    neutron scattering file), then it isn't possible to know in
+    advance the location of the specific value that the user desires.
+    `access_meta` allows the user to provide the location at runtime.
+
+    This function returns `None` when the key is not a valid address
+    for any data within the structure.  Since the leaf could be any
+    type that is not a list, dict, or dataclass, the return type of
+    the function is `Any | None`.
+
+    The list of locations within a structure is given by the
+    `meta_tags` function.
+
+    """
     result = obj
     while key != "":
         match key:
@@ -566,10 +594,36 @@ def access_meta(obj: dataclass, key: str) -> Any | None:
 
 
 def meta_tags(obj: dataclass) -> list[str]:
-    """Find all leaf accessors form a data object.
+    """Find all leaf accessors from a data object.
 
-    The tags returns by this function are the key values with which
-    access_meta might be called on this object.
+    The function treats the passed in object as a tree.  Lists, dicts,
+    and dataclasses are all treated as branches on the tree and any
+    other type is treated as a leaf.  The function then returns a list
+    of strings, where each string is a "path" from the root of the
+    tree to one leaf.  The structure of the path is designed to mimic
+    the python code to access that specific leaf value.
+
+    These accessors allow us to treat accessing entries within a
+    structure as first class values.  This list can then be presented
+    to the user to allow them to select specific information within
+    the larger structure.  This is particularly important when plotting
+    against a specific date value within the structure.
+
+    Example:
+
+    >@dataclass
+     class Thermometer:
+       temperature: float
+       units: str
+       params: list
+    > item = Example()
+    > item.temperature = 273
+    > item.units = "K"
+    > item.old_values = [{'date': '2025-08-12', 'temperature': 300'}]
+    > assert meta_tags(item) = ['.temperature', '.units', '.old_values[0]["date"]', '.old_values[0]["temperature"]']
+
+    The actual value of the leaf object specified by a path can be
+    retrieved with the `access_meta` function.
 
     """
     result = []
@@ -600,6 +654,20 @@ class TagCollection:
 
 
 def collect_tags(objs: list[dataclass]) -> TagCollection:
+    """Identify uniform and varying data within a groups of data objects
+
+    The resulting TagCollection contains every accessor string that is
+    valid for every object in the `objs` list.  For example, if
+    `obj.name` is a string for every `obj` in `objs`, then the string
+    ".name" will be present in one of the two sets in the tags
+    collection.
+
+    To be more specific, if `obj.name` exists and has the same value
+    for every `obj` in `objs`, the the string ".name" will be included
+    in the `singular` set.  If there are at least two distinct values
+    for `obj.name`, then ".name" will be in the `variable` set.
+
+    """
     if not objs:
         return ([], [])
     first = objs.pop()
