@@ -12,7 +12,7 @@ Any useful metadata which cannot be included in these classes represent a bug in
 import base64
 import json
 import re
-from dataclasses import dataclass, fields
+from dataclasses import dataclass, fields, is_dataclass
 from typing import Any
 
 import numpy as np
@@ -555,4 +555,20 @@ def access_meta(obj: dataclass, key: str) -> Any | None:
             case index if matches := re.match("\[(\d+?)\](.+)", index):
                 result = result[int(matches[1])]
                 key = matches[2]
+    return result
+
+def meta_tags(obj: dataclass) -> list[str]:
+    result = []
+    items = [("", obj)]
+    while items:
+        path, item = items.pop()
+        match item:
+            case list(xs):
+                for idx, x in enumerate(xs):
+                    items.append((f"{path}[{idx}]", x))
+            case n if is_dataclass(n):
+                for field in fields(item):
+                    items.append((f"{path}.{field.name}", getattr(item, field.name)))
+            case _:
+                result.append(path)
     return result
