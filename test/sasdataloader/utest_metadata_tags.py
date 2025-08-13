@@ -7,7 +7,7 @@ import pytest
 from sasdata.metadata import Metadata, Process, access_meta, meta_tags, collect_tags
 
 
-@pytest.mark.sasdata3
+@pytest.mark.sasdata
 def test_tag_access():
     """Check ability to access terms by name"""
     processes = [Process(name="Frobulator", date=None, description=None, terms={"Bobbin": "Threadbare"}, notes=[])]
@@ -28,7 +28,7 @@ def test_tag_access():
     assert access_meta(meta, '.process[0].terms["Bobbin"]') == "Threadbare"
 
 
-@pytest.mark.sasdata3
+@pytest.mark.sasdata
 def test_tag_listing():
     """Check the ability to collect term names from object"""
     processes = [Process(name="Frobulator", date=None, description=None, terms={"Bobbin": "Threadbare"}, notes=[])]
@@ -57,7 +57,7 @@ def test_tag_listing():
     ]
 
 
-@pytest.mark.sasdata3
+@pytest.mark.sasdata
 def test_tag_merge():
     """Check ability to access terms by name"""
     processes = [
