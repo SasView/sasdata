@@ -9,6 +9,7 @@ from sasdata.metadata import Metadata, Process, access_meta, meta_tags
 
 @pytest.mark.sasdata3
 def test_tag_access():
+    """Check ability to access terms by name"""
     processes = [Process(name="Frobulator", date=None, description=None, terms={"Bobbin": "Threadbare"}, notes=[])]
     meta = Metadata(
         title="Example",
@@ -29,6 +30,7 @@ def test_tag_access():
 
 @pytest.mark.sasdata3
 def test_tag_listing():
+    """Check the ability to collect term names from object"""
     processes = [Process(name="Frobulator", date=None, description=None, terms={"Bobbin": "Threadbare"}, notes=[])]
     meta = Metadata(
         title="Example",
