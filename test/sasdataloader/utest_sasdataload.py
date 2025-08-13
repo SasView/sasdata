@@ -171,6 +171,13 @@ test_cases = [
             "radiation": "neutron"
         },
     ),
+    Hdf5TestCase(
+        filename=local_data_load("simpleexamplefile.h5"),
+        expected_values={
+            0: {"Q": 0.5488135039273248, "I": 0.6778165367962301},
+            -1: {"Q": 0.004695476192547066, "I": 0.4344166255581208},
+        },
+    ),
 ]
 
 
