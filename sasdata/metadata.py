@@ -542,6 +542,8 @@ class MetadataEncoder(json.JSONEncoder):
 
 
 def access_meta(obj: dataclass, key: str) -> Any | None:
+    """Use a string accessor to locate a key from within the data
+    object."""
     result = obj
     while key != "":
         match key:
@@ -549,10 +551,10 @@ def access_meta(obj: dataclass, key: str) -> Any | None:
                 for field in fields(result):
                     field_string = f".{field.name}"
                     if accessor.startswith(field_string):
-                        key = accessor[len(field_string):]
+                        key = accessor[len(field_string) :]
                         result = getattr(result, field.name)
                         break
-            case index if (type(result) is list) and (matches := re.match("\[(\d+?)\](.+)", index)):
+            case index if (type(result) is list) and (matches := re.match(r"\[(\d+?)\](.*)", index)):
                 result = result[int(matches[1])]
                 key = matches[2]
             case name if (type(result) is dict) and (matches := re.match(r'\["(.+)"\](.*)', name)):
@@ -562,7 +564,14 @@ def access_meta(obj: dataclass, key: str) -> Any | None:
                 return None
     return result
 
+
 def meta_tags(obj: dataclass) -> list[str]:
+    """Find all leaf accessors form a data object.
+
+    The tags returns by this function are the key values with which
+    access_meta might be called on this object.
+
+    """
     result = []
     items = [("", obj)]
     while items:
