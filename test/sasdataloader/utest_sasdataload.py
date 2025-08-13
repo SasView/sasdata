@@ -2,12 +2,14 @@
 Unit tests for the new recursive cansas reader
 """
 
+import json
 import os
 
 import numpy as np
 import pytest
 
 import sasdata.quantities.units as units
+from sasdata.data import SasData, SasDataEncoder
 from sasdata.quantities.quantity import Quantity
 from sasdata.temp_hdf5_reader import load_data as hdf_load_data
 from sasdata.temp_xml_reader import load_data as xml_load_data
@@ -77,5 +79,29 @@ def test_filter_data():
         assert v.metadata.raw.filter("radiation") == ["Spallation Neutron Source"]
         assert v.metadata.raw.filter("SDD") == [
             Quantity(np.array([2845.26], dtype=np.float32), units.millimeters),
-            Quantity(np.array([4385.28], dtype=np.float32), units.millimeters)
+            Quantity(np.array([4385.28], dtype=np.float32), units.millimeters),
         ]
+
+
+@pytest.mark.sasdata2
+@pytest.mark.parametrize("f", test_hdf_file_names)
+def test_json_serialise(f):
+    data = hdf_load_data(local_load(f"data/{f}.h5"))
+
+    with open(local_load(f"json/{f}.json"), encoding="utf-8") as infile:
+        expected = json.loads("".join(infile.readlines()))
+    assert json.loads(SasDataEncoder().encode(data["sasentry01"])) == expected
+
+
+@pytest.mark.sasdata2
+@pytest.mark.parametrize("f", test_hdf_file_names)
+def test_json_deserialise(f):
+    expected = hdf_load_data(local_load(f"data/{f}.h5"))["sasentry01"]
+
+    with open(local_load(f"json/{f}.json"), encoding="utf-8") as infile:
+        parsed = SasData.from_json(json.loads("".join(infile.readlines())))
+    assert parsed.name == expected.name
+    assert parsed._data_contents == expected._data_contents
+    assert parsed.dataset_type == expected.dataset_type
+    assert parsed.mask == expected.mask
+    assert parsed.model_requirements == expected.model_requirements
