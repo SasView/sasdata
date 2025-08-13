@@ -555,9 +555,11 @@ def access_meta(obj: dataclass, key: str) -> Any | None:
             case index if (type(result) is list) and (matches := re.match("\[(\d+?)\](.+)", index)):
                 result = result[int(matches[1])]
                 key = matches[2]
-            case index if (type(result) is dict) and (matches := re.match('\["(.+?)"\](.+)', index)):
+            case name if (type(result) is dict) and (matches := re.match(r'\["(.+)"\](.*)', name)):
                 result = result[matches[1]]
                 key = matches[2]
+            case _:
+                return None
     return result
 
 def meta_tags(obj: dataclass) -> list[str]:
