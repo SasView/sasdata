@@ -12,7 +12,7 @@ Any useful metadata which cannot be included in these classes represent a bug in
 import base64
 import json
 import re
-from dataclasses import dataclass, fields, is_dataclass
+from dataclasses import dataclass, field, fields, is_dataclass
 from typing import Any
 
 import numpy as np
@@ -588,4 +588,34 @@ def meta_tags(obj: dataclass) -> list[str]:
                     items.append((f"{path}.{field.name}", getattr(item, field.name)))
             case _:
                 result.append(path)
+    return result
+
+
+@dataclass(kw_only=True)
+class TagCollection:
+    """The collected tags and their variability."""
+
+    singular: set[str] = field(default_factory=set)
+    variable: set[str] = field(default_factory=set)
+
+
+def collect_tags(objs: list[dataclass]) -> TagCollection:
+    if not objs:
+        return ([], [])
+    first = objs.pop()
+    terms = set(meta_tags(first))
+    for obj in objs:
+        terms = terms.intersection(set(meta_tags(obj)))
+
+    objs.append(first)
+
+    result = TagCollection()
+
+    for term in terms:
+        values = set([access_meta(obj, term) for obj in objs])
+        if len(values) == 1:
+            result.singular.add(term)
+        else:
+            result.variable.add(term)
+
     return result
