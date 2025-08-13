@@ -24,10 +24,32 @@ def test_tag_access():
     assert access_meta(meta, ".run") == [5, 11]
     assert access_meta(meta, ".process")[0].name == "Frobulator"
     assert access_meta(meta, ".process[0].name") == "Frobulator"
+    assert access_meta(meta, ".process[0].name") == "Frobulator"
+
 
 @pytest.mark.sasdata3
 def test_tag_listing():
-    processes = [Process(name="Frobulator", date=None, description=None, terms={}, notes=[])]
-    meta = Metadata(title="Example", run=[5, 11], definition="An example metadata set", process=processes, sample=None, instrument=None, raw=None)
+    processes = [Process(name="Frobulator", date=None, description=None, terms={"Bobbin": "Threadbare"}, notes=[])]
+    meta = Metadata(
+        title="Example",
+        run=[5, 11],
+        definition="An example metadata set",
+        process=processes,
+        sample=None,
+        instrument=None,
+        raw=None,
+    )
 
-    assert sorted(meta_tags(meta)) == sorted([".raw", ".sample", ".instrument", ".definition", ".title", ".run[0]", ".run[1]", ".process[0].terms", ".process[0].date", ".process[0].name", ".process[0].description"])
+    assert sorted(meta_tags(meta)) == [
+        ".definition",
+        ".instrument",
+        ".process[0].date",
+        ".process[0].description",
+        ".process[0].name",
+        '.process[0].terms["Bobbin"]',
+        ".raw",
+        ".run[0]",
+        ".run[1]",
+        ".sample",
+        ".title",
+    ]
