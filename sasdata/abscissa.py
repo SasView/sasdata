@@ -4,6 +4,8 @@ import numpy as np
 from numpy._typing import ArrayLike
 
 from quantities.quantity import Quantity
+from exceptions import InterpretationError
+from util import is_increasing
 
 
 class Abscissa(ABC):
@@ -45,26 +47,73 @@ class Abscissa(ABC):
         return self._axes
 
     @staticmethod
-    def determine(axes_data: list[Quantity[ArrayLike]], ordinate_data: Quantity[ArrayLike]) -> "Abscissa":
+    def _determine_error_message(axis_arrays: list[np.ndarray], ordinate_shape: tuple):
+        """ Error message for the `.determine` function"""
+
+        shape_string = ", ".join([str(axis.shape) for axis in axis_arrays])
+
+        return f"Cannot interpret array shapes axis: [{shape_string}], ordinate: {ordinate_shape}"
+
+    @staticmethod
+    def determine(axis_data: list[Quantity[ArrayLike]], ordinate_data: Quantity[ArrayLike]) -> "Abscissa":
         """ Get an Abscissa object that fits the combination of axes and data"""
 
-        # Different possibilites:
+        # Different posibilites:
         #   1: axes_data[i].shape == axes_data[j].shape == ordinate_data.shape
         #    1a: axis_data[i] is 1D =>
-        #      1a-i:  len(axes_data) == 1 => Grid type (trivially)
-        #      1a-ii: len(axes_data) != 1 => Mesh type
-        #    1b: axis_data[i] dimensionality matches len(axis_data) => Grid type
+        #      1a-i:  len(axes_data) == 1 => Grid type or Scatter type depending on sortedness
+        #      1a-ii: len(axes_data) != 1 => Scatter type
+        #    1b: axis_data[i] dimensionality matches len(axis_data) => Meshgrid type
         #    1c: other => Error
         #   2: (len(axes_data[0]), len(axes_data[1])... ) == ordinate_data.shape => Grid type
         #   3: None of the above => Error
 
         ordinate_shape = np.array(ordinate_data.value).shape
+        axis_arrays = [np.array(axis.value) for axis in axis_data]
 
-        if len(ordinate_shape) == 1 and all([np.array(axis.value).shape == ordinate_shape for axis in axes_data]):
-            return ScatterAbscissa(axes_data)
+        # 1:
+        if all([axis.shape == ordinate_shape for axis in axis_arrays]):
+            # 1a:
+            if all([len(axis.shape)== 1 for axis in axis_arrays]):
+                # 1a-i:
+                if len(axis_arrays) == 1:
+                    # Is it sorted
+                    if is_increasing(axis_arrays[0]):
+                        return GridAbscissa(axis_data)
+                    else:
+                        return ScatterAbscissa(axis_data)
+                # 1a-ii
+                else:
+                    return ScatterAbscissa(axis_data)
+            # 1b
+            elif [len(axis.shape) == len(axis_arrays) for axis in axis_arrays] :
 
-        elif
+                return MeshgridAbscissa(axis_data)
+
+            else:
+                raise InterpretationError(Abscissa._determine_error_message(axis_arrays, ordinate_shape))
+
+        elif all([len(axis.shape)== 1 for axis in axis_arrays]) and \
+                tuple([axis.shape[0] for axis in axis_arrays]) == ordinate_shape:
+
+            # Require that they are sorted
+            if all([is_increasing(axis) for axis in axis_arrays]):
+
+                return GridAbscissa(axis_data)
+
+            else:
+                raise InterpretationError("Grid axes are not sorted")
+
+        else:
+            raise InterpretationError(Abscissa._determine_error_message(axis_arrays, ordinate_shape))
+
 class GridAbscissa(Abscissa):
+
+    @property
+    def is_grid(self):
+        return True
+
+class MeshgridAbscissa(Abscissa):
 
     @property
     def is_grid(self):
