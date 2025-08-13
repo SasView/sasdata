@@ -542,18 +542,17 @@ class MetadataEncoder(json.JSONEncoder):
 
 
 def access_meta(obj: dataclass, key: str) -> Any | None:
-    match key:
-        case "":
-            return obj
-        case accessor if accessor.startswith("."):
-            for field in fields(obj):
-                field_string = f".{field.name}"
-                if accessor.startswith(field_string):
-                    rest = accessor[len(field_string):]
-                    return access_meta(getattr(obj, field.name), rest)
-            return None
-        case index if matches := re.match("\[(\d+?)\](.+)", index):
-            idx = int(matches[1])
-            rest = matches[2]
-            return access_meta(obj[idx], rest)
-    return None
+    result = obj
+    while key != "":
+        match key:
+            case accessor if accessor.startswith("."):
+                for field in fields(result):
+                    field_string = f".{field.name}"
+                    if accessor.startswith(field_string):
+                        key = accessor[len(field_string):]
+                        result = getattr(result, field.name)
+                        break
+            case index if matches := re.match("\[(\d+?)\](.+)", index):
+                result = result[int(matches[1])]
+                key = matches[2]
+    return result
