@@ -2,31 +2,25 @@
 Unit tests for the new recursive cansas reader
 """
 
-import io
-import json
 import os
-
-import numpy as np
-import pytest
 from dataclasses import dataclass, field
 from typing import Any
 
-import sasdata.quantities.units as units
-from sasdata.data import SasData, SasDataEncoder
-from sasdata.quantities.quantity import Quantity
-from sasdata.temp_hdf5_reader import load_data as hdf_load_data
-from sasdata.temp_xml_reader import load_data as xml_load_data
-from sasdata.temp_ascii_reader import (
-    AsciiReaderParams,
-    load_data_default_params,
-    AsciiReaderMetadata,
-    AsciiMetadataCategory,
-)
-from sasdata.temp_ascii_reader import load_data as ascii_load_data
-from sasdata.quantities.units import per_angstrom
+import pytest
+
+from sasdata.data import SasData
 from sasdata.dataset_types import one_dim
 from sasdata.guess import guess_columns
-from sasdata.data import SasData
+from sasdata.quantities.units import per_angstrom
+from sasdata.temp_ascii_reader import (
+    AsciiMetadataCategory,
+    AsciiReaderMetadata,
+    AsciiReaderParams,
+    load_data_default_params,
+)
+from sasdata.temp_ascii_reader import load_data as ascii_load_data
+from sasdata.temp_hdf5_reader import load_data as hdf_load_data
+from sasdata.temp_xml_reader import load_data as xml_load_data
 
 
 def local_load(path: str):
