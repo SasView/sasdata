@@ -9,7 +9,7 @@ from sasdata.metadata import Metadata, Process, access_meta, meta_tags
 
 @pytest.mark.sasdata3
 def test_tag_access():
-    processes = [Process(name="Frobulator", date=None, description=None, terms={}, notes=[])]
+    processes = [Process(name="Frobulator", date=None, description=None, terms={"Bobbin": "Threadbare"}, notes=[])]
     meta = Metadata(
         title="Example",
         run=[5, 11],
@@ -24,7 +24,7 @@ def test_tag_access():
     assert access_meta(meta, ".run") == [5, 11]
     assert access_meta(meta, ".process")[0].name == "Frobulator"
     assert access_meta(meta, ".process[0].name") == "Frobulator"
-    assert access_meta(meta, ".process[0].name") == "Frobulator"
+    assert access_meta(meta, '.process[0].terms["Bobbin"]') == "Threadbare"
 
 
 @pytest.mark.sasdata3
