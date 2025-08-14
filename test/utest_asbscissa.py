@@ -1,12 +1,9 @@
 import numpy as np
 import pytest
-
 from abscissa import Abscissa, GridAbscissa, MeshgridAbscissa, ScatterAbscissa
-from quantities.quantity import Quantity
-
-from quantities.units import none
-
 from exceptions import InterpretationError
+from quantities.quantity import Quantity
+from quantities.units import none
 
 
 def test_deterimine_1d_grid():
