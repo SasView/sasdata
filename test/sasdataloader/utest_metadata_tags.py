@@ -4,7 +4,7 @@ Unit tests for metadata tag access
 
 import pytest
 
-from sasdata.metadata import Metadata, Process, access_meta, meta_tags, collect_tags
+from sasdata.metadata import Metadata, Process, access_meta, collect_tags, meta_tags
 
 
 @pytest.mark.sasdata
@@ -100,7 +100,19 @@ def test_tag_merge():
 
     result = collect_tags([meta, meta2])
 
-    assert result.singular == set([".process[0].name", '.process[0].date', '.process[0].description', '.process[0].terms["Bobbin"]', ".run[0]", ".run[1]",  ".sample", ".instrument", ".raw"])
+    assert result.singular == set(
+        [
+            ".process[0].name",
+            ".process[0].date",
+            ".process[0].description",
+            '.process[0].terms["Bobbin"]',
+            ".run[0]",
+            ".run[1]",
+            ".sample",
+            ".instrument",
+            ".raw",
+        ]
+    )
 
     # Only meta2 has a run[2] term, so it cannot be collected
     assert ".run[2]" not in result.singular
