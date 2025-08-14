@@ -576,11 +576,11 @@ def access_meta(obj: dataclass, key: str) -> Any | None:
     while key != "":
         match key:
             case accessor if accessor.startswith("."):
-                for field in fields(result):
-                    field_string = f".{field.name}"
+                for fld in fields(result):
+                    field_string = f".{fld.name}"
                     if accessor.startswith(field_string):
                         key = accessor[len(field_string) :]
-                        result = getattr(result, field.name)
+                        result = getattr(result, fld.name)
                         break
             case index if (type(result) is list) and (matches := re.match(r"\[(\d+?)\](.*)", index)):
                 result = result[int(matches[1])]
@@ -638,8 +638,8 @@ def meta_tags(obj: dataclass) -> list[str]:
                 for k, v in xs.items():
                     items.append((f'{path}["{k}"]', v))
             case n if is_dataclass(n):
-                for field in fields(item):
-                    items.append((f"{path}.{field.name}", getattr(item, field.name)))
+                for fld in fields(item):
+                    items.append((f"{path}.{fld.name}", getattr(item, fld.name)))
             case _:
                 result.append(path)
     return result
@@ -663,9 +663,9 @@ def collect_tags(objs: list[dataclass]) -> TagCollection:
     collection.
 
     To be more specific, if `obj.name` exists and has the same value
-    for every `obj` in `objs`, the the string ".name" will be included
-    in the `singular` set.  If there are at least two distinct values
-    for `obj.name`, then ".name" will be in the `variable` set.
+    for every `obj` in `objs`, the string ".name" will be included in
+    the `singular` set.  If there are at least two distinct values for
+    `obj.name`, then ".name" will be in the `variable` set.
 
     """
     if not objs:
