@@ -537,3 +537,6 @@ class MetadataEncoder(json.JSONEncoder):
                 }
             case _:
                 return super().default(obj)
+
+class DerivedMetadata(Metadata):
+    pass
