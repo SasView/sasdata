@@ -86,7 +86,7 @@ class Abscissa(ABC):
                 else:
                     return ScatterAbscissa(axis_data)
             # 1b
-            elif [len(axis.shape) == len(axis_arrays) for axis in axis_arrays] :
+            elif all([len(axis.shape) == len(axis_arrays) for axis in axis_arrays]):
 
                 return MeshgridAbscissa(axis_data)
 
