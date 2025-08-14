@@ -1,10 +1,9 @@
 from abc import ABC, abstractmethod
 
 import numpy as np
-from numpy._typing import ArrayLike
-
-from quantities.quantity import Quantity
 from exceptions import InterpretationError
+from numpy._typing import ArrayLike
+from quantities.quantity import Quantity
 from util import is_increasing
 
 
