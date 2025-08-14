@@ -223,7 +223,7 @@ def test_load_file(test_case: BaseTestCase):
         for index, values in expected.items():
             for column, expected_value in values.items():
                 uncertainty_handled = False
-                for uncertainty_str in ["I", "Q", "dQx", "dQy"]:
+                for uncertainty_str in ["I", "Q", "Qx", "Qy"]:
                     if column == "d" + uncertainty_str:
                         uncertainty_handled = True
                         assert loaded._data_contents[uncertainty_str]._variance[
