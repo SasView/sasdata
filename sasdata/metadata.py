@@ -10,6 +10,7 @@ Any useful metadata which cannot be included in these classes represent a bug in
 """
 
 import base64
+import h5py
 import json
 import re
 from dataclasses import dataclass, field, fields, is_dataclass
@@ -48,6 +49,14 @@ class Vec3:
             z=from_json_quantity(obj["z"]),
         )
 
+    def as_h5(self, f: h5py.Group):
+        if self.x:
+            self.x.as_h5(f, "x")
+        if self.y:
+            self.y.as_h5(f, "y")
+        if self.z:
+            self.z.as_h5(f, "z")
+
 
 @dataclass(kw_only=True)
 class Rot3:
@@ -66,6 +75,14 @@ class Rot3:
             pitch=from_json_quantity(obj["pitch"]),
             yaw=from_json_quantity(obj["yaw"]),
         )
+
+    def as_h5(self, f: h5py.Group):
+        if self.roll:
+            self.roll.as_h5(f, "roll")
+        if self.pitch:
+            self.pitch.as_h5(f, "pitch")
+        if self.yaw:
+            self.yaw.as_h5(f, "yaw")
 
 
 @dataclass(kw_only=True)
@@ -237,6 +254,24 @@ class Sample:
             orientation=obj["orientation"],
             details=obj["details"],
         )
+
+    def as_h5(self, f: h5py.Group):
+        if self.name:
+            f.attrs["name"] = self.name
+        if self.sample_id:
+            f.create_dataset("ID", data=self.sample_id)
+        if self.thickness:
+            self.thickness.as_h5(f, "thickness")
+        if self.transmission:
+            f.create_dataset("transmission", data=self.transmission)
+        if self.temperature:
+            self.temperature.as_h5(f, "temperature")
+        if self.position:
+            self.position.as_h5(f.create_group("position"))
+        if self.orientation:
+            self.orientation.as_h5(f.create_group("orientation"))
+        if self.details:
+            f.create_dataset("details", data=self.details)
 
 
 @dataclass(kw_only=True)
@@ -434,6 +469,17 @@ class Metadata:
             instrument=Instrument.from_json(obj["instrument"]),
             raw=MetaNode.from_json(obj["raw"]),
         )
+
+    def as_h5(self, f: h5py.Group):
+        f.attrs["title"] = self.title
+        print(self.run)
+        f.create_dataset("run", data=self.run)
+        f.attrs["definition"] = self.definition
+        # process.as_h5(meta) if process
+        if self.sample:
+            self.sample.as_h5(f.create_group("sassample"))
+        # self.instrument.as_h5(meta) if self.instrument else None
+        # self.raw.as_h5(meta) if self.raw else None
 
 
 class MetadataEncoder(json.JSONEncoder):
