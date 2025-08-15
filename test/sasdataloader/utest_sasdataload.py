@@ -75,9 +75,7 @@ test_cases = [
                 -1: {"Q": 0.0497, "I": 8.346, "dI": 0.191},
             },
         ),
-        marks=pytest.mark.xfail(
-            reason="The ASCII reader cannot make the right guesses for this file."
-        ),
+        marks=pytest.mark.xfail(reason="The ASCII reader cannot make the right guesses for this file."),
     ),
     AsciiTestCase(
         reader_params=local_data_load("test_3_columns.txt"),
@@ -212,9 +210,7 @@ def test_load_file(test_case: BaseTestCase):
         case _:
             raise ValueError("Invalid loader")
     if isinstance(test_case, BulkAsciiTestCase):
-        loaded_expected_pairs = join_actual_expected(
-            loaded_data, test_case.expected_values
-        )
+        loaded_expected_pairs = join_actual_expected(loaded_data, test_case.expected_values)
         metadata_filenames = test_case.expected_metadata.keys()
     else:
         loaded_expected_pairs = [(loaded_data, test_case.expected_values)]
@@ -226,20 +222,16 @@ def test_load_file(test_case: BaseTestCase):
                 for uncertainty_str in ["I", "Q", "Qx", "Qy"]:
                     if column == "d" + uncertainty_str:
                         uncertainty_handled = True
-                        assert loaded._data_contents[uncertainty_str]._variance[
-                            index
-                        ] == pytest.approx(expected_value**2)
+                        assert loaded._data_contents[uncertainty_str]._variance[index] == pytest.approx(
+                            expected_value**2
+                        )
                 if not uncertainty_handled:
-                    assert loaded._data_contents[column].value[index] == pytest.approx(
-                        expected_value
-                    )
+                    assert loaded._data_contents[column].value[index] == pytest.approx(expected_value)
 
     for filename in metadata_filenames:
         current_metadata_dict = test_case.expected_metadata.get(filename)
         current_datum = (
-            next(filter(lambda d: d.name == filename, loaded_data))
-            if isinstance(loaded_data, list)
-            else loaded_data
+            next(filter(lambda d: d.name == filename, loaded_data)) if isinstance(loaded_data, list) else loaded_data
         )
         if current_metadata_dict is None:
             continue
