@@ -225,14 +225,9 @@ def test_load_file(test_case: BaseTestCase):
     for loaded, expected in loaded_expected_pairs:
         for index, values in expected.items():
             for column, expected_value in values.items():
-                uncertainty_handled = False
-                for uncertainty_str in ["I", "Q", "Qx", "Qy"]:
-                    if column == "d" + uncertainty_str:
-                        uncertainty_handled = True
-                        assert loaded._data_contents[uncertainty_str]._variance[index] == pytest.approx(
-                            expected_value**2
-                        )
-                if not uncertainty_handled:
+                if is_uncertainty(column):
+                    assert loaded._data_contents[column[1::]]._variance[index] == pytest.approx(expected_value**2)
+                else:
                     assert loaded._data_contents[column].value[index] == pytest.approx(expected_value)
 
     for filename in metadata_filenames:
