@@ -1,4 +1,6 @@
 import numpy as np
+import h5py
+import typing
 
 from sasdata import dataset_types
 from sasdata.dataset_types import DatasetType
@@ -104,6 +106,13 @@ class SasData:
             data_contents=obj["data_contents"],
             metadata=Metadata.from_json(obj["metadata"]),
         )
+
+
+    def save_h5(self, path: str | typing.BinaryIO):
+        with h5py.File(path, "w") as f:
+            f.attrs["name"] = self.name
+            self.metadata.as_h5(f.create_group("metadata"))
+
 
 
 class SasDataEncoder(MetadataEncoder):
