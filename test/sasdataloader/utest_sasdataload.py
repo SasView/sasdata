@@ -189,6 +189,13 @@ def join_actual_expected(
     return return_value
 
 
+def is_uncertainty(column: str) -> bool:
+    for uncertainty_str in ["I", "Q", "Qx", "Qy"]:
+        if column == "d" + uncertainty_str:
+            return True
+    return False
+
+
 @pytest.mark.parametrize("test_case", test_cases)
 def test_load_file(test_case: BaseTestCase):
     match test_case:
