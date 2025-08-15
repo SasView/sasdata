@@ -21,6 +21,10 @@ SasData Side
     * Unit parsing (95%)
     * Big file of useful units and not so useful units (80%)
     * Printing units (95%)
+  * Operations on Quantities
+    * Arithmetic operations (95%)
+    * Special and not so special functions (50%)
+    * Linear algebra (30%)
 * Operation on datasets
   * Rebinning (35%)
   * Slicing backend [integration] (see above)
