@@ -2,9 +2,11 @@
 Unit tests for the new recursive cansas reader
 """
 
+import io
 import json
 import os
 
+import h5py
 import numpy as np
 import pytest
 
@@ -83,7 +85,7 @@ def test_filter_data():
         ]
 
 
-@pytest.mark.sasdata2
+@pytest.mark.sasdata
 @pytest.mark.parametrize("f", test_hdf_file_names)
 def test_json_serialise(f):
     data = hdf_load_data(local_load(f"data/{f}.h5"))
@@ -93,7 +95,7 @@ def test_json_serialise(f):
     assert json.loads(SasDataEncoder().encode(data["sasentry01"])) == expected
 
 
-@pytest.mark.sasdata2
+@pytest.mark.sasdata
 @pytest.mark.parametrize("f", test_hdf_file_names)
 def test_json_deserialise(f):
     expected = hdf_load_data(local_load(f"data/{f}.h5"))["sasentry01"]
@@ -105,3 +107,20 @@ def test_json_deserialise(f):
     assert parsed.dataset_type == expected.dataset_type
     assert parsed.mask == expected.mask
     assert parsed.model_requirements == expected.model_requirements
+
+@pytest.mark.sasdata3
+@pytest.mark.parametrize("f", test_hdf_file_names)
+def test_h5_serialise(f):
+    expected = hdf_load_data(local_load(f"data/{f}.h5"))["sasentry01"]
+
+    bio = io.BytesIO()
+    expected.save_h5(bio)
+    bio.seek(0)
+
+    result = h5py.File(bio)
+
+    assert result.attrs["name"] == expected.name
+    assert result["metadata"].attrs["title"] == expected.metadata.title
+    assert result["metadata"].attrs["definition"] == expected.metadata.definition
+    for idx, run in enumerate(expected.metadata.run):
+        assert result["metadata"]["run"][idx] == run.encode("utf8")
