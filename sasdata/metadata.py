@@ -11,7 +11,9 @@ Any useful metadata which cannot be included in these classes represent a bug in
 
 import base64
 import json
-from dataclasses import dataclass
+import re
+from dataclasses import dataclass, field, fields, is_dataclass
+from typing import Any
 
 import numpy as np
 from numpy import ndarray
@@ -537,3 +539,151 @@ class MetadataEncoder(json.JSONEncoder):
                 }
             case _:
                 return super().default(obj)
+
+
+def access_meta(obj: dataclass, key: str) -> Any | None:
+    """Use a string accessor to locate a key from within the data
+    object.
+
+    The basic grammar of these accessors explicitly match the python
+    syntax for accessing the data.  For example, to access the `name`
+    field within the object `person`, you would call
+    `access_meta(person, ".name")`.  Similarly, lists and dicts are
+    access with square brackets.
+
+    > assert access_meta(person, '.name') == person.name
+    > assert access_meta(person, '.phone.home') == person.phone.home
+    > assert access_meta(person, '.addresses[0].postal_code') == person.address[0].postal_code
+    > assert access_meta(person, '.children["Taylor"]') == person.children["Taylor"]
+
+    Obviously, when the accessor is know ahead of time, `access_meta`
+    provides no benefit over directly retrieving the data. However,
+    when a data structure is loaded at runtime (e.g. the metadata of a
+    neutron scattering file), then it isn't possible to know in
+    advance the location of the specific value that the user desires.
+    `access_meta` allows the user to provide the location at runtime.
+
+    This function returns `None` when the key is not a valid address
+    for any data within the structure.  Since the leaf could be any
+    type that is not a list, dict, or dataclass, the return type of
+    the function is `Any | None`.
+
+    The list of locations within a structure is given by the
+    `meta_tags` function.
+
+    """
+    result = obj
+    while key != "":
+        match key:
+            case accessor if accessor.startswith("."):
+                for fld in fields(result):
+                    field_string = f".{fld.name}"
+                    if accessor.startswith(field_string):
+                        key = accessor[len(field_string) :]
+                        result = getattr(result, fld.name)
+                        break
+            case index if (type(result) is list) and (matches := re.match(r"\[(\d+?)\](.*)", index)):
+                result = result[int(matches[1])]
+                key = matches[2]
+            case name if (type(result) is dict) and (matches := re.match(r'\["(.+)"\](.*)', name)):
+                result = result[matches[1]]
+                key = matches[2]
+            case _:
+                return None
+    return result
+
+
+def meta_tags(obj: dataclass) -> list[str]:
+    """Find all leaf accessors from a data object.
+
+    The function treats the passed in object as a tree.  Lists, dicts,
+    and dataclasses are all treated as branches on the tree and any
+    other type is treated as a leaf.  The function then returns a list
+    of strings, where each string is a "path" from the root of the
+    tree to one leaf.  The structure of the path is designed to mimic
+    the python code to access that specific leaf value.
+
+    These accessors allow us to treat accessing entries within a
+    structure as first class values.  This list can then be presented
+    to the user to allow them to select specific information within
+    the larger structure.  This is particularly important when plotting
+    against a specific date value within the structure.
+
+    Example:
+
+    >@dataclass
+     class Thermometer:
+       temperature: float
+       units: str
+       params: list
+    > item = Example()
+    > item.temperature = 273
+    > item.units = "K"
+    > item.old_values = [{'date': '2025-08-12', 'temperature': 300'}]
+    > assert meta_tags(item) = ['.temperature', '.units', '.old_values[0]["date"]', '.old_values[0]["temperature"]']
+
+    The actual value of the leaf object specified by a path can be
+    retrieved with the `access_meta` function.
+
+    """
+    result = []
+    items = [("", obj)]
+    while items:
+        path, item = items.pop()
+        match item:
+            case list(xs):
+                for idx, x in enumerate(xs):
+                    items.append((f"{path}[{idx}]", x))
+            case dict(xs):
+                for k, v in xs.items():
+                    items.append((f'{path}["{k}"]', v))
+            case n if is_dataclass(n):
+                for fld in fields(item):
+                    items.append((f"{path}.{fld.name}", getattr(item, fld.name)))
+            case _:
+                result.append(path)
+    return result
+
+
+@dataclass(kw_only=True)
+class TagCollection:
+    """The collected tags and their variability."""
+
+    singular: set[str] = field(default_factory=set)
+    variable: set[str] = field(default_factory=set)
+
+
+def collect_tags(objs: list[dataclass]) -> TagCollection:
+    """Identify uniform and varying data within a groups of data objects
+
+    The resulting TagCollection contains every accessor string that is
+    valid for every object in the `objs` list.  For example, if
+    `obj.name` is a string for every `obj` in `objs`, then the string
+    ".name" will be present in one of the two sets in the tags
+    collection.
+
+    To be more specific, if `obj.name` exists and has the same value
+    for every `obj` in `objs`, the string ".name" will be included in
+    the `singular` set.  If there are at least two distinct values for
+    `obj.name`, then ".name" will be in the `variable` set.
+
+    """
+    if not objs:
+        return ([], [])
+    first = objs.pop()
+    terms = set(meta_tags(first))
+    for obj in objs:
+        terms = terms.intersection(set(meta_tags(obj)))
+
+    objs.append(first)
+
+    result = TagCollection()
+
+    for term in terms:
+        values = set([access_meta(obj, term) for obj in objs])
+        if len(values) == 1:
+            result.singular.add(term)
+        else:
+            result.variable.add(term)
+
+    return result
