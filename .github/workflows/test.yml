@@ -31,7 +31,7 @@ jobs:
       fail-fast: false
 
     env:
-       BUILD_WHEEL: ${{ (matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12') && 'true' || '' }}
+       BUILD_WHEEL: ${{ matrix.python-version == '3.12' && 'true' || '' }}
 
     steps:
 
