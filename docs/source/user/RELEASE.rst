@@ -14,6 +14,11 @@ Features
 ========
 Wheel, egg, and tar.gz files are available on `pypi <https://pypi.org/project/sasdata/>`_.
 
+New in Version 0.11.0
+---------------------
+
+This release introduces some automated linting with Ruff for developers by @DrPaulSharp, and also fixes a bug in a formula.
+
 New in Version 0.10.0
 ---------------------
 
