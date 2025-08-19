@@ -31,7 +31,7 @@ jobs:
       fail-fast: false
 
     env:
-       BUILD_WHEEL: ${{ (matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12') && 'true' || '' }}
+       BUILD_WHEEL: ${{ matrix.python-version == '3.12' && 'true' || '' }}
 
     steps:
 
@@ -95,7 +95,8 @@ jobs:
       - name: Download all the dists
         uses: actions/download-artifact@v4
         with:
-          name: python-package-distributions
-          path: dist/
+          path: |
+           dist/sasdata*whl
+           dist/sasdata*tar*
       - name: Publish distribution to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
