@@ -17,7 +17,7 @@ Wheel, egg, and tar.gz files are available on `pypi <https://pypi.org/project/sa
 New in Version 0.11.0
 ---------------------
 
-This release introduces some automated linting with Ruff for developers by @DrPaulSharp, and also fixes a bug in a formula.
+This release introduces some automated linting with Ruff for developers by @DrPaulSharp, and also fixes a bug in a formula. There has also been some work towards automated PyPi releases from @krzywon.
 
 New in Version 0.10.0
 ---------------------
