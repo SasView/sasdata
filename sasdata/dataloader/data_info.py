@@ -19,13 +19,18 @@
 # TODO: This module should be independent of plottables. We should write
 #        an adapter class for plottables when needed.
 
+import logging
 import math
 from math import fabs
 import copy
 
 import numpy as np
+from typing import Optional
 
 from sasdata.data_util.uncertainty import Uncertainty
+from sasdata.data_util import interpolations
+
+logger = logging.getLogger(__name__)
 
 
 class plottable_1D(object):
@@ -52,22 +57,25 @@ class plottable_1D(object):
     _yaxis = ''
     _yunit = ''
 
+    # operation data
+    _operation = None  # Data1D object that stores points used for operations
+
     def __init__(self, x, y, dx=None, dy=None, dxl=None, dxw=None,
                  lam=None, dlam=None):
         self.x = np.asarray(x)
         self.y = np.asarray(y)
         if dx is not None:
-            self.dx = np.asarray(dx)
+            self.dx = np.asarray(dx, dtype=float)
         if dy is not None:
-            self.dy = np.asarray(dy)
+            self.dy = np.asarray(dy, dtype=float)
         if dxl is not None:
-            self.dxl = np.asarray(dxl)
+            self.dxl = np.asarray(dxl, dtype=float)
         if dxw is not None:
-            self.dxw = np.asarray(dxw)
+            self.dxw = np.asarray(dxw, dtype=float)
         if lam is not None:
-            self.lam = np.asarray(lam)
+            self.lam = np.asarray(lam, dtype=float)
         if dlam is not None:
-            self.dlam = np.asarray(dlam)
+            self.dlam = np.asarray(dlam, dtype=float)
 
     def xaxis(self, label, unit):
         """
@@ -791,7 +799,7 @@ class Data1D(plottable_1D, DataInfo):
             dy = np.zeros(length)
             lam = np.zeros(length)
             dlam = np.zeros(length)
-            clone = Data1D(x, y, lam=lam, dx=dx, dy=dy, dlam=dlam)
+            clone = Data1D(x, y, lam=lam, dx=dx, dy=dy, dlam=dlam, isSesans=self.isSesans)
 
         clone.title = self.title
         clone.run = self.run
@@ -828,84 +836,111 @@ class Data1D(plottable_1D, DataInfo):
         self.yaxis(data1d._yaxis, data1d._yunit)
         self.title = data1d.title
 
-    def _validity_check(self, other):
+    def _interpolation_operation(self, other, tolerance: Optional[float] = 0.01, scale: Optional[str] = 'log'):
         """
-        Checks that the data lengths are compatible.
-        Checks that the x vectors are compatible.
-        Returns errors vectors equal to original
-        errors vectors if they were present or vectors
-        of zeros when none was found.
+        Checks that x values for two datasets have overlapping ranges for an operation.
+        If so, x, y, and dy will be updated to values used in the operation.
+        Resolutions, including dx, dxl, and dxw, are not kept through in the operation.
+        Wavelength parameters for SESANS datasets are also not kept through the operation.
 
-        :param other: other data set for operation
-        :return: dy for self, dy for other [numpy arrays]
-        :raise ValueError: when lengths are not compatible
+        :param other: other data for operation
+        :param tolerance: acceptable deviation in matching x data points, default 0.01 (equivalent to 1 % deviation)
+        :param scale: default 'log', performs interpolation on log scale; use 'linear' for sesans data
+        :raise ValueError: x-ranges of self and other do not overlap
         """
-        dy_other = None
         if isinstance(other, Data1D):
-            # Check that data lengths are the same
-            if len(self.x) != len(other.x) or len(self.y) != len(other.y):
-                msg = "Unable to perform operation: data length are not equal"
+            # check if ranges of self.x and other.x overlap at all
+            if np.min(other.x) > np.max(self.x) or np.max(other.x) < np.min(self.x):
+                msg = "Unable to perform operation: x ranges of two datasets do not overlap."
                 raise ValueError(msg)
-            # Here we could also extrapolate between data points
-            TOLERANCE = 0.01
-            for i in range(len(self.x)):
-                if fabs(self.x[i] - other.x[i]) > self.x[i]*TOLERANCE:
-                    msg = "Incompatible data sets: x-values do not match"
-                    raise ValueError(msg)
+            # check if data points match (within tolerance) across the overlap range of self.x and other.x
+            self_overlap_bool = np.abs((self.x[:, None] - other.x[None, :]) / self.x[:, None]).min(axis=1) <= tolerance
+            self_overlap_index = np.flatnonzero(self_overlap_bool)
+            if len(self_overlap_index) == self_overlap_index.max() - self_overlap_index.min() + 1:
+                # all the points in overlap region of self.x found close matches in overlap region of other.x
+                x_op = self.x[self_overlap_bool]
+                other._operation = other.clone_without_data(x_op.size)
+                other._operation.copy_from_datainfo(other)
+                other_overlap_index = (np.abs(x_op[:, None] - other.x[None, :])).argmin(axis=1)
+                y_op_other = np.copy(other.y)[other_overlap_index]
+                dy_op_other = np.zeros(x_op.size) if (other.dy is None or other.dy.size == 0) \
+                    else np.copy(other.dy)[other_overlap_index]
+            else:
+                # not all the points found a close match so implementing interpolation on log scale
+                self_overlap_bool = (self.x >= max([self.x.min(), other.x.min()])) & (self.x <= min([self.x.max(), other.x.max()]))
+                self_overlap_index = np.flatnonzero(self_overlap_bool)
+                x_op = self.x[self_overlap_bool]
+                other._operation = other.clone_without_data(x_op.size)
+                other._operation.copy_from_datainfo(other)
+                if scale == 'log':
+                    y_op_other, dy_op_other = \
+                        interpolations.linear_scales(x_interp=x_op, x=other.x, y=other.y, dy=other.dy, scale='log')
+                else:
+                    y_op_other, dy_op_other = interpolations.linear(x_interp=x_op, x=other.x, y=other.y, dy=other.dy)
 
-            # Check that the other data set has errors, otherwise
-            # create zero vector
-            dy_other = other.dy
-            if other.dy is None or (len(other.dy) != len(other.y)):
-                dy_other = np.zeros(len(other.y))
+            # setting resolutions and wavelength parameters to None as these parameters are not carried through
+            dx_op_other = None
+            dxl_op_other = None
+            dxw_op_other = None
+            lam_op_other = None
+            dlam_op_other = None
 
-        # Check that we have errors, otherwise create zero vector
-        dy = self.dy
-        if self.dy is None or (len(self.dy) != len(self.y)):
-            dy = np.zeros(len(self.y))
+            other._operation.x = x_op
+            other._operation.y = y_op_other
+            other._operation.dy = dy_op_other if dy_op_other is not None else np.zeros(x_op.size)
+            other._operation.dx = dx_op_other
+            other._operation.dxl = dxl_op_other
+            other._operation.dxw = dxw_op_other
+            other._operation.lam = lam_op_other
+            other._operation.dlam = dlam_op_other
 
-        return dy, dy_other
+        else:
+            # other is something besides Data1D and so all points in self should be used for operation
+            self_overlap_bool = np.ones(self.x.size, dtype=bool)
+            self_overlap_index = np.arange(0, self.x.size+1, 1)
+
+        # setup _operation Data1D for self
+        self._operation = self.clone_without_data(self_overlap_index.size)
+        self._operation.copy_from_datainfo(self)
+        self._operation.x = self.x[self_overlap_bool]
+        self._operation.y = self.y[self_overlap_bool]
+        self._operation.dy = np.zeros(self._operation.y.size, dtype=float) if (self.dy is None or self.dy.size==0) \
+            else self.dy[self_overlap_bool]
+        self._operation.dx = None
+        self._operation.dxl = None
+        self._operation.dxw = None
+        self._operation.lam = None
+        self._operation.dlam = None
 
     def _perform_operation(self, other, operation):
         """
         """
-        # First, check the data compatibility
-        dy, dy_other = self._validity_check(other)
-        result = self.clone_without_data(len(self.x))
-        if self.dxw is None:
-            result.dxw = None
+        # Check for compatibility of the x-ranges and populate the data used for the operation
+        # sets up _operation for both datasets
+        # interpolation will be implemented on the 'other' dataset as needed
+        if self.isSesans:
+            self._interpolation_operation(other, scale='linear')
         else:
-            result.dxw = np.zeros(len(self.x))
-        if self.dxl is None:
-            result.dxl = None
-        else:
-            result.dxl = np.zeros(len(self.x))
+            self._interpolation_operation(other, scale='log')
 
-        for i in range(len(self.x)):
-            result.x[i] = self.x[i]
-            if self.dx is not None and len(self.x) == len(self.dx):
-                result.dx[i] = self.dx[i]
-            if self.dxw is not None and len(self.x) == len(self.dxw):
-                result.dxw[i] = self.dxw[i]
-            if self.dxl is not None and len(self.x) == len(self.dxl):
-                result.dxl[i] = self.dxl[i]
+        result = self.clone_without_data(self._operation.x.size)
+        result.copy_from_datainfo(self)
+        result.x = np.copy(self._operation.x)
+        result.y = np.zeros(self._operation.x.size)
+        result.dy = np.zeros(self._operation.x.size)
+        result.dx = None if self._operation.dx is None else np.copy(self._operation.dx)
+        result.dxl = None if self._operation.dxl is None else np.copy(self._operation.dxl)
+        result.dxw = None if self._operation.dxw is None else np.copy(self._operation.dxw)
+        result.lam = None if self._operation.lam is None else np.copy(self._operation.lam)
+        result.dlam = None if self._operation.dlam is None else np.copy(self._operation.dlam)
 
-            a = Uncertainty(self.y[i], dy[i]**2)
+        for i in range(result.x.size):
+
+            a = Uncertainty(self._operation.y[i], self._operation.dy[i]**2)
             if isinstance(other, Data1D):
-                b = Uncertainty(other.y[i], dy_other[i]**2)
-                if other.dx is not None:
-                    result.dx[i] *= self.dx[i]
-                    result.dx[i] += (other.dx[i]**2)
-                    result.dx[i] /= 2
-                    result.dx[i] = math.sqrt(result.dx[i])
-                if result.dxl is not None and other.dxl is not None:
-                    result.dxl[i] *= self.dxl[i]
-                    result.dxl[i] += (other.dxl[i]**2)
-                    result.dxl[i] /= 2
-                    result.dxl[i] = math.sqrt(result.dxl[i])
+                b = Uncertainty(other._operation.y[i], other._operation.dy[i]**2)
             else:
                 b = other
-
             output = operation(a, b)
             result.y[i] = output.x
             result.dy[i] = math.sqrt(math.fabs(output.variance))
