@@ -63,6 +63,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: sasdata-${{ matrix.os }}-${{ matrix.python-version }}
+        compression-level: 0  # Upload raw wheel for pypi publishing
         path: |
            dist/sasdata*whl
            dist/sasdata*tar*
@@ -90,7 +91,7 @@ jobs:
       name: pypi
       url: https://pypi.org/p/sasdata
     permissions:
-      id-token: write  # IMPORTANT: mandatory for trusted publishing
+      id-token: write
     steps:
       - name: Download all the dists
         uses: actions/download-artifact@v4
