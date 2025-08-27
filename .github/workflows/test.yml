@@ -63,7 +63,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         compression-level: 0  # Upload raw wheel for pypi publishing
-        path: dist/
+        path: dist/*whl
         if-no-files-found: ignore
 
     ### Installation of test-dependencies
