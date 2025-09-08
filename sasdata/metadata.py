@@ -471,10 +471,11 @@ class Metadata:
         )
 
     def as_h5(self, f: h5py.Group):
-        f.attrs["title"] = self.title
-        print(self.run)
+        if self.title:
+            f.attrs["title"] = self.title
         f.create_dataset("run", data=self.run)
-        f.attrs["definition"] = self.definition
+        if self.definition:
+            f.create_dataset("definition", data=self.definition)
         # process.as_h5(meta) if process
         if self.sample:
             self.sample.as_h5(f.create_group("sassample"))
