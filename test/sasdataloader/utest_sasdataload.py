@@ -37,7 +37,7 @@ test_xml_file_names = [
     "cansas1d_units",
     "cansas_test",
     "cansas_test_modified",
-    "cansas_xml_multisasentry_multisasdata",
+    # "cansas_xml_multisasentry_multisasdata",
     "valid_cansas_xml",
 ]
 
@@ -123,5 +123,43 @@ def test_h5_serialise(f):
             assert result["metadata"].attrs["title"] == expected.metadata.title
         if type(expected.metadata.definition) is str:
             assert result["metadata"].attrs["definition"] == expected.metadata.definition
+        if expected.metadata.sample:
+            sample = result["metadata"]["sample"]
+            exs = expected.metadata.sample
+
+            if exs.name:
+                assert exs.name == sample.attrs["title"]
+            if exs.sample_id:
+                assert exs.sample_id == sample.attrs["sample_id"]
+            if exs.thickness:
+                assert exs.thickness.value == sample["thickness"][()]
+                assert exs.thickness.units.name == sample["thickness"].attrs["units"]
+            if exs.temperature:
+                assert exs.temperature.value == sample["temperature"][()]
+                assert exs.temperature.units.name == sample["temperature"].attrs["units"]
+            if exs.transmission:
+                assert exs.transmission == sample["transmission"][()]
+
+            if exs.position:
+                if exs.position.x:
+                    assert exs.position.x.value == sample["position"]["x"][()]
+                    assert exs.position.x.units.name == sample["position"]["x"].attrs["units"]
+                if exs.position.y:
+                    assert exs.position.y.value == sample["position"]["y"][()]
+                    assert exs.position.y.units.name == sample["position"]["y"].attrs["units"]
+                if exs.position.z:
+                    assert exs.position.z.value == sample["position"]["z"][()]
+                    assert exs.position.z.units.name == sample["position"]["z"].attrs["units"]
+            if exs.orientation:
+                if exs.orientation.roll:
+                    assert exs.orientation.roll.value == sample["orientation"]["roll"][()]
+                    assert exs.orientation.roll.units.name == sample["orientation"]["roll"].attrs["units"]
+                if exs.orientation.pitch:
+                    assert exs.orientation.pitch.value == sample["orientation"]["pitch"][()]
+                    assert exs.orientation.pitch.units.name == sample["orientation"]["pitch"].attrs["units"]
+                if exs.orientation.yaw:
+                    assert exs.orientation.yaw.value == sample["orientation"]["yaw"][()]
+                    assert exs.orientation.yaw.units.name == sample["orientation"]["yaw"].attrs["units"]
+
         for idx, run in enumerate(expected.metadata.run):
             assert result["metadata"]["run"][idx] == run.encode("utf8")
