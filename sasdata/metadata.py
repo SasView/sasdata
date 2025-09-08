@@ -471,9 +471,10 @@ class Metadata:
         )
 
     def as_h5(self, f: h5py.Group):
+        for idx, run in enumerate(self.run):
+            f.create_dataset(f"run{idx:02d}", data=run)
         if self.title:
-            f.attrs["title"] = self.title
-        f.create_dataset("run", data=self.run)
+            f.create_dataset("title", data=self.title)
         if self.definition:
             f.create_dataset("definition", data=self.definition)
         # process.as_h5(meta) if process
