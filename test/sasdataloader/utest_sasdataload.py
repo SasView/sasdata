@@ -109,18 +109,19 @@ def test_json_deserialise(f):
     assert parsed.model_requirements == expected.model_requirements
 
 @pytest.mark.sasdata3
-@pytest.mark.parametrize("f", test_hdf_file_names)
+@pytest.mark.parametrize("f", test_xml_file_names)
 def test_h5_serialise(f):
-    expected = hdf_load_data(local_load(f"data/{f}.h5"))["sasentry01"]
+    for name, expected in xml_load_data(local_load(f"data/{f}.xml")).items():
+        bio = io.BytesIO()
+        expected.save_h5(bio)
+        bio.seek(0)
 
-    bio = io.BytesIO()
-    expected.save_h5(bio)
-    bio.seek(0)
+        result = h5py.File(bio)
 
-    result = h5py.File(bio)
-
-    assert result.attrs["name"] == expected.name
-    assert result["metadata"].attrs["title"] == expected.metadata.title
-    assert result["metadata"].attrs["definition"] == expected.metadata.definition
-    for idx, run in enumerate(expected.metadata.run):
-        assert result["metadata"]["run"][idx] == run.encode("utf8")
+        assert result.attrs["name"] == expected.name
+        if type(expected.metadata.title) is str:
+            assert result["metadata"].attrs["title"] == expected.metadata.title
+        if type(expected.metadata.definition) is str:
+            assert result["metadata"].attrs["definition"] == expected.metadata.definition
+        for idx, run in enumerate(expected.metadata.run):
+            assert result["metadata"]["run"][idx] == run.encode("utf8")
