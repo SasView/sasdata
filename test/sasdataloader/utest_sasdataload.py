@@ -108,6 +108,20 @@ def test_json_deserialise(f):
     assert parsed.mask == expected.mask
     assert parsed.model_requirements == expected.model_requirements
 
+
+def safe_assert(e, r):
+    match (e, r):
+        case (Quantity(), _):
+            assert e.value == r[()]
+            assert e.units.symbol == r.attrs["units"]
+        case (str(), bytes()):
+            assert e == r.decode("utf-8")
+        case (_, h5py.Dataset()):
+            safe_assert(e, r[()])
+        case _:
+            assert e == r
+
+
 @pytest.mark.sasdata3
 @pytest.mark.parametrize("f", test_xml_file_names)
 def test_h5_serialise(f):
@@ -118,48 +132,52 @@ def test_h5_serialise(f):
 
         result = h5py.File(bio)
 
-        assert result.attrs["name"] == expected.name
-        if type(expected.metadata.title) is str:
-            assert result["metadata"].attrs["title"] == expected.metadata.title
-        if type(expected.metadata.definition) is str:
-            assert result["metadata"].attrs["definition"] == expected.metadata.definition
-        if expected.metadata.sample:
-            sample = result["metadata"]["sample"]
-            exs = expected.metadata.sample
+        if expected.name:
+            assert expected.name == result.attrs["name"]
 
-            if exs.name:
-                assert exs.name == sample.attrs["title"]
-            if exs.sample_id:
-                assert exs.sample_id == sample.attrs["sample_id"]
-            if exs.thickness:
-                assert exs.thickness.value == sample["thickness"][()]
-                assert exs.thickness.units.name == sample["thickness"].attrs["units"]
-            if exs.temperature:
-                assert exs.temperature.value == sample["temperature"][()]
-                assert exs.temperature.units.name == sample["temperature"].attrs["units"]
-            if exs.transmission:
-                assert exs.transmission == sample["transmission"][()]
+        if expected.metadata:
+            assert_metadata(expected.metadata, result["metadata"])
 
-            if exs.position:
-                if exs.position.x:
-                    assert exs.position.x.value == sample["position"]["x"][()]
-                    assert exs.position.x.units.name == sample["position"]["x"].attrs["units"]
-                if exs.position.y:
-                    assert exs.position.y.value == sample["position"]["y"][()]
-                    assert exs.position.y.units.name == sample["position"]["y"].attrs["units"]
-                if exs.position.z:
-                    assert exs.position.z.value == sample["position"]["z"][()]
-                    assert exs.position.z.units.name == sample["position"]["z"].attrs["units"]
-            if exs.orientation:
-                if exs.orientation.roll:
-                    assert exs.orientation.roll.value == sample["orientation"]["roll"][()]
-                    assert exs.orientation.roll.units.name == sample["orientation"]["roll"].attrs["units"]
-                if exs.orientation.pitch:
-                    assert exs.orientation.pitch.value == sample["orientation"]["pitch"][()]
-                    assert exs.orientation.pitch.units.name == sample["orientation"]["pitch"].attrs["units"]
-                if exs.orientation.yaw:
-                    assert exs.orientation.yaw.value == sample["orientation"]["yaw"][()]
-                    assert exs.orientation.yaw.units.name == sample["orientation"]["yaw"].attrs["units"]
 
-        for idx, run in enumerate(expected.metadata.run):
-            assert result["metadata"]["run"][idx] == run.encode("utf8")
+def assert_metadata(e, r):
+    if e.title:
+        safe_assert(e.title, r["title"][()])
+    if e.definition:
+        safe_assert(e.definition, r["definition"][()])
+    if e.sample:
+        assert_sample(e.sample, r["sassample"])
+
+
+def assert_sample(e, r):
+    if e.name:
+        safe_assert(e.name, r.attrs["name"])
+    if e.sample_id:
+        safe_assert(e.sample_id, r["ID"])
+    if e.thickness:
+        safe_assert(e.thickness, r["thickness"])
+    if e.temperature:
+        safe_assert(e.temperature, r["temperature"])
+    if e.transmission:
+        safe_assert(e.transmission, r["transmission"])
+    if e.position:
+        assert_vec(e.position, r["position"])
+    if e.orientation:
+        assert_rot(e.orientation, r["orientation"])
+
+
+def assert_vec(e, r):
+    if e.x:
+        safe_assert(e.x, r["x"])
+    if e.y:
+        safe_assert(e.y, r["y"])
+    if e.z:
+        safe_assert(e.z, r["z"])
+
+
+def assert_rot(e, r):
+    if e.roll:
+        safe_assert(e.roll, r["roll"])
+    if e.pitch:
+        safe_assert(e.pitch, r["pitch"])
+    if e.yaw:
+        safe_assert(e.yaw, r["yaw"])
