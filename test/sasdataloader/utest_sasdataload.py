@@ -146,6 +146,9 @@ def assert_metadata(e, r):
         safe_assert(e.definition, r["definition"][()])
     if e.sample:
         assert_sample(e.sample, r["sassample"])
+    if e.process:
+        for ei, ri in zip(e.process, sorted([x for x in r if "sasprocess" in x])):
+            assert_process(ei, ri)
 
 
 def assert_sample(e, r):
@@ -181,3 +184,14 @@ def assert_rot(e, r):
         safe_assert(e.pitch, r["pitch"])
     if e.yaw:
         safe_assert(e.yaw, r["yaw"])
+
+
+def assert_process(e, r):
+    if e.name:
+        safe_assert(e.name, r["name"])
+    if e.date:
+        safe_assert(e.date, r["date"])
+    if e.description:
+        safe_assert(e.description, r["description"])
+    for ei, ri in zip(e.notes, [x for x in r if "note" in x]):
+        safe_assert(ei, ri)
