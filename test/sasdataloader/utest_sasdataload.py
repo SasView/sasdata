@@ -146,6 +146,8 @@ def assert_metadata(e, r):
         safe_assert(e.definition, r["definition"][()])
     if e.sample:
         assert_sample(e.sample, r["sassample"])
+    if e.instrument:
+        assert_instrument(e.instrument, r["sasinstrument"])
     if e.process:
         for ei, ri in zip(e.process, sorted([x for x in r if "sasprocess" in x])):
             assert_process(ei, ri)
@@ -195,3 +197,74 @@ def assert_process(e, r):
         safe_assert(e.description, r["description"])
     for ei, ri in zip(e.notes, [x for x in r if "note" in x]):
         safe_assert(ei, ri)
+
+
+def assert_instrument(e, r):
+    if e.source:
+        assert_source(e.source, r["sassource"])
+    if e.detector:
+        for ei, ri in zip(e.detector, [x for x in r if "detector" in r]):
+            assert_detector(ei, ri)
+    if e.collimations:
+        for ei, ri in zip(e.collimations, [x for x in r if "collimation" in r]):
+            assert_collimation(ei, ri)
+
+
+def assert_source(e, r):
+    if e.radiation:
+        safe_assert(e.radiation, r["radiation"])
+    if e.beam_shape:
+        safe_assert(e.beam_shape, r["beam_shape"])
+    if e.beam_size:
+        assert_beam_size(e.beam_size, r["beam_size"])
+    if e.wavelength:
+        safe_assert(e.wavelength, r["wavelength"])
+    if e.wavelength_min:
+        safe_assert(e.wavelength_min, r["wavelength_min"])
+    if e.wavelength_max:
+        safe_assert(e.wavelength_max, r["wavelength_max"])
+    if e.wavelength_spread:
+        safe_assert(e.wavelength_spread, r["wavelength_spread"])
+
+
+def assert_beam_size(e, r):
+    if e.name:
+        safe_assert(e.name, r.attrs["name"])
+    assert_vec(e.size, r)
+
+
+def assert_detector(e, r):
+    if e.name:
+        safe_assert(e.name, r["name"])
+    if e.distance:
+        safe_assert(e.distance, r["SDD"])
+    if e.offset:
+        assert_vec(e.offset, r["offset"])
+    if e.orientation:
+        assert_rot(e.orientation, r["orientation"])
+    if e.beam_center:
+        assert_vec(e.beam_center, r["beam_center"])
+    if e.pixel_size:
+        assert_vec(e.pixel_size, r["pixel_size"])
+    if e.slit_length:
+        safe_assert(e.slit_length, r["slit_length"])
+
+
+def assert_collimation(e, r):
+    if e.length:
+        safe_assert(e.length, r["length"])
+    for ei, ri in zip(e.apertures, [x for x in r if "aperture" in x]):
+        assert_aperture(ei, ri)
+
+
+def assert_aperture(e, r):
+    if e.distance:
+        safe_assert(e.distance, r["distance"])
+    if e.name:
+        safe_assert(e.name, r.attrs["name"])
+    if e.size:
+        assert_vec(e.size, r["size"])
+        if e.size_name:
+            safe_assert(e.size_name, r["size"].attrs["name"])
+    if e.type_:
+        safe_assert(e.type_, r.attrs["type"])
