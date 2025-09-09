@@ -323,6 +323,25 @@ class Process:
             notes=obj["notes"],
         )
 
+    def as_h5(self, group: h5py.Group):
+        if self.name:
+            group.create_dataset("name", data=self.name)
+        if self.date:
+            group.create_dataset("date", data=self.date)
+        if self.description:
+            group.create_dataset("description", data=self.description)
+        if self.terms:
+            for idx, (term, value) in enumerate(self.terms.items()):
+                node = group.create_group(f"term{idx:02d}")
+                node.attrs["name"] = term
+                if type(value) is Quantity:
+                    node.attrs["value"] = value.value
+                    node.attrs["unit"] = value.units.symbol
+                else:
+                    node.attrs["value"] = value
+        for idx, note in enumerate(self.notes):
+            group.create_dataset(f"note{idx:02d}", data=note)
+
 
 @dataclass
 class Instrument:
@@ -478,6 +497,12 @@ class Metadata:
         if self.definition:
             f.create_dataset("definition", data=self.definition)
         # process.as_h5(meta) if process
+        if self.process:
+            for idx, process in enumerate(self.process):
+                name = process.name
+                if name is None:
+                    name = f"sasprocess{idx:02d}"
+                process.as_h5(f.create_group(name))
         if self.sample:
             self.sample.as_h5(f.create_group("sassample"))
         # self.instrument.as_h5(meta) if self.instrument else None
