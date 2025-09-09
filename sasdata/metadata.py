@@ -123,6 +123,21 @@ class Detector:
             slit_length=from_json_quantity(obj["slit_length"]),
         )
 
+    def as_h5(self, group: h5py.Group):
+        if self.name:
+            group.create_dataset("name", data=self.name)
+        if self.distance:
+            self.distance.as_h5(group, "SDD")
+        if self.offset:
+            self.offset.as_h5(group.create_group("offset"))
+        if self.orientation:
+            self.orientation.as_h5(group.create_group("orientation"))
+        if self.beam_center:
+            self.beam_center.as_h5(group.create_group("beam_center"))
+        if self.pixel_size:
+            self.pixel_size.as_h5(group.create_group("pixel_size"))
+        if self.slit_length:
+            self.slit_length.as_h5(group, "slit_length")
 
 @dataclass(kw_only=True)
 class Aperture:
@@ -151,6 +166,19 @@ class Aperture:
         )
 
 
+    def as_h5(self, group: h5py.Group):
+        if self.distance:
+            self.distance.as_h5(group, "distance")
+        if self.name:
+            group.attrs["name"] = self.name
+        if self.size:
+            group = group.create_group("size")
+            self.size.as_h5(group)
+            if self.size_name:
+                group.attrs["name"] = self.size_name
+
+
+
 @dataclass(kw_only=True)
 class Collimation:
     """
@@ -170,6 +198,12 @@ class Collimation:
             apertures=list(map(Aperture.from_json, obj["apertures"])),
         )
 
+    def as_h5(self, group: h5py.Group):
+        if self.length:
+            self.length.as_h5(group, "length")
+        for idx, a in enumerate(self.apertures):
+            a.as_h5(group.create_group(f"sasaperture{idx:02d}"))
+
 
 @dataclass(kw_only=True)
 class BeamSize:
@@ -179,6 +213,12 @@ class BeamSize:
     @staticmethod
     def from_json(obj):
         return BeamSize(name=obj["name"], size=Vec3.from_json(obj["size"]))
+
+    def as_h5(self, group: h5py.Group):
+        if self.name:
+            group.attrs["name"] = self.name
+        if self.size:
+            self.size.as_h5(group)
 
 
 @dataclass(kw_only=True)
@@ -214,6 +254,25 @@ class Source:
             wavelength_max=obj["wavelength_max"],
             wavelength_spread=obj["wavelength_spread"],
         )
+
+    def as_h5(self, group: h5py.Group):
+        if self.radiation:
+            group.create_dataset("radiation", data=self.radiation)
+        if self.beam_shape:
+            group.create_dataset("beam_shape", data=self.beam_shape)
+        if self.beam_size:
+            self.beam_size.as_h5(group.create_group("beam_size"))
+        if self.wavelength:
+            self.wavelength.as_h5(group, "wavelength")
+        if self.wavelength_min:
+            self.wavelength_min.as_h5(group, "wavelength_min")
+        if self.wavelength_max:
+            self.wavelength_max.as_h5(group, "wavelength_max")
+        if self.wavelength_spread:
+            self.wavelength_spread.as_h5(group, "wavelength_spread")
+
+
+
 
 
 @dataclass(kw_only=True)
@@ -364,6 +423,14 @@ class Instrument:
             detector=list(map(Detector.from_json, obj["detector"])),
         )
 
+    def as_h5(self, group: h5py.Group):
+        if self.source:
+            self.source.as_h5(group.create_group("sassource"))
+        for idx, c in enumerate(self.collimations):
+            c.as_h5(group.create_group(f"sascollimation{idx:02d}"))
+        for idx, d in enumerate(self.detector):
+            d.as_h5(group.create_group(f"sasdetector{idx:02d}"))
+
 
 @dataclass(kw_only=True)
 class MetaNode:
@@ -496,7 +563,6 @@ class Metadata:
             f.create_dataset("title", data=self.title)
         if self.definition:
             f.create_dataset("definition", data=self.definition)
-        # process.as_h5(meta) if process
         if self.process:
             for idx, process in enumerate(self.process):
                 name = process.name
@@ -505,7 +571,8 @@ class Metadata:
                 process.as_h5(f.create_group(name))
         if self.sample:
             self.sample.as_h5(f.create_group("sassample"))
-        # self.instrument.as_h5(meta) if self.instrument else None
+        if self.instrument:
+            self.instrument.as_h5(f.create_group("sasinstrument"))
         # self.raw.as_h5(meta) if self.raw else None
 
 
