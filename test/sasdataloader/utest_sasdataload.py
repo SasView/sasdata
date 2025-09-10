@@ -152,7 +152,7 @@ def assert_metadata(e, r):
         assert_instrument(e.instrument, r["sasinstrument"])
     if e.process:
         for ei, ri in zip(e.process, sorted([x for x in r if "sasprocess" in x])):
-            assert_process(ei, ri)
+            assert_process(ei, r[ri])
 
 
 def assert_sample(e, r):
@@ -198,7 +198,7 @@ def assert_process(e, r):
     if e.description:
         safe_assert(e.description, r["description"])
     for ei, ri in zip(e.notes, [x for x in r if "note" in x]):
-        safe_assert(ei, ri)
+        safe_assert(ei, r[ri])
 
 
 def assert_instrument(e, r):
