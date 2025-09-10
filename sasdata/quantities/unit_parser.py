@@ -19,7 +19,7 @@ def split_unit_str(unit_str: str) -> list[str]:
 def validate_unit_str(unit_str: str) -> bool:
     """Validate whether unit_str is valid. This doesn't mean that the unit specified in unit_str exists but rather it
     only consists of letters, and numbers as a unit string should."""
-    return fullmatch(r"[A-Za-zΩ%Å^1-9\-\+/\ \._]+", unit_str) is not None
+    return fullmatch(r"[A-Za-zΩµ%Å^1-9\-\+/\ \._]+", unit_str) is not None
 
 
 def parse_single_unit(
@@ -115,7 +115,7 @@ def known_mistake(unit_str: str) -> Unit | None:
     and give them a reasonible parse"""
     import sasdata.quantities.units as units
 
-    mistakes = {"per_centimeter": units.per_centimeter, "per_angstrom": units.per_angstrom}
+    mistakes = {"µm": units.micrometers, "per_centimeter": units.per_centimeter, "per_angstrom": units.per_angstrom}
     if unit_str in mistakes:
         return mistakes[unit_str]
     return None

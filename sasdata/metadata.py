@@ -171,10 +171,12 @@ class Aperture:
             self.distance.as_h5(group, "distance")
         if self.name:
             group.attrs["name"] = self.name
+        if self.type_ is not None:
+            group.attrs["type"] = self.type_
         if self.size:
             group = group.create_group("size")
             self.size.as_h5(group)
-            if self.size_name:
+            if self.size_name is not None:
                 group.attrs["name"] = self.size_name
 
 
@@ -321,7 +323,7 @@ class Sample:
             f.create_dataset("ID", data=[self.sample_id])
         if self.thickness:
             self.thickness.as_h5(f, "thickness")
-        if self.transmission:
+        if self.transmission is not None:
             f.create_dataset("transmission", data=[self.transmission])
         if self.temperature:
             self.temperature.as_h5(f, "temperature")
@@ -330,7 +332,7 @@ class Sample:
         if self.orientation:
             self.orientation.as_h5(f.create_group("orientation"))
         if self.details:
-            f.create_dataset("details", data=[self.details])
+            f.create_dataset("details", data=self.details)
 
 
 @dataclass(kw_only=True)
@@ -383,11 +385,11 @@ class Process:
         )
 
     def as_h5(self, group: h5py.Group):
-        if self.name:
+        if self.name is not None:
             group.create_dataset("name", data=[self.name])
-        if self.date:
+        if self.date is not None:
             group.create_dataset("date", data=[self.date])
-        if self.description:
+        if self.description is not None:
             group.create_dataset("description", data=[self.description])
         if self.terms:
             for idx, (term, value) in enumerate(self.terms.items()):
