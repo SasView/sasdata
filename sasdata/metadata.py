@@ -481,7 +481,6 @@ class MetaNode:
                 if type(result) is bool and not result:
                     return False
             case _:
-                print(type(self.contents))
                 if self.contents != other.contents:
                     return False
         for k, v in self.attrs.items():
@@ -566,7 +565,6 @@ class Metadata:
         if self.process:
             for idx, process in enumerate(self.process):
                 name = f"sasprocess{idx:02d}"
-                print(f"Process name: {name}")
                 process.as_h5(f.create_group(name))
         if self.sample:
             self.sample.as_h5(f.create_group("sassample"))
