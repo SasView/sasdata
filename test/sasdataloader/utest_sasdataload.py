@@ -116,13 +116,15 @@ def safe_assert(e, r):
             assert e.units.symbol == r.attrs["units"]
         case (str(), bytes()):
             assert e == r.decode("utf-8")
+        case (str(), np.ndarray()):
+            safe_assert(e, r[0])
         case (_, h5py.Dataset()):
             safe_assert(e, r[()])
         case _:
             assert e == r
 
 
-@pytest.mark.sasdata3
+@pytest.mark.sasdata
 @pytest.mark.parametrize("f", test_xml_file_names)
 def test_h5_serialise(f):
     for name, expected in xml_load_data(local_load(f"data/{f}.xml")).items():
@@ -270,7 +272,7 @@ def assert_aperture(e, r):
         safe_assert(e.type_, r.attrs["type"])
 
 
-@pytest.mark.sasdata3
+@pytest.mark.sasdata
 @pytest.mark.parametrize("f", test_hdf_file_names)
 def test_h5_reserialise(f):
     for name, expected in hdf_load_data(local_load(f"data/{f}.h5")).items():
@@ -278,4 +280,11 @@ def test_h5_reserialise(f):
         expected.save_h5(bio)
         bio.seek(0)
 
-        hdf_load_data(bio)
+        result = [x for x in hdf_load_data(bio).values()][0]
+
+        assert expected.metadata.title == result.metadata.title
+        assert expected.metadata.run == result.metadata.run
+        assert expected.metadata.definition == result.metadata.definition
+        assert expected.metadata.process == result.metadata.process
+        assert expected.metadata.sample == result.metadata.sample
+        assert expected.metadata.instrument == result.metadata.instrument
