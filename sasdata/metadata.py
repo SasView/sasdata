@@ -565,9 +565,8 @@ class Metadata:
             f.create_dataset("definition", data=[self.definition])
         if self.process:
             for idx, process in enumerate(self.process):
-                name = process.name
-                if name is None:
-                    name = f"sasprocess{idx:02d}"
+                name = f"sasprocess{idx:02d}"
+                print(f"Process name: {name}")
                 process.as_h5(f.create_group(name))
         if self.sample:
             self.sample.as_h5(f.create_group("sassample"))
