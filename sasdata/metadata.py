@@ -124,8 +124,8 @@ class Detector:
         )
 
     def as_h5(self, group: h5py.Group):
-        if self.name:
-            group.create_dataset("name", data=self.name)
+        if self.name is not None:
+            group.create_dataset("name", data=[self.name])
         if self.distance:
             self.distance.as_h5(group, "SDD")
         if self.offset:
@@ -257,9 +257,9 @@ class Source:
 
     def as_h5(self, group: h5py.Group):
         if self.radiation:
-            group.create_dataset("radiation", data=self.radiation)
+            group.create_dataset("radiation", data=[self.radiation])
         if self.beam_shape:
-            group.create_dataset("beam_shape", data=self.beam_shape)
+            group.create_dataset("beam_shape", data=[self.beam_shape])
         if self.beam_size:
             self.beam_size.as_h5(group.create_group("beam_size"))
         if self.wavelength:
@@ -315,14 +315,14 @@ class Sample:
         )
 
     def as_h5(self, f: h5py.Group):
-        if self.name:
+        if self.name is not None:
             f.attrs["name"] = self.name
-        if self.sample_id:
-            f.create_dataset("ID", data=self.sample_id)
+        if self.sample_id is not None:
+            f.create_dataset("ID", data=[self.sample_id])
         if self.thickness:
             self.thickness.as_h5(f, "thickness")
         if self.transmission:
-            f.create_dataset("transmission", data=self.transmission)
+            f.create_dataset("transmission", data=[self.transmission])
         if self.temperature:
             self.temperature.as_h5(f, "temperature")
         if self.position:
@@ -330,7 +330,7 @@ class Sample:
         if self.orientation:
             self.orientation.as_h5(f.create_group("orientation"))
         if self.details:
-            f.create_dataset("details", data=self.details)
+            f.create_dataset("details", data=[self.details])
 
 
 @dataclass(kw_only=True)
@@ -384,11 +384,11 @@ class Process:
 
     def as_h5(self, group: h5py.Group):
         if self.name:
-            group.create_dataset("name", data=self.name)
+            group.create_dataset("name", data=[self.name])
         if self.date:
-            group.create_dataset("date", data=self.date)
+            group.create_dataset("date", data=[self.date])
         if self.description:
-            group.create_dataset("description", data=self.description)
+            group.create_dataset("description", data=[self.description])
         if self.terms:
             for idx, (term, value) in enumerate(self.terms.items()):
                 node = group.create_group(f"term{idx:02d}")
@@ -399,7 +399,7 @@ class Process:
                 else:
                     node.attrs["value"] = value
         for idx, note in enumerate(self.notes):
-            group.create_dataset(f"note{idx:02d}", data=note)
+            group.create_dataset(f"note{idx:02d}", data=[note])
 
 
 @dataclass
@@ -519,7 +519,7 @@ class MetaNode:
         )
 
 
-@dataclass(kw_only=True)
+@dataclass(kw_only=True, eq=True)
 class Metadata:
     title: str | None
     run: list[str]
@@ -558,11 +558,11 @@ class Metadata:
 
     def as_h5(self, f: h5py.Group):
         for idx, run in enumerate(self.run):
-            f.create_dataset(f"run{idx:02d}", data=run)
-        if self.title:
-            f.create_dataset("title", data=self.title)
-        if self.definition:
-            f.create_dataset("definition", data=self.definition)
+            f.create_dataset(f"run{idx:02d}", data=[run])
+        if self.title is not None:
+            f.create_dataset("title", data=[self.title])
+        if self.definition is not None:
+            f.create_dataset("definition", data=[self.definition])
         if self.process:
             for idx, process in enumerate(self.process):
                 name = process.name
