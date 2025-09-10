@@ -268,3 +268,14 @@ def assert_aperture(e, r):
             safe_assert(e.size_name, r["size"].attrs["name"])
     if e.type_:
         safe_assert(e.type_, r.attrs["type"])
+
+
+@pytest.mark.sasdata3
+@pytest.mark.parametrize("f", test_hdf_file_names)
+def test_h5_reserialise(f):
+    for name, expected in hdf_load_data(local_load(f"data/{f}.h5")).items():
+        bio = io.BytesIO()
+        expected.save_h5(bio)
+        bio.seek(0)
+
+        hdf_load_data(bio)
