@@ -125,7 +125,7 @@ def parse_quantity(node : HDF5Group) -> Quantity[float]:
     """Pull a single quantity with length units out of an HDF5 node"""
     magnitude = node.astype(float)[0]
     unit = node.attrs["units"]
-    return Quantity(magnitude, units.symbol_lookup[unit])
+    return Quantity(magnitude, parse(unit))
 
 def parse_string(node : HDF5Group) -> str:
     """Access string data from a node"""
@@ -233,7 +233,7 @@ def parse_sample(node : HDF5Group) -> Sample:
     temperature = opt_parse(node, "temperature", parse_quantity)
     position = opt_parse(node, "position", parse_vec3)
     orientation = opt_parse(node, "orientation", parse_rot3)
-    details : list[str] = [node[d].asstr()[0] for d in node if "details" in d]
+    details : list[str] = sum([list(node[d].asstr()[()]) for d in node if "details" in d], [])
     return Sample(name=name,
                   sample_id=sample_id,
                   thickness=thickness,
