@@ -138,7 +138,7 @@ def test_h5_serialise(f):
             assert expected.name == result.attrs["name"]
 
         if expected.metadata:
-            assert_metadata(expected.metadata, result["metadata"])
+            assert_metadata(expected.metadata, result["sasentry01"])
 
 
 def assert_metadata(e, r):
@@ -288,3 +288,10 @@ def test_h5_reserialise(f):
         assert expected.metadata.process == result.metadata.process
         assert expected.metadata.sample == result.metadata.sample
         assert expected.metadata.instrument == result.metadata.instrument
+
+        print("=====Expected=====")
+        print(expected.metadata.raw)
+        print("=====Result=====")
+        print(result.metadata.raw)
+
+        assert expected.metadata.raw.name == result.metadata.raw.name
