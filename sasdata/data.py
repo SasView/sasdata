@@ -111,7 +111,7 @@ class SasData:
     def save_h5(self, path: str | typing.BinaryIO):
         with h5py.File(path, "w") as f:
             f.attrs["name"] = self.name
-            self.metadata.as_h5(f.create_group("metadata"))
+            self.metadata.as_h5(f.create_group("sasentry01"))
 
 
 
