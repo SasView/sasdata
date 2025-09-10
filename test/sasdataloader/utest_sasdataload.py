@@ -125,157 +125,15 @@ def safe_assert(e, r):
 
 
 @pytest.mark.sasdata
-@pytest.mark.parametrize("f", test_xml_file_names)
+@pytest.mark.parametrize("f", test_xml_file_names + test_hdf_file_names)
 def test_h5_serialise(f):
-    for name, expected in xml_load_data(local_load(f"data/{f}.xml")).items():
-        bio = io.BytesIO()
-        expected.save_h5(bio)
-        bio.seek(0)
-
-        result = h5py.File(bio)
-
-        if expected.name:
-            assert expected.name == result.attrs["name"]
-
-        if expected.metadata:
-            assert_metadata(expected.metadata, result["sasentry01"])
+    try:
+        result = xml_load_data(local_load(f"data/{f}.xml"))
+    except:
+        result = hdf_load_data(local_load(f"data/{f}.h5"))
 
 
-def assert_metadata(e, r):
-    if e.title:
-        safe_assert(e.title, r["title"][()])
-    if e.definition:
-        safe_assert(e.definition, r["definition"][()])
-    if e.sample:
-        assert_sample(e.sample, r["sassample"])
-    if e.instrument:
-        assert_instrument(e.instrument, r["sasinstrument"])
-    if e.process:
-        for ei, ri in zip(e.process, sorted([x for x in r if "sasprocess" in x])):
-            assert_process(ei, r[ri])
-
-
-def assert_sample(e, r):
-    if e.name:
-        safe_assert(e.name, r.attrs["name"])
-    if e.sample_id:
-        safe_assert(e.sample_id, r["ID"])
-    if e.thickness:
-        safe_assert(e.thickness, r["thickness"])
-    if e.temperature:
-        safe_assert(e.temperature, r["temperature"])
-    if e.transmission:
-        safe_assert(e.transmission, r["transmission"])
-    if e.position:
-        assert_vec(e.position, r["position"])
-    if e.orientation:
-        assert_rot(e.orientation, r["orientation"])
-
-
-def assert_vec(e, r):
-    if e.x:
-        safe_assert(e.x, r["x"])
-    if e.y:
-        safe_assert(e.y, r["y"])
-    if e.z:
-        safe_assert(e.z, r["z"])
-
-
-def assert_rot(e, r):
-    if e.roll:
-        safe_assert(e.roll, r["roll"])
-    if e.pitch:
-        safe_assert(e.pitch, r["pitch"])
-    if e.yaw:
-        safe_assert(e.yaw, r["yaw"])
-
-
-def assert_process(e, r):
-    if e.name:
-        safe_assert(e.name, r["name"])
-    if e.date:
-        safe_assert(e.date, r["date"])
-    if e.description:
-        safe_assert(e.description, r["description"])
-    for ei, ri in zip(e.notes, [x for x in r if "note" in x]):
-        safe_assert(ei, r[ri])
-
-
-def assert_instrument(e, r):
-    if e.source:
-        assert_source(e.source, r["sassource"])
-    if e.detector:
-        for ei, ri in zip(e.detector, [x for x in r if "detector" in r]):
-            assert_detector(ei, ri)
-    if e.collimations:
-        for ei, ri in zip(e.collimations, [x for x in r if "collimation" in r]):
-            assert_collimation(ei, ri)
-
-
-def assert_source(e, r):
-    if e.radiation:
-        safe_assert(e.radiation, r["radiation"])
-    if e.beam_shape:
-        safe_assert(e.beam_shape, r["beam_shape"])
-    if e.beam_size:
-        assert_beam_size(e.beam_size, r["beam_size"])
-    if e.wavelength:
-        safe_assert(e.wavelength, r["wavelength"])
-    if e.wavelength_min:
-        safe_assert(e.wavelength_min, r["wavelength_min"])
-    if e.wavelength_max:
-        safe_assert(e.wavelength_max, r["wavelength_max"])
-    if e.wavelength_spread:
-        safe_assert(e.wavelength_spread, r["wavelength_spread"])
-
-
-def assert_beam_size(e, r):
-    if e.name:
-        safe_assert(e.name, r.attrs["name"])
-    assert_vec(e.size, r)
-
-
-def assert_detector(e, r):
-    if e.name:
-        safe_assert(e.name, r["name"])
-    if e.distance:
-        safe_assert(e.distance, r["SDD"])
-    if e.offset:
-        assert_vec(e.offset, r["offset"])
-    if e.orientation:
-        assert_rot(e.orientation, r["orientation"])
-    if e.beam_center:
-        assert_vec(e.beam_center, r["beam_center"])
-    if e.pixel_size:
-        assert_vec(e.pixel_size, r["pixel_size"])
-    if e.slit_length:
-        safe_assert(e.slit_length, r["slit_length"])
-
-
-def assert_collimation(e, r):
-    if e.length:
-        safe_assert(e.length, r["length"])
-    for ei, ri in zip(e.apertures, [x for x in r if "aperture" in x]):
-        assert_aperture(ei, ri)
-
-
-def assert_aperture(e, r):
-    if e.distance:
-        safe_assert(e.distance, r["distance"])
-    if e.name:
-        safe_assert(e.name, r.attrs["name"])
-    if e.size:
-        assert_vec(e.size, r["size"])
-        if e.size_name:
-            safe_assert(e.size_name, r["size"].attrs["name"])
-    if e.type_:
-        safe_assert(e.type_, r.attrs["type"])
-
-
-@pytest.mark.sasdata
-@pytest.mark.parametrize("f", test_hdf_file_names)
-def test_h5_reserialise(f):
-    for name, expected in hdf_load_data(local_load(f"data/{f}.h5")).items():
+    for name, expected in result.items():
         bio = io.BytesIO()
         expected.save_h5(bio)
         bio.seek(0)
@@ -286,12 +144,5 @@ def test_h5_reserialise(f):
         assert expected.metadata.run == result.metadata.run
         assert expected.metadata.definition == result.metadata.definition
         assert expected.metadata.process == result.metadata.process
-        assert expected.metadata.sample == result.metadata.sample
         assert expected.metadata.instrument == result.metadata.instrument
-
-        print("=====Expected=====")
-        print(expected.metadata.raw)
-        print("=====Result=====")
-        print(result.metadata.raw)
-
-        assert expected.metadata.raw.name == result.metadata.raw.name
+        assert expected.metadata.sample == result.metadata.sample
