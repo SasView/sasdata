@@ -109,21 +109,6 @@ def test_json_deserialise(f):
     assert parsed.model_requirements == expected.model_requirements
 
 
-def safe_assert(e, r):
-    match (e, r):
-        case (Quantity(), _):
-            assert e.value == r[()]
-            assert e.units.symbol == r.attrs["units"]
-        case (str(), bytes()):
-            assert e == r.decode("utf-8")
-        case (str(), np.ndarray()):
-            safe_assert(e, r[0])
-        case (_, h5py.Dataset()):
-            safe_assert(e, r[()])
-        case _:
-            assert e == r
-
-
 @pytest.mark.sasdata
 @pytest.mark.parametrize("f", test_xml_file_names + test_hdf_file_names)
 def test_h5_serialise(f):
@@ -138,11 +123,10 @@ def test_h5_serialise(f):
         expected.save_h5(bio)
         bio.seek(0)
 
-        result = [x for x in hdf_load_data(bio).values()][0]
-
-        assert expected.metadata.title == result.metadata.title
-        assert expected.metadata.run == result.metadata.run
-        assert expected.metadata.definition == result.metadata.definition
-        assert expected.metadata.process == result.metadata.process
-        assert expected.metadata.instrument == result.metadata.instrument
-        assert expected.metadata.sample == result.metadata.sample
+        for result in hdf_load_data(bio).values():
+            assert expected.metadata.title == result.metadata.title
+            assert expected.metadata.run == result.metadata.run
+            assert expected.metadata.definition == result.metadata.definition
+            assert expected.metadata.process == result.metadata.process
+            assert expected.metadata.instrument == result.metadata.instrument
+            assert expected.metadata.sample == result.metadata.sample
