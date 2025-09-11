@@ -50,6 +50,7 @@ class Vec3:
         )
 
     def as_h5(self, f: h5py.Group):
+        """Export data onto an HDF5 group"""
         if self.x:
             self.x.as_h5(f, "x")
         if self.y:
@@ -77,6 +78,7 @@ class Rot3:
         )
 
     def as_h5(self, f: h5py.Group):
+        """Export data onto an HDF5 group"""
         if self.roll:
             self.roll.as_h5(f, "roll")
         if self.pitch:
@@ -124,6 +126,7 @@ class Detector:
         )
 
     def as_h5(self, group: h5py.Group):
+        """Export data onto an HDF5 group"""
         if self.name is not None:
             group.create_dataset("name", data=[self.name])
         if self.distance:
@@ -167,6 +170,7 @@ class Aperture:
 
 
     def as_h5(self, group: h5py.Group):
+        """Export data onto an HDF5 group"""
         if self.distance:
             self.distance.as_h5(group, "distance")
         if self.name:
@@ -201,6 +205,7 @@ class Collimation:
         )
 
     def as_h5(self, group: h5py.Group):
+        """Export data onto an HDF5 group"""
         if self.length:
             self.length.as_h5(group, "length")
         for idx, a in enumerate(self.apertures):
@@ -217,6 +222,7 @@ class BeamSize:
         return BeamSize(name=obj["name"], size=Vec3.from_json(obj["size"]))
 
     def as_h5(self, group: h5py.Group):
+        """Export data onto an HDF5 group"""
         if self.name:
             group.attrs["name"] = self.name
         if self.size:
@@ -258,6 +264,7 @@ class Source:
         )
 
     def as_h5(self, group: h5py.Group):
+        """Export data onto an HDF5 group"""
         if self.radiation:
             group.create_dataset("radiation", data=[self.radiation])
         if self.beam_shape:
@@ -317,6 +324,7 @@ class Sample:
         )
 
     def as_h5(self, f: h5py.Group):
+        """Export data onto an HDF5 group"""
         if self.name is not None:
             f.attrs["name"] = self.name
         if self.sample_id is not None:
@@ -385,6 +393,7 @@ class Process:
         )
 
     def as_h5(self, group: h5py.Group):
+        """Export data onto an HDF5 group"""
         if self.name is not None:
             group.create_dataset("name", data=[self.name])
         if self.date is not None:
@@ -426,6 +435,7 @@ class Instrument:
         )
 
     def as_h5(self, group: h5py.Group):
+        """Export data onto an HDF5 group"""
         if self.source:
             self.source.as_h5(group.create_group("sassource"))
         for idx, c in enumerate(self.collimations):
@@ -558,6 +568,7 @@ class Metadata:
         )
 
     def as_h5(self, f: h5py.Group):
+        """Export data onto an HDF5 group"""
         for idx, run in enumerate(self.run):
             f.create_dataset(f"run{idx:02d}", data=[run])
         if self.title is not None:
