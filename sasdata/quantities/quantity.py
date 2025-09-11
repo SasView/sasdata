@@ -1400,7 +1400,7 @@ class Quantity[QuantityType]:
         return str(self.hash_value)
 
     def as_h5(self, group: h5py.Group, name: str):
-        """Add this data onto a group under the given name"""
+        """Add this data onto a group as a dataset under the given name"""
         data = group.create_dataset(name, data=[self.value])
         data.attrs["units"] = self.units.symbol
 
