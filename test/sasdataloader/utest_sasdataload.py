@@ -44,13 +44,18 @@ test_xml_file_names = [
 
 def local_load(path: str):
     """Get local file path"""
-    return os.path.join(os.path.dirname(__file__), path)
+    base = os.path.join(os.path.dirname(__file__), path)
+    if (os.path.exists(f"{base}.h5")):
+        return f"{base}.h5"
+    if (os.path.exists(f"{base}.xml")):
+        return f"{base}.xml"
+    return f"{base}"
 
 
 @pytest.mark.sasdata
 @pytest.mark.parametrize("f", test_hdf_file_names)
 def test_hdf_load_file(f):
-    data = hdf_load_data(local_load(f"data/{f}.h5"))
+    data = hdf_load_data(local_load(f"data/{f}"))
 
     with open(local_load(f"reference/{f}.txt"), encoding="utf-8") as infile:
         expected = "".join(infile.readlines())
@@ -61,7 +66,7 @@ def test_hdf_load_file(f):
 @pytest.mark.sasdata
 @pytest.mark.parametrize("f", test_xml_file_names)
 def test_xml_load_file(f):
-    data = xml_load_data(local_load(f"data/{f}.xml"))
+    data = xml_load_data(local_load(f"data/{f}"))
 
     with open(local_load(f"reference/{f}.txt"), encoding="utf-8") as infile:
         expected = "".join(infile.readlines())
@@ -71,12 +76,12 @@ def test_xml_load_file(f):
 
 @pytest.mark.sasdata
 def test_filter_data():
-    data = xml_load_data(local_load("data/cansas1d_notitle.xml"))
+    data = xml_load_data(local_load("data/cansas1d_notitle"))
     for k, v in data.items():
         assert v.metadata.raw.filter("transmission") == ["0.327"]
         assert v.metadata.raw.filter("wavelength")[0] == Quantity(6.0, units.angstroms)
         assert v.metadata.raw.filter("SDD")[0] == Quantity(4.15, units.meters)
-    data = hdf_load_data(local_load("data/nxcansas_1Dand2D_multisasentry.h5"))
+    data = hdf_load_data(local_load("data/nxcansas_1Dand2D_multisasentry"))
     for k, v in data.items():
         assert v.metadata.raw.filter("radiation") == ["Spallation Neutron Source"]
         assert v.metadata.raw.filter("SDD") == [
@@ -88,7 +93,7 @@ def test_filter_data():
 @pytest.mark.sasdata
 @pytest.mark.parametrize("f", test_hdf_file_names)
 def test_json_serialise(f):
-    data = hdf_load_data(local_load(f"data/{f}.h5"))
+    data = hdf_load_data(local_load(f"data/{f}"))
 
     with open(local_load(f"json/{f}.json"), encoding="utf-8") as infile:
         expected = json.loads("".join(infile.readlines()))
@@ -98,7 +103,7 @@ def test_json_serialise(f):
 @pytest.mark.sasdata
 @pytest.mark.parametrize("f", test_hdf_file_names)
 def test_json_deserialise(f):
-    expected = hdf_load_data(local_load(f"data/{f}.h5"))["sasentry01"]
+    expected = hdf_load_data(local_load(f"data/{f}"))["sasentry01"]
 
     with open(local_load(f"json/{f}.json"), encoding="utf-8") as infile:
         parsed = SasData.from_json(json.loads("".join(infile.readlines())))
@@ -111,10 +116,10 @@ def test_json_deserialise(f):
 
 @pytest.mark.sasdata
 @pytest.mark.parametrize("f", test_xml_file_names + test_hdf_file_names)
-def test_h5_serialise(f):
+def test_h5_round_trip_serialise(f):
     try:
         result = xml_load_data(local_load(f"data/{f}.xml"))
-    except:
+    except OSError:
         result = hdf_load_data(local_load(f"data/{f}.h5"))
 
 
