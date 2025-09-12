@@ -108,7 +108,6 @@ class SasData:
         with h5py.File(path, "w") as f:
             f.attrs["name"] = self.name
             for idx, (key, entry) in enumerate(self._data_contents.items()):
-                print(key, entry)
                 group = f.create_group(f"sasentry{idx:02d}")
                 self.metadata.as_h5(group)
 
