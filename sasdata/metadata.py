@@ -10,12 +10,12 @@ Any useful metadata which cannot be included in these classes represent a bug in
 """
 
 import base64
-import h5py
 import json
 import re
 from dataclasses import dataclass, field, fields, is_dataclass
 from typing import Any
 
+import h5py
 import numpy as np
 from numpy import ndarray
 
