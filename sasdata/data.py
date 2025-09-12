@@ -1,6 +1,7 @@
-import numpy as np
-import h5py
 import typing
+
+import h5py
+import numpy as np
 
 from sasdata import dataset_types
 from sasdata.dataset_types import DatasetType

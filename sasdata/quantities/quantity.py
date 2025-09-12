@@ -1,8 +1,8 @@
 import hashlib
-import h5py
 import json
 from typing import Any, Self, TypeVar, Union
 
+import h5py
 import numpy as np
 from numpy._typing import ArrayLike
 
