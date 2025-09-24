@@ -1,4 +1,8 @@
 sasentry01
+  mask
+  Qy
+  Qx
+  I
 Metadata:
 
   , Run: 

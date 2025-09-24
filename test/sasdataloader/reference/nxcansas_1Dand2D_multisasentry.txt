@@ -1,4 +1,7 @@
 sasentry01
+  dQ
+  Q
+  I
 Metadata:
 
   MH4_5deg_16T_SLOW, Run: 33837
@@ -43,6 +46,9 @@ Source:
     Wavelength Spread: None
     Beam Size:         None
 sasentry02
+  Qy
+  Qx
+  I
 Metadata:
 
   MH4_5deg_16T_SLOW, Run: 33837
