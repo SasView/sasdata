@@ -1,4 +1,7 @@
 sasentry01
+  Qy
+  Qx
+  I
 Metadata:
 
   MH4_5deg_16T_SLOW, Run: 33837

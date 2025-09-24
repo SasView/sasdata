@@ -9,7 +9,7 @@ from h5py._hl.group import Group as HDF5Group
 from sasdata.data import SasData
 from sasdata.data_backing import Dataset as SASDataDataset
 from sasdata.data_backing import Group as SASDataGroup
-from sasdata.dataset_types import one_dim
+from sasdata.dataset_types import one_dim, two_dim
 from sasdata.metadata import (
     Aperture,
     BeamSize,
@@ -86,7 +86,7 @@ def connected_data(node: SASDataGroup, name_prefix="") -> dict[str, Quantity]:
     for name in node.children:
         child = node.children[name]
 
-        if "units" in child.attributes:
+        if "units" in child.attributes and child.attributes["units"]:
             units = parse(child.attributes["units"])
         else:
             units = GET_UNITS_FROM_ELSEWHERE
@@ -314,24 +314,27 @@ def load_data(filename: str) -> dict[str, SasData]:
 
             data_contents : dict[str, Quantity] = {}
 
-            entry_keys = [key for key in entry if "entry" in key]
+            entry_keys = entry
 
-            if "sasdata" not in entry_keys and "data" not in entry_keys:
+            if not [k for k in entry if k.startswith("sasdata") or k.startswith("data")]:
                 logger.warning("No sasdata or data key")
+                logger.warning(f"Known keys: {[k for k in entry_keys]}")
 
             for key in entry_keys:
                 component = entry[key]
                 lower_key = key.lower()
-                if lower_key == "sasdata" or lower_key == "data":
+                if lower_key.startswith("sasdata") or lower_key.startswith("data"):
                     datum = recurse_hdf5(component)
                     # TODO: Use named identifier
                     data_contents = connected_data(datum, "FILE_ID_HERE")
 
             metadata = parse_metadata(f[root_key])
 
+            dataset_type = two_dim if "Qy" in data_contents else one_dim
+
             loaded_data[root_key] = SasData(
                     name=root_key,
-                    dataset_type=one_dim,
+                    dataset_type=dataset_type,
                     data_contents=data_contents,
                     metadata=metadata,
                     verbose=False,
