@@ -19,7 +19,7 @@ def split_unit_str(unit_str: str) -> list[str]:
 def validate_unit_str(unit_str: str) -> bool:
     """Validate whether unit_str is valid. This doesn't mean that the unit specified in unit_str exists but rather it
     only consists of letters, and numbers as a unit string should."""
-    return fullmatch(r"[A-Za-zΩµ%Å^1-9\-\+/\ \._]+", unit_str) is not None
+    return fullmatch(r"[A-Za-zΩµ%Å^1-9⁻¹-⁹\-\+/\ \._]+", unit_str) is not None
 
 
 def parse_single_unit(
@@ -127,7 +127,7 @@ def parse_unit(unit_str: str, longest_unit: bool = True) -> Unit:
         return result
     try:
         if not validate_unit_str(unit_str):
-            raise ValueError("unit_str contains forbidden characters.")
+            raise ValueError(f"unit_str ({unit_str}) contains forbidden characters.")
         parsed_unit = Unit(1, Dimensions())
         unit_stack = parse_unit_stack(unit_str, longest_unit)
         for unit in unit_stack:
