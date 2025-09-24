@@ -558,12 +558,12 @@ class Metadata:
     @staticmethod
     def from_json(obj):
         return Metadata(
-            title=obj["title"],
+            title=obj["title"] if obj["title"] else None,
             run=obj["run"],
-            definition=obj["definition"],
+            definition=obj["definition"] if obj["definition"] else None,
             process=[Process.from_json(p) for p in obj["process"]],
-            sample=Sample.from_json(obj["sample"]),
-            instrument=Instrument.from_json(obj["instrument"]),
+            sample=Sample.from_json(obj["sample"]) if obj["sample"] else None,
+            instrument=Instrument.from_json(obj["instrument"]) if obj["instrument"] else None,
             raw=MetaNode.from_json(obj["raw"]),
         )
 
@@ -591,6 +591,8 @@ class MetadataEncoder(json.JSONEncoder):
         match obj:
             case None:
                 return None
+            case bytes():
+                return obj.decode("utf-8")
             case NamedUnit():
                 return obj.name
             case Quantity():
