@@ -124,20 +124,25 @@ def test_json_deserialise(f):
 @pytest.mark.parametrize("f", test_xml_file_names + test_hdf_file_names)
 def test_h5_round_trip_serialise(f):
     try:
-        result = xml_load_data(local_load(f"data/{f}.xml"))
+        expected = xml_load_data(local_load(f"data/{f}.xml"))
     except OSError:
-        result = hdf_load_data(local_load(f"data/{f}.h5"))
+        expected = hdf_load_data(local_load(f"data/{f}.h5"))
 
+    bio = io.BytesIO()
+    SasData.save_h5(expected, bio)
+    bio.seek(0)
 
-    for name, expected in result.items():
-        bio = io.BytesIO()
-        expected.save_h5(bio)
-        bio.seek(0)
+    result = hdf_load_data(bio)
+    bio.close()
 
-        for result in hdf_load_data(bio).values():
-            assert expected.metadata.title == result.metadata.title
-            assert expected.metadata.run == result.metadata.run
-            assert expected.metadata.definition == result.metadata.definition
-            assert expected.metadata.process == result.metadata.process
-            assert expected.metadata.instrument == result.metadata.instrument
-            assert expected.metadata.sample == result.metadata.sample
+    for name, entry in result.items():
+        assert expected[name].metadata.title == entry.metadata.title
+        assert expected[name].metadata.run == entry.metadata.run
+        assert expected[name].metadata.definition == entry.metadata.definition
+        assert expected[name].metadata.process == entry.metadata.process
+        assert expected[name].metadata.instrument == entry.metadata.instrument
+        assert expected[name].metadata.sample == entry.metadata.sample
+        assert expected[name].ordinate.units == entry.ordinate.units
+        assert np.all(expected[name].ordinate.value == entry.ordinate.value)
+        assert expected[name].abscissae.units == entry.abscissae.units
+        # assert np.all(expected[name].abscissae.value == entry.abscissae.value)
