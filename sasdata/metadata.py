@@ -171,17 +171,17 @@ class Aperture:
 
     def as_h5(self, group: h5py.Group):
         """Export data onto an HDF5 group"""
-        if self.distance:
+        if self.distance is not None:
             self.distance.as_h5(group, "distance")
-        if self.name:
+        if self.name is not None:
             group.attrs["name"] = self.name
         if self.type_ is not None:
             group.attrs["type"] = self.type_
         if self.size:
-            group = group.create_group("size")
-            self.size.as_h5(group)
+            size_group = group.create_group("size")
+            self.size.as_h5(size_group)
             if self.size_name is not None:
-                group.attrs["name"] = self.size_name
+                size_group.attrs["name"] = self.size_name
 
 
 
