@@ -1,41 +1,9 @@
 sasentry01
+  Q
+  I
 Metadata:
 
-  None, Run: None
-  ===============
+  None, Run: []
+  =============
 
 Definition: None
-Process:
-    Name: None
-    Date: None
-    Description: None
-    Term: None
-    Notes: None
-Sample:
-   ID:           None
-   Transmission: None
-   Thickness:    None
-   Temperature:  None
-   Position:     None
-   Orientation:  None
-Detector:
-   Name:         None
-   Distance:     None
-   Offset:       None
-   Orientation:  None
-   Beam center:  None
-   Pixel size:   None
-   Slit length:  None
-Source:
-    Radiation:         None
-    Shape:             None
-    Wavelength:        None
-    Min. Wavelength:   None
-    Max. Wavelength:   None
-    Wavelength Spread: None
-    Beam Size:         None
-Transmission Spectrum:
-    Name:             None
-    Timestamp:        None
-    Wavelengths:      None
-    Transmission:     None
