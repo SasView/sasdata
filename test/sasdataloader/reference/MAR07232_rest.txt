@@ -1,4 +1,7 @@
 sasentry01
+  Qy
+  Qx
+  I
 Metadata:
 
   MAR07232_rest_out.dat, Run: 2

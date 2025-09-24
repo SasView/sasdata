@@ -27,7 +27,7 @@ one_dim = DatasetType(
 two_dim = DatasetType(
             name="2D I vs Q",
             required=["Qx", "Qy", "I"],
-            optional=["dQx", "dQy", "dQz", "dI", "Qz", "ShadowFactor"],
+            optional=["dQx", "dQy", "dQz", "dI", "Qz", "ShadowFactor", "mask"],
             expected_orders=[
                 ["Qx", "Qy", "I"],
                 ["Qx", "Qy", "I", "dI"],
