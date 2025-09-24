@@ -62,7 +62,7 @@ jobs:
       if: env.BUILD_WHEEL
       uses: actions/upload-artifact@v4
       with:
-        name: sasdata-${{ matrix.os }}-${{ matrix.python-version }}.whl
+        name: sasdata-${{ matrix.os }}-${{ matrix.python-version }}
         compression-level: 0  # Upload raw wheel for pypi publishing
         path: dist/*whl
         if-no-files-found: ignore
@@ -85,16 +85,13 @@ jobs:
     needs:
       - unit-test
     runs-on: ubuntu-latest
-    environment:
-      name: pypi
-      url: https://pypi.org/p/sasdata
     permissions:
       id-token: write
     steps:
       - name: Download all the dists
         uses: actions/download-artifact@v4
         with:
-          path: dist/
+          path: dist
       - name: Publish distribution to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
