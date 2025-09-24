@@ -190,6 +190,8 @@ def parse_named_unit_from_group(unit_str: str, from_group: UnitGroup) -> NamedUn
 
 
 def parse(string: str, name_lookup: bool = True, longest_unit: bool = True, lookup_rtol: float = 1e-14):
+    if type(string) is not str:
+        string = string.decode("utf-8")
     unit = parse_unit(string, longest_unit=longest_unit)
     if name_lookup:
         named = find_named_unit(unit, rtol=lookup_rtol)
