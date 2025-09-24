@@ -1,6 +1,7 @@
 import typing
 
 import h5py
+from h5py._hl.group import Group as HDF5Group
 import numpy as np
 
 from sasdata import dataset_types
@@ -21,7 +22,7 @@ class SasData:
         self.name = name
         # validate data contents
         if not all([key in dataset_type.optional or key in dataset_type.required for key in data_contents]):
-            raise ValueError("Columns don't match the dataset type")
+            raise ValueError(f"Columns don't match the dataset type: {[key for key in data_contents]}")
         self._data_contents = data_contents
         self._verbose = verbose
 
@@ -103,13 +104,25 @@ class SasData:
             metadata=Metadata.from_json(obj["metadata"]),
         )
 
-    def save_h5(self, path: str | typing.BinaryIO):
+    def _save_h5(self, sasentry: HDF5Group):
         """Export data into HDF5 file"""
+        # with h5py.File(path, "w") as f:
+        sasentry.attrs["name"] = self.name
+        self.metadata.as_h5(sasentry)
+        group = sasentry.create_group("sasdata01")
+        for idx, (key, sasdata) in enumerate(self._data_contents.items()):
+            sasdata.as_h5(group, key)
+
+
+    @staticmethod
+    def save_h5(data: dict[str, typing.Self], path: str | typing.BinaryIO):
         with h5py.File(path, "w") as f:
-            f.attrs["name"] = self.name
-            for idx, (key, entry) in enumerate(self._data_contents.items()):
-                group = f.create_group(f"sasentry{idx:02d}")
-                self.metadata.as_h5(group)
+            for idx, (key, data) in enumerate(data.items()):
+                sasentry = f.create_group(f"sasentry{idx+1:02d}")
+                if not key.startswith("sasentry"):
+                    sasentry.attrs["sasview_key"] = key
+                data._save_h5(sasentry)
+
 
 
 class SasDataEncoder(MetadataEncoder):
