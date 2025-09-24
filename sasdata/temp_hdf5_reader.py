@@ -332,7 +332,9 @@ def load_data(filename: str) -> dict[str, SasData]:
 
             dataset_type = two_dim if "Qy" in data_contents else one_dim
 
-            loaded_data[root_key] = SasData(
+            entry_key = entry.attrs["sasview_key"] if "sasview_key" in entry.attrs else root_key
+
+            loaded_data[entry_key] = SasData(
                     name=root_key,
                     dataset_type=dataset_type,
                     data_contents=data_contents,
