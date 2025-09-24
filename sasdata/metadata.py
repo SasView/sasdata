@@ -541,11 +541,11 @@ class Metadata:
     raw: MetaNode
 
     def summary(self):
-        run_string = self.run[0] if len(self.run) == 1 else self.run
+        run_string = str(self.run[0] if len(self.run) == 1 else self.run)
         return (
             f"  {self.title}, Run: {run_string}\n"
             + "  "
-            + "=" * len(self.title if self.title else "")
+            + "=" * len(str(self.title))
             + "======="
             + "=" * len(run_string)
             + "\n\n"
