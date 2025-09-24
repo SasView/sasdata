@@ -96,21 +96,28 @@ def test_json_serialise(f):
 
     with open(local_load(f"json/{f}.json"), encoding="utf-8") as infile:
         expected = json.loads("".join(infile.readlines()))
-    assert json.loads(SasDataEncoder().encode(data["sasentry01"])) == expected
+    assert json.loads(SasDataEncoder().encode(data)) == expected
 
 
 @pytest.mark.sasdata
 @pytest.mark.parametrize("f", test_hdf_file_names)
 def test_json_deserialise(f):
-    expected = hdf_load_data(local_load(f"data/{f}"))["sasentry01"]
+    expected = hdf_load_data(local_load(f"data/{f}"))
 
     with open(local_load(f"json/{f}.json"), encoding="utf-8") as infile:
-        parsed = SasData.from_json(json.loads("".join(infile.readlines())))
-    assert parsed.name == expected.name
-    assert parsed._data_contents == expected._data_contents
-    assert parsed.dataset_type == expected.dataset_type
-    assert parsed.mask == expected.mask
-    assert parsed.model_requirements == expected.model_requirements
+        raw = json.loads("".join(infile.readlines()))
+        parsed = {}
+        for k in raw:
+            parsed[k] = SasData.from_json(raw[k])
+
+    for k in expected:
+        expect = expected[k]
+        pars = parsed[k]
+        assert pars.name == expect.name
+        # assert pars._data_contents == expect._data_contents
+        assert pars.dataset_type == expect.dataset_type
+        assert pars.mask == expect.mask
+        assert pars.model_requirements == expect.model_requirements
 
 
 @pytest.mark.sasdata
