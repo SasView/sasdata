@@ -1,3 +1,6 @@
+import typing
+
+import h5py
 import numpy as np
 
 from sasdata import dataset_types
@@ -17,12 +20,7 @@ class SasData:
     ):
         self.name = name
         # validate data contents
-        if not all(
-            [
-                key in dataset_type.optional or key in dataset_type.required
-                for key in data_contents
-            ]
-        ):
+        if not all([key in dataset_type.optional or key in dataset_type.required for key in data_contents]):
             raise ValueError("Columns don't match the dataset type")
         self._data_contents = data_contents
         self._verbose = verbose
@@ -104,6 +102,14 @@ class SasData:
             data_contents=obj["data_contents"],
             metadata=Metadata.from_json(obj["metadata"]),
         )
+
+    def save_h5(self, path: str | typing.BinaryIO):
+        """Export data into HDF5 file"""
+        with h5py.File(path, "w") as f:
+            f.attrs["name"] = self.name
+            for idx, (key, entry) in enumerate(self._data_contents.items()):
+                group = f.create_group(f"sasentry{idx:02d}")
+                self.metadata.as_h5(group)
 
 
 class SasDataEncoder(MetadataEncoder):

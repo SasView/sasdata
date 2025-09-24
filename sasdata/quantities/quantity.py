@@ -2,6 +2,7 @@ import hashlib
 import json
 from typing import Any, Self, TypeVar, Union
 
+import h5py
 import numpy as np
 from numpy._typing import ArrayLike
 
@@ -1397,6 +1398,11 @@ class Quantity[QuantityType]:
     @property
     def string_repr(self):
         return str(self.hash_value)
+
+    def as_h5(self, group: h5py.Group, name: str):
+        """Add this data onto a group as a dataset under the given name"""
+        data = group.create_dataset(name, data=[self.value])
+        data.attrs["units"] = self.units.symbol
 
 
 class NamedQuantity[QuantityType](Quantity[QuantityType]):

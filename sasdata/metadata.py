@@ -15,6 +15,7 @@ import re
 from dataclasses import dataclass, field, fields, is_dataclass
 from typing import Any
 
+import h5py
 import numpy as np
 from numpy import ndarray
 
@@ -48,6 +49,15 @@ class Vec3:
             z=from_json_quantity(obj["z"]),
         )
 
+    def as_h5(self, f: h5py.Group):
+        """Export data onto an HDF5 group"""
+        if self.x:
+            self.x.as_h5(f, "x")
+        if self.y:
+            self.y.as_h5(f, "y")
+        if self.z:
+            self.z.as_h5(f, "z")
+
 
 @dataclass(kw_only=True)
 class Rot3:
@@ -66,6 +76,15 @@ class Rot3:
             pitch=from_json_quantity(obj["pitch"]),
             yaw=from_json_quantity(obj["yaw"]),
         )
+
+    def as_h5(self, f: h5py.Group):
+        """Export data onto an HDF5 group"""
+        if self.roll:
+            self.roll.as_h5(f, "roll")
+        if self.pitch:
+            self.pitch.as_h5(f, "pitch")
+        if self.yaw:
+            self.yaw.as_h5(f, "yaw")
 
 
 @dataclass(kw_only=True)
@@ -106,6 +125,22 @@ class Detector:
             slit_length=from_json_quantity(obj["slit_length"]),
         )
 
+    def as_h5(self, group: h5py.Group):
+        """Export data onto an HDF5 group"""
+        if self.name is not None:
+            group.create_dataset("name", data=[self.name])
+        if self.distance:
+            self.distance.as_h5(group, "SDD")
+        if self.offset:
+            self.offset.as_h5(group.create_group("offset"))
+        if self.orientation:
+            self.orientation.as_h5(group.create_group("orientation"))
+        if self.beam_center:
+            self.beam_center.as_h5(group.create_group("beam_center"))
+        if self.pixel_size:
+            self.pixel_size.as_h5(group.create_group("pixel_size"))
+        if self.slit_length:
+            self.slit_length.as_h5(group, "slit_length")
 
 @dataclass(kw_only=True)
 class Aperture:
@@ -134,6 +169,22 @@ class Aperture:
         )
 
 
+    def as_h5(self, group: h5py.Group):
+        """Export data onto an HDF5 group"""
+        if self.distance is not None:
+            self.distance.as_h5(group, "distance")
+        if self.name is not None:
+            group.attrs["name"] = self.name
+        if self.type_ is not None:
+            group.attrs["type"] = self.type_
+        if self.size:
+            size_group = group.create_group("size")
+            self.size.as_h5(size_group)
+            if self.size_name is not None:
+                size_group.attrs["name"] = self.size_name
+
+
+
 @dataclass(kw_only=True)
 class Collimation:
     """
@@ -153,6 +204,13 @@ class Collimation:
             apertures=list(map(Aperture.from_json, obj["apertures"])),
         )
 
+    def as_h5(self, group: h5py.Group):
+        """Export data onto an HDF5 group"""
+        if self.length:
+            self.length.as_h5(group, "length")
+        for idx, a in enumerate(self.apertures):
+            a.as_h5(group.create_group(f"sasaperture{idx:02d}"))
+
 
 @dataclass(kw_only=True)
 class BeamSize:
@@ -162,6 +220,13 @@ class BeamSize:
     @staticmethod
     def from_json(obj):
         return BeamSize(name=obj["name"], size=Vec3.from_json(obj["size"]))
+
+    def as_h5(self, group: h5py.Group):
+        """Export data onto an HDF5 group"""
+        if self.name:
+            group.attrs["name"] = self.name
+        if self.size:
+            self.size.as_h5(group)
 
 
 @dataclass(kw_only=True)
@@ -197,6 +262,26 @@ class Source:
             wavelength_max=obj["wavelength_max"],
             wavelength_spread=obj["wavelength_spread"],
         )
+
+    def as_h5(self, group: h5py.Group):
+        """Export data onto an HDF5 group"""
+        if self.radiation:
+            group.create_dataset("radiation", data=[self.radiation])
+        if self.beam_shape:
+            group.create_dataset("beam_shape", data=[self.beam_shape])
+        if self.beam_size:
+            self.beam_size.as_h5(group.create_group("beam_size"))
+        if self.wavelength:
+            self.wavelength.as_h5(group, "wavelength")
+        if self.wavelength_min:
+            self.wavelength_min.as_h5(group, "wavelength_min")
+        if self.wavelength_max:
+            self.wavelength_max.as_h5(group, "wavelength_max")
+        if self.wavelength_spread:
+            self.wavelength_spread.as_h5(group, "wavelength_spread")
+
+
+
 
 
 @dataclass(kw_only=True)
@@ -237,6 +322,25 @@ class Sample:
             orientation=obj["orientation"],
             details=obj["details"],
         )
+
+    def as_h5(self, f: h5py.Group):
+        """Export data onto an HDF5 group"""
+        if self.name is not None:
+            f.attrs["name"] = self.name
+        if self.sample_id is not None:
+            f.create_dataset("ID", data=[self.sample_id])
+        if self.thickness:
+            self.thickness.as_h5(f, "thickness")
+        if self.transmission is not None:
+            f.create_dataset("transmission", data=[self.transmission])
+        if self.temperature:
+            self.temperature.as_h5(f, "temperature")
+        if self.position:
+            self.position.as_h5(f.create_group("position"))
+        if self.orientation:
+            self.orientation.as_h5(f.create_group("orientation"))
+        if self.details:
+            f.create_dataset("details", data=self.details)
 
 
 @dataclass(kw_only=True)
@@ -288,6 +392,26 @@ class Process:
             notes=obj["notes"],
         )
 
+    def as_h5(self, group: h5py.Group):
+        """Export data onto an HDF5 group"""
+        if self.name is not None:
+            group.create_dataset("name", data=[self.name])
+        if self.date is not None:
+            group.create_dataset("date", data=[self.date])
+        if self.description is not None:
+            group.create_dataset("description", data=[self.description])
+        if self.terms:
+            for idx, (term, value) in enumerate(self.terms.items()):
+                node = group.create_group(f"term{idx:02d}")
+                node.attrs["name"] = term
+                if type(value) is Quantity:
+                    node.attrs["value"] = value.value
+                    node.attrs["unit"] = value.units.symbol
+                else:
+                    node.attrs["value"] = value
+        for idx, note in enumerate(self.notes):
+            group.create_dataset(f"note{idx:02d}", data=[note])
+
 
 @dataclass
 class Instrument:
@@ -309,6 +433,15 @@ class Instrument:
             source=Source.from_json(obj["source"]),
             detector=list(map(Detector.from_json, obj["detector"])),
         )
+
+    def as_h5(self, group: h5py.Group):
+        """Export data onto an HDF5 group"""
+        if self.source:
+            self.source.as_h5(group.create_group("sassource"))
+        for idx, c in enumerate(self.collimations):
+            c.as_h5(group.create_group(f"sascollimation{idx:02d}"))
+        for idx, d in enumerate(self.detector):
+            d.as_h5(group.create_group(f"sasdetector{idx:02d}"))
 
 
 @dataclass(kw_only=True)
@@ -360,7 +493,6 @@ class MetaNode:
                 if type(result) is bool and not result:
                     return False
             case _:
-                print(type(self.contents))
                 if self.contents != other.contents:
                     return False
         for k, v in self.attrs.items():
@@ -398,7 +530,7 @@ class MetaNode:
         )
 
 
-@dataclass(kw_only=True)
+@dataclass(kw_only=True, eq=True)
 class Metadata:
     title: str | None
     run: list[str]
@@ -434,6 +566,24 @@ class Metadata:
             instrument=Instrument.from_json(obj["instrument"]),
             raw=MetaNode.from_json(obj["raw"]),
         )
+
+    def as_h5(self, f: h5py.Group):
+        """Export data onto an HDF5 group"""
+        for idx, run in enumerate(self.run):
+            f.create_dataset(f"run{idx:02d}", data=[run])
+        if self.title is not None:
+            f.create_dataset("title", data=[self.title])
+        if self.definition is not None:
+            f.create_dataset("definition", data=[self.definition])
+        if self.process:
+            for idx, process in enumerate(self.process):
+                name = f"sasprocess{idx:02d}"
+                process.as_h5(f.create_group(name))
+        if self.sample:
+            self.sample.as_h5(f.create_group("sassample"))
+        if self.instrument:
+            self.instrument.as_h5(f.create_group("sasinstrument"))
+        # self.raw.as_h5(meta) if self.raw else None
 
 
 class MetadataEncoder(json.JSONEncoder):

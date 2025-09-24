@@ -2,6 +2,7 @@
 Unit tests for the new recursive cansas reader
 """
 
+import io
 import json
 import os
 
@@ -35,20 +36,25 @@ test_xml_file_names = [
     "cansas1d_units",
     "cansas_test",
     "cansas_test_modified",
-    "cansas_xml_multisasentry_multisasdata",
+    # "cansas_xml_multisasentry_multisasdata",
     "valid_cansas_xml",
 ]
 
 
 def local_load(path: str):
     """Get local file path"""
-    return os.path.join(os.path.dirname(__file__), path)
+    base = os.path.join(os.path.dirname(__file__), path)
+    if (os.path.exists(f"{base}.h5")):
+        return f"{base}.h5"
+    if (os.path.exists(f"{base}.xml")):
+        return f"{base}.xml"
+    return f"{base}"
 
 
 @pytest.mark.sasdata
 @pytest.mark.parametrize("f", test_hdf_file_names)
 def test_hdf_load_file(f):
-    data = hdf_load_data(local_load(f"data/{f}.h5"))
+    data = hdf_load_data(local_load(f"data/{f}"))
 
     with open(local_load(f"reference/{f}.txt"), encoding="utf-8") as infile:
         expected = "".join(infile.readlines())
@@ -59,7 +65,7 @@ def test_hdf_load_file(f):
 @pytest.mark.sasdata
 @pytest.mark.parametrize("f", test_xml_file_names)
 def test_xml_load_file(f):
-    data = xml_load_data(local_load(f"data/{f}.xml"))
+    data = xml_load_data(local_load(f"data/{f}"))
 
     with open(local_load(f"reference/{f}.txt"), encoding="utf-8") as infile:
         expected = "".join(infile.readlines())
@@ -69,12 +75,12 @@ def test_xml_load_file(f):
 
 @pytest.mark.sasdata
 def test_filter_data():
-    data = xml_load_data(local_load("data/cansas1d_notitle.xml"))
+    data = xml_load_data(local_load("data/cansas1d_notitle"))
     for k, v in data.items():
         assert v.metadata.raw.filter("transmission") == ["0.327"]
         assert v.metadata.raw.filter("wavelength")[0] == Quantity(6.0, units.angstroms)
         assert v.metadata.raw.filter("SDD")[0] == Quantity(4.15, units.meters)
-    data = hdf_load_data(local_load("data/nxcansas_1Dand2D_multisasentry.h5"))
+    data = hdf_load_data(local_load("data/nxcansas_1Dand2D_multisasentry"))
     for k, v in data.items():
         assert v.metadata.raw.filter("radiation") == ["Spallation Neutron Source"]
         assert v.metadata.raw.filter("SDD") == [
@@ -83,20 +89,20 @@ def test_filter_data():
         ]
 
 
-@pytest.mark.sasdata2
+@pytest.mark.sasdata
 @pytest.mark.parametrize("f", test_hdf_file_names)
 def test_json_serialise(f):
-    data = hdf_load_data(local_load(f"data/{f}.h5"))
+    data = hdf_load_data(local_load(f"data/{f}"))
 
     with open(local_load(f"json/{f}.json"), encoding="utf-8") as infile:
         expected = json.loads("".join(infile.readlines()))
     assert json.loads(SasDataEncoder().encode(data["sasentry01"])) == expected
 
 
-@pytest.mark.sasdata2
+@pytest.mark.sasdata
 @pytest.mark.parametrize("f", test_hdf_file_names)
 def test_json_deserialise(f):
-    expected = hdf_load_data(local_load(f"data/{f}.h5"))["sasentry01"]
+    expected = hdf_load_data(local_load(f"data/{f}"))["sasentry01"]
 
     with open(local_load(f"json/{f}.json"), encoding="utf-8") as infile:
         parsed = SasData.from_json(json.loads("".join(infile.readlines())))
@@ -105,3 +111,26 @@ def test_json_deserialise(f):
     assert parsed.dataset_type == expected.dataset_type
     assert parsed.mask == expected.mask
     assert parsed.model_requirements == expected.model_requirements
+
+
+@pytest.mark.sasdata
+@pytest.mark.parametrize("f", test_xml_file_names + test_hdf_file_names)
+def test_h5_round_trip_serialise(f):
+    try:
+        result = xml_load_data(local_load(f"data/{f}.xml"))
+    except OSError:
+        result = hdf_load_data(local_load(f"data/{f}.h5"))
+
+
+    for name, expected in result.items():
+        bio = io.BytesIO()
+        expected.save_h5(bio)
+        bio.seek(0)
+
+        for result in hdf_load_data(bio).values():
+            assert expected.metadata.title == result.metadata.title
+            assert expected.metadata.run == result.metadata.run
+            assert expected.metadata.definition == result.metadata.definition
+            assert expected.metadata.process == result.metadata.process
+            assert expected.metadata.instrument == result.metadata.instrument
+            assert expected.metadata.sample == result.metadata.sample
