@@ -1,4 +1,5 @@
 import pytest
+import re
 
 from sasdata.quantities import units
 from sasdata.quantities.unit_parser import parse_named_unit, parse_named_unit_from_group, parse_unit
@@ -72,7 +73,7 @@ def test_parse_errors():
     with pytest.raises(ValueError, match="That unit cannot be parsed from the specified group."):
         parse_named_unit_from_group("km", units.speed)
     # Fails because part of the unit matches but there is an unknown unit '@'
-    with pytest.raises(ValueError, match="unit_str contains forbidden characters."):
+    with pytest.raises(ValueError, match=re.escape("unit_str (km@-1) contains forbidden characters.")):
         parse_unit("km@-1")
     # Fails because 'da' is not a unit.
     with pytest.raises(ValueError, match="Unit string contains an unrecognised pattern."):
