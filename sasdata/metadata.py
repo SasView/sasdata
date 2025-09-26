@@ -71,7 +71,7 @@ class Rot3:
     def from_json(obj: dict) -> Quantity | None:
         if obj is None:
             return None
-        return Vec3(
+        return Rot3(
             roll=from_json_quantity(obj["roll"]),
             pitch=from_json_quantity(obj["pitch"]),
             yaw=from_json_quantity(obj["yaw"]),
@@ -165,7 +165,7 @@ class Aperture:
             size=Vec3.from_json(obj["size"]),
             size_name=obj["size_name"],
             name=obj["name"],
-            type_=obj["type_"],
+            type_=obj["type"],
         )
 
 
@@ -596,7 +596,7 @@ class MetadataEncoder(json.JSONEncoder):
             case NamedUnit():
                 return obj.name
             case Quantity():
-                return {"value": obj.value, "units": obj.units}
+                return {"value": obj.value, "units": obj.units.ascii_symbol}
             case ndarray():
                 return {
                     "type": "ndarray",
