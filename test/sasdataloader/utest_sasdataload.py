@@ -145,4 +145,4 @@ def test_h5_round_trip_serialise(f):
         assert expected[name].ordinate.units == entry.ordinate.units
         assert np.all(expected[name].ordinate.value == entry.ordinate.value)
         assert expected[name].abscissae.units == entry.abscissae.units
-        # assert np.all(expected[name].abscissae.value == entry.abscissae.value)
+        assert np.all(expected[name].abscissae.value == entry.abscissae.value)
