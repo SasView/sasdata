@@ -50,6 +50,12 @@ def local_load(path: str):
         return f"{base}.xml"
     return f"{base}"
 
+def example_data_load(path: str):
+    try:
+        return xml_load_data(local_load(f"data/{path}.xml"))
+    except OSError:
+        return hdf_load_data(local_load(f"data/{path}.h5"))
+
 
 @pytest.mark.sasdata
 @pytest.mark.parametrize("f", test_hdf_file_names)
@@ -90,9 +96,9 @@ def test_filter_data():
 
 
 @pytest.mark.sasdata
-@pytest.mark.parametrize("f", test_hdf_file_names)
+@pytest.mark.parametrize("f", test_hdf_file_names + test_xml_file_names)
 def test_json_serialise(f):
-    data = hdf_load_data(local_load(f"data/{f}"))
+    data = example_data_load(f)
 
     with open(local_load(f"json/{f}.json"), encoding="utf-8") as infile:
         expected = json.loads("".join(infile.readlines()))
@@ -100,9 +106,9 @@ def test_json_serialise(f):
 
 
 @pytest.mark.sasdata
-@pytest.mark.parametrize("f", test_hdf_file_names)
+@pytest.mark.parametrize("f", test_hdf_file_names + test_xml_file_names)
 def test_json_deserialise(f):
-    expected = hdf_load_data(local_load(f"data/{f}"))
+    expected = example_data_load(f)
 
     with open(local_load(f"json/{f}.json"), encoding="utf-8") as infile:
         raw = json.loads("".join(infile.readlines()))
@@ -123,10 +129,7 @@ def test_json_deserialise(f):
 @pytest.mark.sasdata
 @pytest.mark.parametrize("f", test_xml_file_names + test_hdf_file_names)
 def test_h5_round_trip_serialise(f):
-    try:
-        expected = xml_load_data(local_load(f"data/{f}.xml"))
-    except OSError:
-        expected = hdf_load_data(local_load(f"data/{f}.h5"))
+    expected = example_data_load(f)
 
     bio = io.BytesIO()
     SasData.save_h5(expected, bio)
