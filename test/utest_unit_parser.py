@@ -1,5 +1,6 @@
-import pytest
 import re
+
+import pytest
 
 from sasdata.quantities import units
 from sasdata.quantities.unit_parser import parse_named_unit, parse_named_unit_from_group, parse_unit
