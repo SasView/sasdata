@@ -138,7 +138,7 @@ class SasDataEncoder(MetadataEncoder):
             case SasData():
                 return {
                     "name": obj.name,
-                    "data_contents": {},
+                    "data_contents": obj._data_contents,
                     "type": obj.dataset_type,
                     "mask": obj.mask,
                     "metadata": obj.metadata,
