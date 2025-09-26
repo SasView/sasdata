@@ -1,8 +1,8 @@
 import typing
 
 import h5py
-from h5py._hl.group import Group as HDF5Group
 import numpy as np
+from h5py._hl.group import Group as HDF5Group
 
 from sasdata import dataset_types
 from sasdata.dataset_types import DatasetType
