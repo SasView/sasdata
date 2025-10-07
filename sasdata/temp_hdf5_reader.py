@@ -325,8 +325,7 @@ def load_data(filename: str) -> dict[str, SasData]:
                 lower_key = key.lower()
                 if lower_key.startswith("sasdata") or lower_key.startswith("data"):
                     datum = recurse_hdf5(component)
-                    # TODO: Use named identifier
-                    data_contents = connected_data(datum, "FILE_ID_HERE")
+                    data_contents = connected_data(datum, str(filename))
 
             metadata = parse_metadata(f[root_key])
 
