@@ -106,9 +106,11 @@ class SasData:
 
     def _save_h5(self, sasentry: HDF5Group):
         """Export data into HDF5 file"""
-        # with h5py.File(path, "w") as f:
         sasentry.attrs["name"] = self.name
         self.metadata.as_h5(sasentry)
+
+        # We export each data set into its own entry, so we only ever
+        # need sasdata01
         group = sasentry.create_group("sasdata01")
         for idx, (key, sasdata) in enumerate(self._data_contents.items()):
             sasdata.as_h5(group, key)
