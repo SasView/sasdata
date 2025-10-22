@@ -328,6 +328,7 @@ def is_uncertainty(column: str) -> bool:
     return False
 
 
+@pytest.mark.dataload
 @pytest.mark.parametrize("test_case", test_cases)
 def test_load_file(test_case: BaseTestCase):
     match test_case:
