@@ -63,6 +63,10 @@ def local_data_load(path: str):
     return local_load(f"{os.path.join('data', path)}")
 
 
+def local_json_load(path: str):
+    return local_load(f"{os.path.join('json', path)}")
+
+
 def example_data_load(path: str):
     try:
         return xml_load_data(local_load(f"data/{path}.xml"))
@@ -86,42 +90,12 @@ def test_filter_data():
         ]
 
 
-@pytest.mark.sasdata
-@pytest.mark.parametrize("f", test_xml_file_names)
-def test_json_serialise(f):
-    data = example_data_load(f)
-
-    with open(local_load(f"json/{f}.json"), encoding="utf-8") as infile:
-        expected = json.loads("".join(infile.readlines()))
-    assert json.loads(SasDataEncoder().encode(data)) == expected
-
-
-@pytest.mark.sasdata
-@pytest.mark.parametrize("f", test_xml_file_names)
-def test_json_deserialise(f):
-    expected = example_data_load(f)
-
-    with open(local_load(f"json/{f}.json"), encoding="utf-8") as infile:
-        raw = json.loads("".join(infile.readlines()))
-        parsed = {}
-        for k in raw:
-            parsed[k] = SasData.from_json(raw[k])
-
-    for k in expected:
-        expect = expected[k]
-        pars = parsed[k]
-        assert pars.name == expect.name
-        # assert pars._data_contents == expect._data_contents
-        assert pars.dataset_type == expect.dataset_type
-        assert pars.mask == expect.mask
-        assert pars.model_requirements == expect.model_requirements
-
-
 @dataclass(kw_only=True)
 class BaseTestCase:
     expected_values: dict[int, dict[str, float]]
     expected_metadata: dict[str, Any] = field(default_factory=dict)
     metadata_file: None | str = None
+    json_file: None | str = None
     round_trip: bool = False
 
 
@@ -269,7 +243,6 @@ test_cases = [
     ),
     Hdf5TestCase(
         filename=local_data_load("x25000_no_di.h5"),
-        metadata_file=local_reference_load("x25000_no_di.txt"),
         expected_values={},
     ),
     Hdf5TestCase(
@@ -286,79 +259,91 @@ test_cases = [
         filename=local_data_load("ISIS_1_0.xml"),
         entry="79680main_1D_2.2_10.0",
         metadata_file=local_reference_load("ISIS_1_0.txt"),
+        json_file=local_json_load("ISIS_1_0.json"),
         expected_values={},
     ),
     XmlTestCase(
         filename=local_data_load("ISIS_1_1.xml"),
         entry="79680main_1D_2.2_10.0",
         metadata_file=local_reference_load("ISIS_1_1.txt"),
+        json_file=local_json_load("ISIS_1_1.json"),
         expected_values={},
     ),
     XmlTestCase(
         filename=local_data_load("ISIS_1_1_doubletrans.xml"),
         entry="79680main_1D_2.2_10.0",
         metadata_file=local_reference_load("ISIS_1_1_doubletrans.txt"),
+        json_file=local_json_load("ISIS_1_1_doubletrans.json"),
         expected_values={},
     ),
     XmlTestCase(
         filename=local_data_load("ISIS_1_1_notrans.xml"),
         entry="79680main_1D_2.2_10.0",
         metadata_file=local_reference_load("ISIS_1_1_notrans.txt"),
+        json_file=local_json_load("ISIS_1_1_notrans.json"),
         expected_values={},
     ),
     XmlTestCase(
         filename=local_data_load("TestExtensions.xml"),
         entry="TK49 c10_SANS",
         metadata_file=local_reference_load("TestExtensions.txt"),
+        json_file=local_json_load("TestExtensions.json"),
         expected_values={},
     ),
     XmlTestCase(
         filename=local_data_load("cansas1d.xml"),
         entry="Test title",
         metadata_file=local_reference_load("cansas1d.txt"),
+        json_file=local_json_load("cansas1d.json"),
         expected_values={},
     ),
     XmlTestCase(
         filename=local_data_load("cansas1d_badunits.xml"),
         entry="Test title",
         metadata_file=local_reference_load("cansas1d_badunits.txt"),
+        json_file=local_json_load("cansas1d_badunits.json"),
         expected_values={},
     ),
     XmlTestCase(
         filename=local_data_load("cansas1d_notitle.xml"),
         entry="SasData01",
         metadata_file=local_reference_load("cansas1d_notitle.txt"),
+        json_file=local_json_load("cansas1d_notitle.json"),
         expected_values={},
     ),
     XmlTestCase(
         filename=local_data_load("cansas1d_slit.xml"),
         entry="Test title",
         metadata_file=local_reference_load("cansas1d_slit.txt"),
+        json_file=local_json_load("cansas1d_slit.json"),
         expected_values={},
     ),
     XmlTestCase(
         filename=local_data_load("cansas1d_units.xml"),
         entry="Test title",
         metadata_file=local_reference_load("cansas1d_units.txt"),
+        json_file=local_json_load("cansas1d_units.json"),
         expected_values={},
     ),
     XmlTestCase(
         filename=local_data_load("cansas_test.xml"),
         entry="ILL-D11 example1: 2A 5mM 0%D2O",
         metadata_file=local_reference_load("cansas_test.txt"),
+        json_file=local_json_load("cansas_test.json"),
         expected_values={},
     ),
     XmlTestCase(
         filename=local_data_load("cansas_test_modified.xml"),
         entry="ILL-D11 example1: 2A 5mM 0%D2O",
         metadata_file=local_reference_load("cansas_test_modified.txt"),
+        json_file=local_json_load("cansas_test_modified.json"),
         expected_values={},
     ),
-    # XmlTestCase(filename=local_data_load("cansas_xml_multisasentry_multisasdata.xml"), metadata_file=local_reference_load("cansas_xml_multisasentry_multisasdata.txt"), expected_values={}),
     XmlTestCase(
         filename=local_data_load("valid_cansas_xml.xml"),
         entry="80514main_1D_2.2_10.0",
         metadata_file=local_reference_load("valid_cansas_xml.txt"),
+        json_file=local_json_load("valid_cansas_xml.json"),
         expected_values={},
     ),
 ]
@@ -435,6 +420,28 @@ def test_load_file(test_case: BaseTestCase):
             expected = "".join(infile.readlines())
         keys = sorted([d for d in combined_data])
         assert "".join(combined_data[k].summary() for k in keys) == expected
+
+    if test_case.json_file is not None:
+        # Test serialisation
+        with open(test_case.json_file, encoding="utf-8") as infile:
+            expected = json.loads("".join(infile.readlines()))
+        assert json.loads(SasDataEncoder().encode(combined_data)) == expected
+
+        # Test deserialisation
+        with open(test_case.json_file, encoding="utf-8") as infile:
+            raw = json.loads("".join(infile.readlines()))
+            parsed = {}
+            for k in raw:
+                parsed[k] = SasData.from_json(raw[k])
+
+        for k in combined_data:
+            expect = combined_data[k]
+            pars = parsed[k]
+            assert pars.name == expect.name
+            # assert pars._data_contents == expect._data_contents
+            assert pars.dataset_type == expect.dataset_type
+            assert pars.mask == expect.mask
+            assert pars.model_requirements == expect.model_requirements
 
     if test_case.round_trip:
         bio = io.BytesIO()
