@@ -27,14 +27,6 @@ from sasdata.temp_ascii_reader import load_data as ascii_load_data
 from sasdata.temp_hdf5_reader import load_data as hdf_load_data
 from sasdata.temp_xml_reader import load_data as xml_load_data
 
-test_hdf_file_names = [
-    "simpleexamplefile",
-    "nxcansas_1Dand2D_multisasentry",
-    "nxcansas_1Dand2D_multisasdata",
-    "MAR07232_rest",
-    "x25000_no_di",
-]
-
 test_xml_file_names = [
     "ISIS_1_0",
     "ISIS_1_1",
@@ -63,6 +55,10 @@ def local_load(path: str):
     return f"{base}"
 
 
+def local_reference_load(path: str):
+    return local_load(f"{os.path.join('reference', path)}")
+
+
 def local_data_load(path: str):
     return local_load(f"{os.path.join('data', path)}")
 
@@ -72,17 +68,6 @@ def example_data_load(path: str):
         return xml_load_data(local_load(f"data/{path}.xml"))
     except OSError:
         return hdf_load_data(local_load(f"data/{path}.h5"))
-
-
-@pytest.mark.sasdata
-@pytest.mark.parametrize("f", test_hdf_file_names)
-def test_hdf_load_file(f):
-    data = hdf_load_data(local_load(f"data/{f}"))
-
-    with open(local_load(f"reference/{f}.txt"), encoding="utf-8") as infile:
-        expected = "".join(infile.readlines())
-    keys = sorted([d for d in data])
-    assert "".join(data[k].summary() for k in keys) == expected
 
 
 @pytest.mark.sasdata
@@ -172,6 +157,7 @@ def test_h5_round_trip_serialise(f):
 class BaseTestCase:
     expected_values: dict[int, dict[str, float]]
     expected_metadata: dict[str, Any] = field(default_factory=dict)
+    metadata_file: None | str = None
 
 
 @dataclass(kw_only=True)
@@ -301,10 +287,31 @@ test_cases = [
     ),
     Hdf5TestCase(
         filename=local_data_load("simpleexamplefile.h5"),
+        metadata_file=local_reference_load("simpleexamplefile.txt"),
         expected_values={
             0: {"Q": 0.5488135039273248, "I": 0.6778165367962301},
             -1: {"Q": 0.004695476192547066, "I": 0.4344166255581208},
         },
+    ),
+    Hdf5TestCase(
+        filename=local_data_load("MAR07232_rest.h5"),
+        metadata_file=local_reference_load("MAR07232_rest.txt"),
+        expected_values={},
+    ),
+    Hdf5TestCase(
+        filename=local_data_load("x25000_no_di.h5"),
+        metadata_file=local_reference_load("x25000_no_di.txt"),
+        expected_values={},
+    ),
+    Hdf5TestCase(
+        filename=local_data_load("nxcansas_1Dand2D_multisasentry.h5"),
+        metadata_file=local_reference_load("nxcansas_1Dand2D_multisasentry.txt"),
+        expected_values={},
+    ),
+    Hdf5TestCase(
+        filename=local_data_load("nxcansas_1Dand2D_multisasdata.h5"),
+        metadata_file=local_reference_load("nxcansas_1Dand2D_multisasdata.txt"),
+        expected_values={},
     ),
 ]
 
@@ -342,8 +349,8 @@ def test_load_file(test_case: BaseTestCase):
             else:
                 raise TypeError("Invalid type for reader_params.")
         case Hdf5TestCase():
-            loaded_data = hdf_load_data(test_case.filename)[test_case.entry]
-            print(loaded_data)
+            combined_data = hdf_load_data(test_case.filename)
+            loaded_data = combined_data[test_case.entry]
         # TODO: Support SESANS
         case XmlTestCase():
             # Not bulk, so just assume we get one dataset.
@@ -373,3 +380,9 @@ def test_load_file(test_case: BaseTestCase):
             continue
         for metadata_key, value in current_metadata_dict.items():
             assert current_datum.metadata.raw.filter(metadata_key) == value
+
+    if test_case.metadata_file is not None:
+        with open(test_case.metadata_file, encoding="utf-8") as infile:
+            expected = "".join(infile.readlines())
+        keys = sorted([d for d in combined_data])
+        assert "".join(combined_data[k].summary() for k in keys) == expected
