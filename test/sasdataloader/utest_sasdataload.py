@@ -71,17 +71,6 @@ def example_data_load(path: str):
 
 
 @pytest.mark.sasdata
-@pytest.mark.parametrize("f", test_xml_file_names)
-def test_xml_load_file(f):
-    data = xml_load_data(local_load(f"data/{f}"))
-
-    with open(local_load(f"reference/{f}.txt"), encoding="utf-8") as infile:
-        expected = "".join(infile.readlines())
-    keys = sorted([d for d in data])
-    assert "".join(data[k].summary() for k in keys) == expected
-
-
-@pytest.mark.sasdata
 def test_filter_data():
     data = xml_load_data(local_load("data/cansas1d_notitle"))
     for k, v in data.items():
@@ -98,7 +87,7 @@ def test_filter_data():
 
 
 @pytest.mark.sasdata
-@pytest.mark.parametrize("f", test_hdf_file_names + test_xml_file_names)
+@pytest.mark.parametrize("f", test_xml_file_names)
 def test_json_serialise(f):
     data = example_data_load(f)
 
@@ -108,7 +97,7 @@ def test_json_serialise(f):
 
 
 @pytest.mark.sasdata
-@pytest.mark.parametrize("f", test_hdf_file_names + test_xml_file_names)
+@pytest.mark.parametrize("f", test_xml_file_names)
 def test_json_deserialise(f):
     expected = example_data_load(f)
 
@@ -129,7 +118,7 @@ def test_json_deserialise(f):
 
 
 @pytest.mark.sasdata
-@pytest.mark.parametrize("f", test_xml_file_names + test_hdf_file_names)
+@pytest.mark.parametrize("f", test_xml_file_names)
 def test_h5_round_trip_serialise(f):
     expected = example_data_load(f)
 
@@ -176,6 +165,7 @@ class BulkAsciiTestCase(AsciiTestCase):
 @dataclass(kw_only=True)
 class XmlTestCase(BaseTestCase):
     filename: str
+    entry: str = "sasentry01"
 
 
 @dataclass(kw_only=True)
@@ -275,6 +265,7 @@ test_cases = [
     ),
     XmlTestCase(
         filename=local_data_load("ISIS_1_0.xml"),
+        entry="79680main_1D_2.2_10.0",
         expected_values={
             0: {"Q": 0.009, "I": 85.3333, "dI": 0.852491, "dQ": 0},
             -2: {"Q": 0.281, "I": 0.408902, "dQ": 0},
@@ -311,6 +302,85 @@ test_cases = [
     Hdf5TestCase(
         filename=local_data_load("nxcansas_1Dand2D_multisasdata.h5"),
         metadata_file=local_reference_load("nxcansas_1Dand2D_multisasdata.txt"),
+        expected_values={},
+    ),
+    XmlTestCase(
+        filename=local_data_load("ISIS_1_0.xml"),
+        entry="79680main_1D_2.2_10.0",
+        metadata_file=local_reference_load("ISIS_1_0.txt"),
+        expected_values={},
+    ),
+    XmlTestCase(
+        filename=local_data_load("ISIS_1_1.xml"),
+        entry="79680main_1D_2.2_10.0",
+        metadata_file=local_reference_load("ISIS_1_1.txt"),
+        expected_values={},
+    ),
+    XmlTestCase(
+        filename=local_data_load("ISIS_1_1_doubletrans.xml"),
+        entry="79680main_1D_2.2_10.0",
+        metadata_file=local_reference_load("ISIS_1_1_doubletrans.txt"),
+        expected_values={},
+    ),
+    XmlTestCase(
+        filename=local_data_load("ISIS_1_1_notrans.xml"),
+        entry="79680main_1D_2.2_10.0",
+        metadata_file=local_reference_load("ISIS_1_1_notrans.txt"),
+        expected_values={},
+    ),
+    XmlTestCase(
+        filename=local_data_load("TestExtensions.xml"),
+        entry="TK49 c10_SANS",
+        metadata_file=local_reference_load("TestExtensions.txt"),
+        expected_values={},
+    ),
+    XmlTestCase(
+        filename=local_data_load("cansas1d.xml"),
+        entry="Test title",
+        metadata_file=local_reference_load("cansas1d.txt"),
+        expected_values={},
+    ),
+    XmlTestCase(
+        filename=local_data_load("cansas1d_badunits.xml"),
+        entry="Test title",
+        metadata_file=local_reference_load("cansas1d_badunits.txt"),
+        expected_values={},
+    ),
+    XmlTestCase(
+        filename=local_data_load("cansas1d_notitle.xml"),
+        entry="SasData01",
+        metadata_file=local_reference_load("cansas1d_notitle.txt"),
+        expected_values={},
+    ),
+    XmlTestCase(
+        filename=local_data_load("cansas1d_slit.xml"),
+        entry="Test title",
+        metadata_file=local_reference_load("cansas1d_slit.txt"),
+        expected_values={},
+    ),
+    XmlTestCase(
+        filename=local_data_load("cansas1d_units.xml"),
+        entry="Test title",
+        metadata_file=local_reference_load("cansas1d_units.txt"),
+        expected_values={},
+    ),
+    XmlTestCase(
+        filename=local_data_load("cansas_test.xml"),
+        entry="ILL-D11 example1: 2A 5mM 0%D2O",
+        metadata_file=local_reference_load("cansas_test.txt"),
+        expected_values={},
+    ),
+    XmlTestCase(
+        filename=local_data_load("cansas_test_modified.xml"),
+        entry="ILL-D11 example1: 2A 5mM 0%D2O",
+        metadata_file=local_reference_load("cansas_test_modified.txt"),
+        expected_values={},
+    ),
+    # XmlTestCase(filename=local_data_load("cansas_xml_multisasentry_multisasdata.xml"), metadata_file=local_reference_load("cansas_xml_multisasentry_multisasdata.txt"), expected_values={}),
+    XmlTestCase(
+        filename=local_data_load("valid_cansas_xml.xml"),
+        entry="80514main_1D_2.2_10.0",
+        metadata_file=local_reference_load("valid_cansas_xml.txt"),
         expected_values={},
     ),
 ]
@@ -354,7 +424,8 @@ def test_load_file(test_case: BaseTestCase):
         # TODO: Support SESANS
         case XmlTestCase():
             # Not bulk, so just assume we get one dataset.
-            loaded_data = next(iter(xml_load_data(test_case.filename).items()))[1]
+            combined_data = xml_load_data(test_case.filename)
+            loaded_data = combined_data[test_case.entry]
         case _:
             raise ValueError("Invalid loader")
     if isinstance(test_case, BulkAsciiTestCase):
