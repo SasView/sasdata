@@ -26,6 +26,7 @@ from sasdata.temp_ascii_reader import (
 from sasdata.temp_ascii_reader import load_data as ascii_load_data
 from sasdata.temp_hdf5_reader import load_data as hdf_load_data
 from sasdata.temp_xml_reader import load_data as xml_load_data
+from sasdata.temp_sesans_reader import load_data as sesans_load_data
 
 
 def local_load(path: str):
@@ -50,6 +51,8 @@ def local_json_load(path: str):
     return local_load(f"{os.path.join('json', path)}")
 
 
+def local_sesans_load(path: str):
+    return local_load(f"{os.path.join('sesans_data', path)}")
 
 
 @pytest.mark.sasdata
@@ -324,6 +327,14 @@ test_cases = [
         json_file=local_json_load("valid_cansas_xml.json"),
         expected_values={},
     ),
+    SesansTestCase(
+        filename=local_sesans_load("sphere2micron.ses"),
+        metadata_file=local_reference_load("sphere2micron.txt"),
+        expected_values={
+            0: {"SpinEchoLength": 391.56, "Depolarisation": 0.0041929},
+            -1: {"SpinEchoLength": 46099, "Depolarisation": -0.19956},
+        },
+    ),
 ]
 
 
@@ -367,6 +378,9 @@ def test_load_file(test_case: BaseTestCase):
             # Not bulk, so just assume we get one dataset.
             combined_data = xml_load_data(test_case.filename)
             loaded_data = combined_data[test_case.entry]
+        case SesansTestCase():
+            loaded_data = sesans_load_data(test_case.filename)
+            combined_data = {"only": loaded_data}
         case _:
             raise ValueError("Invalid loader")
     if isinstance(test_case, BulkAsciiTestCase):
