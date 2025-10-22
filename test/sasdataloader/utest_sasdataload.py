@@ -52,17 +52,20 @@ test_xml_file_names = [
     "valid_cansas_xml",
 ]
 
+
 def local_load(path: str):
     """Get local file path"""
     base = os.path.join(os.path.dirname(__file__), path)
-    if (os.path.exists(f"{base}.h5")):
+    if os.path.exists(f"{base}.h5"):
         return f"{base}.h5"
-    if (os.path.exists(f"{base}.xml")):
+    if os.path.exists(f"{base}.xml"):
         return f"{base}.xml"
     return f"{base}"
 
+
 def local_data_load(path: str):
     return local_load(f"{os.path.join('data', path)}")
+
 
 def example_data_load(path: str):
     try:
@@ -163,6 +166,7 @@ def test_h5_round_trip_serialise(f):
         assert np.all(expected[name].ordinate.value == entry.ordinate.value)
         assert expected[name].abscissae.units == entry.abscissae.units
         assert np.all(expected[name].abscissae.value == entry.abscissae.value)
+
 
 @dataclass(kw_only=True)
 class BaseTestCase:
