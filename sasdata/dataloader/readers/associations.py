@@ -15,15 +15,17 @@ The readers are tried in order they appear when reading a file.
 #############################################################################
 import logging
 
-from . import abs_reader
-from . import anton_paar_saxs_reader
-from . import ascii_reader
-from . import cansas_reader
-from . import cansas_reader_HDF5
-from . import csv_reader
-from . import danse_reader
-from . import red2d_reader
-from . import sesans_reader
+from . import (
+    abs_reader,
+    anton_paar_saxs_reader,
+    ascii_reader,
+    cansas_reader,
+    cansas_reader_HDF5,
+    csv_reader,
+    danse_reader,
+    red2d_reader,
+    sesans_reader,
+)
 
 logger = logging.getLogger(__name__)
 

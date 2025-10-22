@@ -1,22 +1,22 @@
 """
     Unit tests for the new recursive cansas reader
 """
+import logging
 import os
 import unittest
-import logging
 import warnings
 from io import StringIO
+from xml.dom import minidom
 
 from lxml import etree
 from lxml.etree import XMLSyntaxError
-from xml.dom import minidom
 
+from sasdata.dataloader.data_info import Data1D, Data2D
 from sasdata.dataloader.filereader import decode
 from sasdata.dataloader.loader import Loader
-from sasdata.dataloader.data_info import Data1D, Data2D
-from sasdata.dataloader.readers.xml_reader import XMLreader
-from sasdata.dataloader.readers.cansas_reader import Reader
 from sasdata.dataloader.readers.cansas_constants import CansasConstants
+from sasdata.dataloader.readers.cansas_reader import Reader
+from sasdata.dataloader.readers.xml_reader import XMLreader
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +58,7 @@ class cansas_reader_xml(unittest.TestCase):
         if dictionary.get(name) is not None:
             i += 1
             name = name.split("_")[0]
-            name += "_{0}".format(i)
+            name += f"_{i}"
             name = self.get_number_of_entries(dictionary, name, i)
         return name
 
@@ -230,7 +230,6 @@ class cansas_reader_xml(unittest.TestCase):
     def get_processing_instructions(self, xml_reader_object):
         dict = {}
         pi = xml_reader_object.xmlroot.getprevious()
-        i = 0
         while pi is not None:
             attr = {}
             pi_name = ""

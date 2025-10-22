@@ -70,7 +70,7 @@ class OTOKOLoader:
         total_frames = 0
         header_dir = os.path.dirname(os.path.abspath(header_path))
 
-        with open(header_path, "r") as header_file:
+        with open(header_path) as header_file:
             lines = header_file.readlines()
             if len(lines) < 4:
                 raise OTOKOParsingError("Expected more lines in %s." % header_path)

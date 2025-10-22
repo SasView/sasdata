@@ -20,8 +20,8 @@ PYTHONPATH=../src/ python2  -m sasdataloader.test.utest_averaging DataInfoTests.
 
 # TODO: copy the meta data from the 2D object to the resulting 1D object
 import math
+
 import numpy as np
-from typing import Optional, Union
 
 from sasdata.dataloader.data_info import Data1D, Data2D
 
@@ -41,7 +41,7 @@ def position_and_wavelength_to_q(dx: float, dy: float, detector_distance: float,
     return (4.0 * math.pi / wavelength) * math.sin(theta)
 
 
-def get_q_compo(dx: float, dy: float, detector_distance: float, wavelength: float, compo: Optional[str] = None) -> float:
+def get_q_compo(dx: float, dy: float, detector_distance: float, wavelength: float, compo: str | None = None) -> float:
     """
     This reduces tiny error at very large q.
     Implementation of this func is not started yet.<--ToDo
@@ -102,7 +102,7 @@ def get_pixel_fraction_square(x: float, x_min: float, x_max: float) -> float:
         return 1.0
 
 
-def get_intercept(q: float, q_0: float, q_1: float) -> Union[float, None]:
+def get_intercept(q: float, q_0: float, q_1: float) -> float | None:
     """
     Returns the fraction of the side at which the
     q-value intercept the pixel, None otherwise.
@@ -235,7 +235,7 @@ def get_dq_data(data2d: Data2D) -> np.array:
 ################################################################################
 
 
-def reader2D_converter(data2d: Optional[Data2D] = None) -> Data2D:
+def reader2D_converter(data2d: Data2D | None = None) -> Data2D:
     """
     convert old 2d format opened by IhorReader or danse_reader
     to new Data2D format

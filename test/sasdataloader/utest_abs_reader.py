@@ -1,12 +1,12 @@
 """
     Unit tests for data manipulations
 """
+import os.path
 import unittest
+
 from sasdata.dataloader.loader import Loader
 from sasdata.dataloader.readers.abs_reader import Reader as AbsReader
 from sasdata.dataloader.readers.danse_reader import Reader as DANSEReader
-
-import os.path
 
 
 def find(filename):

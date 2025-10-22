@@ -1,8 +1,8 @@
 import os
 import os.path
 import unittest
-
 from xml.etree import ElementTree as ET
+
 import numpy as np
 
 from sasdata.file_converter.bsl_loader import BSLLoader

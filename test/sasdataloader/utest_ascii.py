@@ -2,13 +2,13 @@
     Unit tests for the ascii (n-column) reader
 """
 
-import os.path
-import warnings
 import math
-
+import os.path
 import unittest
-from sasdata.dataloader.loader import Loader
+import warnings
+
 from sasdata.dataloader.data_info import Data2D
+from sasdata.dataloader.loader import Loader
 
 warnings.simplefilter("ignore")
 
@@ -18,7 +18,7 @@ def find(filename):
 
 
 class ABSReaderTests(unittest.TestCase):
-    
+
     def setUp(self):
         self.loader = Loader()
         self.f1_list = self.loader.load(find("ascii_test_1.txt"))
@@ -47,12 +47,12 @@ class ABSReaderTests(unittest.TestCase):
         self.assertEqual(self.f1.x[9],0.0497)
         self.assertTrue(self.f1.x_unit == 'A^{-1}')
         self.assertTrue(self.f1.y_unit == 'cm^{-1}')
-        
+
         self.assertEqual(self.f1.meta_data['loader'],"ASCII")
 
     def test_truncated_1(self):
         """
-            Test an ascii file with header and a 
+            Test an ascii file with header and a
             comment line in the middle of the data section.
             The business rule says that we should stop
             reading at the first comment once the data
@@ -66,7 +66,7 @@ class ABSReaderTests(unittest.TestCase):
 
     def test_truncated_2(self):
         """
-            Test a 6-col ascii file with header and a 
+            Test a 6-col ascii file with header and a
             line with only 2 columns in the middle of the data section.
             The business rule says that we should stop
             reading at the first inconsitent line.
@@ -78,7 +78,7 @@ class ABSReaderTests(unittest.TestCase):
 
     def test_truncated_3(self):
         """
-            Test a 6-col ascii file with complex header and 
+            Test a 6-col ascii file with complex header and
             many lines with 2 or 2 columns in the middle of the data section.
             The business rule says that we should stop
             reading at the last line of header.
@@ -178,4 +178,4 @@ class ABSReaderTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-   
+

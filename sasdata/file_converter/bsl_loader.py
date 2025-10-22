@@ -28,14 +28,14 @@ class BSLLoader:
 
         sasdata_filename = filename.replace('000.', '001.')
         if sasdata_filename == filename:
-            err_msg = ("Invalid header filename {}.\nShould be of the format "
+            err_msg = (f"Invalid header filename {filename}.\nShould be of the format "
                        "Xnn000.XXX where X is any alphanumeric character and n is any"
-                       " digit.").format(filename)
+                       " digit.")
             raise BSLParsingError(err_msg)
 
         data_info = {}
 
-        with open(os.path.join(folder, filename), 'r') as header_file:
+        with open(os.path.join(folder, filename)) as header_file:
             data_info = self._parse_header(header_file, filename, sasdata_filename, folder)
 
         self.filename = data_info['filename']
@@ -61,7 +61,7 @@ class BSLLoader:
         data_filename = header_file.readline().strip()
 
         if len(metadata) != 10:
-            err_msg = "Invalid header file: {}".format(filename)
+            err_msg = f"Invalid header file: {filename}"
             raise BSLParsingError(err_msg)
 
         if data_filename != sasdata_filename:

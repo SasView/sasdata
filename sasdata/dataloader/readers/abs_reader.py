@@ -14,8 +14,8 @@ import logging
 import numpy as np
 
 from sasdata.data_util.nxsunit import Converter
-from sasdata.dataloader.filereader import FileReader
 from sasdata.dataloader.data_info import DataInfo, Detector
+from sasdata.dataloader.filereader import FileReader
 
 logger = logging.getLogger(__name__)
 

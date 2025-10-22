@@ -5,11 +5,11 @@ This provides routines for opening files based on extension,
 and registers the built-in file extensions.
 """
 import os
-from urllib.request import urlopen
-from io import BytesIO
-from typing import Optional, List, Union, TYPE_CHECKING
 from collections import defaultdict
+from io import BytesIO
 from pathlib import Path
+from typing import TYPE_CHECKING, Union
+from urllib.request import urlopen
 
 from sasdata.data_util.loader_exceptions import NoKnownLoaderException
 from sasdata.data_util.util import unique_preserve_order
@@ -25,7 +25,7 @@ DEPRECATION_MESSAGE = ("\rThe extension, {}, of the file, {}, suggests the data 
                        "was made, but, should it be successful, SasView cannot guarantee the accuracy of the data.")
 
 
-def create_empty_data_with_errors(path: Union[str, Path], errors: List[Exception]):
+def create_empty_data_with_errors(path: str | Path, errors: list[Exception]):
     """Create a Data1D instance that only holds errors and a filepath. This allows all file paths to return a common
     data type, regardless if the data loading was successful or a failure."""
     from sasdata.dataloader.data_info import Data1D
@@ -121,13 +121,13 @@ class ExtensionRegistry:
     def __setitem__(self, ext: str, loader):
         self.readers[ext].insert(0, loader)
 
-    def __getitem__(self, ext: str) -> List:
+    def __getitem__(self, ext: str) -> list:
         return self.readers[ext]
 
     def __contains__(self, ext: str) -> bool:
         return ext in self.readers
 
-    def formats(self) -> List[str]:
+    def formats(self) -> list[str]:
         """
         Return a sorted list of the registered formats.
         """
@@ -135,7 +135,7 @@ class ExtensionRegistry:
         names.sort()
         return names
 
-    def extensions(self) -> List[str]:
+    def extensions(self) -> list[str]:
         """
         Return a sorted list of registered extensions.
         """
@@ -143,7 +143,7 @@ class ExtensionRegistry:
         exts.sort()
         return exts
 
-    def lookup(self, path: str) -> List[callable]:
+    def lookup(self, path: str) -> list[callable]:
         """
         Return the loader associated with the file type of path.
 
@@ -162,7 +162,7 @@ class ExtensionRegistry:
         # Ensure the list of readers only includes unique values and the order is maintained
         return unique_preserve_order(readers)
 
-    def load(self, path: str, ext: Optional[str] = None) -> List[Union["Data1D", "Data2D"]]:
+    def load(self, path: str, ext: str | None = None) -> list[Union["Data1D", "Data2D"]]:
         """
         Call the loader for a single file.
 

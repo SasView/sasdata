@@ -1,10 +1,10 @@
-from sasdata.file_converter.nxcansas_writer import NXcanSASWriter
-from sasdata.dataloader.loader import Loader
-
 import os
 import os.path
 import unittest
 import warnings
+
+from sasdata.dataloader.loader import Loader
+from sasdata.file_converter.nxcansas_writer import NXcanSASWriter
 
 warnings.simplefilter("ignore")
 

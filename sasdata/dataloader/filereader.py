@@ -8,14 +8,20 @@ import codecs
 import logging
 from abc import abstractmethod
 from pathlib import Path
-from typing import List, Union, Optional
 
 import numpy as np
+
 from sasdata.data_util.loader_exceptions import NoKnownLoaderException
-from sasdata.dataloader.data_info import Data1D, Data2D, DataInfo, plottable_1D, plottable_2D,\
-    combine_data_info_with_plottable
 from sasdata.data_util.nxsunit import Converter
 from sasdata.data_util.registry import CustomFileOpen
+from sasdata.dataloader.data_info import (
+    Data1D,
+    Data2D,
+    DataInfo,
+    combine_data_info_with_plottable,
+    plottable_1D,
+    plottable_2D,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -73,8 +79,8 @@ class FileReader:
         # Open file handle
         self.f_open = None
 
-    def read(self, filepath: Union[str, Path], file_handler: Optional[CustomFileOpen] = None,
-             f_pos: Optional[int] = 0) -> List[Union[Data1D, Data2D]]:
+    def read(self, filepath: str | Path, file_handler: CustomFileOpen | None = None,
+             f_pos: int | None = 0) -> list[Data1D | Data2D]:
         """
         Basic file reader
 
@@ -92,7 +98,7 @@ class FileReader:
                 return self._read(file_handler)
         return self._read(file_handler)
 
-    def _read(self, file_handler: CustomFileOpen) -> List[Union[Data1D, Data2D]]:
+    def _read(self, file_handler: CustomFileOpen) -> list[Data1D | Data2D]:
         """
         Private method to handle file loading
 
@@ -104,7 +110,7 @@ class FileReader:
         # Move to the desired initial file position in case of successive reads on the same handle
         self.f_open.seek(self.f_pos)
 
-        basename, extension = self.filepath.stem, self.filepath.suffix
+        _, extension = self.filepath.stem, self.filepath.suffix
         self.extension = extension.lower()
         if self.extension in self.ext or self.allow_all:
             try:
@@ -274,7 +280,7 @@ class FileReader:
         return array[ind]
 
     @staticmethod
-    def _remove_nans_in_data(data: Union[Data1D, Data2D]) -> Union[Data1D, Data2D]:
+    def _remove_nans_in_data(data: Data1D | Data2D) -> Data1D | Data2D:
         """
         Remove data points where nan is loaded
         :param data: 1D or 2D data object
@@ -301,7 +307,7 @@ class FileReader:
         return data
 
     @staticmethod
-    def set_default_1d_units(data: Union[Data1D, Data2D]) -> Union[Data1D, Data2D]:
+    def set_default_1d_units(data: Data1D | Data2D) -> Data1D | Data2D:
         """
         Set the x and y axes to the default 1D units
         :param data: 1D data set
@@ -312,7 +318,7 @@ class FileReader:
         return data
 
     @staticmethod
-    def set_default_2d_units(data: Union[Data1D, Data2D]) -> Union[Data1D, Data2D]:
+    def set_default_2d_units(data: Data1D | Data2D) -> Data1D | Data2D:
         """
         Set the x and y axes to the default 2D units
         :param data: 2D data set
@@ -494,7 +500,7 @@ class FileReader:
         self.current_dataset = plottable_1D(x, y, dx, dy)
 
     @staticmethod
-    def splitline(line: str) -> List[str]:
+    def splitline(line: str) -> list[str]:
         """
         Splits a line into pieces based on common delimiters
         :param line: A single line of text
