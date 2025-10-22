@@ -117,36 +117,12 @@ def test_json_deserialise(f):
         assert pars.model_requirements == expect.model_requirements
 
 
-@pytest.mark.sasdata
-@pytest.mark.parametrize("f", test_xml_file_names)
-def test_h5_round_trip_serialise(f):
-    expected = example_data_load(f)
-
-    bio = io.BytesIO()
-    SasData.save_h5(expected, bio)
-    bio.seek(0)
-
-    result = hdf_load_data(bio)
-    bio.close()
-
-    for name, entry in result.items():
-        assert expected[name].metadata.title == entry.metadata.title
-        assert expected[name].metadata.run == entry.metadata.run
-        assert expected[name].metadata.definition == entry.metadata.definition
-        assert expected[name].metadata.process == entry.metadata.process
-        assert expected[name].metadata.instrument == entry.metadata.instrument
-        assert expected[name].metadata.sample == entry.metadata.sample
-        assert expected[name].ordinate.units == entry.ordinate.units
-        assert np.all(expected[name].ordinate.value == entry.ordinate.value)
-        assert expected[name].abscissae.units == entry.abscissae.units
-        assert np.all(expected[name].abscissae.value == entry.abscissae.value)
-
-
 @dataclass(kw_only=True)
 class BaseTestCase:
     expected_values: dict[int, dict[str, float]]
     expected_metadata: dict[str, Any] = field(default_factory=dict)
     metadata_file: None | str = None
+    round_trip: bool = False
 
 
 @dataclass(kw_only=True)
@@ -166,12 +142,14 @@ class BulkAsciiTestCase(AsciiTestCase):
 class XmlTestCase(BaseTestCase):
     filename: str
     entry: str = "sasentry01"
+    round_trip: bool = True
 
 
 @dataclass(kw_only=True)
 class Hdf5TestCase(BaseTestCase):
     filename: str
     entry: str = "sasentry01"
+    round_trip: bool = True
 
 
 @dataclass(kw_only=True)
@@ -457,3 +435,23 @@ def test_load_file(test_case: BaseTestCase):
             expected = "".join(infile.readlines())
         keys = sorted([d for d in combined_data])
         assert "".join(combined_data[k].summary() for k in keys) == expected
+
+    if test_case.round_trip:
+        bio = io.BytesIO()
+        SasData.save_h5(combined_data, bio)
+        bio.seek(0)
+
+        result = hdf_load_data(bio)
+        bio.close()
+
+        for name, entry in result.items():
+            assert combined_data[name].metadata.title == entry.metadata.title
+            assert combined_data[name].metadata.run == entry.metadata.run
+            assert combined_data[name].metadata.definition == entry.metadata.definition
+            assert combined_data[name].metadata.process == entry.metadata.process
+            assert combined_data[name].metadata.instrument == entry.metadata.instrument
+            assert combined_data[name].metadata.sample == entry.metadata.sample
+            assert combined_data[name].ordinate.units == entry.ordinate.units
+            assert np.all(combined_data[name].ordinate.value == entry.ordinate.value)
+            assert combined_data[name].abscissae.units == entry.abscissae.units
+            assert np.all(combined_data[name].abscissae.value == entry.abscissae.value)
