@@ -27,23 +27,6 @@ from sasdata.temp_ascii_reader import load_data as ascii_load_data
 from sasdata.temp_hdf5_reader import load_data as hdf_load_data
 from sasdata.temp_xml_reader import load_data as xml_load_data
 
-test_xml_file_names = [
-    "ISIS_1_0",
-    "ISIS_1_1",
-    "ISIS_1_1_doubletrans",
-    "ISIS_1_1_notrans",
-    "TestExtensions",
-    "cansas1d",
-    "cansas1d_badunits",
-    "cansas1d_notitle",
-    "cansas1d_slit",
-    "cansas1d_units",
-    "cansas_test",
-    "cansas_test_modified",
-    # "cansas_xml_multisasentry_multisasdata",
-    "valid_cansas_xml",
-]
-
 
 def local_load(path: str):
     """Get local file path"""
@@ -67,11 +50,6 @@ def local_json_load(path: str):
     return local_load(f"{os.path.join('json', path)}")
 
 
-def example_data_load(path: str):
-    try:
-        return xml_load_data(local_load(f"data/{path}.xml"))
-    except OSError:
-        return hdf_load_data(local_load(f"data/{path}.h5"))
 
 
 @pytest.mark.sasdata
