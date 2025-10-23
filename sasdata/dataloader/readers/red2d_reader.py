@@ -79,8 +79,6 @@ class Reader(FileReader):
 
         # Defaults
         lines = buf.split('\n')
-        x = []
-        y = []
 
         wavelength = None
         distance = None

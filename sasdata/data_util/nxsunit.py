@@ -46,11 +46,11 @@ inferring the dimension from an example unit.
 import math
 import re
 from collections.abc import Sequence
-from typing import TypeVar, Union
+from typing import TypeVar
 
 __all__ = ['Converter', 'standardize_units']
 T = TypeVar('T')
-ConversionType = Union[float, tuple[float, float]]
+ConversionType = float | tuple[float, float]
 DIMENSIONS = {}  # type: Dict[str, Dict[str, ConversionType]]
 AMBIGUITIES = {}  # type: Dict[str, str]
 PREFIX = dict(peta=1e15, tera=1e12, giga=1e9, mega=1e6, kilo=1e3, deci=1e-1, centi=1e-2, milli=1e-3, mili=1e-3,

@@ -83,7 +83,8 @@ class ASCII2DLoader:
             try:
                 dimensions = np.fromstring(all_lines[current_line],
                     dtype=np.float32, sep=' ')
-                if len(dimensions) != 3: raise ValueError()
+                if len(dimensions) != 3:
+                    raise ValueError()
                 width = int(dimensions[0])
                 height = int(dimensions[1])
             except ValueError:
@@ -109,7 +110,8 @@ class ASCII2DLoader:
             # iflag = 3 => q axis, intensity and error data
             try:
                 iflag = int(all_lines[current_line].strip()[0])
-                if iflag <= 0 or iflag > 3: raise ValueError()
+                if iflag <= 0 or iflag > 3:
+                    raise ValueError()
             except:
                 err_msg = "File incorrectly formatted.\n"
                 iflag = all_lines[current_line].strip()[0]

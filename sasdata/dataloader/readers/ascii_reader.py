@@ -62,8 +62,6 @@ class Reader(FileReader):
         # More than "5" lines of data is considered as actual
         # To count # of current data candidate lines
         candidate_lines = 0
-        # To count total # of previous data candidate lines
-        candidate_lines_previous = 0
         # Current line number
         line_no = 0
         # minimum required number of columns of data

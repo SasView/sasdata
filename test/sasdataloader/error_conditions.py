@@ -18,7 +18,7 @@ class testLoader(unittest.TestCase):
         """
             Loading a corrupted file with a known extension
             should raise a runtime exception.
-            The error condition is similar to an unknown 
+            The error condition is similar to an unknown
             type (file extension). When a reader is identified as
             knowing the file extension, it tries to load. If it
             raises an exception, the system should try to identify

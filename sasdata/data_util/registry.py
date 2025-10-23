@@ -131,7 +131,7 @@ class ExtensionRegistry:
         """
         Return a sorted list of the registered formats.
         """
-        names = [a for a in self.readers.keys() if not a.startswith('.')]
+        names = [a for a in self.readers if not a.startswith('.')]
         names.sort()
         return names
 
@@ -139,7 +139,7 @@ class ExtensionRegistry:
         """
         Return a sorted list of registered extensions.
         """
-        exts = [a for a in self.readers.keys() if a.startswith('.')]
+        exts = [a for a in self.readers if a.startswith('.')]
         exts.sort()
         return exts
 

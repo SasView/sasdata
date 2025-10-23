@@ -52,7 +52,7 @@ class ABSReaderTests(unittest.TestCase):
 
     def test_truncated_1(self):
         """
-            Test an ascii file with header and a 
+            Test an ascii file with header and a
             comment line in the middle of the data section.
             The business rule says that we should stop
             reading at the first comment once the data
@@ -66,7 +66,7 @@ class ABSReaderTests(unittest.TestCase):
 
     def test_truncated_2(self):
         """
-            Test a 6-col ascii file with header and a 
+            Test a 6-col ascii file with header and a
             line with only 2 columns in the middle of the data section.
             The business rule says that we should stop
             reading at the first inconsitent line.
@@ -78,7 +78,7 @@ class ABSReaderTests(unittest.TestCase):
 
     def test_truncated_3(self):
         """
-            Test a 6-col ascii file with complex header and 
+            Test a 6-col ascii file with complex header and
             many lines with 2 or 2 columns in the middle of the data section.
             The business rule says that we should stop
             reading at the last line of header.
