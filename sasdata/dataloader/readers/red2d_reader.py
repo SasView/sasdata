@@ -13,11 +13,10 @@ from typing import Any
 
 import numpy as np
 
-from sasdata.data_util.nxsunit import Converter
-
-from sasdata.dataloader.data_info import plottable_2D, Data2D, DataInfo, Detector
-from sasdata.dataloader.filereader import FileReader
 from sasdata.data_util.loader_exceptions import FileContentsException
+from sasdata.data_util.nxsunit import Converter
+from sasdata.dataloader.data_info import Data2D, DataInfo, Detector, plottable_2D
+from sasdata.dataloader.filereader import FileReader
 
 
 def check_point(x_point: Any):
@@ -80,8 +79,6 @@ class Reader(FileReader):
 
         # Defaults
         lines = buf.split('\n')
-        x = []
-        y = []
 
         wavelength = None
         distance = None

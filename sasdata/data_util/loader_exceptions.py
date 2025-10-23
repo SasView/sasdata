@@ -2,7 +2,6 @@
 Exceptions specific to loading data.
 """
 
-from typing import Optional
 
 
 class NoKnownLoaderException(Exception):
@@ -11,7 +10,7 @@ class NoKnownLoaderException(Exception):
     extension of the loaded file. This exception should only be thrown by
     loader.py.
     """
-    def __init__(self, e: Optional[str] = None):
+    def __init__(self, e: str | None = None):
         self.message = e
 
 
@@ -20,7 +19,7 @@ class DefaultReaderException(Exception):
     Exception for files with no associated reader. This should be thrown by
     default readers only to tell Loader to try the next reader.
     """
-    def __init__(self, e: Optional[str] = None):
+    def __init__(self, e: str | None = None):
         self.message = e
 
 
@@ -29,7 +28,7 @@ class FileContentsException(Exception):
     Exception for files with an associated reader, but with no loadable data.
     This is useful for catching loader or file format issues.
     """
-    def __init__(self, e: Optional[str] = None):
+    def __init__(self, e: str | None = None):
         self.message = e
 
 
@@ -39,5 +38,5 @@ class DataReaderException(Exception):
     along the way.
     Any exceptions of this type should be put into the datainfo.errors
     """
-    def __init__(self, e: Optional[str] = None):
+    def __init__(self, e: str | None = None):
         self.message = e

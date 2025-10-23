@@ -17,16 +17,15 @@
 # copyright 2008, University of Tennessee
 ######################################################################
 
+import logging
 import os
 import sys
-import logging
 import time
-from zipfile import ZipFile
 from collections import defaultdict
-from types import ModuleType
-from typing import Optional, Union, List
 from itertools import zip_longest
 from pathlib import Path
+from types import ModuleType
+from zipfile import ZipFile
 
 from sasdata.data_util.registry import ExtensionRegistry
 from sasdata.data_util.util import unique_preserve_order
@@ -59,10 +58,10 @@ class Registry(ExtensionRegistry):
         # Register default readers
         readers.read_associations(self)
 
-    def load(self, file_path_list: Union[List[Union[str, Path]], str, Path],
-             ext: Optional[Union[List[str], str]] = None,
-             debug: Optional[bool] = False,
-             use_defaults: Optional[bool] = True):
+    def load(self, file_path_list: list[str | Path] | str | Path,
+             ext: list[str] | str | None = None,
+             debug: bool | None = False,
+             use_defaults: bool | None = True):
         """
         Call the loader for the file type of path.
 
@@ -294,7 +293,7 @@ class Registry(ExtensionRegistry):
         # All done
         return writers
 
-    def save(self, path: str, data, format: Optional[str] = None):
+    def save(self, path: str, data, format: str | None = None):
         """
         Call the writer for the file type of path.
         Raises ValueError if no writer is available.
@@ -337,9 +336,9 @@ class Loader:
         """
         return self.__registry.associate_file_reader(ext, loader)
 
-    def load(self, file_path_list: Union[List[Union[str, Path]], str, Path],
-             format: Optional[Union[List[str], str]] = None
-             ) -> List[Union[Data1D, Data2D]]:
+    def load(self, file_path_list: list[str | Path] | str | Path,
+             format: list[str] | str | None = None
+             ) -> list[Data1D | Data2D]:
         """
         Load a file or series of files
         :param file_path_list: String representations of any number of file paths. This can either be a list or a string
@@ -377,7 +376,7 @@ class Loader:
         """
         return self.__registry.wildcards
 
-    def __call__(self, file_path_list: List[str]) -> List[Union[Data1D, Data2D]]:
+    def __call__(self, file_path_list: list[str]) -> list[Data1D | Data2D]:
         """Allow direct calls to the loader system for transient file loader systems.
         :param file_path_list: A list of string representations of file paths. Each item can either be a local file path
             or a URI.

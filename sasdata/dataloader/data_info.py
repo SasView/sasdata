@@ -19,16 +19,16 @@
 # TODO: This module should be independent of plottables. We should write
 #        an adapter class for plottables when needed.
 
+import copy
 import math
 from math import fabs
-import copy
 
 import numpy as np
 
 from sasdata.data_util.uncertainty import Uncertainty
 
 
-class plottable_1D(object):
+class plottable_1D:
     """
     Data1D is a place holder for 1D plottables.
     """
@@ -84,7 +84,7 @@ class plottable_1D(object):
         self._yunit = unit
 
 
-class plottable_2D(object):
+class plottable_2D:
     """
     Data2D is a place holder for 2D plottables.
     """
@@ -164,7 +164,7 @@ class plottable_2D(object):
         self._zunit = unit
 
 
-class Vector(object):
+class Vector:
     """
     Vector class to hold multi-dimensional objects
     """
@@ -193,7 +193,7 @@ class Vector(object):
         return msg
 
 
-class Detector(object):
+class Detector:
     """
     Class to hold detector information
     """
@@ -248,7 +248,7 @@ class Detector(object):
         return _str
 
 
-class Aperture(object):
+class Aperture:
     # Name
     name = None
     # Type
@@ -266,7 +266,7 @@ class Aperture(object):
         self.size = Vector()
 
 
-class Collimation(object):
+class Collimation:
     """
     Class to hold collimation information
     """
@@ -293,7 +293,7 @@ class Collimation(object):
         return _str
 
 
-class Source(object):
+class Source:
     """
     Class to hold source information
     """
@@ -358,7 +358,7 @@ MUON = 'muon'
 ELECTRON = 'electron'
 
 
-class Sample(object):
+class Sample:
     """
     Class to hold the sample description
     """
@@ -411,7 +411,7 @@ class Sample(object):
         return _str
 
 
-class Process(object):
+class Process:
     """
     Class that holds information about the processes
     performed on the data.
@@ -452,7 +452,7 @@ class Process(object):
         return _str
 
 
-class TransmissionSpectrum(object):
+class TransmissionSpectrum:
     """
     Class that holds information about transmission spectrum
     for white beams and spallation sources.
@@ -476,19 +476,18 @@ class TransmissionSpectrum(object):
 
     def __str__(self):
         _str = "Transmission Spectrum:\n"
-        _str += "   Name:             \t{0}\n".format(self.name)
-        _str += "   Timestamp:        \t{0}\n".format(self.timestamp)
-        _str += "   Wavelength unit:  \t{0}\n".format(self.wavelength_unit)
-        _str += "   Transmission unit:\t{0}\n".format(self.transmission_unit)
-        _str += "   Trans. Dev. unit:  \t{0}\n".format(
-                                            self.transmission_deviation_unit)
+        _str += f"   Name:             \t{self.name}\n"
+        _str += f"   Timestamp:        \t{self.timestamp}\n"
+        _str += f"   Wavelength unit:  \t{self.wavelength_unit}\n"
+        _str += f"   Transmission unit:\t{self.transmission_unit}\n"
+        _str += f"   Trans. Dev. unit:  \t{self.transmission_deviation_unit}\n"
         length_list = [len(self.wavelength), len(self.transmission),
                        len(self.transmission_deviation)]
-        _str += "   Number of Pts:    \t{0}\n".format(max(length_list))
+        _str += f"   Number of Pts:    \t{max(length_list)}\n"
         return _str
 
 
-class DataInfo(object):
+class DataInfo:
     """
     Class to hold the data read from a file.
     It includes four blocks of data for the
@@ -769,7 +768,7 @@ class Data1D(plottable_1D, DataInfo):
         :return: True is slit smearing info is present, False otherwise
         """
         def _check(v):
-            return ((v.__class__ == list or v.__class__ == np.ndarray)
+            return (isinstance(v.__class__ == list | np.ndarray)
                     and len(v) > 0 and min(v) > 0)
         return _check(self.dxl) or _check(self.dxw)
 

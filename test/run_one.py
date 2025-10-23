@@ -1,12 +1,14 @@
 #!/usr/bin/env python
+import importlib.util
+import logging
 import os
 import sys
-import xmlrunner
 import unittest
-import importlib.util
-from os.path import abspath, split as splitpath
+from os.path import abspath
+from os.path import split as splitpath
 
-import logging
+import xmlrunner
+
 logger = logging.getLogger(__name__)
 if not logger.root.handlers:
     import logging.config
