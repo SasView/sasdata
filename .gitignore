@@ -25,6 +25,11 @@
 /dist
 .mplconfig
 
+# INSTALL.md recommends a venv that should not be committed
+venv
+.venv
+uv.lock
+
 # doc build
 /docs/sphinx-docs/build
 
@@ -42,6 +47,3 @@ tests.log
 /installers/dist
 *.exe
 sasdata/_version.py
-
-# Local pre-commit hooks
-.pre-commit-config.yaml
