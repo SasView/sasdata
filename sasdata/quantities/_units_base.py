@@ -345,6 +345,7 @@ class RequiredUnitFormatProcessor(UnitFormatProcessor):
         token = ProcessedUnitToken(self.unit, self.power)
 
         return new_scale, new_dimensions, token
+
 class GreedyAbsDimensionUnitFormatProcessor(UnitFormatProcessor):
     """ This processor minimises the dimensionality of the unit by multiplying by as many
     units of the specified type as needed """
@@ -353,9 +354,6 @@ class GreedyAbsDimensionUnitFormatProcessor(UnitFormatProcessor):
 
     def apply(self, scale, dimensions) -> tuple[ProcessedUnitToken, float, Dimensions]:
         pass
-
-class GreedyAbsDimensionUnitFormatProcessor(UnitFormatProcessor):
-    pass
 
 class UnitGroup:
     """ A group of units that all have the same dimensionality """
