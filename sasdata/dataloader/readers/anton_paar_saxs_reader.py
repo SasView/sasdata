@@ -2,14 +2,23 @@
     CanSAS 2D data reader for reading HDF5 formatted CanSAS files.
 """
 
+
 import numpy as np
-from typing import Optional
 from lxml.etree import Element
 
+from sasdata.data_util.loader_exceptions import DataReaderException, FileContentsException
+from sasdata.dataloader.data_info import (
+    Aperture,
+    Collimation,
+    DataInfo,
+    Detector,
+    Process,
+    Sample,
+    Source,
+    TransmissionSpectrum,
+    plottable_1D,
+)
 from sasdata.dataloader.readers.xml_reader import XMLreader
-from sasdata.dataloader.data_info import plottable_1D, DataInfo, Sample, Source
-from sasdata.dataloader.data_info import Process, Aperture, Collimation, TransmissionSpectrum, Detector
-from sasdata.data_util.loader_exceptions import FileContentsException, DataReaderException
 
 
 class Reader(XMLreader):
@@ -127,7 +136,7 @@ class Reader(XMLreader):
         if not correctly_loaded:
             raise DataReaderException(error_message)
 
-    def _parse_child(self, dom: Element, parent: Optional[str] = ''):
+    def _parse_child(self, dom: Element, parent: str | None = ''):
         """
         Recursive method for stepping through the embedded XML
         :param dom: XML node with or without children

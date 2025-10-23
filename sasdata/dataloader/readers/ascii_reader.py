@@ -13,11 +13,10 @@
 #############################################################################
 
 import logging
-from typing import Optional
 
-from sasdata.dataloader.filereader import FileReader
+from sasdata.data_util.loader_exceptions import DefaultReaderException, FileContentsException
 from sasdata.dataloader.data_info import DataInfo, plottable_1D
-from sasdata.data_util.loader_exceptions import FileContentsException, DefaultReaderException
+from sasdata.dataloader.filereader import FileReader
 
 logger = logging.getLogger(__name__)
 
@@ -135,23 +134,23 @@ class Reader(FileReader):
             self.set_all_to_none()
             if self.extension in self.ext:
                 msg = "ASCII Reader error: Fewer than five Q data points found "
-                msg += "in {}.".format(filename)
+                msg += f"in {filename}."
                 raise FileContentsException(msg)
             else:
-                msg = "ASCII Reader could not load the file {}".format(filename)
+                msg = f"ASCII Reader could not load the file {filename}"
                 raise DefaultReaderException(msg)
         # Sanity check
         if has_error_dy and not len(self.current_dataset.y) == \
                 len(self.current_dataset.dy):
             msg = "ASCII Reader error: Number of I and dI data points are"
-            msg += " different in {}.".format(filename)
+            msg += f" different in {filename}."
             # TODO: Add error to self.current_datainfo.errors instead?
             self.set_all_to_none()
             raise FileContentsException(msg)
         if has_error_dx and not len(self.current_dataset.x) == \
                 len(self.current_dataset.dx):
             msg = "ASCII Reader error: Number of Q and dQ data points are"
-            msg += " different in {}.".format(filename)
+            msg += f" different in {filename}."
             # TODO: Add error to self.current_datainfo.errors instead?
             self.set_all_to_none()
             raise FileContentsException(msg)
@@ -163,7 +162,7 @@ class Reader(FileReader):
         self.current_datainfo.meta_data['loader'] = self.type_name
         self.send_to_output()
 
-    def write(self, filename: str, dataset: plottable_1D, sep: Optional[str] = " "):
+    def write(self, filename: str, dataset: plottable_1D, sep: str | None = " "):
         """
         Output data in ascii or similar format, depending on the separator provided
 

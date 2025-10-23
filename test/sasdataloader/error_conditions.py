@@ -1,5 +1,6 @@
-from sasdata.dataloader.loader import Loader
 import unittest
+
+from sasdata.dataloader.loader import Loader
 
 
 class testLoader(unittest.TestCase):
@@ -12,7 +13,7 @@ class testLoader(unittest.TestCase):
             should raise a ValueError exception (thrown by data_util.registry)
         """
         self.assertRaises(ValueError, self.s.load, 'angles_flat.mat')
-        
+
     def test_corrupt(self):
         """
             Loading a corrupted file with a known extension

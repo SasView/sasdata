@@ -4,9 +4,10 @@
 
 import os.path
 import unittest
+
 from sasdata.data_util.loader_exceptions import FileContentsException
-from sasdata.dataloader.readers.sesans_reader import Reader
 from sasdata.dataloader.loader import Loader
+from sasdata.dataloader.readers.sesans_reader import Reader
 
 
 def find(filename):

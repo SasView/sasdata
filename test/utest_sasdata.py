@@ -1,10 +1,10 @@
 #!/usr/bin/env python\
+import logging.config
 import os
-import subprocess
 import re
+import subprocess
 import sys
 
-import logging.config
 LOGGER_CONFIG_FILE = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'logging.ini')
 logging.config.fileConfig(LOGGER_CONFIG_FILE)
 logger = logging.getLogger(__name__)
@@ -61,10 +61,10 @@ def run_tests(dirs=None, run_all=False):
                             failure_text.append("== %s std err ==\n%s"
                                                 % (module_name, std_out))
 
-                    m = re.search("FAILED \(.*errors=([0-9]+)", std_out)
+                    m = re.search(r"FAILED \(.*errors=([0-9]+)", std_out)
                     if m is not None:
                         n_errors += int(m.group(1))
-                    m = re.search("FAILED \(.*failures=([0-9]+)", std_out)
+                    m = re.search(r"FAILED \(.*failures=([0-9]+)", std_out)
                     if m is not None:
                         n_failures += int(m.group(1))
 

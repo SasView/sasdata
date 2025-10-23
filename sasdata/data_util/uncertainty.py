@@ -23,7 +23,7 @@ __all__ = ['Uncertainty']
 
 # TODO: rename to Measurement and add support for units?
 # TODO: C implementation of *,/,**?
-class Uncertainty(object):
+class Uncertainty:
     # Make standard deviation available
     def _getdx(self): return np.sqrt(self.variance)
     def _setdx(self,dx):
