@@ -25,72 +25,34 @@ from sasdata.temp_ascii_reader import (
 )
 from sasdata.temp_ascii_reader import load_data as ascii_load_data
 from sasdata.temp_hdf5_reader import load_data as hdf_load_data
+from sasdata.temp_sesans_reader import load_data as sesans_load_data
 from sasdata.temp_xml_reader import load_data as xml_load_data
 
-test_hdf_file_names = [
-    "simpleexamplefile",
-    "nxcansas_1Dand2D_multisasentry",
-    "nxcansas_1Dand2D_multisasdata",
-    "MAR07232_rest",
-    "x25000_no_di",
-]
-
-test_xml_file_names = [
-    "ISIS_1_0",
-    "ISIS_1_1",
-    "ISIS_1_1_doubletrans",
-    "ISIS_1_1_notrans",
-    "TestExtensions",
-    "cansas1d",
-    "cansas1d_badunits",
-    "cansas1d_notitle",
-    "cansas1d_slit",
-    "cansas1d_units",
-    "cansas_test",
-    "cansas_test_modified",
-    # "cansas_xml_multisasentry_multisasdata",
-    "valid_cansas_xml",
-]
 
 def local_load(path: str):
     """Get local file path"""
     base = os.path.join(os.path.dirname(__file__), path)
-    if (os.path.exists(f"{base}.h5")):
+    if os.path.exists(f"{base}.h5"):
         return f"{base}.h5"
-    if (os.path.exists(f"{base}.xml")):
+    if os.path.exists(f"{base}.xml"):
         return f"{base}.xml"
     return f"{base}"
+
+
+def local_reference_load(path: str):
+    return local_load(f"{os.path.join('reference', path)}")
+
 
 def local_data_load(path: str):
     return local_load(f"{os.path.join('data', path)}")
 
-def example_data_load(path: str):
-    try:
-        return xml_load_data(local_load(f"data/{path}.xml"))
-    except OSError:
-        return hdf_load_data(local_load(f"data/{path}.h5"))
+
+def local_json_load(path: str):
+    return local_load(f"{os.path.join('json', path)}")
 
 
-@pytest.mark.sasdata
-@pytest.mark.parametrize("f", test_hdf_file_names)
-def test_hdf_load_file(f):
-    data = hdf_load_data(local_load(f"data/{f}"))
-
-    with open(local_load(f"reference/{f}.txt"), encoding="utf-8") as infile:
-        expected = "".join(infile.readlines())
-    keys = sorted([d for d in data])
-    assert "".join(data[k].summary() for k in keys) == expected
-
-
-@pytest.mark.sasdata
-@pytest.mark.parametrize("f", test_xml_file_names)
-def test_xml_load_file(f):
-    data = xml_load_data(local_load(f"data/{f}"))
-
-    with open(local_load(f"reference/{f}.txt"), encoding="utf-8") as infile:
-        expected = "".join(infile.readlines())
-    keys = sorted([d for d in data])
-    assert "".join(data[k].summary() for k in keys) == expected
+def local_sesans_load(path: str):
+    return local_load(f"{os.path.join('sesans_data', path)}")
 
 
 @pytest.mark.sasdata
@@ -109,65 +71,13 @@ def test_filter_data():
         ]
 
 
-@pytest.mark.sasdata
-@pytest.mark.parametrize("f", test_hdf_file_names + test_xml_file_names)
-def test_json_serialise(f):
-    data = example_data_load(f)
-
-    with open(local_load(f"json/{f}.json"), encoding="utf-8") as infile:
-        expected = json.loads("".join(infile.readlines()))
-    assert json.loads(SasDataEncoder().encode(data)) == expected
-
-
-@pytest.mark.sasdata
-@pytest.mark.parametrize("f", test_hdf_file_names + test_xml_file_names)
-def test_json_deserialise(f):
-    expected = example_data_load(f)
-
-    with open(local_load(f"json/{f}.json"), encoding="utf-8") as infile:
-        raw = json.loads("".join(infile.readlines()))
-        parsed = {}
-        for k in raw:
-            parsed[k] = SasData.from_json(raw[k])
-
-    for k in expected:
-        expect = expected[k]
-        pars = parsed[k]
-        assert pars.name == expect.name
-        # assert pars._data_contents == expect._data_contents
-        assert pars.dataset_type == expect.dataset_type
-        assert pars.mask == expect.mask
-        assert pars.model_requirements == expect.model_requirements
-
-
-@pytest.mark.sasdata
-@pytest.mark.parametrize("f", test_xml_file_names + test_hdf_file_names)
-def test_h5_round_trip_serialise(f):
-    expected = example_data_load(f)
-
-    bio = io.BytesIO()
-    SasData.save_h5(expected, bio)
-    bio.seek(0)
-
-    result = hdf_load_data(bio)
-    bio.close()
-
-    for name, entry in result.items():
-        assert expected[name].metadata.title == entry.metadata.title
-        assert expected[name].metadata.run == entry.metadata.run
-        assert expected[name].metadata.definition == entry.metadata.definition
-        assert expected[name].metadata.process == entry.metadata.process
-        assert expected[name].metadata.instrument == entry.metadata.instrument
-        assert expected[name].metadata.sample == entry.metadata.sample
-        assert expected[name].ordinate.units == entry.ordinate.units
-        assert np.all(expected[name].ordinate.value == entry.ordinate.value)
-        assert expected[name].abscissae.units == entry.abscissae.units
-        assert np.all(expected[name].abscissae.value == entry.abscissae.value)
-
 @dataclass(kw_only=True)
 class BaseTestCase:
     expected_values: dict[int, dict[str, float]]
     expected_metadata: dict[str, Any] = field(default_factory=dict)
+    metadata_file: None | str = None
+    json_file: None | str = None
+    round_trip: bool = False
 
 
 @dataclass(kw_only=True)
@@ -186,11 +96,15 @@ class BulkAsciiTestCase(AsciiTestCase):
 @dataclass(kw_only=True)
 class XmlTestCase(BaseTestCase):
     filename: str
+    entry: str = "sasentry01"
+    round_trip: bool = True
 
 
 @dataclass(kw_only=True)
 class Hdf5TestCase(BaseTestCase):
     filename: str
+    entry: str = "sasentry01"
+    round_trip: bool = True
 
 
 @dataclass(kw_only=True)
@@ -284,6 +198,7 @@ test_cases = [
     ),
     XmlTestCase(
         filename=local_data_load("ISIS_1_0.xml"),
+        entry="79680main_1D_2.2_10.0",
         expected_values={
             0: {"Q": 0.009, "I": 85.3333, "dI": 0.852491, "dQ": 0},
             -2: {"Q": 0.281, "I": 0.408902, "dQ": 0},
@@ -294,17 +209,131 @@ test_cases = [
             "radiation": "neutron"
         },
     ),
-    pytest.param(
-        Hdf5TestCase(
-            filename=local_data_load("simpleexamplefile.h5"),
-            expected_values={
-                0: {"Q": 0.5488135039273248, "I": 0.6778165367962301},
-                -1: {"Q": 0.004695476192547066, "I": 0.4344166255581208},
-            },
-        ),
-        marks=pytest.mark.xfail(
-            reason="Failing because of some Regex issue. The test looks correct, so this may be an issue with the HDF5 reader itself."
-        ),
+    Hdf5TestCase(
+        filename=local_data_load("simpleexamplefile.h5"),
+        metadata_file=local_reference_load("simpleexamplefile.txt"),
+        expected_values={
+            0: {"Q": 0.5488135039273248, "I": 0.6778165367962301},
+            -1: {"Q": 0.004695476192547066, "I": 0.4344166255581208},
+        },
+    ),
+    Hdf5TestCase(
+        filename=local_data_load("MAR07232_rest.h5"),
+        metadata_file=local_reference_load("MAR07232_rest.txt"),
+        expected_values={},
+    ),
+    Hdf5TestCase(
+        filename=local_data_load("x25000_no_di.h5"),
+        expected_values={},
+    ),
+    Hdf5TestCase(
+        filename=local_data_load("nxcansas_1Dand2D_multisasentry.h5"),
+        metadata_file=local_reference_load("nxcansas_1Dand2D_multisasentry.txt"),
+        expected_values={},
+    ),
+    Hdf5TestCase(
+        filename=local_data_load("nxcansas_1Dand2D_multisasdata.h5"),
+        metadata_file=local_reference_load("nxcansas_1Dand2D_multisasdata.txt"),
+        expected_values={},
+    ),
+    XmlTestCase(
+        filename=local_data_load("ISIS_1_0.xml"),
+        entry="79680main_1D_2.2_10.0",
+        metadata_file=local_reference_load("ISIS_1_0.txt"),
+        json_file=local_json_load("ISIS_1_0.json"),
+        expected_values={},
+    ),
+    XmlTestCase(
+        filename=local_data_load("ISIS_1_1.xml"),
+        entry="79680main_1D_2.2_10.0",
+        metadata_file=local_reference_load("ISIS_1_1.txt"),
+        json_file=local_json_load("ISIS_1_1.json"),
+        expected_values={},
+    ),
+    XmlTestCase(
+        filename=local_data_load("ISIS_1_1_doubletrans.xml"),
+        entry="79680main_1D_2.2_10.0",
+        metadata_file=local_reference_load("ISIS_1_1_doubletrans.txt"),
+        json_file=local_json_load("ISIS_1_1_doubletrans.json"),
+        expected_values={},
+    ),
+    XmlTestCase(
+        filename=local_data_load("ISIS_1_1_notrans.xml"),
+        entry="79680main_1D_2.2_10.0",
+        metadata_file=local_reference_load("ISIS_1_1_notrans.txt"),
+        json_file=local_json_load("ISIS_1_1_notrans.json"),
+        expected_values={},
+    ),
+    XmlTestCase(
+        filename=local_data_load("TestExtensions.xml"),
+        entry="TK49 c10_SANS",
+        metadata_file=local_reference_load("TestExtensions.txt"),
+        json_file=local_json_load("TestExtensions.json"),
+        expected_values={},
+    ),
+    XmlTestCase(
+        filename=local_data_load("cansas1d.xml"),
+        entry="Test title",
+        metadata_file=local_reference_load("cansas1d.txt"),
+        json_file=local_json_load("cansas1d.json"),
+        expected_values={},
+    ),
+    XmlTestCase(
+        filename=local_data_load("cansas1d_badunits.xml"),
+        entry="Test title",
+        metadata_file=local_reference_load("cansas1d_badunits.txt"),
+        json_file=local_json_load("cansas1d_badunits.json"),
+        expected_values={},
+    ),
+    XmlTestCase(
+        filename=local_data_load("cansas1d_notitle.xml"),
+        entry="SasData01",
+        metadata_file=local_reference_load("cansas1d_notitle.txt"),
+        json_file=local_json_load("cansas1d_notitle.json"),
+        expected_values={},
+    ),
+    XmlTestCase(
+        filename=local_data_load("cansas1d_slit.xml"),
+        entry="Test title",
+        metadata_file=local_reference_load("cansas1d_slit.txt"),
+        json_file=local_json_load("cansas1d_slit.json"),
+        expected_values={},
+    ),
+    XmlTestCase(
+        filename=local_data_load("cansas1d_units.xml"),
+        entry="Test title",
+        metadata_file=local_reference_load("cansas1d_units.txt"),
+        json_file=local_json_load("cansas1d_units.json"),
+        expected_values={},
+    ),
+    XmlTestCase(
+        filename=local_data_load("cansas_test.xml"),
+        entry="ILL-D11 example1: 2A 5mM 0%D2O",
+        metadata_file=local_reference_load("cansas_test.txt"),
+        json_file=local_json_load("cansas_test.json"),
+        expected_values={},
+    ),
+    XmlTestCase(
+        filename=local_data_load("cansas_test_modified.xml"),
+        entry="ILL-D11 example1: 2A 5mM 0%D2O",
+        metadata_file=local_reference_load("cansas_test_modified.txt"),
+        json_file=local_json_load("cansas_test_modified.json"),
+        expected_values={},
+    ),
+    XmlTestCase(
+        filename=local_data_load("valid_cansas_xml.xml"),
+        entry="80514main_1D_2.2_10.0",
+        metadata_file=local_reference_load("valid_cansas_xml.txt"),
+        json_file=local_json_load("valid_cansas_xml.json"),
+        expected_values={},
+    ),
+    SesansTestCase(
+        filename=local_sesans_load("sphere2micron.ses"),
+        metadata_file=local_reference_load("sphere2micron.txt"),
+        expected_values={
+            0: {"SpinEchoLength": 391.56, "Depolarisation": 0.0041929},
+            -1: {"SpinEchoLength": 46099, "Depolarisation": -0.19956},
+        },
     ),
 ]
 
@@ -328,6 +357,7 @@ def is_uncertainty(column: str) -> bool:
     return False
 
 
+@pytest.mark.dataload
 @pytest.mark.parametrize("test_case", test_cases)
 def test_load_file(test_case: BaseTestCase):
     match test_case:
@@ -341,11 +371,16 @@ def test_load_file(test_case: BaseTestCase):
             else:
                 raise TypeError("Invalid type for reader_params.")
         case Hdf5TestCase():
-            loaded_data = hdf_load_data(test_case.filename)
+            combined_data = hdf_load_data(test_case.filename)
+            loaded_data = combined_data[test_case.entry]
         # TODO: Support SESANS
         case XmlTestCase():
             # Not bulk, so just assume we get one dataset.
-            loaded_data = next(iter(xml_load_data(test_case.filename).items()))[1]
+            combined_data = xml_load_data(test_case.filename)
+            loaded_data = combined_data[test_case.entry]
+        case SesansTestCase():
+            loaded_data = sesans_load_data(test_case.filename)
+            combined_data = {"only": loaded_data}
         case _:
             raise ValueError("Invalid loader")
     if isinstance(test_case, BulkAsciiTestCase):
@@ -371,3 +406,51 @@ def test_load_file(test_case: BaseTestCase):
             continue
         for metadata_key, value in current_metadata_dict.items():
             assert current_datum.metadata.raw.filter(metadata_key) == value
+
+    if test_case.metadata_file is not None:
+        with open(test_case.metadata_file, encoding="utf-8") as infile:
+            expected = "".join(infile.readlines())
+        keys = sorted([d for d in combined_data])
+        assert "".join(combined_data[k].summary() for k in keys) == expected
+
+    if test_case.json_file is not None:
+        # Test serialisation
+        with open(test_case.json_file, encoding="utf-8") as infile:
+            expected = json.loads("".join(infile.readlines()))
+        assert json.loads(SasDataEncoder().encode(combined_data)) == expected
+
+        # Test deserialisation
+        with open(test_case.json_file, encoding="utf-8") as infile:
+            raw = json.loads("".join(infile.readlines()))
+            parsed = {}
+            for k in raw:
+                parsed[k] = SasData.from_json(raw[k])
+
+        for k in combined_data:
+            expect = combined_data[k]
+            pars = parsed[k]
+            assert pars.name == expect.name
+            # assert pars._data_contents == expect._data_contents
+            assert pars.dataset_type == expect.dataset_type
+            assert pars.mask == expect.mask
+            assert pars.model_requirements == expect.model_requirements
+
+    if test_case.round_trip:
+        bio = io.BytesIO()
+        SasData.save_h5(combined_data, bio)
+        bio.seek(0)
+
+        result = hdf_load_data(bio)
+        bio.close()
+
+        for name, entry in result.items():
+            assert combined_data[name].metadata.title == entry.metadata.title
+            assert combined_data[name].metadata.run == entry.metadata.run
+            assert combined_data[name].metadata.definition == entry.metadata.definition
+            assert combined_data[name].metadata.process == entry.metadata.process
+            assert combined_data[name].metadata.instrument == entry.metadata.instrument
+            assert combined_data[name].metadata.sample == entry.metadata.sample
+            assert combined_data[name].ordinate.units == entry.ordinate.units
+            assert np.all(combined_data[name].ordinate.value == entry.ordinate.value)
+            assert combined_data[name].abscissae.units == entry.abscissae.units
+            assert np.all(combined_data[name].abscissae.value == entry.abscissae.value)
