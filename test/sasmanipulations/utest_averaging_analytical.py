@@ -5,14 +5,23 @@ formulae rather than imported data files.
 """
 
 import unittest
-from unittest.mock import patch
 
 import numpy as np
 from scipy import integrate
 
+from sasdata.data_util.averaging import (
+    Boxavg,
+    Boxsum,
+    CircularAverage,
+    DirectionalAverage,
+    Ring,
+    SectorQ,
+    SlabX,
+    SlabY,
+    WedgePhi,
+    WedgeQ,
+)
 from sasdata.dataloader import data_info
-from sasdata.data_util.averaging import (SlabX, SlabY, Boxsum, Boxavg, CircularAverage, Ring,
-                                         SectorQ, WedgeQ, WedgePhi, DirectionalAverage)
 
 
 class MatrixToData2D:

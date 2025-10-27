@@ -2,10 +2,9 @@
 This module contains various data processors used by Sasview's slicers.
 """
 from enum import Enum, auto
-import numpy as np
 
+import numpy as np
 from numpy.typing import ArrayLike
-from typing import Optional
 
 from sasdata.dataloader.data_info import Data1D, Data2D
 
@@ -67,8 +66,8 @@ class DirectionalAverage:
     def __init__(self,
                  major_axis: ArrayLike,
                  minor_axis: ArrayLike,
-                 major_lims: Optional[tuple[float, float]] = None,
-                 minor_lims: Optional[tuple[float, float]] = None,
+                 major_lims: tuple[float, float] | None = None,
+                 minor_lims: tuple[float, float] | None = None,
                  nbins: int = 100):
         """
         Set up direction of averaging, limits on the ROI, & the number of bins.

@@ -19,10 +19,9 @@ PYTHONPATH=../src/ python2  -m sasmanipulations.test.utest_averaging DataInfoTes
 
 # TODO: copy the meta data from the 2D object to the resulting 1D object
 import math
+from warnings import warn
 
 import numpy as np
-from typing import Optional, Union
-from warnings import warn
 
 from sasdata.dataloader.data_info import Data1D, Data2D
 
@@ -239,7 +238,7 @@ def get_dq_data(data2d: Data2D) -> np.array:
 ################################################################################
 
 
-def reader2D_converter(data2d: Optional[Data2D] = None) -> Data2D:
+def reader2D_converter(data2d: Data2D | None = None) -> Data2D:
     """
     convert old 2d format opened by IhorReader or danse_reader
     to new Data2D format

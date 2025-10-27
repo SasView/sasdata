@@ -22,8 +22,6 @@
 import copy
 import math
 from math import fabs
-import copy
-from typing import Optional
 
 import numpy as np
 
@@ -1236,7 +1234,7 @@ class Data2D(plottable_2D, DataInfo):
         return result
 
 
-def reader2D_converter(data2d: Optional[Data2D] = None) -> Data2D:
+def reader2D_converter(data2d: Data2D | None = None) -> Data2D:
     """
     convert old 2d format opened by IhorReader or danse_reader
     to new Data2D format
