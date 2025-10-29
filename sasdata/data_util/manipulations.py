@@ -1,12 +1,11 @@
 """
 Data manipulations for 2D data sets.
-Using the meta data information, various types of averaging
-are performed in Q-space
+Using the meta data information, various types of averaging are performed in Q-space
 
 To test this module use:
 ```
 cd test
-PYTHONPATH=../src/ python2  -m sasdataloader.test.utest_averaging DataInfoTests.test_sectorphi_quarter
+PYTHONPATH=../src/ python2  -m sasmanipulations.test.utest_averaging DataInfoTests.test_sectorphi_quarter
 ```
 """
 #####################################################################
@@ -20,10 +19,14 @@ PYTHONPATH=../src/ python2  -m sasdataloader.test.utest_averaging DataInfoTests.
 
 # TODO: copy the meta data from the 2D object to the resulting 1D object
 import math
+from warnings import warn
 
 import numpy as np
 
 from sasdata.dataloader.data_info import Data1D, Data2D
+
+warn("sasdata.data_util.manipulations is deprecated. Unless otherwise noted, update your import to "
+     "sasdata.data_util.averaging.", DeprecationWarning, stacklevel=2)
 
 
 def position_and_wavelength_to_q(dx: float, dy: float, detector_distance: float, wavelength: float) -> float:
@@ -196,7 +199,7 @@ def get_dq_data(data2d: Data2D) -> np.array:
     Get the dq for resolution averaging
     The pinholes and det. pix contribution present
     in both direction of the 2D which must be subtracted when
-    converting to 1D: dq_overlap should calculated ideally at
+    converting to 1D: dq_overlap should be calculated ideally at
     q = 0. Note This method works on only pinhole geometry.
     Extrapolate dqx(r) and dqy(phi) at q = 0, and take an average.
     '''
@@ -245,6 +248,8 @@ def reader2D_converter(data2d: Data2D | None = None) -> Data2D:
     :return: 1d arrays of Data2D object
 
     """
+    warn("reader2D_converter should be imported in the future sasdata.dataloader.data_info.",
+         DeprecationWarning, stacklevel=2)
     if data2d.data is None or data2d.x_bins is None or data2d.y_bins is None:
         raise ValueError("Can't convert this data: data=None...")
     new_x = np.tile(data2d.x_bins, (len(data2d.y_bins), 1))
