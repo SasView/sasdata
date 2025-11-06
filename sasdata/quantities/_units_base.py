@@ -72,7 +72,7 @@ class Dimensions:
 
     def __pow__(self, power: int | float):
 
-        if not isinstance(power, (int, float)):
+        if not isinstance(power, (int | float)):
             return NotImplemented
 
         frac = Fraction(power).limit_denominator(500) # Probably way bigger than needed, 10 would probably be fine
@@ -228,7 +228,7 @@ class Unit:
     def __rtruediv__(self: Self, other: "Unit"):
         if isinstance(other, Unit):
             return Unit(other.scale / self.scale, other.dimensions / self.dimensions)
-        elif isinstance(other, (int, float)):
+        elif isinstance(other, (int | float)):
             return Unit(other / self.scale, self.dimensions ** -1)
         else:
             return NotImplemented

@@ -62,7 +62,7 @@ def recurse_hdf5(hdf5_entry):
     elif isinstance(hdf5_entry, HDF5Group):
         return SASDataGroup(
             name=hdf5_entry.name,
-            children={key: recurse_hdf5(hdf5_entry[key]) for key in hdf5_entry.keys()},
+            children={key: recurse_hdf5(hdf5_entry[key]) for key in hdf5_entry},
         )
 
     else:
@@ -309,7 +309,7 @@ def load_data(filename: str) -> dict[str, SasData]:
     with h5py.File(filename, "r") as f:
         loaded_data: dict[str, SasData] = {}
 
-        for root_key in f.keys():
+        for root_key in f:
             entry = f[root_key]
 
             data_contents : dict[str, Quantity] = {}

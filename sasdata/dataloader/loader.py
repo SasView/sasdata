@@ -79,7 +79,7 @@ class Registry(ExtensionRegistry):
         readers if no reader was registered for the file's extension.
         """
         # Coerce file path list and ext to lists
-        file_path_list = [file_path_list] if isinstance(file_path_list, (str, Path)) else file_path_list
+        file_path_list = [file_path_list] if isinstance(file_path_list, (str | Path)) else file_path_list
         ext = [ext] if isinstance(ext, str) else ext
         # Ensure ext has at least 1 value in it to ensure zip_longest has a value for the fillvalue
         if not ext:
