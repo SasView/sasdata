@@ -83,7 +83,7 @@ def get_fallback_readers(settings=None, use_defaults=True):
     """
     default_readers = GENERIC_READERS.copy() if use_defaults else []
     read_methods = []
-    if isinstance(settings, (list, set, tuple)):
+    if isinstance(settings, (list | set | tuple)):
         default_readers.extend(settings)
     for module in default_readers:
         loader = module.Reader()
