@@ -267,18 +267,17 @@ def load_raw(node: etree._Element, version: str) -> MetaNode:
     contents: Quantity[float] | str | list[MetaNode] = ""
     if nodes:
         contents = [load_raw(n, version) for n in nodes]
-    else:
-        if "unit" in attrib and attrib["unit"]:
-            value = parse_string(node, version)
-            if value:
-                try:
-                    contents = Quantity(float(value), unit_parser.parse(attrib["unit"]))
-                except ValueError:
-                    contents = value
-            else:
+    elif "unit" in attrib and attrib["unit"]:
+        value = parse_string(node, version)
+        if value:
+            try:
+                contents = Quantity(float(value), unit_parser.parse(attrib["unit"]))
+            except ValueError:
                 contents = value
         else:
-            contents = parse_string(node, version)
+            contents = value
+    else:
+        contents = parse_string(node, version)
     return MetaNode(name=etree.QName(node).localname, attrs=attrib, contents=contents)
 
 
