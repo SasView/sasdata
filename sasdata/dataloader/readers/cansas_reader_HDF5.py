@@ -130,7 +130,7 @@ class Reader(FileReader):
             # Get all information for the current key
             value = data.get(key)
             class_name = h5attr(value, 'canSAS_class')
-            if isinstance(class_name, (list, tuple, np.ndarray)):
+            if isinstance(class_name, (list | tuple | np.ndarray)):
                 class_name = class_name[0]
             if class_name is None:
                 class_name = h5attr(value, 'NX_class')

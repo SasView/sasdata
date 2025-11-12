@@ -91,7 +91,7 @@ class NXcanSASWriter:
                 if units is not None:
                     entry[names[2]].attrs['units'] = units
 
-        valid_data = all([isinstance(d, (Data1D, Data2D)) for d in dataset])
+        valid_data = all([isinstance(d, (Data1D | Data2D)) for d in dataset])
         if not valid_data:
             raise ValueError("All entries of dataset must be Data1D or Data2D"
                              "objects")
