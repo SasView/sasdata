@@ -9,7 +9,7 @@ from h5py._hl.group import Group as HDF5Group
 from sasdata.data import SasData
 from sasdata.data_backing import Dataset as SASDataDataset
 from sasdata.data_backing import Group as SASDataGroup
-from sasdata.dataset_types import one_dim, two_dim
+from sasdata.dataset_types import one_dim, two_dim, three_dim
 from sasdata.metadata import (
     Aperture,
     BeamSize,
@@ -329,7 +329,12 @@ def load_data(filename: str) -> dict[str, SasData]:
 
             metadata = parse_metadata(f[root_key])
 
-            dataset_type = two_dim if "Qy" in data_contents else one_dim
+            if "Qz" in data_contents:
+                dataset_type = three_dim
+            elif "Qy" in data_contents:
+                dataset_type = two_dim
+            else:
+                dataset_type = one_dim
 
             entry_key = entry.attrs["sasview_key"] if "sasview_key" in entry.attrs else root_key
 
