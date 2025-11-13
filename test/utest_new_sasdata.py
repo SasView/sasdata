@@ -2,7 +2,7 @@ import numpy as np
 
 from sasdata.data import SasData
 from sasdata.data_backing import Group
-from sasdata.dataset_types import one_dim, two_dim
+from sasdata.dataset_types import one_dim, two_dim, three_dim
 from sasdata.quantities.quantity import Quantity
 from sasdata.quantities.units import per_angstrom, per_centimeter
 
@@ -46,3 +46,26 @@ def test_2d():
 
     assert all(data.ordinate.value == np.array(i))
     assert (data.abscissae.value == np.array([[1, 1], [1, 2], [1, 3], [2, 1], [2, 2], [2, 3], [3, 1], [3, 2], [3, 3]])).all().all()
+
+def test_3d():
+    qx = [1, 1, 1, 2, 2, 2, 3, 3, 3]
+    qy = [1, 2, 3, 1, 2, 3, 1, 2, 3]
+    qz = [0, 1, 0, 1, 0, 1, 0, 1, 0]
+    i = [1, 2, 3]
+
+    qx_quantity = Quantity(np.array(qx), per_angstrom)
+    qy_quantity = Quantity(np.array(qy), per_angstrom)
+    qz_quantity = Quantity(np.array(qz), per_angstrom)
+    i_quantity = Quantity(np.array(i), per_centimeter)
+
+    data_contents = {
+        'Qx': qx_quantity,
+        'Qy': qy_quantity,
+        'Qz': qz_quantity,
+        'I': i_quantity
+    }
+
+    data = SasData('TestData', data_contents, three_dim, Group('root', {}), True)
+
+    assert all(data.ordinate.value == np.array(i))
+    assert (data.abscissae.value == np.array([[1, 1, 0], [1, 2, 1], [1, 3, 0], [2, 1, 1], [2, 2, 0], [2, 3, 1], [3, 1, 0], [3, 2, 1], [3, 3, 0]])).all().all()
