@@ -1088,8 +1088,8 @@ class DirectionalAverageValidationTests(unittest.TestCase):
         Ensure correct behaviour when there are no limits provided.
         The min. and max. values from major/minor_axis are taken as the limits.
         """
-        dir_avg = DirectionalAverage(major_axis=[1, 2, 3],
-                                     minor_axis=[4, 5, 6])
+        dir_avg = DirectionalAverage(major_axis=np.array([1, 2, 3]),
+                                     minor_axis=np.array([4, 5, 6]))
         self.assertEqual(dir_avg.major_lims, (1, 3))
         self.assertEqual(dir_avg.minor_lims, (4, 6))
 
