@@ -43,7 +43,7 @@ from sasdata.data_util.averaging import (
     WedgePhi,
     WedgeQ,
 )
-from sasdata.dataloader.data_info import Data1D, Data2D
+from sasdata.dataloader.data_info import Data1D, Data2D, Data3D
 from sasdata.dataloader.data_info import reader2D_converter as _di_reader2D_converter
 from sasdata.quantities.constants import Pi, TwoPi
 
