@@ -1070,10 +1070,11 @@ class DirectionalAverageValidationTests(unittest.TestCase):
 
     def test_nbins_not_int(self):
         """
-        Ensure a TypeError is raised if the parameter nbins is not an integer.
+        Ensure a TypeError is raised if the parameter nbins is not a number 
+        that can be converted to integer.
         """
-        self.assertRaises(TypeError, DirectionalAverage, major_axis=[],
-                          minor_axis=[], nbins=10.0)
+        self.assertRaises(TypeError, DirectionalAverage, major_axis=np.array([0, 1]),
+                          minor_axis=np.array([0, 1]), nbins=np.array([]))
 
     def test_axes_unequal_lengths(self):
         """

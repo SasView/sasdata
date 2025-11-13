@@ -98,7 +98,7 @@ class DirectionalAverage:
             try:
                 nbins = int(nbins)
             except:
-                msg = f"Parameter 'nbins' must should be convertable to an integer via int(), got type {type(nbins)} (={nbins})"
+                msg = f"Parameter 'nbins' must be convertable to an integer via int(), got type {type(nbins)} (={nbins})"
                 raise TypeError(msg)
 
         self.major_axis = np.asarray(major_axis)
