@@ -93,7 +93,7 @@ def guess_params_from_filename(
             columns,
             starting_line=startpos,
             separator_dict=separator_dict,
-            dataset_type=guess_dataset_type(filename),
+            dataset_type=dataset_type,
         )
         return params
 
