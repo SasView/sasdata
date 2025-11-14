@@ -2,6 +2,7 @@
 This module contains various data processors used by Sasview's slicers.
 """
 from enum import Enum, auto
+from typing import Optional, Tuple
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -10,10 +11,10 @@ from sasdata.dataloader.data_info import Data1D, Data2D
 
 
 class IntervalType(Enum):
-    HALF_OPEN = auto()
-    CLOSED = auto()
+    HALF_OPEN = 'half_open'
+    CLOSED = 'closed'
 
-    def weights_for_interval(self, array, l_bound, u_bound):
+    def weights_for_interval(self, array: ArrayLike, l_bound: float, u_bound: float) -> np.ndarray:
         """
         Weight coordinate data by position relative to a specified interval.
 
@@ -21,8 +22,8 @@ class IntervalType(Enum):
         :param l_bound: value defining the lower limit of the region of interest
         :param u_bound: value defining the upper limit of the region of interest
 
-        If and when fractional binning is implemented (ask Lucas), this function
-        will be changed so that instead of outputting zeros and ones, it gives
+        Returns a boolean mask indicating membership in the interval.
+        If fractional binning is implemented, this function should be changed to
         fractional values instead. These will depend on how close the array value
         is to being within the interval defined.
         """
@@ -30,15 +31,26 @@ class IntervalType(Enum):
         # Whether the endpoint should be included depends on circumstance.
         # Half-open is used when binning the major axis (except for the final bin)
         # and closed used for the minor axis and the final bin of the major axis.
-        if self.name.lower() == 'half_open':
+        if self is IntervalType.HALF_OPEN:
             in_range = np.logical_and(l_bound <= array, array < u_bound)
-        elif self.name.lower() == 'closed':
+        elif self is IntervalType.CLOSED:
             in_range = np.logical_and(l_bound <= array, array <= u_bound)
         else:
             msg = f"Unrecognised interval_type: {self.name}"
             raise ValueError(msg)
 
-        return np.asarray(in_range, dtype=int)
+        return np.asarray(in_range, dtype=bool)
+
+def _normalize_angles(phi_data: np.ndarray, phi_min: float, phi_max: float) -> Tuple[np.ndarray, float, float]:
+    """
+    Normalize phi_data and phi_min/phi_max so phi_min is mapped to 0 and phi_data is in [0, 2*pi).
+    Returns (phi_data_normalized, phi_min_normalized, phi_max_normalized).
+    """
+    phi_offset = phi_min
+    phi_min_norm = 0.0
+    phi_max_norm = (phi_max - phi_offset) % (2 * np.pi)
+    phi_data_norm = (phi_data - phi_offset) % (2 * np.pi)
+    return phi_data_norm, phi_min_norm, phi_max_norm
 
 
 class DirectionalAverage:
@@ -60,17 +72,9 @@ class DirectionalAverage:
 
     Note that the old version of manipulations.py had an option for logarithmic
     binning which was only used by SectorQ. This functionality is never called
-    upon by SasView however, so I haven't implemented it here (yet).
-    """
+    upon by SasView however.
 
-    def __init__(self,
-                 major_axis: ArrayLike,
-                 minor_axis: ArrayLike,
-                 major_lims: tuple[float, float] | None = None,
-                 minor_lims: tuple[float, float] | None = None,
-                 nbins: int = 100):
-        """
-        Set up direction of averaging, limits on the ROI, & the number of bins.
+    Set up direction of averaging, limits on the ROI, & the number of bins.
 
         :param major_axis: Coordinate data for axis onto which the 2D data is
                            projected.
@@ -81,7 +85,14 @@ class DirectionalAverage:
         :param minor_lims: Lower and upper bounds of the ROI along the minor
                            axis. Given as a 2 element tuple/list.
         :param nbins: The number of bins the major axis is divided up into.
-        """
+    """
+
+    def __init__(self,
+                 major_axis: ArrayLike,
+                 minor_axis: ArrayLike,
+                 major_lims: tuple[float, float] | None = None,
+                 minor_lims: tuple[float, float] | None = None,
+                 nbins: int = 100):
 
         if any(not hasattr(coordinate_data, "__array__") for
                coordinate_data in (major_axis, minor_axis)):
@@ -94,7 +105,6 @@ class DirectionalAverage:
             raise ValueError(msg)
 
         if not isinstance(nbins, int):
-            # TODO: Make classes that depend on this provide ints, its quite a thing to fix though
             try:
                 nbins = int(nbins)
             except:
@@ -108,17 +118,12 @@ class DirectionalAverage:
             raise ValueError(msg)
         # In some cases all values from a given axis are part of the ROI.
         # An alternative approach may be needed for fractional weights.
-        if major_lims is None:
-            self.major_lims = (self.major_axis.min(), self.major_axis.max())
-        else:
-            self.major_lims = major_lims
-        if minor_lims is None:
-            self.minor_lims = (self.minor_axis.min(), self.minor_axis.max())
-        else:
-            self.minor_lims = minor_lims
+        self.major_lims = (self.major_axis.min(), self.major_axis.max()) if major_lims is None else major_lims
+        self.minor_lims = (self.minor_axis.min(), self.minor_axis.max()) if minor_lims is None else minor_lims
+
         self.nbins = nbins
         # Assume a linear spacing for now, but allow for log, fibonacci, etc. implementations in the future
-        # Add one to bin because this is for the limits, not centroids.
+        # Bin limits define interval edges (nbins + 1 values), not centre.
         self.bin_limits = np.linspace(self.major_lims[0], self.major_lims[1], self.nbins + 1)
 
     @property
@@ -134,73 +139,83 @@ class DirectionalAverage:
         lower, upper = self.get_bin_interval(bin_number)
         return upper - lower
 
-    def get_bin_interval(self, bin_number: int) -> (float, float):
+    def get_bin_interval(self, bin_number: int) -> Tuple[float, float]:
         """
         Return the lower and upper limits defining a bin, given its index.
 
         :param bin_number: The index of the bin (between 0 and self.nbins - 1)
         :return: A tuple of the interval limits as (lower, upper).
         """
-        # Ensure bin_number is an integer and not a float or a string representation
+        # Ensure bin_number is an integer
         bin_number = int(bin_number)
-        return self.bin_limits[bin_number], self.bin_limits[bin_number+1]
+        return float(self.bin_limits[bin_number]), float(self.bin_limits[bin_number + 1])
 
-    def get_bin_index(self, value):
+    def get_bin_index(self, value: float) -> int:
         """
         Return the index of the bin to which the supplied value belongs.
-
         :param value: A coordinate value from somewhere along the major axis.
         """
-        numerator = value - self.major_lims[0]
-        denominator = self.major_lims[1] - self.major_lims[0]
+        numerator = float(value) - float(self.major_lims[0])
+        denominator = float(self.major_lims[1]) - float(self.major_lims[0])
+        if denominator == 0:
+            # all values map to bin 0
+            return 0
         bin_index = int(np.floor(self.nbins * numerator / denominator))
 
         # Bins are indexed from 0 to nbins-1, so this check protects against
         # out-of-range indices when value == self.major_lims[1]
-        if bin_index == self.nbins:
-            bin_index -= 1
+        return int(np.clip(bin_index, 0, self.nbins - 1))
 
-        return bin_index
-
-    def compute_weights(self):
+    def compute_weights(self) -> np.ndarray:
         """
         Return weights array for the contribution of each datapoint to each bin
-
         Each row of the weights array corresponds to the bin with the same
         index.
         """
-        major_weights = np.zeros((self.nbins, self.major_axis.size))
+        n_points = self.major_axis.size
+        major_weights = np.zeros((self.nbins, n_points), dtype=float)
         closed = IntervalType.CLOSED
         for m in range(self.nbins):
             # Include the value at the end of the binning range, but in
             # general use half-open intervals so each value belongs in only
             # one bin.
-            if m == self.nbins - 1:
-                interval = closed
-            else:
-                interval = IntervalType.HALF_OPEN
+            interval = closed if m == self.nbins - 1 else IntervalType.HALF_OPEN
             bin_start, bin_end = self.get_bin_interval(bin_number=m)
-            major_weights[m] = interval.weights_for_interval(array=self.major_axis,
-                                                    l_bound=bin_start,
-                                                    u_bound=bin_end)
-        minor_weights = closed.weights_for_interval(array=self.minor_axis,
-                                             l_bound=self.minor_lims[0],
-                                             u_bound=self.minor_lims[1])
-        return major_weights * minor_weights
+            major_mask = interval.weights_for_interval(array=self.major_axis,
+                                                       l_bound=bin_start,
+                                                       u_bound=bin_end)
+            major_weights[m, :] = major_mask.astype(float)
+        # If minor_lims is None we include all points in minor axis
+        if self.minor_lims is None:
+            minor_mask = np.ones(n_points, dtype=float)
+        else:
+            minor_mask = IntervalType.CLOSED.weights_for_interval(array=self.minor_axis,
+                                                                  l_bound=self.minor_lims[0],
+                                                                  u_bound=self.minor_lims[1]).astype(float)
+        return major_weights * minor_mask[np.newaxis, :]
 
-    def __call__(self, data, err_data):
+    def __call__(self, data: ArrayLike, err_data: ArrayLike):
         """
         Compute the directional average of the supplied intensity & error data.
 
         :param data: intensity data from the origninal Data2D object.
         :param err_data: the corresponding errors for the intensity data.
         """
+        data = np.asarray(data)
+        err_data = np.asarray(err_data)
         weights = self.compute_weights()
 
+        # Sum across points for each bin
+        bin_counts = np.sum(weights, axis=1)
+        # Avoid division by zero: compute sums only where count > 0
         x_axis_values = np.sum(weights * self.major_axis, axis=1)
         intensity = np.sum(weights * data, axis=1)
         errs_squared = np.sum((weights * err_data)**2, axis=1)
-        bin_counts = np.sum(weights, axis=1)
+
+        # Prepare results, only compute division where bin_counts > 0
+        valid_bins = bin_counts > 0
+        if not np.any(valid_bins):
+            raise ValueError("Average Error: No bins inside ROI to average...")        
 
         errors = np.sqrt(errs_squared)
         x_axis_values /= bin_counts
@@ -228,11 +243,11 @@ class GenericROI:
         In classes inheriting from GenericROI, the variables used to define the
         boundaries of the Region Of Interest are also set up during __init__.
         """
-        self.data = None
-        self.err_data = None
-        self.q_data = None
-        self.qx_data = None
-        self.qy_data = None
+        self.data: Optional[np.ndarray] = None
+        self.err_data: Optional[np.ndarray] = None
+        self.q_data: Optional[np.ndarray] = None
+        self.qx_data: Optional[np.ndarray] = None
+        self.qy_data: Optional[np.ndarray] = None
 
     def validate_and_assign_data(self, data2d: Data2D = None) -> None:
         """
@@ -314,7 +329,7 @@ class PolarROI(GenericROI):
         """
 
         super().__init__()
-        self.phi_data = None
+        self.phi_data: Optional[np.ndarray] = None
 
         if r_min >= r_max:
             msg = "Minimum radius cannot be greater than maximum radius."
@@ -380,11 +395,11 @@ class Boxsum(CartesianROI):
         # Currently the weights are binary, but could be fractional in future
         interval = IntervalType.CLOSED
         x_weights = interval.weights_for_interval(array=self.qx_data,
-                                         l_bound=self.qx_min,
-                                         u_bound=self.qx_max)
+                                                  l_bound=self.qx_min,
+                                                  u_bound=self.qx_max).astype(float)
         y_weights = interval.weights_for_interval(array=self.qy_data,
-                                         l_bound=self.qy_min,
-                                         u_bound=self.qy_max)
+                                                  l_bound=self.qy_min,
+                                                  u_bound=self.qy_max).astype(float)
         weights = x_weights * y_weights
 
         data = weights * self.data
@@ -392,9 +407,9 @@ class Boxsum(CartesianROI):
         # how it was done in the old manipulations.py
         err_squared = weights * weights * self.err_data * self.err_data
 
-        total_sum = np.sum(data)
-        total_errors_squared = np.sum(err_squared)
-        total_count = np.sum(weights)
+        total_sum = float(np.sum(data))
+        total_errors_squared = float(np.sum(err_squared))
+        total_count = float(np.sum(weights))
 
         return total_sum, np.sqrt(total_errors_squared), total_count
 
@@ -426,7 +441,8 @@ class Boxavg(Boxsum):
         """
         self.validate_and_assign_data(data2d)
         total_sum, error, count = super()._sum()
-
+        if count == 0:
+            raise ValueError("Boxavg: no points in ROI to compute average.")
         return (total_sum / count), (error / count)
 
 
@@ -476,14 +492,12 @@ class SlabX(CartesianROI):
         # the behaviour of fold here will also need to change. Perhaps we could
         # apply a transformation to the data like the one used in WedgePhi.
 
-        if self.fold:
-            major_lims = (0, self.qx_max)
-            self.qx_data = np.abs(self.qx_data)
-        else:
-            major_lims = (self.qx_min, self.qx_max)
+        # Use local variables to avoid mutating object state
+        qx_data_local = np.abs(self.qx_data) if self.fold else self.qx_data
+        major_lims = (0, self.qx_max) if self.fold else (self.qx_min, self.qx_max)
         minor_lims = (self.qy_min, self.qy_max)
 
-        directional_average = DirectionalAverage(major_axis=self.qx_data,
+        directional_average = DirectionalAverage(major_axis=qx_data_local,
                                                  minor_axis=self.qy_data,
                                                  major_lims=major_lims,
                                                  minor_lims=minor_lims,
@@ -540,14 +554,11 @@ class SlabY(CartesianROI):
         # the behaviour of fold here will also need to change. Perhaps we could
         # apply a transformation to the data like the one used in WedgePhi.
 
-        if self.fold:
-            major_lims = (0, self.qy_max)
-            self.qy_data = np.abs(self.qy_data)
-        else:
-            major_lims = (self.qy_min, self.qy_max)
+        qy_data_local = np.abs(self.qy_data) if self.fold else self.qy_data
+        major_lims = (0, self.qy_max) if self.fold else (self.qy_min, self.qy_max)
         minor_lims = (self.qx_min, self.qx_max)
 
-        directional_average = DirectionalAverage(major_axis=self.qy_data,
+        directional_average = DirectionalAverage(major_axis=qy_data_local,
                                                  minor_axis=self.qx_data,
                                                  major_lims=major_lims,
                                                  minor_lims=minor_lims,
@@ -704,16 +715,13 @@ class SectorQ(PolarROI):
         # Transform all angles to the range [0,2π) where phi_min is at zero,
         # eliminating errors when the ROI straddles the 2π -> 0 discontinuity.
         # We won't need to convert back later because we're plotting against Q.
-        phi_offset = self.phi_min
-        self.phi_min = 0.0
-        self.phi_max = (self.phi_max - phi_offset) % (2 * np.pi)
-        self.phi_data = (self.phi_data - phi_offset) % (2 * np.pi)
+        # Work with local normalized angles to avoid mutating object state
+        phi_data_norm, phi_min_norm, phi_max_norm = _normalize_angles(self.phi_data, self.phi_min, self.phi_max)
 
         major_lims = (self.r_min, self.r_max)
-        minor_lims = (self.phi_min, self.phi_max)
+        minor_lims = (phi_min_norm, phi_max_norm)
         # Secondary region of interest covers angles on opposite side of origin
-        minor_lims_alt = (self.phi_min + np.pi, self.phi_max + np.pi)
-
+        minor_lims_alt = (phi_min_norm + np.pi, phi_max_norm + np.pi)
         primary_region = DirectionalAverage(major_axis=self.q_data,
                                             minor_axis=self.phi_data,
                                             major_lims=major_lims,
@@ -815,18 +823,10 @@ class WedgeQ(PolarROI):
         # Transform all angles to the range [0,2π) where phi_min is at zero,
         # eliminating errors when the ROI straddles the 2π -> 0 discontinuity.
         # We won't need to convert back later because we're plotting against Q.
-        phi_offset = self.phi_min
-        self.phi_min = 0.0
-        self.phi_max = (self.phi_max - phi_offset) % (2 * np.pi)
-        self.phi_data = (self.phi_data - phi_offset) % (2 * np.pi)
-
+        phi_data_norm, phi_min_norm, phi_max_norm = _normalize_angles(self.phi_data, self.phi_min, self.phi_max)
         # Averaging takes place between radial and angular limits
         major_lims = (self.r_min, self.r_max)
-        # When phi_max and phi_min have the same angle, ROI is a full circle.
-        if self.phi_max == 0:
-            minor_lims = None
-        else:
-            minor_lims = (self.phi_min, self.phi_max)
+        minor_lims = None if phi_max_norm == 0 else (phi_min_norm, phi_max_norm)
 
         directional_average = DirectionalAverage(major_axis=self.q_data,
                                                  minor_axis=self.phi_data,
@@ -882,16 +882,11 @@ class WedgePhi(PolarROI):
         # eliminating errors when the ROI straddles the 2π -> 0 discontinuity.
         # Remember to transform back afterward as we're plotting against phi.
         phi_offset = self.phi_min
-        self.phi_min = 0.0
-        self.phi_max = (self.phi_max - phi_offset) % (2 * np.pi)
-        self.phi_data = (self.phi_data - phi_offset) % (2 * np.pi)
+        phi_data_norm, phi_min_norm, phi_max_norm = _normalize_angles(self.phi_data, self.phi_min, self.phi_max)
 
         # Averaging takes place between angular and radial limits
         # When phi_max and phi_min have the same angle, ROI is a full circle.
-        if self.phi_max == 0:
-            major_lims = None
-        else:
-            major_lims = (self.phi_min, self.phi_max)
+        major_lims = None if phi_max_norm == 0 else (self.phi_min_norm, phi_max_norm)
         minor_lims = (self.r_min, self.r_max)
 
         directional_average = DirectionalAverage(major_axis=self.phi_data,
@@ -1016,14 +1011,11 @@ class Sectorcut(PolarROI):
         # Calculate q_data using unmasked qx_data and qy_data to ensure data sizes match
         q_data = np.sqrt(data2D.qx_data * data2D.qx_data + data2D.qy_data * data2D.qy_data)
 
-        phi_offset = self.phi_min
-        self.phi_min = 0.0
-        self.phi_max = (self.phi_max - phi_offset) % (2 * np.pi)
-        self.phi_data = (self.phi_data - phi_offset) % (2 * np.pi)
-        phi_shifted = self.phi_data - np.pi
+        phi_data_norm, phi_min_norm, phi_max_norm = _normalize_angles(self.phi_data, self.phi_min, self.phi_max)
+        phi_shifted = phi_data_norm - np.pi        
 
         # Determine angular bounds for both upper and lower half of image
-        phi_min_angle, phi_max_angle = (self.phi_min, self.phi_max)
+        phi_min_angle, phi_max_angle = (phi_min_norm, phi_max_norm)
 
         # Determine regions of interest
         out_radial = (self.r_min <= q_data) & (self.r_max > q_data)
