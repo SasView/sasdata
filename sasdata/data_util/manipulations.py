@@ -920,8 +920,27 @@ class _Sector:
         y_counts = np.zeros(self.nbins)  # Cycle counts (for the mean)
 
         # Get the min and max into the region: 0 <= phi < 2Pi
+        TwoPi = 2 * math.pi
         phi_min = flip_phi(self.phi_min)
-        phi_max = flip_phi(self.phi_max)
+
+        # Compute original span in a robust way with the inputs
+        # and take modulo 2pi so that a full span is normalised to a full circle
+        # and multiples of 2pi are recognized.
+        # This avoids zero width when phi_max == phi_min + 2pi.
+        span = (self.phi_max - self.phi_min)
+        span_mod = span % TwoPi
+
+        # If the original specified span corresponds to a full circle (or very close),
+        # construct a continuous interval for binning from phi_min to phi_min + 2pi.
+        if math.isclose(span_mod, 0.0, abs_tol=1e-12) and abs(span) >= TwoPi:
+            # Treat as full circle
+            phi_max = phi_min + TwoPi
+        else:
+            # Normal case: map phi_max into [0,2pi] for bins
+            phi_max = flip_phi(self.phi_max)
+
+
+
         # Now calculate the angles for the opposite side sector, here referred
         # to as "minor wing," and ensure these too are within 0 to 2pi
         phi_min_minor = flip_phi(phi_min - math.pi)
@@ -937,7 +956,7 @@ class _Sector:
             # Note that their values must not be altered, as they are used to
             # determine what points (also in the range 0, 2pi) are in the ROI.
             if phi_min > phi_max:
-                binning = Binning(phi_min, phi_max + 2 * np.pi, self.nbins, self.base)
+                binning = Binning(phi_min, phi_max + 2 * math.pi, self.nbins, self.base)
             else:
                 binning = Binning(phi_min, phi_max, self.nbins, self.base)
         elif self.fold:
@@ -1007,7 +1026,7 @@ class _Sector:
                 # then phi_value needs to be shifted too so that it falls in
                 # the continuous range set up for the binning process.
                 if phi_min > phi_value:
-                    i_bin = binning.get_bin_index(phi_value + 2 * np.pi)
+                    i_bin = binning.get_bin_index(phi_value + 2 * math.pi)
                 else:
                     i_bin = binning.get_bin_index(phi_value)
             else:
