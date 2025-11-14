@@ -16,10 +16,14 @@ def NDrebin(data: Quantity[ArrayLike],
             num_bins: Optional[List[Sequence[int]]] = None
         ):
     """
-    I provide values at points with coordinates
-    The points may not be in a nice grid
+    Provide values at points with ND coordinates.
+    The coordinates may not be in a nice grid.
+    The data can be in any array shape.
 
-    I want to rebin that data into a regular grid
+    The coordinates are in the same shape plus one dimension,
+    preferably the first dimension, which is the ND coordinate position
+
+    Rebin that data into a regular grid.
 
     :data: The data at each point
     :coords: The locations of each data point, same size of data
