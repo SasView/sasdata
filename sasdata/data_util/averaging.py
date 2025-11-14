@@ -1,8 +1,7 @@
 """
 This module contains various data processors used by Sasview's slicers.
 """
-from enum import Enum, auto
-from typing import Optional, Tuple
+from enum import Enum
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -41,7 +40,7 @@ class IntervalType(Enum):
 
         return np.asarray(in_range, dtype=bool)
 
-def _normalize_angles(phi_data: np.ndarray, phi_min: float, phi_max: float) -> Tuple[np.ndarray, float, float]:
+def _normalize_angles(phi_data: np.ndarray, phi_min: float, phi_max: float) -> tuple[np.ndarray, float, float]:
     """
     Normalize phi_data and phi_min/phi_max so phi_min is mapped to 0 and phi_data is in [0, 2*pi).
     Returns (phi_data_normalized, phi_min_normalized, phi_max_normalized).
@@ -139,7 +138,7 @@ class DirectionalAverage:
         lower, upper = self.get_bin_interval(bin_number)
         return upper - lower
 
-    def get_bin_interval(self, bin_number: int) -> Tuple[float, float]:
+    def get_bin_interval(self, bin_number: int) -> tuple[float, float]:
         """
         Return the lower and upper limits defining a bin, given its index.
 
@@ -215,7 +214,7 @@ class DirectionalAverage:
         # Prepare results, only compute division where bin_counts > 0
         valid_bins = bin_counts > 0
         if not np.any(valid_bins):
-            raise ValueError("Average Error: No bins inside ROI to average...")        
+            raise ValueError("Average Error: No bins inside ROI to average...")
 
         errors = np.sqrt(errs_squared)
         x_axis_values /= bin_counts
@@ -243,11 +242,11 @@ class GenericROI:
         In classes inheriting from GenericROI, the variables used to define the
         boundaries of the Region Of Interest are also set up during __init__.
         """
-        self.data: Optional[np.ndarray] = None
-        self.err_data: Optional[np.ndarray] = None
-        self.q_data: Optional[np.ndarray] = None
-        self.qx_data: Optional[np.ndarray] = None
-        self.qy_data: Optional[np.ndarray] = None
+        self.data: np.ndarray | None = None
+        self.err_data: np.ndarray | None = None
+        self.q_data: np.ndarray | None = None
+        self.qx_data: np.ndarray | None = None
+        self.qy_data: np.ndarray | None = None
 
     def validate_and_assign_data(self, data2d: Data2D = None) -> None:
         """
@@ -329,7 +328,7 @@ class PolarROI(GenericROI):
         """
 
         super().__init__()
-        self.phi_data: Optional[np.ndarray] = None
+        self.phi_data: np.ndarray | None = None
 
         if r_min >= r_max:
             msg = "Minimum radius cannot be greater than maximum radius."
@@ -1012,7 +1011,7 @@ class Sectorcut(PolarROI):
         q_data = np.sqrt(data2D.qx_data * data2D.qx_data + data2D.qy_data * data2D.qy_data)
 
         phi_data_norm, phi_min_norm, phi_max_norm = _normalize_angles(self.phi_data, self.phi_min, self.phi_max)
-        phi_shifted = phi_data_norm - np.pi        
+        phi_shifted = phi_data_norm - np.pi
 
         # Determine angular bounds for both upper and lower half of image
         phi_min_angle, phi_max_angle = (phi_min_norm, phi_max_norm)
