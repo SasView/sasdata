@@ -3,7 +3,9 @@ Shared test helpers for averaging tests.
 """
 import numpy as np
 from scipy import integrate
+
 from sasdata.dataloader import data_info
+
 
 def make_dd_from_func(func, matrix_size=201):
     """
@@ -85,8 +87,8 @@ def expected_boxavg_and_err(matrix, slice_rows=None, slice_cols=None):
     avg = np.mean(mat) if mat.size > 0 else 0.0
     err = np.sqrt(np.sum(mat)) / mat.size if mat.size > 0 else 0.0
     return avg, err
-    
-    
+
+
 class MatrixToData2D:
     """
     Create Data2D objects from supplied 2D arrays of data.
@@ -105,7 +107,7 @@ class MatrixToData2D:
         # Creating a Data2D object to use for testing the averagers.
         self.data = data_info.Data2D(data=data_flat, err_data=err_flat,
                                         qx_data=qx_data, qy_data=qy_data,
-                                        q_data=q_data, mask=mask)    
+                                        q_data=q_data, mask=mask)
 
     def _validate_and_convert_inputs(self, data2d, err_data):
         """Validate inputs and coerce to numpy arrays. Returns (matrix, err_data_or_None)."""
@@ -155,7 +157,7 @@ class MatrixToData2D:
         q_data = np.sqrt(qx_data * qx_data + qy_data * qy_data)
         mask = np.ones(len(data_flat), dtype=bool)
         return data_flat, err_flat, qx_data, qy_data, q_data, mask
-                                                                           
+
 class CircularTestingMatrix:
     """
     This class is used to generate a 2D array representing a function in polar
