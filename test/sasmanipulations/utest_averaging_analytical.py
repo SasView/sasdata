@@ -23,6 +23,88 @@ from sasdata.data_util.averaging import (
 )
 from sasdata.dataloader import data_info
 
+# TODO - also check the errors are being calculated correctly
+
+# ------------------------
+# Helpers
+# ------------------------
+def make_dd_from_func(func, matrix_size=201):
+    """
+    Create a MatrixToData2D from a function of (x, y). Returns the MatrixToData2D
+    instance and matrix_size for convenience.
+    func should accept (x, y) meshgrid arrays and return a 2D array.
+    """
+    x, y = np.meshgrid(np.linspace(-1, 1, matrix_size),
+                       np.linspace(-1, 1, matrix_size))
+    mat = func(x, y)
+    return MatrixToData2D(data2d=mat), matrix_size
+
+
+def integrate_1d_output(output, method="simpson"):
+    """
+    Integrate output from an averager consistently.
+    - If output is a Data1D-like object with .x and .y -> integrate y(x)
+    - If output is a tuple (result, error[, npoints]) -> return numeric result
+    """
+    if hasattr(output, "x") and hasattr(output, "y"):
+        if method == "trapezoid":
+            return integrate.trapezoid(output.y, output.x)
+        return integrate.simpson(output.y, output.x)
+    if isinstance(output, tuple) and len(output) >= 1:
+        return output[0]
+    raise TypeError("Unsupported averager output type: %r" % type(output))
+
+
+def expected_slabx_area(qx_min, qx_max, qy_min, qy_max):
+    # data = x^2 * y -> integrate x^2 dx and average y across qy range
+    x_part_integ = (qx_max**3 - qx_min**3) / 3
+    y_part_integ = (qy_max**2 - qy_min**2) / 2
+    y_part_avg = y_part_integ / (qy_max - qy_min)
+    return y_part_avg * x_part_integ
+
+def expected_slaby_area(qx_min, qx_max, qy_min, qy_max):
+    # data = x * y^2 -> integrate y^2 dy and average x across qx range
+    y_part_integ = (qy_max**3 - qy_min**3) / 3
+    x_part_integ = (qx_max**2 - qx_min**2) / 2
+    x_part_avg = x_part_integ / (qx_max - qx_min)
+    return x_part_avg * y_part_integ
+
+def make_uniform_dd(shape=(100, 100), value=1.0):
+    """Convenience for tests that need a constant matrix Data2D."""
+    mat = np.full(shape, value, dtype=float)
+    return MatrixToData2D(data2d=mat)
+
+def run_and_integrate(averager, dd, integrator="simpson"):
+    """
+    Run an averager (callable) with a Data2D container returned by MatrixToData2D
+    and return the integrated result (scalar area / sum) consistently.
+    """
+    out = averager(dd.data)
+    return integrate_1d_output(out, method=("trapezoid" if integrator == "trapezoid" else "simpson"))
+
+def expected_boxsum_and_err(matrix, slice_rows=None, slice_cols=None):
+    """
+    Compute expected Boxsum (sum) and its error for a given 2D numpy matrix.
+    Optional slice indices can restrict the region (tuples/lists of indices).
+    """
+    mat = np.asarray(matrix)
+    if slice_rows is not None and slice_cols is not None:
+        mat = mat[np.ix_(slice_rows, slice_cols)]
+    total = np.sum(mat)
+    err = np.sqrt(np.sum(mat))
+    return total, err
+
+def expected_boxavg_and_err(matrix, slice_rows=None, slice_cols=None):
+    """
+    Compute expected Boxavg (mean) and its error for a given 2D numpy matrix.
+    Error uses sqrt(sum)/N as in existing tests.
+    """
+    mat = np.asarray(matrix)
+    if slice_rows is not None and slice_cols is not None:
+        mat = mat[np.ix_(slice_rows, slice_cols)]
+    avg = np.mean(mat) if mat.size > 0 else 0.0
+    err = np.sqrt(np.sum(mat)) / mat.size if mat.size > 0 else 0.0
+    return avg, err
 
 class MatrixToData2D:
     """
@@ -77,7 +159,6 @@ class MatrixToData2D:
                                      qx_data=qx_data, qy_data=qy_data,
                                      q_data=q_data, mask=mask)
 
-
 class CircularTestingMatrix:
     """
     This class is used to generate a 2D array representing a function in polar
@@ -125,7 +206,6 @@ class CircularTestingMatrix:
         Integral of the testing matrix along the major axis, between the limits
         specified. This can be compared to the integral under the 1D data
         output by the averager being tested to confirm it's working properly.
-
         :param r_min: value defining the minimum Q in the ROI.
         :param r_max: value defining the maximum Q in the ROI.
         :param phi_min: value defining the minimum Phi in the ROI.
@@ -153,9 +233,7 @@ class CircularTestingMatrix:
             calculated_area = sine_part_avg * linear_part_integ
         else:
             calculated_area = linear_part_avg * sine_part_integ
-
         return calculated_area
-
 
 class SlabXTests(unittest.TestCase):
     """
@@ -216,12 +294,10 @@ class SlabXTests(unittest.TestCase):
         """
         Test that SlabX can average correctly when x is the major axis
         """
-        matrix_size = 201
-        x, y = np.meshgrid(np.linspace(-1, 1, matrix_size),
-                           np.linspace(-1, 1, matrix_size))
-        # Create a distribution which is quadratic in x and linear in y
-        test_data = x**2 * y
-        averager_data = MatrixToData2D(data2d=test_data)
+        def func(x, y):
+            return x**2 * y
+        averager_data, matrix_size = make_dd_from_func(func, matrix_size=201)
+
 
         # Set up region of interest to average over - the limits are arbitrary.
         qx_min = -0.5 * averager_data.qmax  # = -0.5
@@ -235,28 +311,18 @@ class SlabXTests(unittest.TestCase):
         slab_object = SlabX(qx_range=(qx_min, qx_max), qy_range=(qy_min,qy_max), nbins=nbins, fold=fold)
         data1d = slab_object(averager_data.data)
 
-        # ∫x² dx = x³ / 3 + constant.
-        x_part_integ = (qx_max**3 - qx_min**3) / 3
-        # ∫y dy = y² / 2 + constant.
-        y_part_integ = (qy_max**2 - qy_min**2) / 2
-        y_part_avg = y_part_integ / (qy_max - qy_min)
-        expected_area = y_part_avg * x_part_integ
-        actual_area = integrate.simpson(data1d.y, data1d.x)
+        expected_area = expected_slabx_area(qx_min, qx_max, qy_min, qy_max)
+        actual_area = integrate_1d_output(data1d, method="simpson")
 
         self.assertAlmostEqual(actual_area, expected_area, 2)
-
-        # TODO - also check the errors are being calculated correctly
 
     def test_slabx_averaging_with_fold(self):
         """
         Test that SlabX can average correctly when x is the major axis
         """
-        matrix_size = 201
-        x, y = np.meshgrid(np.linspace(-1, 1, matrix_size),
-                           np.linspace(-1, 1, matrix_size))
-        # Create a distribution which is quadratic in x and linear in y
-        test_data = x**2 * y
-        averager_data = MatrixToData2D(data2d=test_data)
+        def func(x, y):
+            return x**2 * y
+        averager_data, matrix_size = make_dd_from_func(func, matrix_size=201)
 
         # Set up region of interest to average over - the limits are arbitrary.
         qx_min = -0.5 * averager_data.qmax  # = -0.5
@@ -271,19 +337,11 @@ class SlabXTests(unittest.TestCase):
         data1d = slab_object(averager_data.data)
 
         # Negative values of x are not graphed when fold = True
-        qx_min = 0
-        # ∫x² dx = x³ / 3 + constant.
-        x_part_integ = (qx_max**3 - qx_min**3) / 3
-        # ∫y dy = y² / 2 + constant.
-        y_part_integ = (qy_max**2 - qy_min**2) / 2
-        y_part_avg = y_part_integ / (qy_max - qy_min)
-        expected_area = y_part_avg * x_part_integ
-        actual_area = integrate.simpson(data1d.y, data1d.x)
+        qx_min_fold = 0
+        expected_area = expected_slabx_area(qx_min_fold, qx_max, qy_min, qy_max)
+        actual_area = integrate_1d_output(data1d, method="simpson")
 
         self.assertAlmostEqual(actual_area, expected_area, 2)
-
-        # TODO - also check the errors are being calculated correctly
-
 
 class SlabYTests(unittest.TestCase):
     """
@@ -320,7 +378,6 @@ class SlabYTests(unittest.TestCase):
         detector2 = data_info.Detector()
         averager_data.data.detector.append(detector1)
         averager_data.data.detector.append(detector2)
-
         slab_object = SlabY()
         self.assertRaises(ValueError, slab_object, averager_data.data)
 
@@ -344,12 +401,10 @@ class SlabYTests(unittest.TestCase):
         """
         Test that SlabY can average correctly when y is the major axis
         """
-        matrix_size = 201
-        x, y = np.meshgrid(np.linspace(-1, 1, matrix_size),
-                           np.linspace(-1, 1, matrix_size))
-        # Create a distribution which is linear in x and quadratic in y
-        test_data = x * y**2
-        averager_data = MatrixToData2D(data2d=test_data)
+        def func(x, y):
+            return x * y**2
+        averager_data, matrix_size = make_dd_from_func(func, matrix_size=201)
+
 
         # Set up region of interest to average over - the limits are arbitrary.
         qx_min = -0.5 * averager_data.qmax  # = -0.5
@@ -363,28 +418,19 @@ class SlabYTests(unittest.TestCase):
         slab_object = SlabY(qx_range=(qx_min, qx_max), qy_range=(qy_min,qy_max), nbins=nbins, fold=fold)
         data1d = slab_object(averager_data.data)
 
-        # ∫x dx = x² / 2 + constant.
-        x_part_integ = (qx_max**2 - qx_min**2) / 2
-        x_part_avg = x_part_integ / (qx_max - qx_min)  # or (x_min + x_max) / 2
-        # ∫y² dy = y³ / 3 + constant.
-        y_part_integ = (qy_max**3 - qy_min**3) / 3
-        expected_area = x_part_avg * y_part_integ
-        actual_area = integrate.simpson(data1d.y, data1d.x)
+        expected_area = expected_slaby_area(qx_min, qx_max, qy_min, qy_max)
+        actual_area = integrate_1d_output(data1d, method="simpson")
 
         self.assertAlmostEqual(actual_area, expected_area, 2)
-
-        # TODO - also check the errors are being calculated correctly
 
     def test_slab_averaging_y_with_fold(self):
         """
         Test that SlabY can average correctly when y is the major axis
         """
-        matrix_size = 201
-        x, y = np.meshgrid(np.linspace(-1, 1, matrix_size),
-                           np.linspace(-1, 1, matrix_size))
-        # Create a distribution which is linear in x and quadratic in y
-        test_data = x * y**2
-        averager_data = MatrixToData2D(data2d=test_data)
+        def func(x, y):
+            return x * y**2
+
+        averager_data, matrix_size = make_dd_from_func(func, matrix_size=201)
 
         # Set up region of interest to average over - the limits are arbitrary.
         qx_min = -0.5 * averager_data.qmax  # = -0.5
@@ -400,19 +446,11 @@ class SlabYTests(unittest.TestCase):
 
         # Negative values of y are not graphed when fold = True, so don't
         # include them in the area calculation.
-        qy_min = 0
-        # ∫x dx = x² / 2 + constant.
-        x_part_integ = (qx_max**2 - qx_min**2) / 2
-        x_part_avg = x_part_integ / (qx_max - qx_min)  # or (x_min + x_max) / 2
-        # ∫y² dy = y³ / 3 + constant.
-        y_part_integ = (qy_max**3 - qy_min**3) / 3
-        expected_area = x_part_avg * y_part_integ
-        actual_area = integrate.simpson(data1d.y, data1d.x)
+        qy_min_fold = 0
+        expected_area = expected_slaby_area(qx_min, qx_max, qy_min_fold, qy_max)
+        actual_area = integrate_1d_output(data1d, method="simpson")
 
         self.assertAlmostEqual(actual_area, expected_area, 2)
-
-        # TODO - also check the errors are being calculated correctly
-
 
 class BoxsumTests(unittest.TestCase):
     """
@@ -440,14 +478,14 @@ class BoxsumTests(unittest.TestCase):
         """
         Test Boxsum raises an error when there are multiple detectors.
         """
-        averager_data = MatrixToData2D(np.ones([100, 100]))
+        dd = make_uniform_dd((100, 100), value=1.0)
         detector1 = data_info.Detector()
         detector2 = data_info.Detector()
-        averager_data.data.detector.append(detector1)
-        averager_data.data.detector.append(detector2)
+        dd.data.detector.append(detector1)
+        dd.data.detector.append(detector2)
 
         box_object = Boxsum()
-        self.assertRaises(ValueError, box_object, averager_data.data)
+        self.assertRaises(ValueError, box_object, dd.data)
 
     def test_boxsum_total(self):
         """
@@ -456,21 +494,11 @@ class BoxsumTests(unittest.TestCase):
         # Creating a 100x100 matrix for a distribution which is flat in y
         # and linear in x.
         test_data = np.tile(np.arange(100), (100, 1))
-        averager_data = MatrixToData2D(data2d=test_data)
+        dd = MatrixToData2D(data2d=test_data)
 
-        # Selected region is entire data set
-        qx_min = -1 * averager_data.qmax
-        qx_max = averager_data.qmax
-        qy_min = -1 * averager_data.qmax
-        qy_max = averager_data.qmax
-        box_object = Boxsum(qx_range=(qx_min, qx_max), qy_range=(qy_min,qy_max))
-        result, error, npoints = box_object(averager_data.data)
-        correct_sum = np.sum(test_data)
-        # When averager_data was created, we didn't include any error data.
-        # Stand-in error data is created, equal to np.sqrt(data2D).
-        # With the current method of error calculation, this is the result we
-        # should expect. This may need to change at some point.
-        correct_error = np.sqrt(np.sum(test_data))
+        box_object = Boxsum(qx_range=(-1 * dd.qmax, dd.qmax), qy_range=(-1 * dd.qmax, dd.qmax))
+        result, error, npoints = box_object(dd.data)
+        correct_sum, correct_error = expected_boxsum_and_err(test_data)
 
         self.assertAlmostEqual(result, correct_sum, 6)
         self.assertAlmostEqual(error, correct_error, 6)
@@ -482,24 +510,13 @@ class BoxsumTests(unittest.TestCase):
         # Creating a 100x100 matrix for a distribution which is flat in y
         # and linear in x.
         test_data = np.tile(np.arange(100), (100, 1))
-        averager_data = MatrixToData2D(data2d=test_data)
+        dd = MatrixToData2D(data2d=test_data)
 
-        # Selection region covers the inner half of the +&- x&y axes
-        qx_min = -0.5 * averager_data.qmax
-        qx_max = 0.5 * averager_data.qmax
-        qy_min = -0.5 * averager_data.qmax
-        qy_max = 0.5 * averager_data.qmax
-        # Extracting the inner half of the data set
+        # region corresponds to central 50x50 in original test
+        box_object = Boxsum(qx_range=(-0.5 * dd.qmax, 0.5 * dd.qmax), qy_range=(-0.5 * dd.qmax, 0.5 * dd.qmax))
+        result, error, npoints = box_object(dd.data)
         inner_portion = test_data[25:75, 25:75]
-
-        box_object = Boxsum(qx_range=(qx_min, qx_max), qy_range=(qy_min,qy_max))
-        result, error, npoints = box_object(averager_data.data)
-        correct_sum = np.sum(inner_portion)
-        # When averager_data was created, we didn't include any error data.
-        # Stand-in error data is created, equal to np.sqrt(data2D).
-        # With the current method of error calculation, this is the result we
-        # should expect. This may need to change at some point.
-        correct_error = np.sqrt(np.sum(inner_portion))
+        correct_sum, correct_error = expected_boxsum_and_err(inner_portion)
 
         self.assertAlmostEqual(result, correct_sum, 6)
         self.assertAlmostEqual(error, correct_error, 6)
@@ -509,17 +526,11 @@ class BoxsumTests(unittest.TestCase):
         Test that Boxsum returns 0 when there are no points within the ROI
         """
         test_data = np.ones([100, 100])
-        # Make a hole in the middle with zeros
-        test_data[25:75, 25:75] = np.zeros([50, 50])
-        averager_data = MatrixToData2D(data2d=test_data)
+        test_data[25:75, 25:75] = 0
+        dd = MatrixToData2D(data2d=test_data)
 
-        # Selection region covers the inner half of the +&- x&y axes
-        qx_min = -0.5 * averager_data.qmax
-        qx_max = 0.5 * averager_data.qmax
-        qy_min = -0.5 * averager_data.qmax
-        qy_max = 0.5 * averager_data.qmax
-        box_object = Boxsum(qx_range=(qx_min, qx_max), qy_range=(qy_min, qy_max))
-        result, error, npoints = box_object(averager_data.data)
+        box_object = Boxsum(qx_range=(-0.5 * dd.qmax, 0.5 * dd.qmax), qy_range=(-0.5 * dd.qmax, 0.5 * dd.qmax))
+        result, error, npoints = box_object(dd.data)
 
         self.assertAlmostEqual(result, 0, 6)
         self.assertAlmostEqual(error, 0, 6)
@@ -551,14 +562,14 @@ class BoxavgTests(unittest.TestCase):
         """
         Test Boxavg raises an error when there are multiple detectors.
         """
-        averager_data = MatrixToData2D(np.ones([100, 100]))
+        dd = make_uniform_dd((100, 100), value=1.0)
         detector1 = data_info.Detector()
         detector2 = data_info.Detector()
-        averager_data.data.detector.append(detector1)
-        averager_data.data.detector.append(detector2)
+        dd.data.detector.append(detector1)
+        dd.data.detector.append(detector2)
 
         box_object = Boxavg()
-        self.assertRaises(ValueError, box_object, averager_data.data)
+        self.assertRaises(ValueError, box_object, dd.data)
 
     def test_boxavg_total(self):
         """
@@ -567,21 +578,11 @@ class BoxavgTests(unittest.TestCase):
         # Creating a 100x100 matrix for a distribution which is flat in y
         # and linear in x.
         test_data = np.tile(np.arange(100), (100, 1))
-        averager_data = MatrixToData2D(data2d=test_data)
+        dd = MatrixToData2D(data2d=test_data)
 
-        # Selected region is entire data set
-        qx_min = -1 * averager_data.qmax
-        qx_max = averager_data.qmax
-        qy_min = -1 * averager_data.qmax
-        qy_max = averager_data.qmax
-        box_object = Boxavg(qx_range=(qx_min, qx_max), qy_range=(qy_min,qy_max))
-        result, error = box_object(averager_data.data)
-        correct_avg = np.mean(test_data)
-        # When averager_data was created, we didn't include any error data.
-        # Stand-in error data is created, equal to np.sqrt(data2D).
-        # With the current method of error calculation, this is the result we
-        # should expect. This may need to change at some point.
-        correct_error = np.sqrt(np.sum(test_data)) / test_data.size
+        box_object = Boxavg(qx_range=(-1 * dd.qmax, dd.qmax), qy_range=(-1 * dd.qmax, dd.qmax))
+        result, error = box_object(dd.data)
+        correct_avg, correct_error = expected_boxavg_and_err(test_data)
 
         self.assertAlmostEqual(result, correct_avg, 6)
         self.assertAlmostEqual(error, correct_error, 6)
@@ -593,24 +594,12 @@ class BoxavgTests(unittest.TestCase):
         # Creating a 100x100 matrix for a distribution which is flat in y
         # and linear in x.
         test_data = np.tile(np.arange(100), (100, 1))
-        averager_data = MatrixToData2D(data2d=test_data)
+        dd = MatrixToData2D(data2d=test_data)
 
-        # Selection region covers the inner half of the +&- x&y axes
-        qx_min = -0.5 * averager_data.qmax
-        qx_max = 0.5 * averager_data.qmax
-        qy_min = -0.5 * averager_data.qmax
-        qy_max = 0.5 * averager_data.qmax
-        # Extracting the inner half of the data set
+        box_object = Boxavg(qx_range=(-0.5 * dd.qmax, 0.5 * dd.qmax), qy_range=(-0.5 * dd.qmax, 0.5 * dd.qmax))
+        result, error = box_object(dd.data)
         inner_portion = test_data[25:75, 25:75]
-
-        box_object = Boxavg(qx_range=(qx_min, qx_max), qy_range=(qy_min,qy_max))
-        result, error = box_object(averager_data.data)
-        correct_avg = np.mean(inner_portion)
-        # When averager_data was created, we didn't include any error data.
-        # Stand-in error data is created, equal to np.sqrt(data2D).
-        # With the current method of error calculation, this is the result we
-        # should expect. This may need to change at some point.
-        correct_error = np.sqrt(np.sum(inner_portion)) / inner_portion.size
+        correct_avg, correct_error = expected_boxavg_and_err(inner_portion)
 
         self.assertAlmostEqual(result, correct_avg, 6)
         self.assertAlmostEqual(error, correct_error, 6)
@@ -622,15 +611,10 @@ class BoxavgTests(unittest.TestCase):
         test_data = np.ones([100, 100])
         # Make a hole in the middle with zeros
         test_data[25:75, 25:75] = np.zeros([50, 50])
-        averager_data = MatrixToData2D(data2d=test_data)
+        dd = MatrixToData2D(data2d=test_data)
 
-        # Selection region covers the inner half of the +&- x&y axes
-        qx_min = -0.5 * averager_data.qmax
-        qx_max = 0.5 * averager_data.qmax
-        qy_min = -0.5 * averager_data.qmax
-        qy_max = 0.5 * averager_data.qmax
-        box_object = Boxavg(qx_range=(qx_min, qx_max), qy_range=(qy_min,qy_max))
-        result, error = box_object(averager_data.data)
+        box_object = Boxavg(qx_range=(-0.5 * dd.qmax, 0.5 * dd.qmax), qy_range=(-0.5 * dd.qmax, 0.5 * dd.qmax))
+        result, error = box_object(dd.data)
 
         self.assertAlmostEqual(result, 0, 6)
         self.assertAlmostEqual(error, 0, 6)
@@ -730,9 +714,6 @@ class CircularAverageTests(unittest.TestCase):
         # This is still a good level of precision compared to the others though
         self.assertAlmostEqual(actual_area, expected_area, 2)
 
-        # TODO - also check the errors are being calculated correctly
-
-
 class RingTests(unittest.TestCase):
     """
     This class contains the tests for the Ring class from manipulations.py
@@ -799,9 +780,6 @@ class RingTests(unittest.TestCase):
         actual_area = integrate.simpson(data1d.y, data1d.x)
 
         self.assertAlmostEqual(actual_area, expected_area, 1)
-
-        # TODO - also check the errors are being calculated correctly
-
 
 class SectorQTests(unittest.TestCase):
     """
@@ -1161,7 +1139,6 @@ class DirectionalAverageFunctionalityTests(unittest.TestCase):
 
         np.testing.assert_array_almost_equal(x_axis_values, expected_x, 10)
         np.testing.assert_array_almost_equal(intensity, expected_intensity, 10)
-        # TODO - also implement check for correct errors
 
     def test_no_points_in_roi(self):
         """
@@ -1172,7 +1149,6 @@ class DirectionalAverageFunctionalityTests(unittest.TestCase):
         self.directional_average.minor_lims = (2, 3)
         self.assertRaises(ValueError, self.directional_average,
                           self.data2d.data.data, self.data2d.data.err_data)
-
 
 if __name__ == '__main__':
     unittest.main()

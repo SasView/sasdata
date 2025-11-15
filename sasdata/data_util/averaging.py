@@ -4,12 +4,10 @@ This module contains various data processors used by Sasview's slicers.
 
 from enum import Enum, auto
 
-
 import numpy as np
 from numpy.typing import ArrayLike
 
 from sasdata.dataloader.data_info import Data1D, Data2D
-
 
 class IntervalType(Enum):
     HALF_OPEN = auto()
@@ -41,8 +39,6 @@ class IntervalType(Enum):
             raise ValueError(msg)
 
         return np.asarray(in_range, dtype=int)
-
-
 
 class DirectionalAverage:
     """
@@ -90,19 +86,17 @@ class DirectionalAverage:
 
         if lims is None:
             major_lims = minor_lims = None
-        else:        
-            if not (isinstance(lims, (list, tuple)) and len(lims) == 2):
-                msg = "Parameter 'lims' must be a 2-tuple (major_lims, minor_lims) or None."
-                raise ValueError(msg)
+        elif not (isinstance(lims, (list, tuple)) and len(lims) == 2):
+            msg = "Parameter 'lims' must be a 2-tuple (major_lims, minor_lims) or None."
+            raise ValueError(msg)
+        else:
             major_lims, minor_lims = lims
 
-        if not isinstance(nbins, int):
-            # TODO: Make classes that depend on this provide ints, its quite a thing to fix though
-            try:
-                nbins = int(nbins)
-            except:
-                msg = f"Parameter 'nbins' must be convertable to an integer via int(), got type {type(nbins)} (={nbins})"
-                raise TypeError(msg)
+        try:
+            nbins = int(nbins)
+        except:
+            msg = f"Parameter 'nbins' must be convertable to an integer via int(), got type {type(nbins)} (={nbins})"
+            raise TypeError(msg)
 
         self.major_axis = np.asarray(major_axis)
         self.minor_axis = np.asarray(minor_axis)
@@ -136,7 +130,6 @@ class DirectionalAverage:
         """
         lower, upper = self.get_bin_interval(bin_number)
         return upper - lower
-
 
     def get_bin_interval(self, bin_number: int) -> tuple[float, float]:
 
@@ -223,7 +216,6 @@ class DirectionalAverage:
 
         return x_axis_values[finite], intensity[finite], errors[finite]
 
-
 class GenericROI:
     """
     Base class used to set up the data from a Data2D object for processing.
@@ -243,7 +235,6 @@ class GenericROI:
         self.q_data = None
         self.qx_data = None
         self.qy_data = None
-
 
     def validate_and_assign_data(self, data2d: Data2D = None) -> None:
         """
@@ -278,7 +269,6 @@ class GenericROI:
         self.err_data[self.err_data == 0] = \
             np.sqrt(np.abs(self.data[self.err_data == 0]))
 
-
 class CartesianROI(GenericROI):
     """
     Base class for data manipulators with a Cartesian (rectangular) ROI.
@@ -300,7 +290,6 @@ class CartesianROI(GenericROI):
         self.qx_max = qx_max
         self.qy_min = qy_min
         self.qy_max = qy_max
-
 
 class PolarROI(GenericROI):
     """
@@ -347,7 +336,6 @@ class PolarROI(GenericROI):
         # Phi data can be calculated from the Cartesian Q coordinates.
         self.phi_data = np.arctan2(self.qy_data, self.qx_data)
 
-
 class Boxsum(CartesianROI):
     """
     Compute the sum of the intensity within a rectangular Region Of Interest.
@@ -361,10 +349,8 @@ class Boxsum(CartesianROI):
         :param qx_range: Bounds of the ROI along the Q_x direction.
         :param qy_range: Bounds of the ROI along the Q_y direction.
         """
-        qx_min, qx_max = qx_range
-        qy_min, qy_max = qy_range
-        super().__init__(qx_range=(qx_min, qx_max),
-                         qy_range=(qy_min, qy_max))
+        super().__init__(qx_range=qx_range,
+                         qy_range=qy_range)
 
     def __call__(self, data2d: Data2D = None) -> float:
         """
@@ -405,7 +391,6 @@ class Boxsum(CartesianROI):
 
         return total_sum, np.sqrt(total_errors_squared), total_count
 
-
 class Boxavg(Boxsum):
     """
     Compute the average intensity within a rectangular Region Of Interest.
@@ -419,10 +404,8 @@ class Boxavg(Boxsum):
         :param qx_range: Bounds of the ROI along the Q_x direction.
         :param qy_range: Bounds of the ROI along the Q_y direction.
         """
-        qx_min, qx_max = qx_range
-        qy_min, qy_max = qy_range
-        super().__init__(qx_range=(qx_min, qx_max),
-                         qy_range=(qy_min, qy_max))
+        super().__init__(qx_range=qx_range,
+                         qy_range=qy_range)
 
     def __call__(self, data2d: Data2D) -> float:
         """
@@ -434,7 +417,6 @@ class Boxavg(Boxsum):
         total_sum, error, count = super()._sum()
 
         return (total_sum / count), (error / count)
-
 
 class SlabX(CartesianROI):
     """
@@ -460,10 +442,8 @@ class SlabX(CartesianROI):
         :param fold: Whether the two halves of the ROI along Q_x should be
                      folded together during averaging.
         """
-        qx_min, qx_max = qx_range
-        qy_min, qy_max = qy_range
-        super().__init__(qx_range=(qx_min, qx_max),
-                         qy_range=(qy_min, qy_max))
+        super().__init__(qx_range=qx_range,
+                         qy_range=qy_range)
         self.nbins = nbins
         self.fold = fold
 
@@ -497,7 +477,6 @@ class SlabX(CartesianROI):
 
         return Data1D(x=qx_data, y=intensity, dy=error)
 
-
 class SlabY(CartesianROI):
     """
     Average I(Q_x, Q_y) along the x direction (within a ROI), giving I(Q_y).
@@ -523,10 +502,8 @@ class SlabY(CartesianROI):
         :param fold: Whether the two halves of the ROI along Q_y should be
                      folded together during averaging.
         """
-        qx_min, qx_max = qx_range
-        qy_min, qy_max = qy_range
-        super().__init__(qx_range=(qx_min, qx_max),
-                         qy_range=(qy_min, qy_max))
+        super().__init__(qx_range=qx_range,
+                         qy_range=qy_range)
         self.nbins = nbins
         self.fold = fold
 
@@ -560,7 +537,6 @@ class SlabY(CartesianROI):
 
         return Data1D(x=qy_data, y=intensity, dy=error)
 
-
 class CircularAverage(PolarROI):
     """
     Calculate I(|Q|) by circularly averaging 2D data between 2 radial limits.
@@ -581,8 +557,7 @@ class CircularAverage(PolarROI):
         :param r_max: Upper limit for |Q| values to use during averaging.
         :param nbins: The number of bins data is sorted into along |Q| the axis
         """
-        r_min, r_max = r_range
-        super().__init__(r_range=(r_min, r_max))
+        super().__init__(r_range=r_range)
         self.nbins = nbins
 
     def __call__(self, data2d: Data2D = None) -> Data1D:
@@ -606,7 +581,6 @@ class CircularAverage(PolarROI):
 
         return Data1D(x=q_data, y=intensity, dy=error)
 
-
 class Ring(PolarROI):
     """
     Calculate I(φ) by radially averaging 2D data between 2 radial limits.
@@ -627,8 +601,7 @@ class Ring(PolarROI):
         :param r_max: Upper limit for |Q| values to use during averaging.
         :param nbins: The number of bins data is sorted into along Phi the axis
         """
-        r_min, r_max = r_range
-        super().__init__(r_range=(r_min, r_max))
+        super().__init__(r_range=r_range)
         self.nbins = nbins
 
     def __call__(self, data2d: Data2D = None) -> Data1D:
@@ -651,7 +624,6 @@ class Ring(PolarROI):
             directional_average(data=self.data, err_data=self.err_data)
 
         return Data1D(x=phi_data, y=intensity, dy=error)
-
 
 class SectorQ(PolarROI):
     """
@@ -687,10 +659,7 @@ class SectorQ(PolarROI):
         :param fold: Whether the primary and secondary ROIs should be folded
                      together during averaging.
         """
-        r_min, r_max = r_range
-        phi_min, phi_max = phi_range
-        super().__init__(r_range=(r_min, r_max),
-                         phi_range=(phi_min, phi_max))
+        super().__init__(r_range=r_range, phi_range=phi_range)
 
         self.nbins = nbins
         self.fold = fold
@@ -773,7 +742,6 @@ class SectorQ(PolarROI):
 
         return data1d
 
-
 class WedgeQ(PolarROI):
     """
     Project I(Q, φ) data onto I(Q) within a region defined by Cartesian limits.
@@ -798,10 +766,7 @@ class WedgeQ(PolarROI):
         :Defaults to full circle (0, 2*pi).
         :param nbins: The number of bins data is sorted into along the |Q| axis
         """
-        r_min, r_max = r_range
-        phi_min, phi_max = phi_range
-        super().__init__(r_range=(r_min, r_max),
-                         phi_range=(phi_min, phi_max))
+        super().__init__(r_range=r_range, phi_range=phi_range)
         self.nbins = nbins
 
     def __call__(self, data2d: Data2D = None) -> Data1D:
@@ -838,7 +803,6 @@ class WedgeQ(PolarROI):
 
         return Data1D(x=q_data, y=intensity, dy=error)
 
-
 class WedgePhi(PolarROI):
     """
     Project I(Q, φ) data onto I(φ) within a region defined by Cartesian limits.
@@ -863,10 +827,7 @@ class WedgePhi(PolarROI):
                           Defaults to full circle (0, 2*pi).
         :param nbins: The number of bins data is sorted into along the φ axis.
         """
-        r_min, r_max = r_range
-        phi_min, phi_max = phi_range
-        super().__init__(r_range=(r_min, r_max),
-                         phi_range=(phi_min, phi_max))
+        super().__init__(r_range=r_range, phi_range=phi_range)
         self.nbins = nbins
 
     def __call__(self, data2d: Data2D = None) -> Data1D:
@@ -911,7 +872,6 @@ class WedgePhi(PolarROI):
 
         return Data1D(x=phi_data, y=intensity, dy=error)
 
-
 class SectorPhi(WedgePhi):
     """
     Sector average as a function of phi.
@@ -927,7 +887,6 @@ class SectorPhi(WedgePhi):
     # been named WedgePhi.
 
 ################################################################################
-
 
 class Ringcut(PolarROI):
     """
@@ -963,14 +922,13 @@ class Ringcut(PolarROI):
         out = (self.r_min <= q_data) & (self.r_max >= q_data)
         return out
 
-
 class Boxcut(CartesianROI):
     """
     Find a rectangular 2D region of interest.
     """
 
-    def __init__(self, x_min: float = 0.0, x_max: float = 0.0, y_min: float = 0.0, y_max: float = 0.0):
-        super().__init__(x_min, x_max, y_min, y_max)
+    def __init__(self, qx_range: tuple[float, float] = (0.0, 0.0), qy_range: tuple[float, float] = (0.0, 0.0)):
+        super().__init__(qx_range=qx_range, qy_range=qy_range)
 
     def __call__(self, data2D: Data2D) -> np.ndarray[bool]:
         """
@@ -986,7 +944,6 @@ class Boxcut(CartesianROI):
         outy = (self.qy_min <= data2D.qy_data) & (self.qy_max > data2D.qy_data)
 
         return outx & outy
-
 
 class Sectorcut(PolarROI):
     """
@@ -1016,13 +973,11 @@ class Sectorcut(PolarROI):
         # Calculate q_data using unmasked qx_data and qy_data to ensure data sizes match
         q_data = np.sqrt(data2D.qx_data * data2D.qx_data + data2D.qy_data * data2D.qy_data)
 
-
         phi_offset = self.phi_min
         self.phi_min = 0.0
         self.phi_max = (self.phi_max - phi_offset) % (2 * np.pi)
         self.phi_data = (self.phi_data - phi_offset) % (2 * np.pi)
         phi_shifted = self.phi_data - np.pi
-
 
         # Determine angular bounds for both upper and lower half of image
         phi_min_angle, phi_max_angle = (self.phi_min, self.phi_max)
