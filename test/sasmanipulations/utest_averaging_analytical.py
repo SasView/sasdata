@@ -174,8 +174,7 @@ class SlabXTests(unittest.TestCase):
         nbins = 100
         fold = True
 
-        slab_object = SlabX(qx_min=qx_min, qx_max=qx_max, qy_min=qy_min,
-                            qy_max=qy_max, nbins=nbins, fold=fold)
+        slab_object = SlabX(qx_range=(qx_min, qx_max), qy_range=(qy_min,qy_max), nbins=nbins, fold=fold)
 
         self.assertEqual(slab_object.qx_min, qx_min)
         self.assertEqual(slab_object.qx_max, qx_max)
@@ -210,8 +209,7 @@ class SlabXTests(unittest.TestCase):
         qy_min = 2 * averager_data.qmax
         qy_max = 3 * averager_data.qmax
 
-        slab_object = SlabX(qx_min=qx_min, qx_max=qx_max,
-                            qy_min=qy_min, qy_max=qy_max)
+        slab_object = SlabX(qx_range=(qx_min, qx_max), qy_range=(qy_min,qy_max))
         self.assertRaises(ValueError, slab_object, averager_data.data)
 
     def test_slabx_averaging_without_fold(self):
@@ -234,8 +232,7 @@ class SlabXTests(unittest.TestCase):
         # Explicitly not using fold in this test
         fold = False
 
-        slab_object = SlabX(qx_min=qx_min, qx_max=qx_max, qy_min=qy_min,
-                            qy_max=qy_max, nbins=nbins, fold=fold)
+        slab_object = SlabX(qx_range=(qx_min, qx_max), qy_range=(qy_min,qy_max), nbins=nbins, fold=fold)
         data1d = slab_object(averager_data.data)
 
         # ∫x² dx = x³ / 3 + constant.
@@ -270,8 +267,7 @@ class SlabXTests(unittest.TestCase):
         # Explicitly using fold in this test
         fold = True
 
-        slab_object = SlabX(qx_min=qx_min, qx_max=qx_max, qy_min=qy_min,
-                            qy_max=qy_max, nbins=nbins, fold=fold)
+        slab_object = SlabX(qx_range=(qx_min, qx_max), qy_range=(qy_min,qy_max), nbins=nbins, fold=fold)
         data1d = slab_object(averager_data.data)
 
         # Negative values of x are not graphed when fold = True
@@ -306,8 +302,7 @@ class SlabYTests(unittest.TestCase):
         nbins = 100
         fold = True
 
-        slab_object = SlabY(qx_min=qx_min, qx_max=qx_max, qy_min=qy_min,
-                            qy_max=qy_max, nbins=nbins, fold=fold)
+        slab_object = SlabY(qx_range=(qx_min, qx_max), qy_range=(qy_min,qy_max), nbins=nbins, fold=fold)
 
         self.assertEqual(slab_object.qx_min, qx_min)
         self.assertEqual(slab_object.qx_max, qx_max)
@@ -342,8 +337,7 @@ class SlabYTests(unittest.TestCase):
         qy_min = 2 * averager_data.qmax
         qy_max = 3 * averager_data.qmax
 
-        slab_object = SlabY(qx_min=qx_min, qx_max=qx_max,
-                            qy_min=qy_min, qy_max=qy_max)
+        slab_object = SlabY(qx_range=(qx_min, qx_max), qy_range=(qy_min,qy_max))
         self.assertRaises(ValueError, slab_object, averager_data.data)
 
     def test_slaby_averaging_without_fold(self):
@@ -366,8 +360,7 @@ class SlabYTests(unittest.TestCase):
         # Explicitly not using fold in this test
         fold = False
 
-        slab_object = SlabY(qx_min=qx_min, qx_max=qx_max, qy_min=qy_min,
-                            qy_max=qy_max, nbins=nbins, fold=fold)
+        slab_object = SlabY(qx_range=(qx_min, qx_max), qy_range=(qy_min,qy_max), nbins=nbins, fold=fold)
         data1d = slab_object(averager_data.data)
 
         # ∫x dx = x² / 2 + constant.
@@ -402,8 +395,7 @@ class SlabYTests(unittest.TestCase):
         # Explicitly using fold in this test
         fold = True
 
-        slab_object = SlabY(qx_min=qx_min, qx_max=qx_max, qy_min=qy_min,
-                            qy_max=qy_max, nbins=nbins, fold=fold)
+        slab_object = SlabY(qx_range=(qx_min, qx_max), qy_range=(qy_min,qy_max), nbins=nbins, fold=fold)
         data1d = slab_object(averager_data.data)
 
         # Negative values of y are not graphed when fold = True, so don't
@@ -437,8 +429,7 @@ class BoxsumTests(unittest.TestCase):
         qy_min = 3
         qy_max = 4
 
-        box_object = Boxsum(qx_min=qx_min, qx_max=qx_max,
-                            qy_min=qy_min, qy_max=qy_max)
+        box_object = Boxsum(qx_range=(qx_min, qx_max), qy_range=(qy_min,qy_max))
 
         self.assertEqual(box_object.qx_min, qx_min)
         self.assertEqual(box_object.qx_max, qx_max)
@@ -472,8 +463,7 @@ class BoxsumTests(unittest.TestCase):
         qx_max = averager_data.qmax
         qy_min = -1 * averager_data.qmax
         qy_max = averager_data.qmax
-        box_object = Boxsum(qx_min=qx_min, qx_max=qx_max,
-                            qy_min=qy_min, qy_max=qy_max)
+        box_object = Boxsum(qx_range=(qx_min, qx_max), qy_range=(qy_min,qy_max))
         result, error, npoints = box_object(averager_data.data)
         correct_sum = np.sum(test_data)
         # When averager_data was created, we didn't include any error data.
@@ -502,8 +492,7 @@ class BoxsumTests(unittest.TestCase):
         # Extracting the inner half of the data set
         inner_portion = test_data[25:75, 25:75]
 
-        box_object = Boxsum(qx_min=qx_min, qx_max=qx_max,
-                            qy_min=qy_min, qy_max=qy_max)
+        box_object = Boxsum(qx_range=(qx_min, qx_max), qy_range=(qy_min,qy_max))
         result, error, npoints = box_object(averager_data.data)
         correct_sum = np.sum(inner_portion)
         # When averager_data was created, we didn't include any error data.
@@ -529,8 +518,7 @@ class BoxsumTests(unittest.TestCase):
         qx_max = 0.5 * averager_data.qmax
         qy_min = -0.5 * averager_data.qmax
         qy_max = 0.5 * averager_data.qmax
-        box_object = Boxsum(qx_min=qx_min, qx_max=qx_max,
-                            qy_min=qy_min, qy_max=qy_max)
+        box_object = Boxsum(qx_range=(qx_min, qx_max), qy_range=(qy_min, qy_max))
         result, error, npoints = box_object(averager_data.data)
 
         self.assertAlmostEqual(result, 0, 6)
@@ -552,8 +540,7 @@ class BoxavgTests(unittest.TestCase):
         qy_min = 3
         qy_max = 4
 
-        box_object = Boxavg(qx_min=qx_min, qx_max=qx_max,
-                            qy_min=qy_min, qy_max=qy_max)
+        box_object = Boxavg(qx_range=(qx_min, qx_max), qy_range=(qy_min,qy_max))
 
         self.assertEqual(box_object.qx_min, qx_min)
         self.assertEqual(box_object.qx_max, qx_max)
@@ -587,8 +574,7 @@ class BoxavgTests(unittest.TestCase):
         qx_max = averager_data.qmax
         qy_min = -1 * averager_data.qmax
         qy_max = averager_data.qmax
-        box_object = Boxavg(qx_min=qx_min, qx_max=qx_max,
-                            qy_min=qy_min, qy_max=qy_max)
+        box_object = Boxavg(qx_range=(qx_min, qx_max), qy_range=(qy_min,qy_max))
         result, error = box_object(averager_data.data)
         correct_avg = np.mean(test_data)
         # When averager_data was created, we didn't include any error data.
@@ -617,8 +603,7 @@ class BoxavgTests(unittest.TestCase):
         # Extracting the inner half of the data set
         inner_portion = test_data[25:75, 25:75]
 
-        box_object = Boxavg(qx_min=qx_min, qx_max=qx_max,
-                            qy_min=qy_min, qy_max=qy_max)
+        box_object = Boxavg(qx_range=(qx_min, qx_max), qy_range=(qy_min,qy_max))
         result, error = box_object(averager_data.data)
         correct_avg = np.mean(inner_portion)
         # When averager_data was created, we didn't include any error data.
@@ -644,8 +629,7 @@ class BoxavgTests(unittest.TestCase):
         qx_max = 0.5 * averager_data.qmax
         qy_min = -0.5 * averager_data.qmax
         qy_max = 0.5 * averager_data.qmax
-        box_object = Boxavg(qx_min=qx_min, qx_max=qx_max,
-                            qy_min=qy_min, qy_max=qy_max)
+        box_object = Boxavg(qx_range=(qx_min, qx_max), qy_range=(qy_min,qy_max))
         result, error = box_object(averager_data.data)
 
         self.assertAlmostEqual(result, 0, 6)
@@ -666,7 +650,7 @@ class CircularAverageTests(unittest.TestCase):
         r_max = 2
         nbins = 100
 
-        circ_object = CircularAverage(r_min=r_min, r_max=r_max, nbins=nbins)
+        circ_object = CircularAverage(r_range=(r_min, r_max), nbins=nbins)
 
         self.assertEqual(circ_object.r_min, r_min)
         self.assertEqual(circ_object.r_max, r_max)
@@ -709,7 +693,7 @@ class CircularAverageTests(unittest.TestCase):
         """
         Test that CircularAverage raises ValueError when r_min > r_max
         """
-        self.assertRaises(ValueError, CircularAverage, r_min=0.1, r_max=0.05)
+        self.assertRaises(ValueError, CircularAverage, r_range=(0.1, 0.05))
 
     def test_circularaverage_no_points_to_average(self):
         """
@@ -719,8 +703,7 @@ class CircularAverageTests(unittest.TestCase):
         averager_data = MatrixToData2D(test_data)
 
         # Region of interest well outside region with data
-        circ_object = CircularAverage(r_min=2 * averager_data.qmax,
-                                      r_max=3 * averager_data.qmax)
+        circ_object = CircularAverage(r_range=(2 * averager_data.qmax,3 * averager_data.qmax))
         self.assertRaises(ValueError, circ_object, averager_data.data)
 
     def test_circularaverage_averages_circularly(self):
@@ -736,7 +719,7 @@ class CircularAverageTests(unittest.TestCase):
         r_max = averager_data.qmax * 0.75
 
         nbins = test_data.matrix_size
-        circ_object = CircularAverage(r_min=r_min, r_max=r_max, nbins=nbins)
+        circ_object = CircularAverage(r_range=(r_min, r_max), nbins=nbins)
         data1d = circ_object(averager_data.data)
 
         expected_area = test_data.area_under_region(r_min=r_min, r_max=r_max)
@@ -767,7 +750,7 @@ class RingTests(unittest.TestCase):
         # Note that Ring also has params center_x and center_y, but these are
         # not used by the slicers and there is a 'todo' in manipulations.py to
         # remove them. For this reason, I have not tested their initialisation.
-        ring_object = Ring(r_min=r_min, r_max=r_max, nbins=nbins)
+        ring_object = Ring(r_range=(r_min, r_max), nbins=nbins)
 
         self.assertEqual(ring_object.r_min, r_min)
         self.assertEqual(ring_object.r_max, r_max)
@@ -793,8 +776,7 @@ class RingTests(unittest.TestCase):
         averager_data = MatrixToData2D(test_data)
 
         # Region of interest well outside region with data
-        ring_object = Ring(r_min=2 * averager_data.qmax,
-                           r_max=3 * averager_data.qmax)
+        ring_object = Ring(r_range=(2 * averager_data.qmax, 3 * averager_data.qmax))
         self.assertRaises(ValueError, ring_object, averager_data.data)
 
     def test_ring_averages_azimuthally(self):
@@ -810,7 +792,7 @@ class RingTests(unittest.TestCase):
         r_max = 0.75 * averager_data.qmax
         nbins = test_data.matrix_size // 2
 
-        ring_object = Ring(r_min=r_min, r_max=r_max, nbins=nbins)
+        ring_object = Ring(r_range=(r_min, r_max), nbins=nbins)
         data1d = ring_object(averager_data.data)
 
         expected_area = test_data.area_under_region(r_min=r_min, r_max=r_max)
@@ -843,8 +825,8 @@ class SectorQTests(unittest.TestCase):
 
         # sector_object = SectorQ(r_min=r_min, r_max=r_max, phi_min=phi_min,
         #                         phi_max=phi_max, nbins=nbins, base=base)
-        sector_object = SectorQ(r_min=r_min, r_max=r_max, phi_min=phi_min,
-                                phi_max=phi_max, nbins=nbins)
+
+        sector_object = SectorQ(r_range=(r_min, r_max), phi_range=(phi_min,phi_max), nbins=nbins)
 
         self.assertEqual(sector_object.r_min, r_min)
         self.assertEqual(sector_object.r_max, r_max)
@@ -875,8 +857,7 @@ class SectorQTests(unittest.TestCase):
         phi_max = 5*np.pi/6
         nbins = int(test_data.matrix_size * np.sqrt(2)/4)  # usually reliable
 
-        wedge_object = SectorQ(r_min=r_min, r_max=r_max, phi_min=phi_min,
-                               phi_max=phi_max, nbins=nbins)
+        wedge_object = SectorQ(r_range=(r_min, r_max), phi_range=(phi_min,phi_max), nbins=nbins)
         # Explicitly set fold to False - results span full +/- range
         wedge_object.fold = False
         data1d = wedge_object(averager_data.data)
@@ -909,8 +890,7 @@ class SectorQTests(unittest.TestCase):
         phi_max = 5*np.pi/6
         nbins = int(test_data.matrix_size * np.sqrt(2)/4)  # usually reliable
 
-        wedge_object = SectorQ(r_min=r_min, r_max=r_max, phi_min=phi_min,
-                               phi_max=phi_max, nbins=nbins)
+        wedge_object = SectorQ(r_range=(r_min, r_max), phi_range=(phi_min,phi_max), nbins=nbins)
         # Explicitly set fold to True - points either side of 0,0 are averaged
         wedge_object.fold = True
         data1d = wedge_object(averager_data.data)
@@ -948,8 +928,7 @@ class WedgeQTests(unittest.TestCase):
         phi_max = np.pi
         nbins = 10
 
-        wedge_object = WedgeQ(r_min=r_min, r_max=r_max, phi_min=phi_min,
-                              phi_max=phi_max, nbins=nbins)
+        wedge_object = WedgeQ(r_range=(r_min, r_max), phi_range=(phi_min,phi_max), nbins=nbins)
 
         self.assertEqual(wedge_object.r_min, r_min)
         self.assertEqual(wedge_object.r_max, r_max)
@@ -972,8 +951,7 @@ class WedgeQTests(unittest.TestCase):
         phi_max = 5*np.pi/6
         nbins = int(test_data.matrix_size * np.sqrt(2)/4)  # usually reliable
 
-        wedge_object = WedgeQ(r_min=r_min, r_max=r_max, phi_min=phi_min,
-                              phi_max=phi_max, nbins=nbins)
+        wedge_object = WedgeQ(r_range=(r_min, r_max), phi_range=(phi_min,phi_max), nbins=nbins)
         data1d = wedge_object(averager_data.data)
 
         expected_area = test_data.area_under_region(r_min=r_min, r_max=r_max,
@@ -1005,8 +983,7 @@ class WedgePhiTests(unittest.TestCase):
 
         # wedge_object = WedgePhi(r_min=r_min, r_max=r_max, phi_min=phi_min,
         #                           phi_max=phi_max, nbins=nbins, base=base)
-        wedge_object = WedgePhi(r_min=r_min, r_max=r_max, phi_min=phi_min,
-                                phi_max=phi_max, nbins=nbins)
+        wedge_object = WedgePhi(r_range=(r_min, r_max), phi_range=(phi_min,phi_max), nbins=nbins)
 
         self.assertEqual(wedge_object.r_min, r_min)
         self.assertEqual(wedge_object.r_max, r_max)
@@ -1037,8 +1014,7 @@ class WedgePhiTests(unittest.TestCase):
         phi_max = 5*np.pi/6
         nbins = int(test_data.matrix_size * np.sqrt(2)/4)  # usually reliable
 
-        wedge_object = WedgePhi(r_min=r_min, r_max=r_max, phi_min=phi_min,
-                                phi_max=phi_max, nbins=nbins)
+        wedge_object = WedgePhi(r_range=(r_min, r_max), phi_range=(phi_min,phi_max), nbins=nbins)
         data1d = wedge_object(averager_data.data)
 
         expected_area = test_data.area_under_region(r_min=r_min, r_max=r_max,
@@ -1066,7 +1042,7 @@ class DirectionalAverageValidationTests(unittest.TestCase):
         Ensure a ValueError is raised if the wrong number of limits is suppied.
         """
         self.assertRaises(ValueError, DirectionalAverage, major_axis=[],
-                          minor_axis=[], major_lims=[], minor_lims=[])
+                          minor_axis=[], lims=([], []))
 
     def test_nbins_not_int(self):
         """
@@ -1124,8 +1100,7 @@ class DirectionalAverageFunctionalityTests(unittest.TestCase):
         self.directional_average = \
             DirectionalAverage(major_axis=self.data2d.data.qx_data,
                                minor_axis=self.data2d.data.qy_data,
-                               major_lims=self.lims,
-                               minor_lims=self.lims, nbins=self.nbins)
+                               lims=(self.lims,self.lims), nbins=self.nbins)
 
     def test_bin_width(self):
         """
