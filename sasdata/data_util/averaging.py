@@ -78,7 +78,7 @@ class DirectionalAverage:
                      2-tuple or None. 
         :param nbins: The number of bins the major axis is divided up into.
         """
-        
+
         if any(not hasattr(coordinate_data, "__array__") for
                coordinate_data in (major_axis, minor_axis)):
             msg = "Must provide major & minor coordinate arrays for binning."
@@ -86,6 +86,7 @@ class DirectionalAverage:
 
         if lims is None:
             major_lims = minor_lims = None
+
         elif not (isinstance(lims, (list, tuple)) and len(lims) == 2):
             msg = "Parameter 'lims' must be a 2-tuple (major_lims, minor_lims) or None."
             raise ValueError(msg)
@@ -692,7 +693,7 @@ class SectorQ(PolarROI):
                                             nbins=self.nbins)
         secondary_region = DirectionalAverage(major_axis=self.q_data,
                                               minor_axis=self.phi_data,
-                                              lims=(major_lims,minor_lims_alt),                                              
+                                              lims=(major_lims,minor_lims_alt),
                                               nbins=self.nbins)
 
         primary_q, primary_I, primary_err = \
@@ -898,7 +899,7 @@ class Ringcut(PolarROI):
 
     Phi_min and phi_max should be defined between 0 and 2*pi
     in anti-clockwise starting from the x- axis on the left-hand side
-    """ 
+    """
 
     def __init__(self, r_range: tuple[float, float] = (0.0, 0.0), phi_range: tuple[float, float] = (0.0, 2*np.pi)):
 
@@ -955,7 +956,7 @@ class Sectorcut(PolarROI):
     Phi_min and phi_max are given in units of radian
     and (phi_max-phi_min) should not be larger than pi
     """
-    
+
     def __init__(self, phi_range: tuple[float, float] = (0.0, np.pi)):
         super().__init__(r_range=(0, np.inf), phi_range=phi_range)
 
