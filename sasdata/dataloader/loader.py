@@ -383,3 +383,7 @@ class Loader:
         :return: A list of loaded Data1D/2D objects.
         """
         return self.load(file_path_list)
+
+
+if __name__ == 'main':
+    load

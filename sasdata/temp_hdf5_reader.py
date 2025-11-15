@@ -125,13 +125,19 @@ def connected_data(node: SASDataGroup, name_prefix="") -> dict[str, Quantity]:
 
 def parse_quantity(node : HDF5Group) -> Quantity[float]:
     """Pull a single quantity with length units out of an HDF5 node"""
-    magnitude = node.astype(float)[0]
+    if node.shape == (): # scalar dataset
+        magnitude =  node.astype(float)[()]
+    else: # vector dataset
+        magnitude =  node.astype(float)[0]
     unit = node.attrs["units"]
     return Quantity(magnitude, parse(unit))
 
 def parse_string(node : HDF5Group) -> str:
     """Access string data from a node"""
-    return node.asstr()[0]
+    if node.shape == (): # scalar dataset
+        return node.asstr()[()]
+    else: # vector dataset
+        return node.asstr()[0]
 
 def opt_parse[T](node: HDF5Group, key: str, subparser: Callable[[HDF5Group], T]) -> T | None:
     """Parse a subnode if it is present"""
@@ -168,9 +174,13 @@ def parse_source(node : HDF5Group) -> Source:
     beam_shape = opt_parse(node, "beam_shape", parse_string)
     beam_size = opt_parse(node, "beam_size", parse_beam_size)
     wavelength = opt_parse(node, "wavelength", parse_quantity)
+    if wavelength is None:
+        wavelength = opt_parse(node, "incident_wavelength", parse_quantity)
     wavelength_min = opt_parse(node, "wavelength_min", parse_quantity)
     wavelength_max = opt_parse(node, "wavelength_max", parse_quantity)
     wavelength_spread = opt_parse(node, "wavelength_spread", parse_quantity)
+    if wavelength_spread is None:
+        wavelength_spread = opt_parse(node, "incident_wavelength_spread", parse_quantity)
     return Source(
         radiation=radiation,
         beam_shape=beam_shape,
@@ -224,14 +234,17 @@ def parse_instrument(node : HDF5Group) -> Instrument:
     return Instrument(
         collimations= [parse_collimation(node[x]) for x in node if "collimation" in x],
         detector=[parse_detector(node[d]) for d in node if "detector" in d],
-        source=parse_source(node["sassource"]),
+        source=parse_source(node["SASsource"]),
     )
 
 def parse_sample(node : HDF5Group) -> Sample:
     name = attr_parse(node, "name")
     sample_id = opt_parse(node, "ID", parse_string)
     thickness = opt_parse(node, "thickness", parse_quantity)
-    transmission = opt_parse(node, "transmission", lambda n: float(n[0].astype(str)))
+    try: # vector
+        transmission = opt_parse(node, "transmission", lambda n: float(n[0].astype(str)))
+    except ValueError: # scalar
+        transmission = opt_parse(node, "transmission", lambda n: float(n[()].astype(str)))
     temperature = opt_parse(node, "temperature", parse_quantity)
     position = opt_parse(node, "position", parse_vec3)
     orientation = opt_parse(node, "orientation", parse_rot3)
@@ -281,17 +294,17 @@ def load_raw(node: HDF5Group | HDF5Dataset) -> MetaNode:
                     contents = node.asstr()[0]
             else:
                 if "units" in attrib and attrib["units"]:
-                    contents = Quantity(node[:], parse(attrib["units"]))
+                    contents = Quantity(node[()], parse(attrib["units"]))
                 else:
-                    contents = node[:]
+                    contents = node[()]
             return MetaNode(name=name, attrs=attrib, contents=contents)
         case _:
             raise RuntimeError(f"Cannot load raw data of type {type(node)}")
 
 def parse_metadata(node : HDF5Group) -> Metadata:
-    instrument = opt_parse(node, "sasinstrument", parse_instrument)
-    sample = opt_parse(node, "sassample", parse_sample)
-    process = [parse_process(node[p]) for p in node if "sasprocess" in p]
+    instrument = opt_parse(node, "SASinstrument", parse_instrument)
+    sample = opt_parse(node, "SASsample", parse_sample)
+    process = [parse_process(node[p]) for p in node if "SASprocess" in p]
     title = opt_parse(node, "title", parse_string)
     run = [parse_string(node[r]) for r in node if "run" in r]
     definition = opt_parse(node, "definition", parse_string)
@@ -318,15 +331,13 @@ def load_data(filename: str) -> dict[str, SasData]:
 
             entry_keys = entry
 
-            if not [k for k in entry if k.startswith("sasdata") or k.startswith("data")]:
+            if not [k for k in entry if k.lower().startswith("sasdata") or k.lower().startswith("data")]:
                 logger.warning("No sasdata or data key")
                 logger.warning(f"Known keys: {[k for k in entry_keys]}")
 
             for key in entry_keys:
                 component = entry[key]
-                print(key)
                 lower_key = key.lower()
-                # print(lower_key)
                 if lower_key.startswith("sasdata") or lower_key.startswith("data"):
                     datum = recurse_hdf5(component)
                     data_contents = connected_data(datum, str(filename))
@@ -358,6 +369,32 @@ if __name__ == "__main__":
 
     for dataset in data.values():
         print(dataset.summary())
-        print(dataset.dataset_type)
+        # print(dataset.dataset_type)
+        # print(dataset._data_contents)
+        # print(dataset.metadata)
+
+
+        from postprocess import deduce_qz
+        data = deduce_qz(dataset)
+
+        print(data.summary())
+        # print(dataset.dataset_type)
         print(dataset._data_contents)
-        print(dataset.metadata)
+        print(dataset._data_contents['Qz'].value)
+        # print(dataset.metadata)
+
+
+    # import h5py
+
+    # new_path = "/entry1/SASdata"
+    # old_path = "/entry1/test"
+
+    # with h5py.File(test_file, "a") as f:
+    #     parent = f[old_path].parent
+    #     name_new = new_path.rsplit("/", 1)[-1]
+
+    #     # Copy to the new name
+    #     f.copy(old_path, parent, name=name_new)
+
+    #     # Remove the old entry
+    #     del f[old_path]
