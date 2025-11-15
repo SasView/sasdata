@@ -9,6 +9,7 @@ from numpy.typing import ArrayLike
 
 from sasdata.dataloader.data_info import Data1D, Data2D
 
+
 class IntervalType(Enum):
     HALF_OPEN = auto()
     CLOSED = auto()
