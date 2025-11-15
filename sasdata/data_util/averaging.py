@@ -79,45 +79,79 @@ class DirectionalAverage:
         :param nbins: The number of bins the major axis is divided up into.
         """
 
+        # Step 1: quick checks and parsing
+        self._validate_coordinate_arrays(major_axis, minor_axis)
+        major_lims, minor_lims = self._parse_lims(lims)
+        self.nbins = self._coerce_nbins(nbins)
+
+        # Step 2: assign arrays and check sizes
+        self.major_axis, self.minor_axis = self._assign_axes_and_check_lengths(major_axis, minor_axis)
+
+        # Step 3: set final limits and compute bin limits
+        self.major_lims, self.minor_lims = self._set_default_lims_and_bin_limits(major_lims, minor_lims)
+
+    def _validate_coordinate_arrays(self, major_axis, minor_axis) -> None:
+        """Ensure both major and minor coordinate inputs are array-like."""
         if any(not hasattr(coordinate_data, "__array__") for
-               coordinate_data in (major_axis, minor_axis)):
+                coordinate_data in (major_axis, minor_axis)):
             msg = "Must provide major & minor coordinate arrays for binning."
             raise ValueError(msg)
 
+    def _parse_lims(self, lims):
+        """
+        Validate the lims parameter and return (major_lims, minor_lims).
+        Accepts None or a 2-tuple (major_lims, minor_lims). Each of the two
+        elements may be None or a 2-tuple of floats.
+        """
         if lims is None:
-            major_lims = minor_lims = None
+            return None, None
 
-        elif not (isinstance(lims, (list, tuple)) and len(lims) == 2):
+        if not (isinstance(lims, (list, tuple)) and len(lims) == 2):
             msg = "Parameter 'lims' must be a 2-tuple (major_lims, minor_lims) or None."
             raise ValueError(msg)
-        else:
-            major_lims, minor_lims = lims
 
+        major_lims, minor_lims = lims
+        return major_lims, minor_lims
+
+    def _coerce_nbins(self, nbins):
+        """Coerce nbins to int, raising a TypeError with the original message on failure."""
         try:
-            nbins = int(nbins)
-        except:
+            return int(nbins)
+        except Exception:
             msg = f"Parameter 'nbins' must be convertable to an integer via int(), got type {type(nbins)} (={nbins})"
             raise TypeError(msg)
 
-        self.major_axis = np.asarray(major_axis)
-        self.minor_axis = np.asarray(minor_axis)
-        if self.major_axis.size != self.minor_axis.size:
+    def _assign_axes_and_check_lengths(self, major_axis, minor_axis):
+        """Assign axes to numpy arrays and check they have equal length."""
+        major_arr = np.asarray(major_axis)
+        minor_arr = np.asarray(minor_axis)
+        if major_arr.size != minor_arr.size:
             msg = "Major and minor axes must have same length"
             raise ValueError(msg)
-        # In some cases all values from a given axis are part of the ROI.
-        # An alternative approach may be needed for fractional weights.
+        return major_arr, minor_arr
+
+    def _set_default_lims_and_bin_limits(self, major_lims, minor_lims):
+        """
+        Determine final major and minor limits (using data min/max if None)
+        and compute bin_limits based on major_lims and self.nbins.
+        Returns (major_lims_final, minor_lims_final).
+        """
+        # Major limits
         if major_lims is None:
-            self.major_lims = (self.major_axis.min(), self.major_axis.max())
+            major_lims_final = (self.major_axis.min(), self.major_axis.max())
         else:
-            self.major_lims = major_lims
+            major_lims_final = major_lims
+
+        # Minor limits
         if minor_lims is None:
-            self.minor_lims = (self.minor_axis.min(), self.minor_axis.max())
+            minor_lims_final = (self.minor_axis.min(), self.minor_axis.max())
         else:
-            self.minor_lims = minor_lims
-        self.nbins = nbins
-        # Assume a linear spacing for now, but allow for log, fibonacci, etc. implementations in the future
-        # Add one to bin because this is for the limits, not centroids.
-        self.bin_limits = np.linspace(self.major_lims[0], self.major_lims[1], self.nbins + 1)
+            minor_lims_final = minor_lims
+
+        # Store and compute bin limits (nbins + 1 points for boundaries)
+        self.bin_limits = np.linspace(major_lims_final[0], major_lims_final[1], self.nbins + 1)
+
+        return major_lims_final, minor_lims_final
 
     @property
     def bin_widths(self) -> np.ndarray:
