@@ -1,7 +1,9 @@
 """
 This module contains various data processors used by Sasview's slicers.
 """
+
 from enum import Enum, auto
+
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -39,6 +41,7 @@ class IntervalType(Enum):
             raise ValueError(msg)
 
         return np.asarray(in_range, dtype=int)
+
 
 
 class DirectionalAverage:
@@ -134,7 +137,9 @@ class DirectionalAverage:
         lower, upper = self.get_bin_interval(bin_number)
         return upper - lower
 
-    def get_bin_interval(self, bin_number: int) -> (float, float):
+
+    def get_bin_interval(self, bin_number: int) -> tuple[float, float]:
+
         """
         Return the lower and upper limits defining a bin, given its index.
 
@@ -200,7 +205,11 @@ class DirectionalAverage:
         x_axis_values = np.sum(weights * self.major_axis, axis=1)
         intensity = np.sum(weights * data, axis=1)
         errs_squared = np.sum((weights * err_data)**2, axis=1)
+
         bin_counts = np.sum(weights, axis=1)
+        # Prepare results, only compute division where bin_counts > 0
+        if not np.any(bin_counts > 0):
+            raise ValueError("Average Error: No bins inside ROI to average...")
 
         errors = np.sqrt(errs_squared)
         x_axis_values /= bin_counts
@@ -228,11 +237,13 @@ class GenericROI:
         In classes inheriting from GenericROI, the variables used to define the
         boundaries of the Region Of Interest are also set up during __init__.
         """
+
         self.data = None
         self.err_data = None
         self.q_data = None
         self.qx_data = None
         self.qy_data = None
+
 
     def validate_and_assign_data(self, data2d: Data2D = None) -> None:
         """
@@ -310,6 +321,7 @@ class PolarROI(GenericROI):
         r_min, r_max = r_range
         phi_min, phi_max = phi_range
         super().__init__()
+
         self.phi_data = None
 
         if r_min >= r_max:
@@ -1004,11 +1016,13 @@ class Sectorcut(PolarROI):
         # Calculate q_data using unmasked qx_data and qy_data to ensure data sizes match
         q_data = np.sqrt(data2D.qx_data * data2D.qx_data + data2D.qy_data * data2D.qy_data)
 
+
         phi_offset = self.phi_min
         self.phi_min = 0.0
         self.phi_max = (self.phi_max - phi_offset) % (2 * np.pi)
         self.phi_data = (self.phi_data - phi_offset) % (2 * np.pi)
         phi_shifted = self.phi_data - np.pi
+
 
         # Determine angular bounds for both upper and lower half of image
         phi_min_angle, phi_max_angle = (self.phi_min, self.phi_max)
