@@ -220,7 +220,3 @@ def load_data(params: AsciiReaderParams) -> list[SasData]:
 def load_data_default_params(filename: str) -> list[SasData]:
     params = guess_params_from_filename(filename, guess_dataset_type(filename))
     return load_data(params)
-
-
-
-test_data = "/Users/pmneves/Downloads/grasp/GPSANS_0108840.dat"
