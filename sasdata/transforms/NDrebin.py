@@ -10,10 +10,11 @@ from sasdata.quantities.quantity import Quantity
 
 def NDrebin(data: Quantity[ArrayLike],
             coords: Quantity[ArrayLike],
-            axes: list[Quantity[ArrayLike]],
+            axes: Optional[list[Quantity[ArrayLike]]] = None,
             limits: Optional[List[Sequence[float]]] = None,
             step_size: Optional[List[Sequence[float]]] = None,
-            num_bins: Optional[List[Sequence[int]]] = None
+            num_bins: Optional[List[Sequence[int]]] = None,
+            subpixel: Optional[bool] = False
         ):
     """
     Provide values at points with ND coordinates.
@@ -21,9 +22,13 @@ def NDrebin(data: Quantity[ArrayLike],
     The data can be in any array shape.
 
     The coordinates are in the same shape plus one dimension,
-    preferably the first dimension, which is the ND coordinate position
+        preferably the first dimension, which is the ND coordinate
+        position
 
     Rebin that data into a regular grid.
+
+    Note that this does lose some information from the underlying data,
+        as you are essentially averaging many measurements into one bin.
 
     :data: The data at each point
     :coords: The locations of each data point, same size of data
@@ -40,6 +45,20 @@ def NDrebin(data: Quantity[ArrayLike],
     :num_bins: The number of bins along each axis. Superceded by
         step_size if step_size is provided. At least one of step_size
         or num_bins must be provided.
+    :subpixel: Whether to perform subpixel binning or not. Defaults 
+        to false.
+        -If false, measurements are binned into one bin,
+        the one they fall within. Roughly a "nearest neighbor"
+        approach.
+        -If true, subpixel binning will be applied, where
+        the value of a measurement is distributed to its 2^Ndim
+        nearest neighbors weighted by proximity. For example, if
+        a point falls exactly between two bins, its value will be
+        given to both bins with 50% weight. This is roughly a
+        "linear interpolation" approach. Tends to do better at 
+        reducing sharp peaks and edges if data is sampled unevenly.
+        However, this is roughly 2^Ndim times slower since you have
+        to address each bin 2^Ndim more times.
     """
 
     # Identify number of points
@@ -53,6 +72,7 @@ def NDrebin(data: Quantity[ArrayLike],
         raise ValueError(f"The coords have to have the same shape as "
                          "the data, plus one more dimension which is "
                          "length Ndims")
+    Ndims = int(Ndims)
 
     # flatten input data to 1D of length Nvals
     data_flat = data.reshape(-1)
@@ -164,9 +184,10 @@ def NDrebin(data: Quantity[ArrayLike],
 
     # now bin the data!
     for ind in range(Nvals):
-        binned_data[bin_inds[ind,:]] = binned_data[bin_inds[ind,:]] + data_flat[ind]
-        binned_data_errs[bin_inds[ind,:]] = binned_data_errs[bin_inds[ind,:]] + errors_flat[ind]**2
-        n_samples[bin_inds[ind,:]] = n_samples[bin_inds[ind,:]] + 1
+        this_bin_ind = bin_inds[ind,:]
+        binned_data[this_bin_ind] = binned_data[this_bin_ind] + data_flat[ind]
+        binned_data_errs[this_bin_ind] = binned_data_errs[this_bin_ind] + errors_flat[ind]**2
+        n_samples[this_bin_ind] = n_samples[this_bin_ind] + 1
        
 
     # normalize binned_data by the number of times sampled
@@ -179,3 +200,58 @@ def NDrebin(data: Quantity[ArrayLike],
 
 
     return binned_data, bin_centers_list
+
+
+if __name__ == "__main__":
+    import numpy as np
+    import matplotlib.pyplot as plt
+
+    # Parameters for the Gaussian function
+    mu = 0.0          # Mean
+    sigma = 1.0       # Standard deviation
+    noise = 0.1
+    Nvals = 100000
+
+    # Generate Nvals random values between -5 and 5
+    x = -5 + (5 + 5) * np.random.rand(Nvals)   # shape: (Nvals,)
+
+    # Build qmat equivalent to MATLAB:
+    # qmat = [x(:)'; 0*x(:)'; 0*x(:)']
+    # → 3 x Nvals array
+    qmat = np.vstack([
+        x,
+        np.zeros_like(x),
+        np.zeros_like(x)
+    ])
+
+    # Evaluate the Gaussian function
+    I_1 = np.exp(-((x - mu) ** 2) / (2 * sigma ** 2)) / (sigma * np.sqrt(2 * np.pi))
+
+    # Add uniform noise in [-noise, +noise]
+    I_1 = I_1 - noise + 2 * noise * np.random.rand(Nvals)
+
+    # Fiducial
+    xreal = np.linspace(-5, 5, 1001)
+    Ireal = np.exp(-((xreal - mu) ** 2) / (2 * sigma ** 2)) / (sigma * np.sqrt(2 * np.pi))
+
+    # NDrebin
+    qbin, Ibin, _ = NDrebin(I_1, qmat,
+        step_size=[0.1,np.inf,np.inf]
+    )
+
+    qbin2, Ibin2, _ = NDrebin(I_1, qmat,
+        step_size=[0.1,np.inf,np.inf]
+    )
+
+    # Plot
+    plt.figure()
+    plt.plot(qbin[0, :], Ibin, 'o', linewidth=2, label='sum')
+    plt.plot(qbin2[0, :], Ibin2, 'o', linewidth=2, label='fractional')
+    plt.plot(xreal, Ireal, 'k-', linewidth=2, label='analytic')
+
+    plt.xlabel('x')
+    plt.ylabel('I')
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
+
