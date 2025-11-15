@@ -2,17 +2,18 @@
 Unit tests for SlabX and SlabY averagers (moved out of utest_averaging_analytical.py).
 """
 import unittest
+
 import numpy as np
-from scipy import integrate
+
+from sasdata.data_util.averaging import SlabX, SlabY
+from sasdata.dataloader import data_info
 from test.sasmanipulations.helper import (
     MatrixToData2D,
-    make_dd_from_func,
     expected_slabx_area,
     expected_slaby_area,
     integrate_1d_output,
+    make_dd_from_func,
 )
-from sasdata.data_util.averaging import SlabX, SlabY
-from sasdata.dataloader import data_info
 
 # TODO - also check the errors are being calculated correctly
 
@@ -232,6 +233,6 @@ class SlabYTests(unittest.TestCase):
         actual_area = integrate_1d_output(data1d, method="simpson")
 
         self.assertAlmostEqual(actual_area, expected_area, 2)
-        
+
 if __name__ == '__main__':
-    unittest.main()        
+    unittest.main()

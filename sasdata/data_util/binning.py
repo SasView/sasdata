@@ -3,6 +3,7 @@ from numpy.typing import ArrayLike
 
 from sasdata.data_util.interval import IntervalType
 
+
 class DirectionalAverage:
     """
     Average along one coordinate axis of 2D data and return data for a 1D plot.

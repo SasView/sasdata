@@ -2,13 +2,12 @@
 Unit tests for SlabX and SlabY averagers (moved out of utest_averaging_analytical.py).
 """
 import unittest
+
 import numpy as np
 from scipy import integrate
-from test.sasmanipulations.helper import (
-    MatrixToData2D, CircularTestingMatrix
-)
-from sasdata.data_util.averaging import CircularAverage, Ring, SectorQ, WedgeQ, WedgePhi
-from sasdata.dataloader import data_info
+
+from sasdata.data_util.averaging import CircularAverage, Ring, SectorQ, WedgePhi, WedgeQ
+from test.sasmanipulations.helper import CircularTestingMatrix, MatrixToData2D
 
 # TODO - also check the errors are being calculated correctly
 
@@ -172,7 +171,7 @@ class RingTests(unittest.TestCase):
         actual_area = integrate.simpson(data1d.y, data1d.x)
 
         self.assertAlmostEqual(actual_area, expected_area, 1)
-        
+
 class SectorQTests(unittest.TestCase):
     """
     This class contains the tests for the SectorQ class from manipulations.py
@@ -392,7 +391,7 @@ class WedgePhiTests(unittest.TestCase):
                                                     phi_max=phi_max)
         actual_area = integrate.simpson(data1d.y, data1d.x)
 
-        self.assertAlmostEqual(actual_area, expected_area, 1)       
+        self.assertAlmostEqual(actual_area, expected_area, 1)
 
 if __name__ == '__main__':
-    unittest.main()        
+    unittest.main()

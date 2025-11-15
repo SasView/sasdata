@@ -7,6 +7,7 @@ formulae rather than imported data files.
 import unittest
 
 import numpy as np
+
 from scipy import integrate
 from test.sasmanipulations.helper import MatrixToData2D 
 from sasdata.data_util.averaging import DirectionalAverage
