@@ -33,6 +33,8 @@ from sasdata.quantities.unit_parser import parse
 test_file = "./example_data/2d_data/BAM_2D.h5"
 # test_file = "./example_data/2d_data/14250_2D_NoDetInfo_NXcanSAS_v3.h5"
 # test_file = "./example_data/2d_data/33837rear_2D_1.75_16.5_NXcanSAS_v3.h5"
+test_file = "/Users/pmneves/Library/CloudStorage/OneDrive-JohnsHopkins/_research/EuAg4Sb2/PSI_SANS_Jun23/data_nov/sans2023n065775.hdf"
+test_file = "/Users/pmneves/Downloads/108854.nxcansas.h5"
 
 logger = logging.getLogger(__name__)
 
@@ -322,7 +324,9 @@ def load_data(filename: str) -> dict[str, SasData]:
 
             for key in entry_keys:
                 component = entry[key]
+                print(key)
                 lower_key = key.lower()
+                # print(lower_key)
                 if lower_key.startswith("sasdata") or lower_key.startswith("data"):
                     datum = recurse_hdf5(component)
                     data_contents = connected_data(datum, str(filename))
@@ -354,3 +358,6 @@ if __name__ == "__main__":
 
     for dataset in data.values():
         print(dataset.summary())
+        print(dataset.dataset_type)
+        print(dataset._data_contents)
+        print(dataset.metadata)
