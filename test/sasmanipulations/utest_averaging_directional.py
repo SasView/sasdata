@@ -7,18 +7,13 @@ formulae rather than imported data files.
 import unittest
 
 import numpy as np
-from scipy import integrate
-from test.sasmanipulations.helper import (MatrixToData2D, CircularTestingMatrix, make_dd_from_func,
-                      expected_slabx_area, expected_slaby_area, integrate_1d_output, expected_boxsum_and_err,expected_boxavg_and_err, make_uniform_dd) 
+
 from sasdata.data_util.averaging import (
-    
     DirectionalAverage,
-    
-    SectorQ,
-    WedgePhi,
-    WedgeQ,
 )
-from sasdata.dataloader import data_info
+from test.sasmanipulations.helper import (
+    MatrixToData2D,
+)
 
 # TODO - also check the errors are being calculated correctly
 

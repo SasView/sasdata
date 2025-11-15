@@ -2,16 +2,17 @@
 Unit tests for SlabX and SlabY averagers (moved out of utest_averaging_analytical.py).
 """
 import unittest
+
 import numpy as np
-from scipy import integrate
+
+from sasdata.data_util.averaging import Boxavg, Boxsum
+from sasdata.dataloader import data_info
 from test.sasmanipulations.helper import (
     MatrixToData2D,
-    make_uniform_dd,
-    expected_boxsum_and_err,
     expected_boxavg_and_err,
+    expected_boxsum_and_err,
+    make_uniform_dd,
 )
-from sasdata.data_util.averaging import Boxsum, Boxavg
-from sasdata.dataloader import data_info
 
 # TODO - also check the errors are being calculated correctly
 
@@ -181,6 +182,6 @@ class BoxavgTests(unittest.TestCase):
 
         self.assertAlmostEqual(result, 0, 6)
         self.assertAlmostEqual(error, 0, 6)
-        
+
 if __name__ == '__main__':
-    unittest.main()        
+    unittest.main()

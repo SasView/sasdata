@@ -1,5 +1,7 @@
 import numpy as np
+
 from sasdata.dataloader.data_info import Data2D
+
 
 class GenericROI:
     """
@@ -52,8 +54,8 @@ class GenericROI:
         # the square root of the data. This code was added to replicate
         # previous functionality. It's a bit dodgy, so feel free to remove.
         self.err_data[self.err_data == 0] = \
-            np.sqrt(np.abs(self.data[self.err_data == 0]))           
-           
+            np.sqrt(np.abs(self.data[self.err_data == 0]))
+
 class CartesianROI(GenericROI):
     """
     Base class for data manipulators with a Cartesian (rectangular) ROI.
@@ -119,4 +121,4 @@ class PolarROI(GenericROI):
         # Most validation and pre-processing is taken care of by GenericROI.
         super().validate_and_assign_data(data2d)
         # Phi data can be calculated from the Cartesian Q coordinates.
-        self.phi_data = np.arctan2(self.qy_data, self.qx_data)            
+        self.phi_data = np.arctan2(self.qy_data, self.qx_data)

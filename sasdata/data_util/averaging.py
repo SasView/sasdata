@@ -2,16 +2,14 @@
 This module contains various data processors used by Sasview's slicers.
 """
 
-from enum import Enum, auto
 
 import numpy as np
-from numpy.typing import ArrayLike
 
+from sasdata.data_util.binning import DirectionalAverage
+from sasdata.data_util.interval import IntervalType
+from sasdata.data_util.roi import CartesianROI, PolarROI
 from sasdata.dataloader.data_info import Data1D, Data2D
 
-from sasdata.data_util.interval import IntervalType
-from sasdata.data_util.binning import DirectionalAverage
-from sasdata.data_util.roi import GenericROI, CartesianROI, PolarROI
 
 class Boxsum(CartesianROI):
     """

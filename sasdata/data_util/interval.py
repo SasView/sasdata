@@ -2,6 +2,7 @@ from enum import Enum, auto
 
 import numpy as np
 
+
 class IntervalType(Enum):
     HALF_OPEN = auto()
     CLOSED = auto()
