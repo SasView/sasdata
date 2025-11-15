@@ -8,10 +8,8 @@ import unittest
 
 import numpy as np
 
-from scipy import integrate
-from test.sasmanipulations.helper import MatrixToData2D 
 from sasdata.data_util.averaging import DirectionalAverage
-from sasdata.dataloader import data_info
+from test.sasmanipulations.helper import MatrixToData2D
 
 # TODO - also check the errors are being calculated correctly
 
