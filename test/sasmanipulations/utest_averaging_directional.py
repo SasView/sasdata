@@ -8,30 +8,11 @@ import unittest
 
 import numpy as np
 from scipy import integrate
-from test.sasmanipulations.helper import (MatrixToData2D, CircularTestingMatrix, make_dd_from_func,
-                      expected_slabx_area, expected_slaby_area, integrate_1d_output, expected_boxsum_and_err,expected_boxavg_and_err, make_uniform_dd) 
-from sasdata.data_util.averaging import (
-    
-    DirectionalAverage,
-    
-    SectorQ,
-    WedgePhi,
-    WedgeQ,
-)
+from test.sasmanipulations.helper import MatrixToData2D 
+from sasdata.data_util.averaging import DirectionalAverage
 from sasdata.dataloader import data_info
 
 # TODO - also check the errors are being calculated correctly
-
-
-
-
-
-
-
-
-
-
-
 
 class DirectionalAverageValidationTests(unittest.TestCase):
     """
@@ -76,7 +57,6 @@ class DirectionalAverageValidationTests(unittest.TestCase):
                                      minor_axis=np.array([4, 5, 6]))
         self.assertEqual(dir_avg.major_lims, (1, 3))
         self.assertEqual(dir_avg.minor_lims, (4, 6))
-
 
 class DirectionalAverageFunctionalityTests(unittest.TestCase):
     """
