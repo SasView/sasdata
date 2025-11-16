@@ -21,32 +21,38 @@ def apply_fixes(data: SasData, mantid_unit_error=True):
 
 
 def deduce_qz(data: SasData):
-    # check if metadata has wavelength information and data is 2D
-    wavelength = getattr(
-        getattr(
-            getattr(
-                getattr(data, "metadata", None),
-                "instrument",
+    # if Qz is not already in the dataset
+    if 'Qz' not in data._data_contents:
+        # now check if we have Qx and Qy
+        if 'Qx' in data._data_contents and 'Qy' in data._data_contents:
+            # we start by making the approximation that qz=0
+            data._data_contents['Qz'] = 0*data._data_contents['Qx']
+
+            # now check if metadata has wavelength information
+            wavelength = getattr(
+                getattr(
+                    getattr(
+                        getattr(data, "metadata", None),
+                        "instrument",
+                        None
+                    ),
+                    "source",
+                    None
+                ),
+                "wavelength",
                 None
-            ),
-            "source",
-            None
-        ),
-        "wavelength",
-        None
-    )
-    # we start by making the approximation that qz=0
-    data._data_contents['Qz'] = 0*data._data_contents['Qx']
-    
-    if wavelength is not None:
-        # we can deduce the value of qz from qx and qy
-        qx = data._data_contents['Qx']
-        qy = data._data_contents['Qy']
+            )
+            
+            if wavelength is not None:
+                # we can deduce the value of qz from qx and qy
+                # if we have the wavelength
+                qx = data._data_contents['Qx']
+                qy = data._data_contents['Qy']
 
-        # this is how you convert qx, qy, and wavelength to qz
-        k0 = 2*np.pi/wavelength
-        qz = k0-(k0**2-qx**2-qy**2)**(0.5)
+                # this is how you convert qx, qy, and wavelength to qz
+                k0 = 2*np.pi/wavelength
+                qz = k0-(k0**2-qx**2-qy**2)**(0.5)
 
-        data._data_contents['Qz'] = qz
+                data._data_contents['Qz'] = qz
 
     return data
