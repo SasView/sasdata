@@ -380,63 +380,79 @@ if __name__ == "__main__":
 
     if True:
         # Parameters of the 2D Gaussian
-        mu = np.array([0.0, 0.0])                 # Mean vector
-        sigma = np.array([1.0, 2.0])              # Std dev in x and y
-        noise = 0.1
-        Nvals = int(1e6)
+        mu = np.array([0.15, 0.0, 0.0])                 # Mean vector
+        sigma = np.array([0.015, 0.055, 0.05])              # Std dev in x and y
+        noise = 0.
+        SDD = 2.7
+        k_0 = 2*np.pi/5
+        pix_x = 1./128.
+        pix_y = 1./128.
 
-        # Generate random points (x, y) in a 2D square
-        x = -5 + 10 * np.random.rand(Nvals)
-        y = -5 + 10 * np.random.rand(Nvals)
+        # Generate our 2D detector grid
+        x = np.arange(-64,64)*pix_x
+        y = np.arange(-64,64)*pix_y
+        
+        [xmesh, ymesh] = np.meshgrid(x, y)
 
-        # qmat now contains [x; y; 0] just like the MATLAB pattern
-        qmat = np.vstack([
-            x,
-            y,
-            np.zeros_like(x)
-        ])
+        # calculate qx, qy, qz
+        qx = k_0*xmesh/np.sqrt(xmesh**2+ymesh**2+SDD**2)
+        qy = k_0*ymesh/np.sqrt(xmesh**2+ymesh**2+SDD**2)
+        qz = k_0-k_0*SDD/np.sqrt(xmesh**2+ymesh**2+SDD**2)
 
-        # Evaluate 2D Gaussian:
+        # qmat
+        qmat0 = np.stack([qx,qy,qz], axis=2)
+
+        # now rotate about y
+        angle_list = np.pi/180*np.linspace(-15,15,int(30/.25))
+        qmat = np.zeros((len(x), len(y), len(angle_list), 3))
+        for ind in range(len(angle_list)):
+            new_qmat = np.copy(qmat0)
+            new_qmat[:,:,0] = np.cos(angle_list[ind])*qmat0[:,:,0] - \
+                np.sin(angle_list[ind])*qmat0[:,:,2]
+            new_qmat[:,:,2] = np.sin(angle_list[ind])*qmat0[:,:,0] + \
+                np.cos(angle_list[ind])*qmat0[:,:,2]
+            qmat[:,:,ind,:] = qmat0
+
+
+        # Evaluate Gaussian:
         #     G(x,y) = (1/(2πσxσy)) * exp(-[(x-μx)^2/(2σx^2) + (y-μy)^2/(2σy^2)])
         I_2D = (
             np.exp(
-                -((x - mu[0])**2) / (2 * sigma[0]**2)
-                -((y - mu[1])**2) / (2 * sigma[1]**2)
+                -((qmat[:,:,:,0] - mu[0])**2) / (2 * sigma[0]**2)
+                -((qmat[:,:,:,1] - mu[1])**2) / (2 * sigma[1]**2)
+                -((qmat[:,:,:,2] - mu[2])**2) / (2 * sigma[2]**2)
             ) /
-            (2 * np.pi * sigma[0] * sigma[1])
+            (2 * np.pi * sigma[0] * sigma[1] * sigma[2])
         )
 
         # Add uniform noise
-        I_2D = I_2D - noise + 2 * noise * np.random.rand(Nvals)
+        I_2D = I_2D - noise + 2 * noise * np.random.rand(*I_2D.shape)
 
         # Rebin in 2D. 
         # You can choose finite steps for both x and y depending on how you want bins defined.
         import time
         start = time.perf_counter()
         Ibin, qbin = NDrebin(I_2D, qmat,
-            step_size=[0.45, 0.35, np.inf]
+            step_size=[0.006, 0.006, np.inf]
         )
         end = time.perf_counter()
-        print(f"Computed {Nvals} points in {end - start:.6f} seconds")
+        print(f"Computed {qmat.size/3} points in {end - start:.6f} seconds")
 
         start = time.perf_counter()
         Ibin2, qbin2 = NDrebin(I_2D, qmat,
-            step_size=[0.45, 0.35, np.inf],
+            step_size=[0.0035, 0.0035, np.inf],
             subpixel=True
         )
         end = time.perf_counter()
-        print(f"Computed {Nvals} points with subpixels in {end - start:.6f} seconds")
+        print(f"Computed {qmat.size/3} points with subpixels in {end - start:.6f} seconds")
 
 
         # Fiducial 2D
-        xreal = np.linspace(-5, 5, 301)
-        yreal = np.linspace(-5, 5, 201)
-        [Xreal, Yreal] = np.meshgrid(xreal,yreal, indexing='ij')
-
+        [xmesh, ymesh] = np.meshgrid(qbin2[0], qbin2[1])
         Ireal = (
             np.exp(
-                -((Xreal - mu[0])**2) / (2 * sigma[0]**2)
-                -((Yreal - mu[1])**2) / (2 * sigma[1]**2)
+                -((xmesh - mu[0])**2) / (2 * sigma[0]**2)
+                -((ymesh - mu[1])**2) / (2 * sigma[1]**2)
             ) /
             (2 * np.pi * sigma[0] * sigma[1])
         )
@@ -445,7 +461,7 @@ if __name__ == "__main__":
         plt.figure(figsize=(4,8))
 
         plt.subplot(3, 1, 1)
-        plt.pcolormesh(np.squeeze(qbin[1]), np.squeeze(qbin[0]), np.squeeze(Ibin), shading='nearest')
+        plt.pcolormesh(qbin[0], qbin[1], np.squeeze(Ibin.T), shading='nearest')
         plt.xlabel('x')
         plt.ylabel('y')
         plt.title('sum')
@@ -453,7 +469,7 @@ if __name__ == "__main__":
         plt.tight_layout()
 
         plt.subplot(3, 1, 2)
-        plt.pcolormesh(np.squeeze(qbin[1]), np.squeeze(qbin[0]), np.squeeze(Ibin), shading='nearest')
+        plt.pcolormesh(qbin2[0], qbin2[1], np.squeeze(Ibin2.T), shading='nearest')
         plt.xlabel('x')
         plt.ylabel('y')
         plt.title('sum')
@@ -461,7 +477,7 @@ if __name__ == "__main__":
         plt.tight_layout()
 
         plt.subplot(3, 1, 3)
-        plt.pcolormesh(yreal, xreal, Ireal, shading='nearest')
+        plt.pcolormesh(xmesh, ymesh, Ireal, shading='nearest')
         plt.xlabel('x')
         plt.ylabel('y')
         plt.title('real')
