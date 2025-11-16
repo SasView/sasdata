@@ -33,8 +33,6 @@ from sasdata.quantities.unit_parser import parse
 test_file = "./example_data/2d_data/BAM_2D.h5"
 # test_file = "./example_data/2d_data/14250_2D_NoDetInfo_NXcanSAS_v3.h5"
 # test_file = "./example_data/2d_data/33837rear_2D_1.75_16.5_NXcanSAS_v3.h5"
-test_file = "/Users/pmneves/Library/CloudStorage/OneDrive-JohnsHopkins/_research/EuAg4Sb2/PSI_SANS_Jun23/data_nov/sans2023n065775.hdf"
-test_file = "/Users/pmneves/Downloads/108854.nxcansas.h5"
 
 logger = logging.getLogger(__name__)
 
@@ -369,33 +367,3 @@ if __name__ == "__main__":
 
     for dataset in data.values():
         print(dataset.summary())
-        # print(dataset.dataset_type)
-        # print(dataset._data_contents)
-        # print(dataset.metadata)
-
-
-
-        from postprocess import deduce_qz
-        dataset = deduce_qz(dataset)
-
-        print(dataset.summary())
-        # print(dataset.dataset_type)
-        print(dataset._data_contents)
-        print(dataset._data_contents['Qz'].value)
-        # print(dataset.metadata)
-
-
-    # import h5py
-
-    # new_path = "/entry1/SASdata"
-    # old_path = "/entry1/test"
-
-    # with h5py.File(test_file, "a") as f:
-    #     parent = f[old_path].parent
-    #     name_new = new_path.rsplit("/", 1)[-1]
-
-    #     # Copy to the new name
-    #     f.copy(old_path, parent, name=name_new)
-
-    #     # Remove the old entry
-    #     del f[old_path]
