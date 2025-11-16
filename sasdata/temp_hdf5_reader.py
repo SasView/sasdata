@@ -374,10 +374,11 @@ if __name__ == "__main__":
         # print(dataset.metadata)
 
 
-        from postprocess import deduce_qz
-        data = deduce_qz(dataset)
 
-        print(data.summary())
+        from postprocess import deduce_qz
+        dataset = deduce_qz(dataset)
+
+        print(dataset.summary())
         # print(dataset.dataset_type)
         print(dataset._data_contents)
         print(dataset._data_contents['Qz'].value)
