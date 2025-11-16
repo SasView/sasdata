@@ -40,14 +40,13 @@ def deduce_qz(data: SasData):
     
     if wavelength is not None:
         # we can deduce the value of qz from qx and qy
-        qx = data._data_contents['Qx'].value
-        qy = data._data_contents['Qy'].value
+        qx = data._data_contents['Qx']
+        qy = data._data_contents['Qy']
 
         # this is how you convert qx, qy, and wavelength to qz
         k0 = 2*np.pi/wavelength
-        twotheta = np.arcsin((qx**2 + qy**2) / k0)
-        qz = (1 - np.cos(twotheta)) * k0
+        qz = k0-(k0**2-qx**2-qy**2)**(0.5)
 
-        data._data_contents['Qz'].value = qz
+        data._data_contents['Qz'] = qz
 
     return data
