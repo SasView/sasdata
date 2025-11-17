@@ -8,6 +8,7 @@ import numpy as np
 
 from sasdata.data import SasData
 
+
 def fix_mantid_units_error(data: SasData) -> SasData:
     pass
 
@@ -42,7 +43,7 @@ def deduce_qz(data: SasData):
                 "wavelength",
                 None
             )
-            
+
             if wavelength is not None:
                 # we can deduce the value of qz from qx and qy
                 # if we have the wavelength
@@ -56,3 +57,14 @@ def deduce_qz(data: SasData):
                 data._data_contents['Qz'] = qz
 
     return data
+
+if __name__ == "__main__":
+    from sasdata.temp_hdf5_reader import load_data
+    test_file = "/Users/pmneves/Downloads/108854.nxcansas.h5"
+    data = load_data(test_file)
+
+    for dataset in data.values():
+        deduce_qz(dataset)
+        print(dataset.summary())
+
+        print(dataset._data_contents)
