@@ -43,29 +43,12 @@ from sasdata.data_util.averaging import (
     WedgePhi,
     WedgeQ,
 )
-from sasdata.dataloader.data_info import Data1D, Data2D, Data3D
+from sasdata.dataloader.data_info import Data1D, Data2D
 from sasdata.dataloader.data_info import reader2D_converter as _di_reader2D_converter
 from sasdata.quantities.constants import Pi, TwoPi
 
 warn("sasdata.data_util.manipulations is deprecated. Unless otherwise noted, update your import to "
      "sasdata.data_util.averaging.", DeprecationWarning, stacklevel=2)
-
-
-def deduce_qz(qx: float, qy: float, wavelength: float) -> float:
-    """
-    If you know qx, qy, and the wavelength, you can derive qz
-
-    :param qx: qx [inverse length]
-    :param dy: qy [inverse length]
-    :param wavelength: neutron wavelength [length]
-
-    :return: qz
-    """
-
-    k0 = 2*np.pi/wavelength
-    twotheta = np.arcsin((qx**2 + qy**2) / k0)
-    qz = (1 - np.cos(twotheta)) * k0
-    return qz
 
 
 def position_and_wavelength_to_q(dx: float, dy: float, detector_distance: float, wavelength: float) -> float:
