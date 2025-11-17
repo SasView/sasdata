@@ -233,7 +233,7 @@ class QuantityAccessor[DataType](Accessor[DataType, Quantity[DataType]]):
 
 class LengthAccessor[T](QuantityAccessor[T]):
     dimension_name = 'length'
-
+    
     @property
     def meters(self) -> T:
         quantity = self.quantity
@@ -406,7 +406,7 @@ class LengthAccessor[T](QuantityAccessor[T]):
 
 class AreaAccessor[T](QuantityAccessor[T]):
     dimension_name = 'area'
-
+    
     @property
     def square_meters(self) -> T:
         quantity = self.quantity
@@ -579,7 +579,7 @@ class AreaAccessor[T](QuantityAccessor[T]):
 
 class VolumeAccessor[T](QuantityAccessor[T]):
     dimension_name = 'volume'
-
+    
     @property
     def litres(self) -> T:
         quantity = self.quantity
@@ -760,7 +760,7 @@ class VolumeAccessor[T](QuantityAccessor[T]):
 
 class InverselengthAccessor[T](QuantityAccessor[T]):
     dimension_name = 'inverse_length'
-
+    
     @property
     def per_meter(self) -> T:
         quantity = self.quantity
@@ -933,7 +933,7 @@ class InverselengthAccessor[T](QuantityAccessor[T]):
 
 class InverseareaAccessor[T](QuantityAccessor[T]):
     dimension_name = 'inverse_area'
-
+    
     @property
     def per_square_meter(self) -> T:
         quantity = self.quantity
@@ -1106,7 +1106,7 @@ class InverseareaAccessor[T](QuantityAccessor[T]):
 
 class InversevolumeAccessor[T](QuantityAccessor[T]):
     dimension_name = 'inverse_volume'
-
+    
     @property
     def per_cubic_meter(self) -> T:
         quantity = self.quantity
@@ -1279,7 +1279,7 @@ class InversevolumeAccessor[T](QuantityAccessor[T]):
 
 class TimeAccessor[T](QuantityAccessor[T]):
     dimension_name = 'time'
-
+    
     @property
     def seconds(self) -> T:
         quantity = self.quantity
@@ -1372,7 +1372,7 @@ class TimeAccessor[T](QuantityAccessor[T]):
 
 class RateAccessor[T](QuantityAccessor[T]):
     dimension_name = 'rate'
-
+    
     @property
     def hertz(self) -> T:
         quantity = self.quantity
@@ -1477,11 +1477,19 @@ class RateAccessor[T](QuantityAccessor[T]):
         else:
             return quantity.in_units_of(units.attohertz)
 
+    @property
+    def revolutions_per_minute(self) -> T:
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.revolutions_per_minute)
+
 
 
 class SpeedAccessor[T](QuantityAccessor[T]):
     dimension_name = 'speed'
-
+    
     @property
     def meters_per_second(self) -> T:
         quantity = self.quantity
@@ -3334,7 +3342,7 @@ class SpeedAccessor[T](QuantityAccessor[T]):
 
 class AccelerationAccessor[T](QuantityAccessor[T]):
     dimension_name = 'acceleration'
-
+    
     @property
     def meters_per_square_second(self) -> T:
         quantity = self.quantity
@@ -5187,7 +5195,7 @@ class AccelerationAccessor[T](QuantityAccessor[T]):
 
 class DensityAccessor[T](QuantityAccessor[T]):
     dimension_name = 'density'
-
+    
     @property
     def grams_per_cubic_meter(self) -> T:
         quantity = self.quantity
@@ -7880,7 +7888,7 @@ class DensityAccessor[T](QuantityAccessor[T]):
 
 class ForceAccessor[T](QuantityAccessor[T]):
     dimension_name = 'force'
-
+    
     @property
     def newtons(self) -> T:
         quantity = self.quantity
@@ -8005,7 +8013,7 @@ class ForceAccessor[T](QuantityAccessor[T]):
 
 class PressureAccessor[T](QuantityAccessor[T]):
     dimension_name = 'pressure'
-
+    
     @property
     def pascals(self) -> T:
         quantity = self.quantity
@@ -8122,7 +8130,7 @@ class PressureAccessor[T](QuantityAccessor[T]):
 
 class EnergyAccessor[T](QuantityAccessor[T]):
     dimension_name = 'energy'
-
+    
     @property
     def joules(self) -> T:
         quantity = self.quantity
@@ -8335,7 +8343,7 @@ class EnergyAccessor[T](QuantityAccessor[T]):
 
 class PowerAccessor[T](QuantityAccessor[T]):
     dimension_name = 'power'
-
+    
     @property
     def watts(self) -> T:
         quantity = self.quantity
@@ -8444,7 +8452,7 @@ class PowerAccessor[T](QuantityAccessor[T]):
 
 class ChargeAccessor[T](QuantityAccessor[T]):
     dimension_name = 'charge'
-
+    
     @property
     def coulombs(self) -> T:
         quantity = self.quantity
@@ -8553,7 +8561,7 @@ class ChargeAccessor[T](QuantityAccessor[T]):
 
 class PotentialAccessor[T](QuantityAccessor[T]):
     dimension_name = 'potential'
-
+    
     @property
     def volts(self) -> T:
         quantity = self.quantity
@@ -8662,7 +8670,7 @@ class PotentialAccessor[T](QuantityAccessor[T]):
 
 class ResistanceAccessor[T](QuantityAccessor[T]):
     dimension_name = 'resistance'
-
+    
     @property
     def ohms(self) -> T:
         quantity = self.quantity
@@ -8771,7 +8779,7 @@ class ResistanceAccessor[T](QuantityAccessor[T]):
 
 class CapacitanceAccessor[T](QuantityAccessor[T]):
     dimension_name = 'capacitance'
-
+    
     @property
     def farads(self) -> T:
         quantity = self.quantity
@@ -8880,7 +8888,7 @@ class CapacitanceAccessor[T](QuantityAccessor[T]):
 
 class ConductanceAccessor[T](QuantityAccessor[T]):
     dimension_name = 'conductance'
-
+    
     @property
     def siemens(self) -> T:
         quantity = self.quantity
@@ -8989,7 +8997,7 @@ class ConductanceAccessor[T](QuantityAccessor[T]):
 
 class MagneticfluxAccessor[T](QuantityAccessor[T]):
     dimension_name = 'magnetic_flux'
-
+    
     @property
     def webers(self) -> T:
         quantity = self.quantity
@@ -9098,7 +9106,7 @@ class MagneticfluxAccessor[T](QuantityAccessor[T]):
 
 class MagneticfluxdensityAccessor[T](QuantityAccessor[T]):
     dimension_name = 'magnetic_flux_density'
-
+    
     @property
     def tesla(self) -> T:
         quantity = self.quantity
@@ -9207,7 +9215,7 @@ class MagneticfluxdensityAccessor[T](QuantityAccessor[T]):
 
 class InductanceAccessor[T](QuantityAccessor[T]):
     dimension_name = 'inductance'
-
+    
     @property
     def henry(self) -> T:
         quantity = self.quantity
@@ -9316,7 +9324,7 @@ class InductanceAccessor[T](QuantityAccessor[T]):
 
 class TemperatureAccessor[T](QuantityAccessor[T]):
     dimension_name = 'temperature'
-
+    
     @property
     def kelvin(self) -> T:
         quantity = self.quantity
@@ -9433,7 +9441,7 @@ class TemperatureAccessor[T](QuantityAccessor[T]):
 
 class DimensionlessAccessor[T](QuantityAccessor[T]):
     dimension_name = 'dimensionless'
-
+    
     @property
     def none(self) -> T:
         quantity = self.quantity
@@ -9454,7 +9462,7 @@ class DimensionlessAccessor[T](QuantityAccessor[T]):
 
 class AngleAccessor[T](QuantityAccessor[T]):
     dimension_name = 'angle'
-
+    
     @property
     def degrees(self) -> T:
         quantity = self.quantity
@@ -9475,7 +9483,7 @@ class AngleAccessor[T](QuantityAccessor[T]):
 
 class SolidangleAccessor[T](QuantityAccessor[T]):
     dimension_name = 'solid_angle'
-
+    
     @property
     def stradians(self) -> T:
         quantity = self.quantity
@@ -9488,7 +9496,7 @@ class SolidangleAccessor[T](QuantityAccessor[T]):
 
 class AmountAccessor[T](QuantityAccessor[T]):
     dimension_name = 'amount'
-
+    
     @property
     def moles(self) -> T:
         quantity = self.quantity
@@ -9549,7 +9557,7 @@ class AmountAccessor[T](QuantityAccessor[T]):
 
 class ConcentrationAccessor[T](QuantityAccessor[T]):
     dimension_name = 'concentration'
-
+    
     @property
     def moles_per_cubic_meter(self) -> T:
         quantity = self.quantity
