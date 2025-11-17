@@ -143,14 +143,14 @@ with open("units.py", 'w', encoding=encoding) as fid:
             # when called from units.py.  This condition patches the
             # line when the copy is made.
             if line.startswith("from unicode_superscript"):
-                fid.write(line.replace("from unicode_superscript", "from sasdata.quantities.unicode_superscript"))
+                fid.write(line.replace("from unicode_superscript", "\nfrom sasdata.quantities.unicode_superscript"))
             else:
                 fid.write(line)
 
     # Write in unit definitions
     fid.write("\n\n"
               "#\n"
-              "# Specific units \n"
+              "# Specific units\n"
               "#\n\n")
 
     symbol_lookup = {}
@@ -374,14 +374,14 @@ with open("units.py", 'w', encoding=encoding) as fid:
         ("concentration", Dimensions(length=-3, moles_hint=1)),
     ]
 
-    fid.write("\n#\n# Units by type \n#\n\n")
+    fid.write("\n#\n# Units by type\n#\n\n")
 
     for dimension_name, dimensions in dimension_names:
 
 
         fid.write(f"\n"
                   f"{dimension_name} = UnitGroup(\n"
-                  f"  name = '{dimension_name}', \n"
+                  f"  name = '{dimension_name}',\n"
                   f"  units = [\n")
 
         for unit_name in unit_types[hash(dimensions)]:
@@ -419,7 +419,7 @@ with open("accessors.py", 'w', encoding=encoding) as fid:
         fid.write(f"\n"
                   f"class {accessor_name}[T](QuantityAccessor[T]):\n"
                   f"    dimension_name = '{dimension_name}'\n"
-                  f"    \n")
+                  f"\n")
 
         for unit_name in unit_types[hash(dimensions)]:
             fid.write(f"    @property\n"
@@ -435,14 +435,19 @@ with open("accessors.py", 'w', encoding=encoding) as fid:
 
 with open("si.py", 'w') as fid:
 
-    fid.write('"""'+(warning_text%"_build_tables.py")+'"""\n\n')
     si_unit_names = [values.plural for values in base_si_units + derived_si_units if values.plural != "grams"] + ["kilograms"]
+    si_unit_names.sort()
 
-    for name in si_unit_names:
+    fid.write('"""'+(warning_text%"_build_tables.py")+'"""\n\n')
+    fid.write("from sasdata.quantities.units import (\n")
 
-        fid.write(f"from sasdata.quantities.units import {name}\n")
-
-    fid.write("\nall_si = [\n")
     for name in si_unit_names:
         fid.write(f"    {name},\n")
+
+    fid.write(")\n")
+    fid.write("\nall_si = [\n")
+
+    for name in si_unit_names:
+        fid.write(f"    {name},\n")
+
     fid.write("]\n")
