@@ -1,24 +1,22 @@
 
+import time
+from collections.abc import Sequence
+
 import numpy as np
 from numpy._typing import ArrayLike
 
-from typing import List, Optional, Sequence
-
 from sasdata.quantities.quantity import Quantity
-
-import time
-
 
 
 def NDrebin(data: Quantity[ArrayLike],
             coords: Quantity[ArrayLike],
-            data_errs: Optional[Quantity[ArrayLike]] = None,
-            axes: Optional[list[Quantity[ArrayLike]]] = None,
-            upper: Optional[List[Sequence[float]]] = None,
-            lower: Optional[List[Sequence[float]]] = None,
-            step_size: Optional[List[Sequence[float]]] = None,
-            num_bins: Optional[List[Sequence[int]]] = None,
-            fractional: Optional[bool] = False
+            data_errs: Quantity[ArrayLike] | None = None,
+            axes: list[Quantity[ArrayLike]] | None = None,
+            upper: list[Sequence[float]] | None = None,
+            lower: list[Sequence[float]] | None = None,
+            step_size: list[Sequence[float]] | None = None,
+            num_bins: list[Sequence[int]] | None = None,
+            fractional: bool | None = False
         ):
     """
     Provide values at points with ND coordinates.
@@ -137,7 +135,7 @@ def NDrebin(data: Quantity[ArrayLike],
 
     # if Ndims is not an integer value we have a problem
     if not Ndims.is_integer():
-        raise ValueError(f"The coords have to have the same shape as "
+        raise ValueError("The coords have to have the same shape as "
                          "the data, plus one more dimension which is "
                          "length Ndims")
     Ndims = int(Ndims)
@@ -153,7 +151,7 @@ def NDrebin(data: Quantity[ArrayLike],
 
     if errors_flat.shape != data_flat.shape:
         ValueError("Data and errors have to have the same shape.")
-    
+
     # if 1D, need to add a size 1 dimension index to coords
     if Ndims == 1:
         coords = coords.reshape(-1, 1)
@@ -168,9 +166,9 @@ def NDrebin(data: Quantity[ArrayLike],
     else:
         # search if any axis is size Ndims
         dim_axis = next(i for i, s in enumerate(coords.shape) if s == Ndims)
-    
+
     if not coords.shape[dim_axis] == Ndims:
-        raise ValueError(f"The coords have to have one dimension which is "
+        raise ValueError("The coords have to have one dimension which is "
                          "the dimensionality of the space")
 
     # flatten coords to size Nvals x Ndims
@@ -187,14 +185,14 @@ def NDrebin(data: Quantity[ArrayLike],
     coords_flat = np.tensordot(coords_flat, axes_inv, axes=([1], [0]))
 
 
-    # if limits were not provided, default to the min and max 
+    # if limits were not provided, default to the min and max
     # coord in each dimension
     if upper is None:
-        upper = np.zeros((Ndims))
+        upper = np.zeros(Ndims)
         for ind in range(Ndims):
             upper[ind] = np.max(coords_flat[:,ind])
     if lower is None:
-        lower = np.zeros((Ndims))
+        lower = np.zeros(Ndims)
         for ind in range(Ndims):
             lower[ind] = np.min(coords_flat[:,ind])
 
@@ -296,7 +294,7 @@ def NDrebin(data: Quantity[ArrayLike],
         bin_inds[coords_flat[:, ind]<bins_list[ind][0], ind] = np.nan
         bin_inds[coords_flat[:, ind]==bins_list[ind][-1], ind] = num_bins[ind]-1
         bin_inds[coords_flat[:, ind]>bins_list[ind][-1], ind] = np.nan
-    
+
     if not fractional:
         # this is a non-vector way of binning the data:
         # for ind in range(Nvals):
@@ -352,7 +350,7 @@ def NDrebin(data: Quantity[ArrayLike],
 
 
         # for each dimension, double the amount of subpoints
-        # for a point at x_i, 1-x_i goes to 
+        # for a point at x_i, 1-x_i goes to
         for ind in range(Ndims):
             # will be where the bin goes
             arr_mod = valid_inds.copy()
@@ -363,15 +361,15 @@ def NDrebin(data: Quantity[ArrayLike],
             arr_mod[:, ind] = 1. - arr_mod[:, ind]
             partial_weights = np.vstack([partial_weights, arr_mod])
 
-        
+
         # any bins that ended up outside just get clamped
         for ind in range(Ndims):
             valid_inds[valid_inds[:, ind]<0, ind] = 0
             valid_inds[valid_inds[:, ind]>num_bins[ind]-1, ind] = num_bins[ind]-1
-        
+
         # weights are the product of partial weights
         weights = np.prod(partial_weights, axis=1)
-        
+
         # need to tile the data and errs to weight them for each bin
         data_valid = np.tile(data_flat[valid], 2**Ndims)
         errs_valid = np.tile(errors_flat[valid], 2**Ndims)
@@ -394,7 +392,7 @@ def NDrebin(data: Quantity[ArrayLike],
         binned_data_errs = err_sum.reshape(num_bins)
         n_samples = ns_sum.reshape(num_bins)
 
-        
+
 
 
     # normalize binned_data by the number of times sampled
@@ -422,8 +420,8 @@ def NDrebin(data: Quantity[ArrayLike],
 
 if __name__ == "__main__":
     # a bunch of local testing
-    import numpy as np
     import matplotlib.pyplot as plt
+    import numpy as np
 
     if True:
         # Parameters for the Gaussian function
@@ -500,7 +498,7 @@ if __name__ == "__main__":
         # Generate our 2D detector grid
         x = np.arange(-64,64)*pix_x
         y = np.arange(-64,64)*pix_y
-        
+
         [xmesh, ymesh] = np.meshgrid(x, y)
 
         # calculate qx, qy, qz
@@ -537,7 +535,7 @@ if __name__ == "__main__":
         # Add uniform noise
         I_2D = I_2D - noise + 2 * noise * np.random.rand(*I_2D.shape)
 
-        # Rebin in 2D. 
+        # Rebin in 2D.
         # You can choose finite steps for both x and y depending on how you want bins defined.
         import time
         start = time.perf_counter()
@@ -625,7 +623,7 @@ if __name__ == "__main__":
     # Add uniform noise
     I_ND = I_ND - noise + 2 * noise * np.random.rand(1,Nvals)
 
-    # Rebin in 2D. 
+    # Rebin in 2D.
     # You can choose finite steps for both x and y depending on how you want bins defined.
     import time
     start = time.perf_counter()
