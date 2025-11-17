@@ -88,6 +88,7 @@ from fractions import Fraction
 from typing import Self
 
 import numpy as np
+
 from sasdata.quantities.unicode_superscript import int_as_unicode_superscript
 
 
@@ -453,7 +454,7 @@ class UnitGroup:
 
 
 #
-# Specific units 
+# Specific units
 #
 
 meters = NamedUnit(1, Dimensions(1, 0, 0, 0, 0, 0, 0),name='meters',ascii_symbol='m',symbol='m')
@@ -2120,12 +2121,12 @@ symbol_lookup = {
 
 
 #
-# Units by type 
+# Units by type
 #
 
 
 length = UnitGroup(
-  name = 'length', 
+  name = 'length',
   units = [
     meters,
     exameters,
@@ -2151,7 +2152,7 @@ length = UnitGroup(
 ])
 
 area = UnitGroup(
-  name = 'area', 
+  name = 'area',
   units = [
     square_meters,
     square_exameters,
@@ -2177,7 +2178,7 @@ area = UnitGroup(
 ])
 
 volume = UnitGroup(
-  name = 'volume', 
+  name = 'volume',
   units = [
     litres,
     cubic_meters,
@@ -2204,7 +2205,7 @@ volume = UnitGroup(
 ])
 
 inverse_length = UnitGroup(
-  name = 'inverse_length', 
+  name = 'inverse_length',
   units = [
     per_meter,
     per_exameter,
@@ -2230,7 +2231,7 @@ inverse_length = UnitGroup(
 ])
 
 inverse_area = UnitGroup(
-  name = 'inverse_area', 
+  name = 'inverse_area',
   units = [
     per_square_meter,
     per_square_exameter,
@@ -2256,7 +2257,7 @@ inverse_area = UnitGroup(
 ])
 
 inverse_volume = UnitGroup(
-  name = 'inverse_volume', 
+  name = 'inverse_volume',
   units = [
     per_cubic_meter,
     per_cubic_exameter,
@@ -2282,7 +2283,7 @@ inverse_volume = UnitGroup(
 ])
 
 time = UnitGroup(
-  name = 'time', 
+  name = 'time',
   units = [
     seconds,
     milliseconds,
@@ -2298,7 +2299,7 @@ time = UnitGroup(
 ])
 
 rate = UnitGroup(
-  name = 'rate', 
+  name = 'rate',
   units = [
     hertz,
     exahertz,
@@ -2317,7 +2318,7 @@ rate = UnitGroup(
 ])
 
 speed = UnitGroup(
-  name = 'speed', 
+  name = 'speed',
   units = [
     meters_per_second,
     meters_per_millisecond,
@@ -2553,7 +2554,7 @@ speed = UnitGroup(
 ])
 
 acceleration = UnitGroup(
-  name = 'acceleration', 
+  name = 'acceleration',
   units = [
     meters_per_square_second,
     meters_per_square_millisecond,
@@ -2789,7 +2790,7 @@ acceleration = UnitGroup(
 ])
 
 density = UnitGroup(
-  name = 'density', 
+  name = 'density',
   units = [
     grams_per_cubic_meter,
     exagrams_per_cubic_meter,
@@ -3130,7 +3131,7 @@ density = UnitGroup(
 ])
 
 force = UnitGroup(
-  name = 'force', 
+  name = 'force',
   units = [
     newtons,
     exanewtons,
@@ -3150,7 +3151,7 @@ force = UnitGroup(
 ])
 
 pressure = UnitGroup(
-  name = 'pressure', 
+  name = 'pressure',
   units = [
     pascals,
     exapascals,
@@ -3169,7 +3170,7 @@ pressure = UnitGroup(
 ])
 
 energy = UnitGroup(
-  name = 'energy', 
+  name = 'energy',
   units = [
     joules,
     exajoules,
@@ -3200,7 +3201,7 @@ energy = UnitGroup(
 ])
 
 power = UnitGroup(
-  name = 'power', 
+  name = 'power',
   units = [
     watts,
     exawatts,
@@ -3218,7 +3219,7 @@ power = UnitGroup(
 ])
 
 charge = UnitGroup(
-  name = 'charge', 
+  name = 'charge',
   units = [
     coulombs,
     exacoulombs,
@@ -3236,7 +3237,7 @@ charge = UnitGroup(
 ])
 
 potential = UnitGroup(
-  name = 'potential', 
+  name = 'potential',
   units = [
     volts,
     exavolts,
@@ -3254,7 +3255,7 @@ potential = UnitGroup(
 ])
 
 resistance = UnitGroup(
-  name = 'resistance', 
+  name = 'resistance',
   units = [
     ohms,
     exaohms,
@@ -3272,7 +3273,7 @@ resistance = UnitGroup(
 ])
 
 capacitance = UnitGroup(
-  name = 'capacitance', 
+  name = 'capacitance',
   units = [
     farads,
     exafarads,
@@ -3290,7 +3291,7 @@ capacitance = UnitGroup(
 ])
 
 conductance = UnitGroup(
-  name = 'conductance', 
+  name = 'conductance',
   units = [
     siemens,
     exasiemens,
@@ -3308,7 +3309,7 @@ conductance = UnitGroup(
 ])
 
 magnetic_flux = UnitGroup(
-  name = 'magnetic_flux', 
+  name = 'magnetic_flux',
   units = [
     webers,
     exawebers,
@@ -3326,7 +3327,7 @@ magnetic_flux = UnitGroup(
 ])
 
 magnetic_flux_density = UnitGroup(
-  name = 'magnetic_flux_density', 
+  name = 'magnetic_flux_density',
   units = [
     tesla,
     exatesla,
@@ -3344,7 +3345,7 @@ magnetic_flux_density = UnitGroup(
 ])
 
 inductance = UnitGroup(
-  name = 'inductance', 
+  name = 'inductance',
   units = [
     henry,
     exahenry,
@@ -3362,7 +3363,7 @@ inductance = UnitGroup(
 ])
 
 temperature = UnitGroup(
-  name = 'temperature', 
+  name = 'temperature',
   units = [
     kelvin,
     exakelvin,
@@ -3381,14 +3382,14 @@ temperature = UnitGroup(
 ])
 
 dimensionless = UnitGroup(
-  name = 'dimensionless', 
+  name = 'dimensionless',
   units = [
     none,
     percent,
 ])
 
 angle = UnitGroup(
-  name = 'angle', 
+  name = 'angle',
   units = [
     degrees,
     radians,
@@ -3396,13 +3397,13 @@ angle = UnitGroup(
 ])
 
 solid_angle = UnitGroup(
-  name = 'solid_angle', 
+  name = 'solid_angle',
   units = [
     stradians,
 ])
 
 amount = UnitGroup(
-  name = 'amount', 
+  name = 'amount',
   units = [
     moles,
     millimoles,
@@ -3414,7 +3415,7 @@ amount = UnitGroup(
 ])
 
 concentration = UnitGroup(
-  name = 'concentration', 
+  name = 'concentration',
   units = [
     moles_per_cubic_meter,
     millimoles_per_cubic_meter,
