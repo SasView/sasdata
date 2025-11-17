@@ -2,7 +2,7 @@ import numpy as np
 
 from sasdata.data import SasData
 from sasdata.data_backing import Group
-from sasdata.dataset_types import one_dim, two_dim, three_dim
+from sasdata.dataset_types import one_dim, three_dim, two_dim
 from sasdata.quantities.quantity import Quantity
 from sasdata.quantities.units import per_angstrom, per_centimeter
 

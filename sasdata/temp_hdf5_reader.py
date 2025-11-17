@@ -279,7 +279,7 @@ def parse_collimation(node : HDF5Group) -> Collimation:
     length = opt_parse(node, "length", parse_quantity)
 
     keys = find_canSAS_key(node, "SASaperture")
-    apertures = None
+    apertures = []
     if keys is not None:
         if isinstance(keys, str):
             keys = [keys]
@@ -366,14 +366,15 @@ def load_raw(node: HDF5Group | HDF5Dataset) -> MetaNode:
             attrib = {a: node.attrs[a] for a in node.attrs}
             if (str(dt).startswith("|S")):
                 if "units" in attrib:
-                    contents = Quantity(float(node.asstr()[0]), parse(attrib["units"]))
+                    contents = parse_string(node)
                 else:
-                    contents = node.asstr()[0]
+                    contents = parse_string(node)
             else:
                 if "units" in attrib and attrib["units"]:
-                    contents = Quantity(node[()], parse(attrib["units"]))
+                    data = node[()] if node.shape == () else node[:]
+                    contents = Quantity(data, parse(attrib["units"]))
                 else:
-                    contents = node[()]
+                    contents = node[()] if node.shape == () else node[:]
             return MetaNode(name=name, attrs=attrib, contents=contents)
         case _:
             raise RuntimeError(f"Cannot load raw data of type {type(node)}")
