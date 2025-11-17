@@ -1,11 +1,9 @@
-import numpy as np
-import pytest
-from matplotlib import pyplot as plt
 import time
 
+import numpy as np
+from matplotlib import pyplot as plt
+
 from sasdata.transforms.NDrebin import NDrebin
-
-
 
 
 def test_1D_exact(show_plots: bool):
@@ -36,7 +34,7 @@ def test_1D_exact(show_plots: bool):
         plt.tight_layout()
         plt.show()
 
-        
+
     # rebin to the exact same bins with fractional
     Ibin, qbin, *rest = NDrebin(Ireal, xreal, lower=-5.5, upper=5.5, num_bins=11, fractional=True)
 
@@ -120,7 +118,7 @@ def test_ND():
     # Add uniform noise
     I_ND = I_ND - noise + 2 * noise * np.random.rand(1,Nvals)
 
-    # Rebin in 2D. 
+    # Rebin in 2D.
     # You can choose finite steps for both x and y depending on how you want bins defined.
     start = time.perf_counter()
     Ibin, qbin, *rest = NDrebin(I_ND, qmat,
