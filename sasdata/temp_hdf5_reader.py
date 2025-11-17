@@ -130,7 +130,7 @@ def get_canSAS_class(node : HDF5Group) -> str | None:
     elif "NX_class" in node.attrs:
         cls = node.attrs["NX_class"]
         cls = NX2SAS_class(cls)
-        # note that sastransmission groups have a 
+        # note that sastransmission groups have a
         # NX_class of NXdata but a canSAS_class of SAStransmission_spectrum
         # which is ambiguous
         if node.name.lower().startswith("sastransmission"):
@@ -397,7 +397,7 @@ def parse_metadata(node : HDF5Group) -> Metadata:
         if isinstance(keys, str):
             keys = [keys]
         process = [parse_process(node[p]) for p in keys]
-    
+
     # parse the datasets
     title = opt_parse(node, "title", parse_string)
     run = [parse_string(node[r]) for r in node if "run" in r]
@@ -418,7 +418,7 @@ def load_data(filename: str) -> dict[str, SasData]:
 
         for root_key in f.keys():
             entry = f[root_key]
-            
+
             # if this is actually a SASentry
             if get_canSAS_class(entry)=='SASentry':
                 data_contents : dict[str, Quantity] = {}
