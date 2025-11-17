@@ -533,12 +533,12 @@ class MetaNode:
 @dataclass(kw_only=True, eq=True)
 class Metadata:
     title: str | None
-    run: list[str]
+    run: list[str] | None
     definition: str | None
     process: list[Process]
     sample: Sample | None
     instrument: Instrument | None
-    raw: MetaNode
+    raw: MetaNode | None
 
     def summary(self):
         run_string = str(self.run[0] if len(self.run) == 1 else self.run)

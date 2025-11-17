@@ -9,7 +9,7 @@ from h5py._hl.group import Group as HDF5Group
 from sasdata.data import SasData
 from sasdata.data_backing import Dataset as SASDataDataset
 from sasdata.data_backing import Group as SASDataGroup
-from sasdata.dataset_types import one_dim, two_dim, three_dim
+from sasdata.dataset_types import one_dim, three_dim, two_dim
 from sasdata.metadata import (
     Aperture,
     BeamSize,
@@ -30,9 +30,10 @@ from sasdata.quantities.unit_parser import parse
 
 # test_file = "./example_data/1d_data/33837rear_1D_1.75_16.5_NXcanSAS_v3.h5"
 # test_file = "./example_data/1d_data/33837rear_1D_1.75_16.5_NXcanSAS.h5"
-test_file = "./example_data/2d_data/BAM_2D.h5"
+# test_file = "./example_data/2d_data/BAM_2D.h5"
 # test_file = "./example_data/2d_data/14250_2D_NoDetInfo_NXcanSAS_v3.h5"
 # test_file = "./example_data/2d_data/33837rear_2D_1.75_16.5_NXcanSAS_v3.h5"
+test_file = "/Users/pmneves/Downloads/108854.nxcansas.h5"
 
 logger = logging.getLogger(__name__)
 
@@ -121,6 +122,56 @@ def connected_data(node: SASDataGroup, name_prefix="") -> dict[str, Quantity]:
 
 ### Begin metadata parsing code
 
+def get_canSAS_class(node : HDF5Group) -> str | None:
+    # Check if attribute exists
+    if "canSAS_class" in node.attrs:
+        cls = node.attrs["canSAS_class"]
+        return cls
+    elif "NX_class" in node.attrs:
+        cls = node.attrs["NX_class"]
+        cls = NX2SAS_class(cls)
+        # note that sastransmission groups have a 
+        # NX_class of NXdata but a canSAS_class of SAStransmission_spectrum
+        # which is ambiguous
+        if node.name.lower().startswith("sastransmission"):
+            cls = 'SAStransmission_spectrum'
+        return cls
+
+    return None
+
+def NX2SAS_class(cls : str) -> str | None:
+    # converts NX class names to canSAS class names
+    mapping = {
+        "NXentry": "SASentry",
+        "NXdata": "SASdata",
+        "NXdetector": "SASdetector",
+        "NXinstrument": "SASinstrument",
+        "NXnote": "SASnote",
+        "NXprocess": "SASprocess",
+        "NXcollection": "SASprocessnote",
+        "NXdata": "SAStransmission_spectrum",
+        "NXsample": "SASsample",
+        "NXsource": "SASsource",
+        "NXaperture": "SASaperture",
+        "NXcollimator": "SAScollimation",
+        "NXdetector": "SASdetector",
+        "NXsource": "SASsource",
+    }
+    return mapping.get(cls, None)
+
+def find_canSAS_key(node: HDF5Group, canSAS_class: str):
+    matches = []
+
+    for key, item in node.items():
+        if item.attrs.get("canSAS_class") == canSAS_class:
+            matches.append(key)
+
+    if not matches:
+        return None
+    if len(matches) == 1:
+        return matches[0]
+    return matches
+
 def parse_quantity(node : HDF5Group) -> Quantity[float]:
     """Pull a single quantity with length units out of an HDF5 node"""
     if node.shape == (): # scalar dataset
@@ -137,8 +188,10 @@ def parse_string(node : HDF5Group) -> str:
     else: # vector dataset
         return node.asstr()[0]
 
-def opt_parse[T](node: HDF5Group, key: str, subparser: Callable[[HDF5Group], T]) -> T | None:
+def opt_parse[T](node: HDF5Group, key: str, subparser: Callable[[HDF5Group], T], ignore_case=False) -> T | None:
     """Parse a subnode if it is present"""
+    if ignore_case: # ignore the case of the key
+        key = next((k for k in node.keys() if k.lower() == key.lower()), None)
     if key in node:
         return subparser(node[key])
     return None
@@ -150,7 +203,7 @@ def attr_parse(node: HDF5Group, key: str) -> str | None:
     return None
 
 
-def parse_apterture(node : HDF5Group) -> Aperture:
+def parse_aperture(node : HDF5Group) -> Aperture:
     distance = opt_parse(node, "distance", parse_quantity)
     name = attr_parse(node, "name")
     size = opt_parse(node, "size", parse_vec3)
@@ -224,16 +277,41 @@ def parse_detector(node : HDF5Group) -> Detector:
 
 def parse_collimation(node : HDF5Group) -> Collimation:
     length = opt_parse(node, "length", parse_quantity)
-    return Collimation(length=length, apertures=[parse_apterture(node[ap])
-                                                 for ap in node if "aperture" in ap])
+
+    keys = find_canSAS_key(node, "SASaperture")
+    apertures = None
+    if keys is not None:
+        if isinstance(keys, str):
+            keys = [keys]
+        apertures = [parse_aperture(node[p]) for p in keys]
+
+    return Collimation(length=length, apertures=apertures)
 
 
 def parse_instrument(node : HDF5Group) -> Instrument:
-    sassourcekey = next(k for k in node.keys() if k.lower() == "sassource")
+    keys = find_canSAS_key(node, "SAScollimation")
+    collimations = []
+    if keys is not None:
+        if isinstance(keys, str):
+            keys = [keys]
+        collimations = [parse_collimation(node[p]) for p in keys]
+
+    keys = find_canSAS_key(node, "SASdetector")
+    detector = []
+    if keys is not None:
+        if isinstance(keys, str):
+            keys = [keys]
+        detector = [parse_detector(node[p]) for p in keys]
+
+    keys = find_canSAS_key(node, "SASsource")
+    source = None
+    if keys is not None:
+        source = parse_source(node[keys])
+
     return Instrument(
-        collimations= [parse_collimation(node[x]) for x in node if "collimation" in x],
-        detector=[parse_detector(node[d]) for d in node if "detector" in d],
-        source = parse_source(node[sassourcekey]),
+        collimations=collimations,
+        detector=detector,
+        source=source,
     )
 
 def parse_sample(node : HDF5Group) -> Sample:
@@ -301,22 +379,36 @@ def load_raw(node: HDF5Group | HDF5Dataset) -> MetaNode:
             raise RuntimeError(f"Cannot load raw data of type {type(node)}")
 
 def parse_metadata(node : HDF5Group) -> Metadata:
-    instrument = opt_parse(node, "SASinstrument", parse_instrument)
-    sample = opt_parse(node, "SASsample", parse_sample)
-    process = [parse_process(node[p]) for p in node if "SASprocess" in p]
+    # parse the metadata groups
+    key = find_canSAS_key(node, "SASinstrument")
+    instrument = None
+    if key is not None:
+        instrument = parse_instrument(node[key])
+
+    key = find_canSAS_key(node, "SASsample")
+    sample = None
+    if key is not None:
+        sample = parse_sample(node[key])
+
+    keys = find_canSAS_key(node, "SASprocess")
+    process = []
+    if keys is not None:
+        if isinstance(keys, str):
+            keys = [keys]
+        process = [parse_process(node[p]) for p in keys]
+    
+    # parse the datasets
     title = opt_parse(node, "title", parse_string)
     run = [parse_string(node[r]) for r in node if "run" in r]
     definition = opt_parse(node, "definition", parse_string)
-    raw =  load_raw(node)
+
     return Metadata(process=process,
                     instrument=instrument,
                     sample=sample,
                     title=title,
                     run=run,
-                    raw=raw,
-                    definition=definition)
-
-### End Metadata parsing code
+                    definition=definition,
+                    raw=None)
 
 
 def load_data(filename: str) -> dict[str, SasData]:
@@ -325,40 +417,41 @@ def load_data(filename: str) -> dict[str, SasData]:
 
         for root_key in f.keys():
             entry = f[root_key]
+            
+            # if this is actually a SASentry
+            if get_canSAS_class(entry)=='SASentry':
+                data_contents : dict[str, Quantity] = {}
 
-            data_contents : dict[str, Quantity] = {}
+                entry_keys = entry.keys()
 
-            entry_keys = entry
+                if not [k for k in entry_keys if get_canSAS_class(entry[k])=='SASdata']:
+                    logger.warning("No sasdata or data key")
+                    logger.warning(f"Known keys: {[k for k in entry_keys]}")
 
-            if not [k for k in entry if k.lower().startswith("sasdata") or k.lower().startswith("data")]:
-                logger.warning("No sasdata or data key")
-                logger.warning(f"Known keys: {[k for k in entry_keys]}")
+                for key in entry_keys:
+                    component = entry[key]
+                    if get_canSAS_class(entry[key])=='SASdata':
+                        datum = recurse_hdf5(component)
+                        data_contents = connected_data(datum, str(filename))
 
-            for key in entry_keys:
-                component = entry[key]
-                lower_key = key.lower()
-                if lower_key.startswith("sasdata") or lower_key.startswith("data"):
-                    datum = recurse_hdf5(component)
-                    data_contents = connected_data(datum, str(filename))
+                metadata = parse_metadata(f[root_key])
 
-            metadata = parse_metadata(f[root_key])
+                if "Qz" in data_contents:
+                    dataset_type = three_dim
+                elif "Qy" in data_contents:
+                    dataset_type = two_dim
+                else:
+                    dataset_type = one_dim
 
-            if "Qz" in data_contents:
-                dataset_type = three_dim
-            elif "Qy" in data_contents:
-                dataset_type = two_dim
-            else:
-                dataset_type = one_dim
+                entry_key = entry.attrs["sasview_key"] if "sasview_key" in entry.attrs else root_key
 
-            entry_key = entry.attrs["sasview_key"] if "sasview_key" in entry.attrs else root_key
-
-            loaded_data[entry_key] = SasData(
-                    name=root_key,
-                    dataset_type=dataset_type,
-                    data_contents=data_contents,
-                    metadata=metadata,
-                    verbose=False,
-                )
+                loaded_data[entry_key] = SasData(
+                        name=root_key,
+                        dataset_type=dataset_type,
+                        data_contents=data_contents,
+                        metadata=metadata,
+                        verbose=False,
+                    )
 
         return loaded_data
 
