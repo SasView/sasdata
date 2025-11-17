@@ -229,10 +229,11 @@ def parse_collimation(node : HDF5Group) -> Collimation:
 
 
 def parse_instrument(node : HDF5Group) -> Instrument:
+    sassourcekey = next(k for k in node.keys() if k.lower() == "sassource")
     return Instrument(
         collimations= [parse_collimation(node[x]) for x in node if "collimation" in x],
         detector=[parse_detector(node[d]) for d in node if "detector" in d],
-        source=parse_source(node["SASsource"]),
+        source = parse_source(node[sassourcekey]),
     )
 
 def parse_sample(node : HDF5Group) -> Sample:
