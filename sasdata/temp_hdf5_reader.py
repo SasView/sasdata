@@ -30,10 +30,9 @@ from sasdata.quantities.unit_parser import parse
 
 # test_file = "./example_data/1d_data/33837rear_1D_1.75_16.5_NXcanSAS_v3.h5"
 # test_file = "./example_data/1d_data/33837rear_1D_1.75_16.5_NXcanSAS.h5"
-# test_file = "./example_data/2d_data/BAM_2D.h5"
+test_file = "./example_data/2d_data/BAM_2D.h5"
 # test_file = "./example_data/2d_data/14250_2D_NoDetInfo_NXcanSAS_v3.h5"
 # test_file = "./example_data/2d_data/33837rear_2D_1.75_16.5_NXcanSAS_v3.h5"
-test_file = "/Users/pmneves/Downloads/108854.nxcansas.h5"
 
 logger = logging.getLogger(__name__)
 
@@ -167,9 +166,9 @@ def find_canSAS_key(node: HDF5Group, canSAS_class: str):
             matches.append(key)
 
     if not matches:
-        return None
+        return []
     if len(matches) == 1:
-        return matches[0]
+        return [matches[0]]
     return matches
 
 def parse_quantity(node : HDF5Group) -> Quantity[float]:
@@ -420,39 +419,40 @@ def load_data(filename: str) -> dict[str, SasData]:
             entry = f[root_key]
 
             # if this is actually a SASentry
-            if get_canSAS_class(entry)=='SASentry':
-                data_contents : dict[str, Quantity] = {}
+            if not get_canSAS_class(entry) == 'SASentry':
+                continue
+            data_contents : dict[str, Quantity] = {}
 
-                entry_keys = entry.keys()
+            entry_keys = entry.keys()
 
-                if not [k for k in entry_keys if get_canSAS_class(entry[k])=='SASdata']:
-                    logger.warning("No sasdata or data key")
-                    logger.warning(f"Known keys: {[k for k in entry_keys]}")
+            if not [k for k in entry_keys if get_canSAS_class(entry[k])=='SASdata']:
+                logger.warning("No sasdata or data key")
+                logger.warning(f"Known keys: {[k for k in entry_keys]}")
 
-                for key in entry_keys:
-                    component = entry[key]
-                    if get_canSAS_class(entry[key])=='SASdata':
-                        datum = recurse_hdf5(component)
-                        data_contents = connected_data(datum, str(filename))
+            for key in entry_keys:
+                component = entry[key]
+                if get_canSAS_class(entry[key])=='SASdata':
+                    datum = recurse_hdf5(component)
+                    data_contents = connected_data(datum, str(filename))
 
-                metadata = parse_metadata(f[root_key])
+            metadata = parse_metadata(f[root_key])
 
-                if "Qz" in data_contents:
-                    dataset_type = three_dim
-                elif "Qy" in data_contents:
-                    dataset_type = two_dim
-                else:
-                    dataset_type = one_dim
+            if "Qz" in data_contents:
+                dataset_type = three_dim
+            elif "Qy" in data_contents:
+                dataset_type = two_dim
+            else:
+                dataset_type = one_dim
 
-                entry_key = entry.attrs["sasview_key"] if "sasview_key" in entry.attrs else root_key
+            entry_key = entry.attrs["sasview_key"] if "sasview_key" in entry.attrs else root_key
 
-                loaded_data[entry_key] = SasData(
-                        name=root_key,
-                        dataset_type=dataset_type,
-                        data_contents=data_contents,
-                        metadata=metadata,
-                        verbose=False,
-                    )
+            loaded_data[entry_key] = SasData(
+                    name=root_key,
+                    dataset_type=dataset_type,
+                    data_contents=data_contents,
+                    metadata=metadata,
+                    verbose=False,
+                )
 
         return loaded_data
 
