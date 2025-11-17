@@ -12,11 +12,13 @@ import time
 
 def NDrebin(data: Quantity[ArrayLike],
             coords: Quantity[ArrayLike],
+            data_errs: Optional[Quantity[ArrayLike]] = None,
             axes: Optional[list[Quantity[ArrayLike]]] = None,
-            limits: Optional[List[Sequence[float]]] = None,
+            upper: Optional[List[Sequence[float]]] = None,
+            lower: Optional[List[Sequence[float]]] = None,
             step_size: Optional[List[Sequence[float]]] = None,
             num_bins: Optional[List[Sequence[int]]] = None,
-            subpixel: Optional[bool] = False
+            fractional: Optional[bool] = False
         ):
     """
     Provide values at points with ND coordinates.
@@ -36,23 +38,27 @@ def NDrebin(data: Quantity[ArrayLike],
     :coords: The locations of each data point, same size of data
         plus one more dimension with the same length as the
         dimensionality of the space (Ndim)
+    :data_errs: Optional, the same size as data, the uncertainties on data
     :axes: The axes of the coordinate system we are binning
         into. Defaults to diagonal (e.g. (1,0,0), (0,1,0), and 
         (0,0,1) for 3D data). A list of Ndim element vectors
-    :limits: The limits along each axis. Defaults to the smallest
-        and largest values in the data if no limits are provided.
-        A list of 2 element vectors.
+    :upper: The upper limits along each axis. Defaults to the largest
+        values in the data if no limits are provided.
+        A 1D list of Ndims values.
+    :lower: The lower limits along each axis. Defaults to the smallest
+        values in the data if no limits are provided.
+        A 1D list of Ndims values.
     :step_size: The size of steps along each axis. Supercedes
         num_bins. A list of length Ndim.
     :num_bins: The number of bins along each axis. Superceded by
         step_size if step_size is provided. At least one of step_size
         or num_bins must be provided.
-    :subpixel: Whether to perform subpixel binning or not. Defaults 
+    :fractional: Whether to perform fractional binning or not. Defaults 
         to false.
         -If false, measurements are binned into one bin,
         the one they fall within. Roughly a "nearest neighbor"
         approach.
-        -If true, subpixel binning will be applied, where
+        -If true, fractional binning will be applied, where
         the value of a measurement is distributed to its 2^Ndim
         nearest neighbors weighted by proximity. For example, if
         a point falls exactly between two bins, its value will be
@@ -64,8 +70,62 @@ def NDrebin(data: Quantity[ArrayLike],
 
 
     Returns: binned_data, bin_centers_list
-    :binned_data: has size num_bins and is NDimensional
-    :bin_centers_list: is a list of vectors 
+    :binned_data: has size num_bins and is NDimensional, contains
+        the binned data
+    :bin_centers_list: is a list of 1D vectors, contains the
+        axes of the binned data. The coordinates of bin [i,j,k]
+        is given by 
+        bin_centers_list[0][i]*axes[i]+bin_centers_list[1][j]*axes[j]+
+        bin_centers_list[0][k]*axes[k]
+    :binned_data_errs: has size num_bins and is NDimensional, contains
+        the propagated errors of the binned_data
+    :bins_list: is a list of 1D vectors, is similar to bin_centers_list,
+        but instead contains the edges of the bins, so it is 1 longer
+        in each dimension
+    :step_size: is a list of Ndims numbers, contains the step size
+        along each dimensino
+    :num_bins: is a list of Ndims numbers, contains the number
+        of bins along each dimension
+
+
+    An example call might be:
+    # test syntax 1
+    Ndims = 4
+    Nvals = int(1e5)
+    qmat = np.random.rand(Ndims, Nvals)
+    Imat = np.random.rand(Nvals)
+
+    Ibin, qbin, *rest = NDrebin(Imat, qmat,
+        step_size=0.1*np.random.rand(Ndims)+0.05,
+        lower=0.1*np.random.rand(Ndims)+0.0,
+        upper=0.1*np.random.rand(Ndims)+0.9
+    )
+    results = NDrebin(Imat, qmat,
+        step_size=0.1*np.random.rand(Ndims)+0.05,
+        lower=0.1*np.random.rand(Ndims)+0.0,
+        upper=0.1*np.random.rand(Ndims)+0.9
+    )
+    Ibin = results[0]
+    qbin = results[1]
+    bins_list = results[2]
+    step_size = results[3]
+    num_bins = results[4]
+
+    
+    # test syntax 2
+    Ndims = 2
+    Nvals = int(1e5)
+    qmat = np.random.rand(Ndims, 100, Nvals)
+    Imat = np.random.rand(100, Nvals)
+    Imat_errs = np.random.rand(100, Nvals)
+
+    binned_data, bin_centers_list, binned_data_errs, bins_list, step_size, num_bins \
+    = NDrebin(Imat, qmat,
+        data_errs = Imat_errs,
+        num_bins=[10,20],
+        axes = np.eye(2),
+        fractional=True
+    )
 
     """
 
@@ -84,7 +144,19 @@ def NDrebin(data: Quantity[ArrayLike],
 
     # flatten input data to 1D of length Nvals
     data_flat = data.reshape(-1)
-    errors_flat = 0*data_flat   # TODO add error propagation
+    if data_errs is None:
+        no_errs = True
+        errors_flat = 0*data_flat   # no errors
+    else:
+        no_errs = False
+        errors_flat = data_errs.reshape(-1)
+
+    if errors_flat.shape != data_flat.shape:
+        ValueError("Data and errors have to have the same shape.")
+    
+    # if 1D, need to add a size 1 dimension index to coords
+    if Ndims == 1:
+        coords = coords.reshape(-1, 1)
 
     # check if the first axis of coords is the dimensions axis
     if coords.shape[0] == Ndims:
@@ -117,24 +189,41 @@ def NDrebin(data: Quantity[ArrayLike],
 
     # if limits were not provided, default to the min and max 
     # coord in each dimension
-    if limits is None:
-        limits = np.zeros((2,Ndims))
+    if upper is None:
+        upper = np.zeros((Ndims))
         for ind in range(Ndims):
-            limits[0,ind] = np.min(coords_flat[:,ind])
-            limits[1,ind] = np.max(coords_flat[:,ind])
+            upper[ind] = np.max(coords_flat[:,ind])
+    if lower is None:
+        lower = np.zeros((Ndims))
+        for ind in range(Ndims):
+            lower[ind] = np.min(coords_flat[:,ind])
+
+    # if provided just one limit for 1D as a scalar, make it a list
+    # for formatting purposes
+    lower = np.atleast_1d(lower)
+    upper = np.atleast_1d(upper)
+    # if not isinstance(lower, (list, tuple)):
+    #     lower = [lower]
+    # print(lower)
+    # if not isinstance(upper, (list, tuple)):
+    #     upper = [upper]
 
     # clean up limits
+    if lower.size != Ndims:
+        ValueError("Lower limits must be None or a 1D iterable of length Ndims.")
+    if upper.size != Ndims:
+        ValueError("Upper limits must be None or a 1D iterable of length Ndims.")
     for ind in range(Ndims):
         # if individual limits are nan, inf, none, etc, replace with min/max
-        if not np.isfinite(limits[0,ind]):
-            limits[0,ind] = np.min(coords_flat[:,ind])
-        if not np.isfinite(limits[1,ind]):
-            limits[1,ind] = np.max(coords_flat[:,ind])
+        if not np.isfinite(lower[ind]):
+            lower[ind] = np.min(coords_flat[:,ind])
+        if not np.isfinite(upper[ind]):
+            upper[ind] = np.max(coords_flat[:,ind])
         # if any of the limits are in the wrong order, flip them
-        if limits[0,ind] > limits[1,ind]:
-            temp = limits[0,ind]
-            limits[0,ind] = limits[1,ind]
-            limits[1,ind] = temp
+        if lower[ind] > upper[ind]:
+            temp = lower[ind]
+            lower[ind] = upper[ind]
+            upper[ind] = temp
 
 
     # bins_list is a Ndims long list of vectors which are the edges of
@@ -145,12 +234,21 @@ def NDrebin(data: Quantity[ArrayLike],
     #   each bin. Each vector is num_bins[i] long
     bin_centers_list = []
 
+
+
     # create the bins in each dimension
     if step_size is None:
         # if step_size was not specified, derive from num_bins
         step_size = []
+        # if provided just one num_bin for 1D as a scalar, make it a list
+        # for formatting purposes
+        # if not isinstance(num_bins, (list, tuple)):
+        #     num_bins = [num_bins]
+        num_bins = np.atleast_1d(num_bins)
+        if num_bins.size != Ndims:
+            ValueError("num_bins must be None or a 1D iterable of length Ndims.")
         for ind in range(Ndims):
-            these_bins = np.linspace(limits[0,ind], limits[1,ind], num_bins[ind]+1)
+            these_bins = np.linspace(lower[ind], upper[ind], num_bins[ind]+1)
             these_centers = (these_bins[:-1] + these_bins[1:]) / 2.0
             this_step_size = these_bins[1] - these_bins[0]
 
@@ -160,14 +258,21 @@ def NDrebin(data: Quantity[ArrayLike],
     else:
         # else use step_size and derive num_bins
         num_bins = []
+        # if provided just one step_size for 1D as a scalar, make it a list
+        # for formatting purposes
+        # if not isinstance(step_size, (list, tuple)):
+        #     step_size = [step_size]
+        step_size = np.atleast_1d(step_size)
+        if step_size.size != Ndims:
+            ValueError("step_size must be None or a 1D iterable of length Ndims.")
         for ind in range(Ndims):
-            if limits[0,ind] == limits[1,ind]:
+            if lower[ind] == upper[ind]:
                 # min and max of limits are the same, i.e. data has to be exactly this
-                these_bins = np.array([limits[0,ind], limits[0,ind]])
+                these_bins = np.array([lower[ind], lower[ind]])
             else:
-                these_bins = np.arange(limits[0,ind], limits[1,ind], step_size[ind])
-            if these_bins[-1] != limits[1,ind]:
-                these_bins = np.append(these_bins, limits[1,ind])
+                these_bins = np.arange(lower[ind], upper[ind], step_size[ind])
+            if these_bins[-1] != upper[ind]:
+                these_bins = np.append(these_bins, upper[ind])
             these_centers = (these_bins[:-1] + these_bins[1:]) / 2.0
             this_num_bins = these_bins.size-1
 
@@ -192,7 +297,7 @@ def NDrebin(data: Quantity[ArrayLike],
         bin_inds[coords_flat[:, ind]==bins_list[ind][-1], ind] = num_bins[ind]-1
         bin_inds[coords_flat[:, ind]>bins_list[ind][-1], ind] = np.nan
     
-    if not subpixel:
+    if not fractional:
         # this is a non-vector way of binning the data:
         # for ind in range(Nvals):
         #     this_bin_ind = bin_inds[ind,:]
@@ -246,7 +351,7 @@ def NDrebin(data: Quantity[ArrayLike],
         partial_weights = 1.-np.mod(valid_inds, 1)
 
 
-        # for each dimension, double the amount of subpixels
+        # for each dimension, double the amount of subpoints
         # for a point at x_i, 1-x_i goes to 
         for ind in range(Ndims):
             # will be where the bin goes
@@ -302,7 +407,10 @@ def NDrebin(data: Quantity[ArrayLike],
     binned_data_errs[n_samples==0] = np.nan
 
 
-    return binned_data, bin_centers_list
+    if no_errs:
+        return binned_data, bin_centers_list, bins_list, step_size, num_bins
+    else:
+        return binned_data, bin_centers_list, binned_data_errs, bins_list, step_size, num_bins
 
 
 
@@ -313,6 +421,7 @@ def NDrebin(data: Quantity[ArrayLike],
 
 
 if __name__ == "__main__":
+    # a bunch of local testing
     import numpy as np
     import matplotlib.pyplot as plt
 
@@ -348,19 +457,19 @@ if __name__ == "__main__":
         # NDrebin
         import time
         start = time.perf_counter()
-        Ibin, qbin = NDrebin(I_1, qmat,
+        Ibin, qbin, *rest = NDrebin(I_1, qmat,
             step_size=[0.1,np.inf,np.inf]
         )
         end = time.perf_counter()
         print(f"Computed {Nvals} points in {end - start:.6f} seconds")
 
         start = time.perf_counter()
-        Ibin2, qbin2 = NDrebin(I_1, qmat,
+        Ibin2, qbin2, *rest = NDrebin(I_1, qmat,
             step_size=[0.1,np.inf,np.inf],
-            subpixel = True
+            fractional = True
         )
         end = time.perf_counter()
-        print(f"Computed {Nvals} points with subpixels in {end - start:.6f} seconds")
+        print(f"Computed {Nvals} points with fractional binning in {end - start:.6f} seconds")
 
         # Plot
         plt.figure()
@@ -432,19 +541,19 @@ if __name__ == "__main__":
         # You can choose finite steps for both x and y depending on how you want bins defined.
         import time
         start = time.perf_counter()
-        Ibin, qbin = NDrebin(I_2D, qmat,
+        Ibin, qbin, *rest = NDrebin(I_2D, qmat,
             step_size=[0.006, 0.006, np.inf]
         )
         end = time.perf_counter()
         print(f"Computed {qmat.size/3} points in {end - start:.6f} seconds")
 
         start = time.perf_counter()
-        Ibin2, qbin2 = NDrebin(I_2D, qmat,
+        Ibin2, qbin2, *rest = NDrebin(I_2D, qmat,
             step_size=[0.0035, 0.0035, np.inf],
-            subpixel=True
+            fractional=True
         )
         end = time.perf_counter()
-        print(f"Computed {qmat.size/3} points with subpixels in {end - start:.6f} seconds")
+        print(f"Computed {qmat.size/3} points with fractional binning in {end - start:.6f} seconds")
 
 
         # Fiducial 2D
@@ -520,20 +629,61 @@ if __name__ == "__main__":
     # You can choose finite steps for both x and y depending on how you want bins defined.
     import time
     start = time.perf_counter()
-    Ibin, qbin = NDrebin(I_ND, qmat,
+    Ibin, qbin, *rest = NDrebin(I_ND, qmat,
         step_size=0.2*np.random.rand(Ndims)+0.1,
-        limits=np.array([[1,2,3],[9,8,7]])
+        lower=[1,2,3],
+        upper=[9,8,7]
     )
     end = time.perf_counter()
     print(f"Computed {Nvals} points in {end - start:.6f} seconds")
 
     start = time.perf_counter()
-    Ibin, qbin = NDrebin(I_ND, qmat,
+    Ibin, qbin, *rest = NDrebin(I_ND, qmat,
         step_size=0.2*np.random.rand(Ndims)+0.1,
-        limits=np.array([[1,2,3],[9,8,7]]),
-        subpixel=True
+        lower=[1,2,3],
+        upper=[9,8,7],
+        fractional=True
     )
     end = time.perf_counter()
-    print(f"Computed {Nvals} points with subpixels in {end - start:.6f} seconds")
+    print(f"Computed {Nvals} points with fractional binning in {end - start:.6f} seconds")
+
+
+
+    # test syntax
+    Ndims = 4
+    Nvals = int(1e5)
+    qmat = np.random.rand(Ndims, Nvals)
+    Imat = np.random.rand(Nvals)
+
+    Ibin, qbin, *rest = NDrebin(Imat, qmat,
+        step_size=0.1*np.random.rand(Ndims)+0.05,
+        lower=0.1*np.random.rand(Ndims)+0.0,
+        upper=0.1*np.random.rand(Ndims)+0.9
+    )
+    results = NDrebin(Imat, qmat,
+        step_size=0.1*np.random.rand(Ndims)+0.05,
+        lower=0.1*np.random.rand(Ndims)+0.0,
+        upper=0.1*np.random.rand(Ndims)+0.9
+    )
+    Ibin = results[0]
+    qbin = results[1]
+    bins_list = results[2]
+    step_size = results[3]
+    num_bins = results[4]
+
+    # test syntax
+    Ndims = 2
+    Nvals = int(1e5)
+    qmat = np.random.rand(Ndims, 100, Nvals)
+    Imat = np.random.rand(100, Nvals)
+    Imat_errs = np.random.rand(100, Nvals)
+
+    binned_data, bin_centers_list, binned_data_errs, bins_list, step_size, num_bins \
+    = NDrebin(Imat, qmat,
+        data_errs = Imat_errs,
+        num_bins=[10,20],
+        axes = np.eye(2),
+        fractional=True
+    )
 
     input()
