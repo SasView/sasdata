@@ -533,7 +533,7 @@ class MetaNode:
 @dataclass(kw_only=True, eq=True)
 class Metadata:
     title: str | None
-    run: list[str] | None
+    run: list[str]
     definition: str | None
     process: list[Process]
     sample: Sample | None
