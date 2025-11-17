@@ -32,6 +32,11 @@ def NDrebin(data: Quantity[ArrayLike],
     Note that this does lose some information from the underlying data,
         as you are essentially averaging multiple measurements into one bin.
 
+    Note that once can use this function to perform integrations over
+        one or more dimensions by setting the num_bins to 1 or the 
+        step_size to infinity for one or more axes. The integration will
+        be performed from the lower to upper bound of that axis.
+
     :data: The data at each point
     :coords: The locations of each data point, same size of data
         plus one more dimension with the same length as the
