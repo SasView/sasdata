@@ -165,10 +165,6 @@ def find_canSAS_key(node: HDF5Group, canSAS_class: str):
         if item.attrs.get("canSAS_class") == canSAS_class:
             matches.append(key)
 
-    if not matches:
-        return []
-    if len(matches) == 1:
-        return [matches[0]]
     return matches
 
 def parse_quantity(node : HDF5Group) -> Quantity[float]:
@@ -186,6 +182,13 @@ def parse_string(node : HDF5Group) -> str:
         return node.asstr()[()]
     else: # vector dataset
         return node.asstr()[0]
+
+def parse_float_first(node: HDF5Group) -> float:
+    """Return the first element (or scalar) of a numeric dataset as float."""
+    if node.shape == ():
+        return float(node[()].astype(str))
+    else:
+        return float(node[0].astype(str))
 
 def opt_parse[T](node: HDF5Group, key: str, subparser: Callable[[HDF5Group], T], ignore_case=False) -> T | None:
     """Parse a subnode if it is present"""
@@ -278,11 +281,8 @@ def parse_collimation(node : HDF5Group) -> Collimation:
     length = opt_parse(node, "length", parse_quantity)
 
     keys = find_canSAS_key(node, "SASaperture")
-    apertures = []
-    if keys is not None:
-        if isinstance(keys, str):
-            keys = [keys]
-        apertures = [parse_aperture(node[p]) for p in keys]
+    keys = list(keys) if keys is not None else []  # list([1,2,3]) returns [1,2,3] and list("string") returns ["string"]
+    apertures = [parse_aperture(node[p]) for p in keys]  # Empty list of keys will give an empty collimations list
 
     return Collimation(length=length, apertures=apertures)
 
@@ -317,10 +317,7 @@ def parse_sample(node : HDF5Group) -> Sample:
     name = attr_parse(node, "name")
     sample_id = opt_parse(node, "ID", parse_string)
     thickness = opt_parse(node, "thickness", parse_quantity)
-    try: # vector
-        transmission = opt_parse(node, "transmission", lambda n: float(n[0].astype(str)))
-    except ValueError: # scalar
-        transmission = opt_parse(node, "transmission", lambda n: float(n[()].astype(str)))
+    transmission = opt_parse(node, "transmission", parse_float_first)
     temperature = opt_parse(node, "temperature", parse_quantity)
     position = opt_parse(node, "position", parse_vec3)
     orientation = opt_parse(node, "orientation", parse_rot3)
@@ -380,22 +377,17 @@ def load_raw(node: HDF5Group | HDF5Dataset) -> MetaNode:
 
 def parse_metadata(node : HDF5Group) -> Metadata:
     # parse the metadata groups
-    key = find_canSAS_key(node, "SASinstrument")
-    instrument = None
-    if key is not None:
-        instrument = parse_instrument(node[key])
+    keys = find_canSAS_key(node, "SASinstrument")
+    keys = list(keys) if keys is not None else []  # list([1,2,3]) returns [1,2,3] and list("string") returns ["string"]
+    instrument = [parse_instrument(node[p]) for p in keys]  # Empty list of keys will give an empty collimations list
 
-    key = find_canSAS_key(node, "SASsample")
-    sample = None
-    if key is not None:
-        sample = parse_sample(node[key])
+    keys = find_canSAS_key(node, "SASsample")
+    keys = list(keys) if keys is not None else []  # list([1,2,3]) returns [1,2,3] and list("string") returns ["string"]
+    sample = [parse_sample(node[p]) for p in keys]  # Empty list of keys will give an empty collimations list
 
     keys = find_canSAS_key(node, "SASprocess")
-    process = []
-    if keys is not None:
-        if isinstance(keys, str):
-            keys = [keys]
-        process = [parse_process(node[p]) for p in keys]
+    keys = list(keys) if keys is not None else []  # list([1,2,3]) returns [1,2,3] and list("string") returns ["string"]
+    process = [parse_process(node[p]) for p in keys]  # Empty list of keys will give an empty collimations list
 
     # parse the datasets
     title = opt_parse(node, "title", parse_string)
