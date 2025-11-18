@@ -23,31 +23,54 @@ from warnings import warn
 
 import numpy as np
 
-from sasdata.dataloader.data_info import Data1D, Data2D
+from sasdata.data_util.averaging import (
+    Boxavg as AvgBoxavg,
+)
+from sasdata.data_util.averaging import (
+    Boxcut as AvgBoxcut,
+)
 
 ################################################################################
 # Backwards-compatible wrappers that delegate to the new implementations
-# in averaging.py. 
+# in averaging.py.
 # The original manipulations classes used different parameter names.
 # The wrappers below translate the old style
 # parameters to the new classes to preserve external behaviour.
 ################################################################################
-
 from sasdata.data_util.averaging import (
     Boxsum as AvgBoxsum,
-    Boxavg as AvgBoxavg,
-    SlabX as AvgSlabX,
-    SlabY as AvgSlabY,
+)
+from sasdata.data_util.averaging import (
     CircularAverage as AvgCircularAverage,
+)
+from sasdata.data_util.averaging import (
     Ring as AvgRing,
-    SectorQ as AvgSectorQ,
-    WedgeQ as AvgWedgeQ,
-    WedgePhi as AvgWedgePhi,
-    SectorPhi as AvgSectorPhi,
+)
+from sasdata.data_util.averaging import (
     Ringcut as AvgRingcut,
-    Boxcut as AvgBoxcut,
+)
+from sasdata.data_util.averaging import (
     Sectorcut as AvgSectorcut,
 )
+from sasdata.data_util.averaging import (
+    SectorPhi as AvgSectorPhi,
+)
+from sasdata.data_util.averaging import (
+    SectorQ as AvgSectorQ,
+)
+from sasdata.data_util.averaging import (
+    SlabX as AvgSlabX,
+)
+from sasdata.data_util.averaging import (
+    SlabY as AvgSlabY,
+)
+from sasdata.data_util.averaging import (
+    WedgePhi as AvgWedgePhi,
+)
+from sasdata.data_util.averaging import (
+    WedgeQ as AvgWedgeQ,
+)
+from sasdata.dataloader.data_info import Data2D
 
 warn("sasdata.data_util.manipulations is deprecated. Unless otherwise noted, update your import to "
      "sasdata.data_util.averaging.", DeprecationWarning, stacklevel=2)
