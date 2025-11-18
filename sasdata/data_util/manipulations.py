@@ -73,7 +73,7 @@ def flip_phi(phi: float) -> float:
     if phi < 0:
         phi_out = phi + (TwoPi)
     elif phi > (TwoPi):
-        phi_out = phi - (TwoPi)
+        phi_out = phi % TwoPi
     else:
         phi_out = phi
     return phi_out
