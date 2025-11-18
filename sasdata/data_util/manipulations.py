@@ -788,9 +788,7 @@ class Ring:
         :return: Data1D object
         """
         if data2D.__class__.__name__ not in ["Data2D", "plottable_2D"]:
-            raise RuntimeError("Ring averaging only take plottable_2D objects")
-
-        Pi = math.pi
+            raise RuntimeError("Ring averaging only take plottable_2D objects")        
 
         # Get data
         data = data2D.data[np.isfinite(data2D.data)]
@@ -920,16 +918,15 @@ class _Sector:
         x_err = np.zeros(self.nbins)
         y_counts = np.zeros(self.nbins)  # Cycle counts (for the mean)
 
-        # Get the min and max into the region: 0 <= phi < 2Pi
-        TwoPi = 2 * math.pi
-        phi_min = flip_phi(self.phi_min)
-
         # Compute original span in a robust way with the inputs
         # and take modulo 2pi so that a full span is normalised to a full circle
         # and multiples of 2pi are recognized.
         # This avoids zero width when phi_max == phi_min + 2pi.
         span = (self.phi_max - self.phi_min)
         span_mod = span % TwoPi
+
+        # Get the min and max into the region: 0 <= phi < 2Pi        
+        phi_min = flip_phi(self.phi_min)
 
         # If the original specified span corresponds to a full circle (or very close),
         # construct a continuous interval for binning from phi_min to phi_min + 2pi.
@@ -944,8 +941,8 @@ class _Sector:
 
         # Now calculate the angles for the opposite side sector, here referred
         # to as "minor wing," and ensure these too are within 0 to 2pi
-        phi_min_minor = flip_phi(phi_min - TwoPi)
-        phi_max_minor = flip_phi(phi_max - TwoPi)
+        phi_min_minor = flip_phi(phi_min - Pi)
+        phi_max_minor = flip_phi(phi_max - Pi)
 
         #  set up the bins by creating a binning object
         if run.lower() == 'phi':
@@ -1279,7 +1276,6 @@ class Sectorcut:
         """
         if data2D.__class__.__name__ not in ["Data2D", "plottable_2D"]:
             raise RuntimeError("Sectorcut take only plottable_2D objects")
-        Pi = math.pi
         # Get data
         qx_data = data2D.qx_data
         qy_data = data2D.qy_data
