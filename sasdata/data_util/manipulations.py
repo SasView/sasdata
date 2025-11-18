@@ -22,8 +22,9 @@ PYTHONPATH=../src/ python2  -m sasdataloader.test.utest_averaging DataInfoTests.
 import math
 
 import numpy as np
-from sasdata.quantities.constants import Pi, TwoPi
+
 from sasdata.dataloader.data_info import Data1D, Data2D
+from sasdata.quantities.constants import Pi, TwoPi
 
 
 def position_and_wavelength_to_q(dx: float, dy: float, detector_distance: float, wavelength: float) -> float:
