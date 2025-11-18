@@ -8,35 +8,30 @@ from numpy._typing import ArrayLike
 from sasdata.quantities.quantity import Quantity
 
 
-class binnedNDdata:
+class NDRebin:
     """
     N-dimensional rebinning of data into regular bins, with optional
     fractional binning and error propagation.
 
+    Parameters
+    ----------
+    data : Quantity[ArrayLike]
+        Data values on an Nd grid.
+    coords : Quantity[ArrayLike]
+        Coordinates corresponding to data.
+    data_errs : Quantity[ArrayLike], optional
+        Errors on data.
+    axes, upper, lower, step_size, num_bins, fractional
+        See individual attributes; control bin geometry and binning style.
+
     Typical usage
     -------------
     rebin = NDRebin(data, coords, num_bins=[10, 20])
-    rebin.prepare()
     rebin.run()
     binned = rebin.binned_data
     errs   = rebin.binned_data_errs
     """
 
-    def __init__(self, binned_data: Quantity[ArrayLike],
-                 bin_centers_list: list[Quantity[ArrayLike]] | None = None,
-                 binned_data_errs: Quantity[ArrayLike] | None = None,
-                 bins_list: list[Quantity[ArrayLike]] | None = None,
-                 step_size: list[Sequence[float]] | None = None,
-                 num_bins: list[Sequence[int]] | None = None,
-                 ):
-        self.binned_data = binned_data
-        self.bin_centers_list = bin_centers_list
-        self.binned_data_errs = binned_data_errs
-        self.bins_list = bins_list
-        self.step_size = step_size
-        self.num_bins = num_bins
-
-class NDRebin:
     def __init__(
         self,
         data: Quantity[ArrayLike],
@@ -230,9 +225,9 @@ class NDRebin:
 
         # create the bins in each dimension
         if self.step_size is None:
-            self.step_size_from_num_bins()
+            self._step_size_from_num_bins()
         else:
-            self.num_bins_from_step_size()
+            self._num_bins_from_step_size()
 
     def _step_size_from_num_bins(self):
         # if step_size was not specified, derive from num_bins
@@ -333,26 +328,43 @@ class NDRebin:
     def _calculate_fractional_bins(self):
 
         # more convenient to work with half shifted inds
+        # bin_inds_frac for bin i is between i-0.5 and i+0.5 and the bin center
+        # is at i.
         bin_inds_frac = self.bin_inds - 0.5
 
         # 1. Identify valid rows (no NaNs)
         valid = ~np.isnan(bin_inds_frac).any(axis=1)
         valid_inds = bin_inds_frac[valid]
         partial_weights = 1.-np.mod(valid_inds, 1)
+        data_valid = self.data_flat[valid]
+        errs_valid = self.errors_flat[valid]
 
+        # In 1D, for a point at x between bin centers at x_i and x_{i+1},
+        # wx_{i+1}=(x-x_i)/dx partial weight goes to bin i+1
+        # and wx_i=1-w_{i+1} partial weight goes to bin i.
+        # bin_inds = (x-(x_1-dx/2))/dx = (x-x_1)/dx+0.5. Therefore
+        # bin_inds_frac = (x-x_1)/dx, so wx_{i+1} = mod(idx,1) and
+        # wx_i = 1-mod(idx,1)
 
         # for each dimension, double the amount of subpoints
-        # for a point at x_i, 1-x_i goes to
         for ind in range(self.Ndims):
+            # bins on the edge only go in one bin on that axis
+            edge_mask = np.logical_not(
+                np.logical_or(valid_inds[:, ind]<0,
+                              valid_inds[:, ind]>self.num_bins[ind]-1)
+                              )
+            partial_weights[~edge_mask, ind] = 1.0
             # will be where the bin goes
-            arr_mod = valid_inds.copy()
+            arr_mod = valid_inds[edge_mask]
             arr_mod[:, ind] += 1.
             valid_inds = np.vstack([valid_inds, arr_mod])
             # how close it is to that bin
-            arr_mod = partial_weights.copy()
+            arr_mod = partial_weights[edge_mask]
             arr_mod[:, ind] = 1. - arr_mod[:, ind]
             partial_weights = np.vstack([partial_weights, arr_mod])
-
+            # the value and uncertainty
+            data_valid = np.concatenate([data_valid, data_valid[edge_mask]])
+            errs_valid = np.concatenate([errs_valid, errs_valid[edge_mask]])
 
         # any bins that ended up outside just get clamped
         for ind in range(self.Ndims):
@@ -361,10 +373,6 @@ class NDRebin:
 
         # weights are the product of partial weights
         weights = np.prod(partial_weights, axis=1)
-
-        # need to tile the data and errs to weight them for each bin
-        data_valid = np.tile(self.data_flat[valid], 2**self.Ndims)
-        errs_valid = np.tile(self.errors_flat[valid], 2**self.Ndims)
 
         # 2. Convert valid bins to integer indices
         inds_int = valid_inds.astype(int)
