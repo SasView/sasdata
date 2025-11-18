@@ -22,6 +22,8 @@ class GenericROI:
         self.q_data = None
         self.qx_data = None
         self.qy_data = None
+        self.center_x =0.0
+        self.center_y =0.0
 
     def validate_and_assign_data(self, data2d: Data2D = None) -> None:
         """
@@ -46,9 +48,9 @@ class GenericROI:
         # during data processing.
         self.data = data2d.data[valid_data]
         self.err_data = data2d.err_data[valid_data]
-        self.q_data = data2d.q_data[valid_data]
-        self.qx_data = data2d.qx_data[valid_data]
-        self.qy_data = data2d.qy_data[valid_data]
+        self.q_data = data2d.q_data[valid_data]- np.sqrt(self.center_x**2 + self.center_y**2)
+        self.qx_data = data2d.qx_data[valid_data]-self.center_x
+        self.qy_data = data2d.qy_data[valid_data]-self.center_y
 
         # No points should have zero error, if they do then assume the error is
         # the square root of the data. This code was added to replicate
@@ -83,7 +85,7 @@ class PolarROI(GenericROI):
     Base class for data manipulators with a polar ROI.
     """
 
-    def __init__(self, r_range: tuple[float, float], phi_range: tuple[float, float] = (0.0, 2*np.pi)) -> None:
+    def __init__(self, r_range: tuple[float, float], phi_range: tuple[float, float] = (0.0, 2*np.pi), center=tuple[float, float] = (0.0, 0.0)) -> None:
         """
         Assign the variables used to label the properties of the Data2D object.
         Also establish the upper and lower bounds defining the ROI.
@@ -96,6 +98,7 @@ class PolarROI(GenericROI):
         """
         r_min, r_max = r_range
         phi_min, phi_max = phi_range
+        center_x, center_y = center
         super().__init__()
 
         self.phi_data = None
@@ -108,6 +111,8 @@ class PolarROI(GenericROI):
         self.r_max = r_max
         self.phi_min = phi_min
         self.phi_max = phi_max
+        self.center_x = center_x
+        self.center_y = center_y
 
     def validate_and_assign_data(self, data2d: Data2D = None) -> None:
         """

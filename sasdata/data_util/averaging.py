@@ -165,7 +165,7 @@ class SlabY(CartesianROI):
     resulting in a 1D plot with only positive Q values shown.
     """
 
-    def __init__(self, qx_range: tuple[float, float] = (0.0, 0), qy_range: tuple[float, float] = (0.0, 0), nbins: int = 100, fold: bool = False):
+    def __init__(self, qx_range: tuple[float, float] = (0.0, 0.0), qy_range: tuple[float, float] = (0.0, 0), nbins: int = 100, fold: bool = False):
         """
         Set up the ROI boundaries, the binning of the output 1D data, and fold.
 
@@ -223,7 +223,7 @@ class CircularAverage(PolarROI):
     where intensity is given as a function of Q only.
     """
 
-    def __init__(self, r_range: tuple[float, float], nbins: int = 100) -> None:
+    def __init__(self, r_range: tuple[float, float], center: tuple[float, float] = (0.0, 0.0), nbins: int = 100) -> None:
         """
         Set up the lower and upper radial limits as well as the number of bins.
 
@@ -232,7 +232,7 @@ class CircularAverage(PolarROI):
         :param r_max: Upper limit for |Q| values to use during averaging.
         :param nbins: The number of bins data is sorted into along |Q| the axis
         """
-        super().__init__(r_range=r_range)
+        super().__init__(r_range=r_range, center = center)
         self.nbins = nbins
 
     def __call__(self, data2d: Data2D = None) -> Data1D:
@@ -267,7 +267,7 @@ class Ring(PolarROI):
     positive x-axis, φ, only.
     """
 
-    def __init__(self, r_range: tuple[float, float], nbins: int = 100) -> None:
+    def __init__(self, r_range: tuple[float, float], center: tuple[float, float] = (0.0, 0.0),  nbins: int = 100) -> None:
         """
         Set up the lower and upper radial limits as well as the number of bins.
 
@@ -276,7 +276,7 @@ class Ring(PolarROI):
         :param r_max: Upper limit for |Q| values to use during averaging.
         :param nbins: The number of bins data is sorted into along Phi the axis
         """
-        super().__init__(r_range=r_range)
+        super().__init__(r_range=r_range, center=center)
         self.nbins = nbins
 
     def __call__(self, data2d: Data2D = None) -> Data1D:
@@ -322,7 +322,7 @@ class SectorQ(PolarROI):
     Data1D object where intensity is given as a function of Q only.
     """
 
-    def __init__(self, r_range: tuple[float, float], phi_range: tuple[float, float] = (0.0, 2*np.pi), nbins: int = 100, fold: bool = True) -> None:
+    def __init__(self, r_range: tuple[float, float], phi_range: tuple[float, float] = (0.0, 2*np.pi), center: tuple[float, float] = (0.0, 0.0), nbins: int = 100, fold: bool = True) -> None:
         """
         Set up the ROI boundaries, the binning of the output 1D data, and fold.
 
@@ -334,7 +334,7 @@ class SectorQ(PolarROI):
         :param fold: Whether the primary and secondary ROIs should be folded
                      together during averaging.
         """
-        super().__init__(r_range=r_range, phi_range=phi_range)
+        super().__init__(r_range=r_range, phi_range=phi_range, center = center)
 
         self.nbins = nbins
         self.fold = fold
@@ -431,7 +431,7 @@ class WedgeQ(PolarROI):
     Data1D object where intensity is given as a function of Q only.
     """
 
-    def __init__(self, r_range: tuple[float, float], phi_range: tuple[float, float] = (0.0, 2*np.pi), nbins: int = 100) -> None:
+    def __init__(self, r_range: tuple[float, float], phi_range: tuple[float, float] = (0.0, 2*np.pi), center: tuple[float, float] = (0.0, 0.0),nbins: int = 100) -> None:
         """
         Set up the ROI boundaries, and the binning of the output 1D data.
 
@@ -441,7 +441,7 @@ class WedgeQ(PolarROI):
         :Defaults to full circle (0, 2*pi).
         :param nbins: The number of bins data is sorted into along the |Q| axis
         """
-        super().__init__(r_range=r_range, phi_range=phi_range)
+        super().__init__(r_range=r_range, phi_range=phi_range, center = center)
         self.nbins = nbins
 
     def __call__(self, data2d: Data2D = None) -> Data1D:
@@ -492,7 +492,7 @@ class WedgePhi(PolarROI):
     Data1D object where intensity is given as a function of Q only.
     """
 
-    def __init__(self, r_range: tuple[float, float], phi_range: tuple[float, float] = (0.0, 2*np.pi), nbins: int = 100) -> None:
+    def __init__(self, r_range: tuple[float, float], phi_range: tuple[float, float] = (0.0, 2*np.pi), center: tuple[float, float] = (0.0, 0.0), nbins: int = 100) -> None:
         """
         Set up the ROI boundaries, and the binning of the output 1D data.
 
@@ -502,7 +502,7 @@ class WedgePhi(PolarROI):
                           Defaults to full circle (0, 2*pi).
         :param nbins: The number of bins data is sorted into along the φ axis.
         """
-        super().__init__(r_range=r_range, phi_range=phi_range)
+        super().__init__(r_range=r_range, phi_range=phi_range, center = center)
         self.nbins = nbins
 
     def __call__(self, data2d: Data2D = None) -> Data1D:
@@ -575,9 +575,9 @@ class Ringcut(PolarROI):
     in anti-clockwise starting from the x- axis on the left-hand side
     """
 
-    def __init__(self, r_range: tuple[float, float] = (0.0, 0.0), phi_range: tuple[float, float] = (0.0, 2*np.pi)):
+    def __init__(self, r_range: tuple[float, float] = (0.0, 0.0), phi_range: tuple[float, float] = (0.0, 2*np.pi), center: tuple[float, float] = (0.0, 0.0)):
 
-        super().__init__(r_range, phi_range)
+        super().__init__(r_range, phi_range, center)
 
     def __call__(self, data2D: Data2D) -> np.ndarray[bool]:
         """
@@ -631,8 +631,8 @@ class Sectorcut(PolarROI):
     and (phi_max-phi_min) should not be larger than pi
     """
 
-    def __init__(self, phi_range: tuple[float, float] = (0.0, np.pi)):
-        super().__init__(r_range=(0, np.inf), phi_range=phi_range)
+    def __init__(self, phi_range: tuple[float, float] = (0.0, np.pi), center: tuple[float, float] = (0.0, 0.0)):
+        super().__init__(r_range=(0, np.inf), phi_range=phi_range, center=center)
 
     def __call__(self, data2D: Data2D) -> np.ndarray[bool]:
         """
