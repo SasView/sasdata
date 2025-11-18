@@ -33,6 +33,7 @@ from sasdata.quantities.unit_parser import parse
 test_file = "./example_data/2d_data/BAM_2D.h5"
 # test_file = "./example_data/2d_data/14250_2D_NoDetInfo_NXcanSAS_v3.h5"
 # test_file = "./example_data/2d_data/33837rear_2D_1.75_16.5_NXcanSAS_v3.h5"
+test_file = "/Users/pmneves/Downloads/108854.nxcansas.h5"
 
 logger = logging.getLogger(__name__)
 
@@ -289,23 +290,15 @@ def parse_collimation(node : HDF5Group) -> Collimation:
 
 def parse_instrument(node : HDF5Group) -> Instrument:
     keys = find_canSAS_key(node, "SAScollimation")
-    collimations = []
-    if keys is not None:
-        if isinstance(keys, str):
-            keys = [keys]
-        collimations = [parse_collimation(node[p]) for p in keys]
+    keys = list(keys) if keys is not None else []  # list([1,2,3]) returns [1,2,3] and list("string") returns ["string"]
+    collimations = [parse_collimation(node[p]) for p in keys]  # Empty list of keys will give an empty collimations list
 
     keys = find_canSAS_key(node, "SASdetector")
-    detector = []
-    if keys is not None:
-        if isinstance(keys, str):
-            keys = [keys]
-        detector = [parse_detector(node[p]) for p in keys]
+    keys = list(keys) if keys is not None else []  # list([1,2,3]) returns [1,2,3] and list("string") returns ["string"]
+    detector = [parse_detector(node[p]) for p in keys]  # Empty list of keys will give an empty collimations list
 
     keys = find_canSAS_key(node, "SASsource")
-    source = None
-    if keys is not None:
-        source = parse_source(node[keys])
+    source = parse_source(node[keys[0]]) if keys is not None else None
 
     return Instrument(
         collimations=collimations,
@@ -378,12 +371,12 @@ def load_raw(node: HDF5Group | HDF5Dataset) -> MetaNode:
 def parse_metadata(node : HDF5Group) -> Metadata:
     # parse the metadata groups
     keys = find_canSAS_key(node, "SASinstrument")
-    keys = list(keys) if keys is not None else []  # list([1,2,3]) returns [1,2,3] and list("string") returns ["string"]
-    instrument = [parse_instrument(node[p]) for p in keys]  # Empty list of keys will give an empty collimations list
+    keys = list(keys) if keys is not None else []  # list([1,2,3]) returns [1,2,3] and list("string") returns ["string
+    instrument = parse_instrument(node[keys[0]]) if keys is not None else None
 
     keys = find_canSAS_key(node, "SASsample")
     keys = list(keys) if keys is not None else []  # list([1,2,3]) returns [1,2,3] and list("string") returns ["string"]
-    sample = [parse_sample(node[p]) for p in keys]  # Empty list of keys will give an empty collimations list
+    sample = parse_sample(node[keys[0]]) if keys is not None else None
 
     keys = find_canSAS_key(node, "SASprocess")
     keys = list(keys) if keys is not None else []  # list([1,2,3]) returns [1,2,3] and list("string") returns ["string"]
