@@ -43,6 +43,7 @@ class NDRebin:
         step_size: ArrayLike | None = None,
         num_bins: ArrayLike | None = None,
         fractional: bool = False,
+        normalize: bool = True,
     ):
         self.data = data
         self.coords = coords
@@ -53,6 +54,7 @@ class NDRebin:
         self.step_size = step_size
         self.num_bins = num_bins
         self.fractional = fractional
+        self.normalize = normalize
 
         # Internal attributes initialised later
         self.Nvals: int | None = None
@@ -395,8 +397,11 @@ class NDRebin:
     def _norm_data(self):
         # normalize binned_data by the number of times sampled
         with np.errstate(divide='ignore', invalid='ignore'):
-            self.binned_data = np.divide(self.binned_data, self.n_samples)
-            self.binned_data_errs = np.divide(np.sqrt(self.binned_data_errs), self.n_samples)
+            if self.normalize:
+                self.binned_data = np.divide(self.binned_data, self.n_samples)
+                self.binned_data_errs = np.divide(np.sqrt(self.binned_data_errs), self.n_samples)
+            else:
+                self.binned_data_errs = np.sqrt(self.binned_data_errs)
 
         # any bins with no samples is nan
         mask = self.n_samples == 0
@@ -859,17 +864,19 @@ if __name__ == "__main__":
         # NDrebin
         import time
         start = time.perf_counter()
-        Ibin, qbin, *rest = NDrebin(I_1, qmat,
-            step_size=[0.1,np.inf,np.inf]
-        )
+        rebin = NDRebin(I_1, qmat, step_size=[0.1,np.inf,np.inf])
+        rebin.run()
+        Ibin = rebin.binned_data
+        qbin = rebin.bin_centers_list
         end = time.perf_counter()
         print(f"Computed {Nvals} points in {end - start:.6f} seconds")
 
         start = time.perf_counter()
-        Ibin2, qbin2, *rest = NDrebin(I_1, qmat,
-            step_size=[0.1,np.inf,np.inf],
-            fractional = True
-        )
+        rebin = NDRebin(I_1, qmat, step_size=[0.1,np.inf,np.inf],
+            fractional = True)
+        rebin.run()
+        Ibin2 = rebin.binned_data
+        qbin2 = rebin.bin_centers_list
         end = time.perf_counter()
         print(f"Computed {Nvals} points with fractional binning in {end - start:.6f} seconds")
 
@@ -943,17 +950,21 @@ if __name__ == "__main__":
         # You can choose finite steps for both x and y depending on how you want bins defined.
         import time
         start = time.perf_counter()
-        Ibin, qbin, *rest = NDrebin(I_2D, qmat,
-            step_size=[0.006, 0.006, np.inf]
-        )
+        rebin = NDRebin(I_2D, qmat,
+            step_size=[0.006, 0.006, np.inf])
+        rebin.run()
+        Ibin = rebin.binned_data
+        qbin = rebin.bin_centers_list
         end = time.perf_counter()
         print(f"Computed {qmat.size/3} points in {end - start:.6f} seconds")
 
         start = time.perf_counter()
-        Ibin2, qbin2, *rest = NDrebin(I_2D, qmat,
+        rebin = NDRebin(I_2D, qmat,
             step_size=[0.0035, 0.0035, np.inf],
-            fractional=True
-        )
+            fractional=True)
+        rebin.run()
+        Ibin2 = rebin.binned_data
+        qbin2 = rebin.bin_centers_list
         end = time.perf_counter()
         print(f"Computed {qmat.size/3} points with fractional binning in {end - start:.6f} seconds")
 
@@ -1001,91 +1012,92 @@ if __name__ == "__main__":
 
 
 
+    if True:
+        # test ND gaussian
+        Ndims = 3
+        mu = np.zeros(Ndims)                 # Mean vector
+        sigma = np.random.rand(Ndims)              # Std dev in x and y
+        noise = 0.1
+        Nvals = int(1e6)
 
-    # test ND gaussian
-    Ndims = 3
-    mu = np.zeros(Ndims)                 # Mean vector
-    sigma = np.random.rand(Ndims)              # Std dev in x and y
-    noise = 0.1
-    Nvals = int(1e6)
+        # Generate random points (x, y) in a 2D square
+        qmat = -5 + 10 * np.random.rand(Ndims, Nvals)
 
-    # Generate random points (x, y) in a 2D square
-    qmat = -5 + 10 * np.random.rand(Ndims, Nvals)
+        # Evaluate 2D Gaussian:
+        #     G(x,y) = (1/(2πσxσy)) * exp(-[(x-μx)^2/(2σx^2) + (y-μy)^2/(2σy^2)])
+        exp_op = np.zeros(Nvals)
+        sigma_tot = 1
+        for ind in range(Ndims):
+            exp_op = exp_op -((qmat[ind,:] - mu[ind])**2) / (2 * sigma[ind]**2)
+            sigma_tot = sigma_tot * sigma[ind]
+        I_ND = (
+            np.exp(exp_op) /
+            (2 * np.pi * sigma_tot)
+        )
 
-    # Evaluate 2D Gaussian:
-    #     G(x,y) = (1/(2πσxσy)) * exp(-[(x-μx)^2/(2σx^2) + (y-μy)^2/(2σy^2)])
-    exp_op = np.zeros(Nvals)
-    sigma_tot = 1
-    for ind in range(Ndims):
-        exp_op = exp_op -((qmat[ind,:] - mu[ind])**2) / (2 * sigma[ind]**2)
-        sigma_tot = sigma_tot * sigma[ind]
-    I_ND = (
-        np.exp(exp_op) /
-        (2 * np.pi * sigma_tot)
-    )
+        # Add uniform noise
+        I_ND = I_ND - noise + 2 * noise * np.random.rand(1,Nvals)
 
-    # Add uniform noise
-    I_ND = I_ND - noise + 2 * noise * np.random.rand(1,Nvals)
+        # Rebin in 2D.
+        # You can choose finite steps for both x and y depending on how you want bins defined.
+        import time
+        start = time.perf_counter()
+        rebin = NDRebin(I_ND, qmat,
+            step_size=0.2*np.random.rand(Ndims)+0.1,
+            lower=[1,2,3],
+            upper=[9,8,7])
+        rebin.run()
+        Ibin = rebin.binned_data
+        qbin = rebin.bin_centers_list
+        end = time.perf_counter()
+        print(f"Computed {Nvals} points in {end - start:.6f} seconds")
 
-    # Rebin in 2D.
-    # You can choose finite steps for both x and y depending on how you want bins defined.
-    import time
-    start = time.perf_counter()
-    Ibin, qbin, *rest = NDrebin(I_ND, qmat,
-        step_size=0.2*np.random.rand(Ndims)+0.1,
-        lower=[1,2,3],
-        upper=[9,8,7]
-    )
-    end = time.perf_counter()
-    print(f"Computed {Nvals} points in {end - start:.6f} seconds")
-
-    start = time.perf_counter()
-    Ibin, qbin, *rest = NDrebin(I_ND, qmat,
-        step_size=0.2*np.random.rand(Ndims)+0.1,
-        lower=[1,2,3],
-        upper=[9,8,7],
-        fractional=True
-    )
-    end = time.perf_counter()
-    print(f"Computed {Nvals} points with fractional binning in {end - start:.6f} seconds")
+        start = time.perf_counter()
+        rebin = NDRebin(I_ND, qmat,
+            step_size=0.2*np.random.rand(Ndims)+0.1,
+            lower=[1,2,3],
+            upper=[9,8,7],
+            fractional=True)
+        rebin.run()
+        Ibin = rebin.binned_data
+        qbin = rebin.bin_centers_list
+        end = time.perf_counter()
+        print(f"Computed {Nvals} points with fractional binning in {end - start:.6f} seconds")
 
 
 
-    # test syntax
-    Ndims = 4
-    Nvals = int(1e5)
-    qmat = np.random.rand(Ndims, Nvals)
-    Imat = np.random.rand(Nvals)
+        # test syntax
+        Ndims = 4
+        Nvals = int(1e5)
+        qmat = np.random.rand(Ndims, Nvals)
+        Imat = np.random.rand(Nvals)
 
-    Ibin, qbin, *rest = NDrebin(Imat, qmat,
-        step_size=0.1*np.random.rand(Ndims)+0.05,
-        lower=0.1*np.random.rand(Ndims)+0.0,
-        upper=0.1*np.random.rand(Ndims)+0.9
-    )
-    results = NDrebin(Imat, qmat,
-        step_size=0.1*np.random.rand(Ndims)+0.05,
-        lower=0.1*np.random.rand(Ndims)+0.0,
-        upper=0.1*np.random.rand(Ndims)+0.9
-    )
-    Ibin = results[0]
-    qbin = results[1]
-    bins_list = results[2]
-    step_size = results[3]
-    num_bins = results[4]
+        rebin = NDRebin(Imat, qmat,
+            step_size=0.1*np.random.rand(Ndims)+0.05,
+            lower=0.1*np.random.rand(Ndims)+0.0,
+            upper=0.1*np.random.rand(Ndims)+0.9)
+        rebin.run()
+        Ibin = rebin.binned_data
+        qbin = rebin.bin_centers_list
 
-    # test syntax
-    Ndims = 2
-    Nvals = int(1e5)
-    qmat = np.random.rand(Ndims, 100, Nvals)
-    Imat = np.random.rand(100, Nvals)
-    Imat_errs = np.random.rand(100, Nvals)
+        # test syntax
+        Ndims = 2
+        Nvals = int(1e5)
+        qmat = np.random.rand(Ndims, 100, Nvals)
+        Imat = np.random.rand(100, Nvals)
+        Imat_errs = np.random.rand(100, Nvals)
 
-    binned_data, bin_centers_list, binned_data_errs, bins_list, step_size, num_bins \
-    = NDrebin(Imat, qmat,
-        data_errs = Imat_errs,
-        num_bins=[10,20],
-        axes = np.eye(2),
-        fractional=True
-    )
+        rebin = NDRebin(Imat, qmat,
+            data_errs = Imat_errs,
+            num_bins=[10,20],
+            axes = np.eye(2),
+            fractional=True)
+        rebin.run()
+        Ibin = rebin.binned_data
+        qbin = rebin.bin_centers_list
+        Ibin_errs = rebin.binned_data_errs
+        bins_list = rebin.bins_list
+        step_size = rebin.step_size
+        num_bins = rebin.num_bins
 
     input()
