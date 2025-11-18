@@ -8,6 +8,349 @@ from numpy._typing import ArrayLike
 from sasdata.quantities.quantity import Quantity
 
 
+class binnedNDdata:
+
+    def __init__(self, binned_data: Quantity[ArrayLike],
+                 bin_centers_list: list[Quantity[ArrayLike]] | None = None,
+                 binned_data_errs: Quantity[ArrayLike] | None = None,
+                 bins_list: list[Quantity[ArrayLike]] | None = None,
+                 step_size: list[Sequence[float]] | None = None,
+                 num_bins: list[Sequence[int]] | None = None,
+                 ):
+        self.binned_data = binned_data
+        self.bin_centers_list = bin_centers_list
+        self.binned_data_errs = binned_data_errs
+        self.bins_list = bins_list
+        self.step_size = step_size
+        self.num_bins = num_bins
+
+class NDRebin:
+
+    def __init__(self, data: Quantity[ArrayLike],
+            coords: Quantity[ArrayLike],
+            data_errs: Quantity[ArrayLike] | None = None,
+            axes: list[Quantity[ArrayLike]] | None = None,
+            upper: list[Sequence[float]] | None = None,
+            lower: list[Sequence[float]] | None = None,
+            step_size: list[Sequence[float]] | None = None,
+            num_bins: list[Sequence[int]] | None = None,
+            fractional: bool | None = False
+    ):
+        self.data = data
+        self.coords = coords
+        self.data_errs = data_errs
+        self.axes = axes
+        self.upper = upper
+        self.lower = lower
+        self.step_size = step_size
+        self.num_bins = num_bins
+        self.fractional = fractional
+        self.binned_data = np.zeroes(self.data.shape())  # I'm not sure this is actually correct.
+
+        # check the size of the data and coords inputs
+        # and define Ndims and Nvals
+        self.check_data_coords()
+
+        # flatten the input data and errors
+        self.check_data_errs()
+
+        # flatten the coords
+        self.flatten_coords()
+
+        # handle optional axes
+        if self.axes is None:
+            # make axes if not provided
+            self.make_axes()
+        else:
+            # project into specified axes
+            self.project_axes()
+
+        # build the limits
+        self.build_limits()
+
+        # make the bins
+        self.make_bins()
+
+        # make the bin indices
+        self.create_bin_inds()
+
+    def __call__(self):
+        if self.fractional:
+            self._calculate_fractional_binning()
+        else:
+            self.calculate_bins()
+
+    def check_data_coords(self):
+        # Identify number of points
+        self.Nvals = self.data.size
+
+        # Identify number of dimensions
+        self.Ndims = self.coords.size / self.Nvals
+
+        # if Ndims is not an integer value we have a problem
+        if not self.Ndims.is_integer():
+            raise ValueError("The coords have to have the same shape as "
+                            "the data, plus one more dimension which is "
+                            "length Ndims")
+        self.Ndims = int(Ndims)
+
+    def check_data_errs(self):
+        # flatten input data to 1D of length Nvals
+        self.data_flat = self.data.reshape(-1)
+        if self.data_errs is None:
+            self.errors_flat = 0*self.data_flat   # no errors
+        else:
+            self.errors_flat = self.data_errs.reshape(-1)
+
+        if self.errors_flat.shape != self.data_flat.shape:
+            ValueError("Data and errors have to have the same shape.")
+
+    def flatten_coords(self):
+        # if 1D, need to add a size 1 dimension index to coords
+        if self.Ndims == 1:
+            self.coords = self.coords.reshape(-1, 1)
+
+        # check if the first axis of coords is the dimensions axis
+        if self.coords.shape[0] == self.Ndims:
+            # first check if it is the first axis
+            self.dim_axis = 0
+        elif self.coords.shape[-1] == self.Ndims:
+            # now check if it is the last axis
+            self.dim_axis = -1
+        else:
+            # search if any axis is size Ndims
+            self.dim_axis = next(i for i, s in enumerate(self.coords.shape) if s == self.Ndims)
+
+        if not self.coords.shape[self.dim_axis] == self.Ndims:
+            raise ValueError("The coords have to have one dimension which is "
+                            "the dimensionality of the space")
+
+        # flatten coords to size Nvals x Ndims
+        moved = np.moveaxis(self.coords, self.dim_axis, 0)
+        self.coords_flat = moved.reshape(self.Ndims, -1).T
+
+    def make_axes(self):
+        # if axes are not provided, default to identity
+        if self.axes is None:
+            self.axes = np.eye(self.Ndims)
+
+    def project_axes(self):
+        # now project the data into the axes
+        self.axes_inv = np.linalg.inv(self.axes)
+        self.coords_flat = np.tensordot(self.coords_flat, self.axes_inv, axes=([1], [0]))
+
+    def build_limits(self):
+        # if limits were not provided, default to the min and max
+        # coord in each dimension
+        if self.upper is None:
+            self.upper = np.zeros(self.Ndims)
+            for ind in range(self.Ndims):
+                self.upper[ind] = np.max(self.coords_flat[:,ind])
+        if self.lower is None:
+            self.lower = np.zeros(self.Ndims)
+            for ind in range(self.Ndims):
+                self.lower[ind] = np.min(self.coords_flat[:,ind])
+
+        # if provided just one limit for 1D as a scalar, make it a list
+        # for formatting purposes
+        self.lower = np.atleast_1d(self.lower)
+        self.upper = np.atleast_1d(self.upper)
+
+        # clean up limits
+        if self.lower.size != self.Ndims:
+            ValueError("Lower limits must be None or a 1D iterable of length Ndims.")
+        if self.upper.size != self.Ndims:
+            ValueError("Upper limits must be None or a 1D iterable of length Ndims.")
+        for ind in range(self.Ndims):
+            # if individual limits are nan, inf, none, etc, replace with min/max
+            if not np.isfinite(self.lower[ind]):
+                self.lower[ind] = np.min(self.coords_flat[:,ind])
+            if not np.isfinite(self.upper[ind]):
+                self.upper[ind] = np.max(self.coords_flat[:,ind])
+            # if any of the limits are in the wrong order, flip them
+            if self.lower[ind] > self.upper[ind]:
+                temp = self.lower[ind]
+                self.lower[ind] = self.upper[ind]
+                self.upper[ind] = temp
+
+    def make_bins(self):
+        # bins_list is a Ndims long list of vectors which are the edges of
+        #   each bin. Each vector is num_bins[i]+1 long
+        self.bins_list = []
+
+        # bin_centers_list is a Ndims long list of vectors which are the centers of
+        #   each bin. Each vector is num_bins[i] long
+        self.bin_centers_list = []
+
+        # create the bins in each dimension
+        if self.step_size is None:
+            self.step_size_from_num_bins()
+        else:
+            self.num_bins_from_step_size()
+
+    def step_size_from_num_bins(self):
+        # if step_size was not specified, derive from num_bins
+        self.step_size = []
+        # if provided just one num_bin for 1D as a scalar, make it a list
+        # for formatting purposes
+        self.num_bins = np.atleast_1d(self.num_bins)
+        if self.num_bins.size != self.Ndims:
+            ValueError("num_bins must be None or a 1D iterable of length Ndims.")
+        for ind in range(self.Ndims):
+            these_bins = np.linspace(self.lower[ind], self.upper[ind], self.num_bins[ind]+1)
+            these_centers = (these_bins[:-1] + these_bins[1:]) / 2.0
+            this_step_size = these_bins[1] - these_bins[0]
+
+            self.bins_list.append(these_bins)
+            self.bin_centers_list.append(these_centers)
+            self.step_size.append(this_step_size)
+
+    def num_bins_from_step_size(self):
+        # if num_bins was not specified, derive from step_size
+        self.num_bins = []
+        # if provided just one step_size for 1D as a scalar, make it a list
+        # for formatting purposes
+        self.step_size = np.atleast_1d(step_size)
+        if self.step_size.size != self.Ndims:
+            ValueError("step_size must be None or a 1D iterable of length Ndims.")
+        for ind in range(self.Ndims):
+            if self.lower[ind] == self.upper[ind]:
+                # min and max of limits are the same, i.e. data has to be exactly this
+                these_bins = np.array([self.lower[ind], self.lower[ind]])
+            else:
+                these_bins = np.arange(self.lower[ind], self.upper[ind], self.step_size[ind])
+            if these_bins[-1] != self.upper[ind]:
+                these_bins = np.append(these_bins, self.upper[ind])
+            these_centers = (these_bins[:-1] + these_bins[1:]) / 2.0
+            this_num_bins = these_bins.size-1
+
+            self.bins_list.append(these_bins)
+            self.bin_centers_list.append(these_centers)
+            self.num_bins.append(this_num_bins)
+
+    def create_bin_inds(self):
+        # create the bin inds for each data point as a Nvals x Ndims long vector
+        self.bin_inds = np.zeros((self.Nvals, self.Ndims))
+        for ind in range(self.Ndims):
+            this_min = self.bins_list[ind][0]
+            this_step = self.step_size[ind]
+            self.bin_inds[:, ind] = (self.coords_flat[:,ind] - this_min) / this_step
+            # any that are outside the bin limits should be removed
+            self.bin_inds[self.coords_flat[:, ind]< self.bins_list[ind][0],  ind] = np.nan
+            self.bin_inds[self.coords_flat[:, ind]==self.bins_list[ind][-1], ind] = num_bins[ind]-1
+            self.bin_inds[self.coords_flat[:, ind]> self.bins_list[ind][-1], ind] = np.nan
+
+    def calculate_bins(self):
+
+        # this is a non-vector way of binning the data:
+        # for ind in range(Nvals):
+        #     this_bin_ind = bin_inds[ind,:]
+        #     if not np.isnan(this_bin_ind).any():
+        #         this_bin_ind = this_bin_ind.astype(int)
+        #         binned_data[*this_bin_ind] = binned_data[*this_bin_ind] + data_flat[ind]
+        #         binned_data_errs[*this_bin_ind] = binned_data_errs[*this_bin_ind] + errors_flat[ind]**2
+        #         n_samples[*this_bin_ind] = n_samples[*this_bin_ind] + 1
+
+
+        # and here is a vector equivalent
+        # -------------------------------------------------------------
+        # Inputs:
+        #   bin_inds       : (Nvals, Ndims) array of indices, some rows may contain NaN
+        #   data_flat      : (Nvals,)  values to accumulate
+        #   errors_flat    : (Nvals,)  errors to accumulate (squared)
+        #   binned_data    : Ndims-dimensional array (output)
+        #   binned_data_errs : Ndims-dimensional array (output)
+        #   n_samples      : Ndims-dimensional array (output)
+        # -------------------------------------------------------------
+
+        # 1. Identify valid rows (no NaNs)
+        valid = ~np.isnan(self.bin_inds).any(axis=1)
+
+        # 2. Convert valid bins to integer indices
+        inds_int = self.bin_inds[valid].astype(int)
+
+        # 3. Map multidimensional indices → flat indices
+        flat_idx = np.ravel_multi_index(inds_int.T, dims=self.num_bins)
+
+        # 4. Use bincount to accumulate in a vectorized way
+        size = np.prod(self.num_bins)
+
+        bd_sum = np.bincount(flat_idx, weights=self.data_flat[valid], minlength=size)
+        err_sum = np.bincount(flat_idx, weights=self.errors_flat[valid]**2, minlength=size)
+        ns_sum = np.bincount(flat_idx, minlength=size)
+
+        # 5. Reshape and add into the original arrays
+        self.binned_data = bd_sum.reshape(self.num_bins)
+        self.binned_data_errs = err_sum.reshape(self.num_bins)
+        self.n_samples = ns_sum.reshape(self.num_bins)
+
+    def calculate_fractional_binning(self):
+
+        # more convenient to work with half shifted inds
+        bin_inds_frac = self.bin_inds - 0.5
+
+        # 1. Identify valid rows (no NaNs)
+        valid = ~np.isnan(bin_inds_frac).any(axis=1)
+        valid_inds = bin_inds_frac[valid]
+        partial_weights = 1.-np.mod(valid_inds, 1)
+
+
+        # for each dimension, double the amount of subpoints
+        # for a point at x_i, 1-x_i goes to
+        for ind in range(self.Ndims):
+            # will be where the bin goes
+            arr_mod = valid_inds.copy()
+            arr_mod[:, ind] += 1.
+            valid_inds = np.vstack([valid_inds, arr_mod])
+            # how close it is to that bin
+            arr_mod = partial_weights.copy()
+            arr_mod[:, ind] = 1. - arr_mod[:, ind]
+            partial_weights = np.vstack([partial_weights, arr_mod])
+
+
+        # any bins that ended up outside just get clamped
+        for ind in range(self.Ndims):
+            valid_inds[valid_inds[:, ind]<0, ind] = 0
+            valid_inds[valid_inds[:, ind]>self.num_bins[ind]-1, ind] = self.num_bins[ind]-1
+
+        # weights are the product of partial weights
+        weights = np.prod(partial_weights, axis=1)
+
+        # need to tile the data and errs to weight them for each bin
+        data_valid = np.tile(self.data_flat[valid], 2**self.Ndims)
+        errs_valid = np.tile(self.errors_flat[valid], 2**self.Ndims)
+
+        # 2. Convert valid bins to integer indices
+        inds_int = valid_inds.astype(int)
+
+        # 3. Map multidimensional indices → flat indices
+        flat_idx = np.ravel_multi_index(inds_int.T, dims=self.num_bins)
+
+        # 4. Use bincount to accumulate in a vectorized way
+        size = np.prod(self.num_bins)
+
+        bd_sum = np.bincount(flat_idx, weights=weights*data_valid, minlength=size)
+        err_sum = np.bincount(flat_idx, weights=(weights**2)*(errs_valid**2), minlength=size)
+        ns_sum = np.bincount(flat_idx, weights=weights, minlength=size)
+
+        # 5. Reshape and add into the original arrays
+        self.binned_data = bd_sum.reshape(num_bins)
+        self.binned_data_errs = err_sum.reshape(num_bins)
+        self.n_samples = ns_sum.reshape(num_bins)
+
+    def norm_data(self):
+        # normalize binned_data by the number of times sampled
+        with np.errstate(divide='ignore', invalid='ignore'):
+            binned_data = np.divide(binned_data, self.n_samples)
+            binned_data_errs = np.divide(np.sqrt(binned_data_errs), self.n_samples)
+
+        # any bins with no samples is nan
+        binned_data[self.n_samples==0] = np.nan
+        binned_data_errs[self.n_samples==0] = np.nan
+
+
+
+
 def NDrebin(data: Quantity[ArrayLike],
             coords: Quantity[ArrayLike],
             data_errs: Quantity[ArrayLike] | None = None,
@@ -92,6 +435,7 @@ def NDrebin(data: Quantity[ArrayLike],
 
 
     An example call might be:
+    .. code-block::
     # test syntax 1
     Ndims = 4
     Nvals = int(1e5)
