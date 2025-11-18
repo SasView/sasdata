@@ -22,7 +22,7 @@ PYTHONPATH=../src/ python2  -m sasdataloader.test.utest_averaging DataInfoTests.
 import math
 
 import numpy as np
-
+from sasdata.quantities.constants import Pi, TwoPi
 from sasdata.dataloader.data_info import Data1D, Data2D
 
 
@@ -38,7 +38,7 @@ def position_and_wavelength_to_q(dx: float, dy: float, detector_distance: float,
     plane_dist = math.sqrt(dx * dx + dy * dy)
     # Half of the scattering angle
     theta = 0.5 * math.atan(plane_dist / detector_distance)
-    return (4.0 * math.pi / wavelength) * math.sin(theta)
+    return (2.0* TwoPi / wavelength) * math.sin(theta)
 
 
 def get_q_compo(dx: float, dy: float, detector_distance: float, wavelength: float, compo: str | None = None) -> float:
@@ -50,7 +50,7 @@ def get_q_compo(dx: float, dy: float, detector_distance: float, wavelength: floa
         if dx >= 0:
             angle_xy = 0
         else:
-            angle_xy = math.pi
+            angle_xy = Pi
     else:
         angle_xy = math.atan(dx / dy)
 
@@ -71,9 +71,9 @@ def flip_phi(phi: float) -> float:
     :return: phi in >=0 and <=2Pi
     """
     if phi < 0:
-        phi_out = phi + (2 * math.pi)
-    elif phi > (2 * math.pi):
-        phi_out = phi - (2 * math.pi)
+        phi_out = phi + (TwoPi)
+    elif phi > (TwoPi):
+        phi_out = phi - (TwoPi)
     else:
         phi_out = phi
     return phi_out
@@ -847,7 +847,7 @@ class Ring:
         for i in range(self.nbins_phi):
             phi_bins[i] = phi_bins[i] / phi_counts[i]
             phi_err[i] = math.sqrt(phi_err[i]) / phi_counts[i]
-            phi_values[i] = 2.0 * math.pi / self.nbins_phi * (1.0 * i)
+            phi_values[i] = TwoPi / self.nbins_phi * (1.0 * i)
 
         idx = (np.isfinite(phi_bins))
 
@@ -870,7 +870,7 @@ class _Sector:
     starting from the negative x-axis.
     """
 
-    def __init__(self, r_min, r_max, phi_min=0, phi_max=2 * math.pi, nbins=20,
+    def __init__(self, r_min, r_max, phi_min=0, phi_max=TwoPi, nbins=20,
                  base=None):
         '''
         :param base: must be a valid base for an algorithm, i.e.,
@@ -943,8 +943,8 @@ class _Sector:
 
         # Now calculate the angles for the opposite side sector, here referred
         # to as "minor wing," and ensure these too are within 0 to 2pi
-        phi_min_minor = flip_phi(phi_min - math.pi)
-        phi_max_minor = flip_phi(phi_max - math.pi)
+        phi_min_minor = flip_phi(phi_min - TwoPi)
+        phi_max_minor = flip_phi(phi_max - TwoPi)
 
         #  set up the bins by creating a binning object
         if run.lower() == 'phi':
@@ -956,7 +956,7 @@ class _Sector:
             # Note that their values must not be altered, as they are used to
             # determine what points (also in the range 0, 2pi) are in the ROI.
             if phi_min > phi_max:
-                binning = Binning(phi_min, phi_max + 2 * math.pi, self.nbins, self.base)
+                binning = Binning(phi_min, phi_max + TwoPi, self.nbins, self.base)
             else:
                 binning = Binning(phi_min, phi_max, self.nbins, self.base)
         elif self.fold:
@@ -979,7 +979,7 @@ class _Sector:
             # calculate the phi-value of the pixel (j,i) and convert the range
             # [-pi,pi] returned by the atan2 function to the [0,2pi] range used
             # as the reference frame for these calculations
-            phi_value = math.atan2(qy_data[n], qx_data[n]) + math.pi
+            phi_value = math.atan2(qy_data[n], qx_data[n]) + Pi
 
             # No need to calculate: data outside of the radius
             if self.r_min > q_value or q_value > self.r_max:
@@ -1026,7 +1026,7 @@ class _Sector:
                 # then phi_value needs to be shifted too so that it falls in
                 # the continuous range set up for the binning process.
                 if phi_min > phi_value:
-                    i_bin = binning.get_bin_index(phi_value + 2 * math.pi)
+                    i_bin = binning.get_bin_index(phi_value + TwoPi)
                 else:
                     i_bin = binning.get_bin_index(phi_value)
             else:
@@ -1248,7 +1248,7 @@ class Sectorcut:
     and (phi_max-phi_min) should not be larger than pi
     """
 
-    def __init__(self, phi_min=0, phi_max=math.pi):
+    def __init__(self, phi_min=0, phi_max=Pi):
         self.phi_min = phi_min
         self.phi_max = phi_max
 
