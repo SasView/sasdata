@@ -311,11 +311,13 @@ class NDRebin:
         # for formatting purposes
         self.lower = np.atleast_1d(self.lower)
         self.upper = np.atleast_1d(self.upper)
+        lower = np.atleast_1d(lower).astype(float, copy=True)
+        upper = np.atleast_1d(upper).astype(float, copy=True)
 
         # validate limits sizes
-        if self.lower.size != self.Ndims:
+        if lower.size != self.Ndims:
             raise ValueError("Lower limits must be None or a 1D iterable of length Ndims.")
-        if self.upper.size != self.Ndims:
+        if upper.size != self.Ndims:
             raise ValueError("Upper limits must be None or a 1D iterable of length Ndims.")
 
         # if individual limits are nan, inf, none, etc, replace with min/max

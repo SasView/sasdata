@@ -266,7 +266,7 @@ def test_ND():
 
 
 if __name__ == "__main__":
-    test_1D_exact(show_plots=False)
-    test_2D(show_plots=False)
+    test_1D_exact(show_plots=True)
+    test_2D(show_plots=True)
     test_syntax()
     test_ND()
