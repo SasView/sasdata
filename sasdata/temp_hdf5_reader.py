@@ -387,13 +387,16 @@ def parse_metadata(node : HDF5Group) -> Metadata:
     run = [parse_string(node[r]) for r in node if "run" in r]
     definition = opt_parse(node, "definition", parse_string)
 
+    # load the entire node recursively into a raw object
+    raw = load_raw(node)
+
     return Metadata(process=process,
                     instrument=instrument,
                     sample=sample,
                     title=title,
                     run=run,
                     definition=definition,
-                    raw=None)
+                    raw=raw)
 
 
 def load_data(filename: str) -> dict[str, SasData]:
@@ -415,6 +418,7 @@ def load_data(filename: str) -> dict[str, SasData]:
                 logger.warning(f"Known keys: {[k for k in entry_keys]}")
 
             for key in entry_keys:
+                print(type(entry[key]))
                 component = entry[key]
                 if get_canSAS_class(entry[key])=='SASdata':
                     datum = recurse_hdf5(component)
