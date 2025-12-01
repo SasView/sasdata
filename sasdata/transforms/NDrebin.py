@@ -301,36 +301,32 @@ class NDRebin:
     def _build_limits(self):
         # if limits were not provided, default to the min and max
         # coord in each dimension
-        if self.upper is None:
-            self.upper = np.zeros(self.Ndims)
-            for ind in range(self.Ndims):
-                self.upper[ind] = np.max(self.coords_flat[:,ind])
-        if self.lower is None:
-            self.lower = np.zeros(self.Ndims)
-            for ind in range(self.Ndims):
-                self.lower[ind] = np.min(self.coords_flat[:,ind])
+        coords = self.coords_flat
+        mins = np.min(coords, axis=0)
+        maxs = np.max(coords, axis=0)
+        lower = mins if self.lower is None else self.lower
+        upper = maxs if self.upper is None else self.upper
 
         # if provided just one limit for 1D as a scalar, make it a list
         # for formatting purposes
         self.lower = np.atleast_1d(self.lower)
         self.upper = np.atleast_1d(self.upper)
 
-        # clean up limits
+        # validate limits sizes
         if self.lower.size != self.Ndims:
             raise ValueError("Lower limits must be None or a 1D iterable of length Ndims.")
         if self.upper.size != self.Ndims:
             raise ValueError("Upper limits must be None or a 1D iterable of length Ndims.")
-        for ind in range(self.Ndims):
-            # if individual limits are nan, inf, none, etc, replace with min/max
-            if not np.isfinite(self.lower[ind]):
-                self.lower[ind] = np.min(self.coords_flat[:,ind])
-            if not np.isfinite(self.upper[ind]):
-                self.upper[ind] = np.max(self.coords_flat[:,ind])
-            # if any of the limits are in the wrong order, flip them
-            if self.lower[ind] > self.upper[ind]:
-                temp = self.lower[ind]
-                self.lower[ind] = self.upper[ind]
-                self.upper[ind] = temp
+
+        # if individual limits are nan, inf, none, etc, replace with min/max
+        finite_lower = np.isfinite(lower)
+        finite_upper = np.isfinite(upper)
+        lower = np.where(finite_lower, lower, mins)
+        upper = np.where(finite_upper, upper, maxs)
+
+        # if any of the limits are in the wrong order, flip them
+        self.lower = np.minimum(lower, upper)
+        self.upper = np.maximum(lower, upper)
 
     def _make_bins(self):
         # bins_list is a Ndims long list of vectors which are the edges of
