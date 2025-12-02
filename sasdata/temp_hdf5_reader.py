@@ -34,15 +34,13 @@ test_file = "./example_data/2d_data/BAM_2D.h5"
 # test_file = "./example_data/2d_data/14250_2D_NoDetInfo_NXcanSAS_v3.h5"
 # test_file = "./example_data/2d_data/33837rear_2D_1.75_16.5_NXcanSAS_v3.h5"
 test_file = "/Users/pmneves/Downloads/108854.nxcansas.h5"
+test_file = "./test/sasdataloader/data/simpleexamplefile.h5"
 
 logger = logging.getLogger(__name__)
 
 
 def recurse_hdf5(hdf5_entry):
     if isinstance(hdf5_entry, HDF5Dataset):
-        #
-        # print(hdf5_entry.dtype)
-        # print(type(hdf5_entry.dtype))
 
         attributes = {name: hdf5_entry.attrs[name] for name in hdf5_entry.attrs}
 
@@ -132,7 +130,8 @@ def get_canSAS_class(node : HDF5Group) -> str | None:
         cls = NX2SAS_class(cls)
         # note that sastransmission groups have a
         # NX_class of NXdata but a canSAS_class of SAStransmission_spectrum
-        # which is ambiguous
+        # which is ambiguous because then how can one tell if it is a SASdata
+        # or a SAStransmission_spectrum object from the NX_class?
         if node.name.lower().startswith("sastransmission"):
             cls = 'SAStransmission_spectrum'
         return cls
@@ -149,14 +148,26 @@ def NX2SAS_class(cls : str) -> str | None:
         "NXnote": "SASnote",
         "NXprocess": "SASprocess",
         "NXcollection": "SASprocessnote",
-        "NXdata": "SAStransmission_spectrum",
         "NXsample": "SASsample",
         "NXsource": "SASsource",
         "NXaperture": "SASaperture",
         "NXcollimator": "SAScollimation",
-        "NXdetector": "SASdetector",
-        "NXsource": "SASsource",
+
+        "SASentry": "SASentry",
+        "SASdata": "SASdata",
+        "SASdetector": "SASdetector",
+        "SASinstrument": "SASinstrument",
+        "SASnote": "SASnote",
+        "SASprocess": "SASprocess",
+        "SASprocessnote": "SASprocessnote",
+        "SAStransmission_spectrum": "SAStransmission_spectrum",
+        "SASsample": "SASsample",
+        "SASsource": "SASsource",
+        "SASaperture": "SASaperture",
+        "SAScollimation": "SAScollimation",
     }
+    if isinstance(cls, bytes):
+        cls = cls.decode()
     return mapping.get(cls, None)
 
 def find_canSAS_key(node: HDF5Group, canSAS_class: str):
@@ -371,15 +382,15 @@ def load_raw(node: HDF5Group | HDF5Dataset) -> MetaNode:
 def parse_metadata(node : HDF5Group) -> Metadata:
     # parse the metadata groups
     keys = find_canSAS_key(node, "SASinstrument")
-    keys = list(keys) if keys is not None else []  # list([1,2,3]) returns [1,2,3] and list("string") returns ["string
-    instrument = parse_instrument(node[keys[0]]) if keys is not None else None
+    keys = list(keys) if keys else []  # list([1,2,3]) returns [1,2,3] and list("string") returns ["string"]
+    instrument = parse_instrument(node[keys[0]]) if keys else None
 
     keys = find_canSAS_key(node, "SASsample")
-    keys = list(keys) if keys is not None else []  # list([1,2,3]) returns [1,2,3] and list("string") returns ["string"]
-    sample = parse_sample(node[keys[0]]) if keys is not None else None
+    keys = list(keys) if keys else []  # list([1,2,3]) returns [1,2,3] and list("string") returns ["string"]
+    sample = parse_sample(node[keys[0]]) if keys else None
 
     keys = find_canSAS_key(node, "SASprocess")
-    keys = list(keys) if keys is not None else []  # list([1,2,3]) returns [1,2,3] and list("string") returns ["string"]
+    keys = list(keys) if keys else []  # list([1,2,3]) returns [1,2,3] and list("string") returns ["string"]
     process = [parse_process(node[p]) for p in keys]  # Empty list of keys will give an empty collimations list
 
     # parse the datasets
@@ -418,7 +429,6 @@ def load_data(filename: str) -> dict[str, SasData]:
                 logger.warning(f"Known keys: {[k for k in entry_keys]}")
 
             for key in entry_keys:
-                print(type(entry[key]))
                 component = entry[key]
                 if get_canSAS_class(entry[key])=='SASdata':
                     datum = recurse_hdf5(component)
