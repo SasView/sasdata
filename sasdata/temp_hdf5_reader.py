@@ -34,7 +34,7 @@ test_file = "./example_data/2d_data/BAM_2D.h5"
 # test_file = "./example_data/2d_data/14250_2D_NoDetInfo_NXcanSAS_v3.h5"
 # test_file = "./example_data/2d_data/33837rear_2D_1.75_16.5_NXcanSAS_v3.h5"
 test_file = "/Users/pmneves/Downloads/108854.nxcansas.h5"
-test_file = "./test/sasdataloader/data/simpleexamplefile.h5"
+test_file = "./test/sasdataloader/data/nxcansas_1Dand2D_multisasentry_multisasdata.h5"
 
 logger = logging.getLogger(__name__)
 
