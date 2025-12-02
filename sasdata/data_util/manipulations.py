@@ -24,6 +24,7 @@ import math
 import numpy as np
 
 from sasdata.dataloader.data_info import Data1D, Data2D
+from sasdata.quantities.constants import Pi, TwoPi
 
 
 def position_and_wavelength_to_q(dx: float, dy: float, detector_distance: float, wavelength: float) -> float:
@@ -38,7 +39,7 @@ def position_and_wavelength_to_q(dx: float, dy: float, detector_distance: float,
     plane_dist = math.sqrt(dx * dx + dy * dy)
     # Half of the scattering angle
     theta = 0.5 * math.atan(plane_dist / detector_distance)
-    return (4.0 * math.pi / wavelength) * math.sin(theta)
+    return (2.0* TwoPi / wavelength) * math.sin(theta)
 
 
 def get_q_compo(dx: float, dy: float, detector_distance: float, wavelength: float, compo: str | None = None) -> float:
@@ -50,7 +51,7 @@ def get_q_compo(dx: float, dy: float, detector_distance: float, wavelength: floa
         if dx >= 0:
             angle_xy = 0
         else:
-            angle_xy = math.pi
+            angle_xy = Pi
     else:
         angle_xy = math.atan(dx / dy)
 
@@ -71,9 +72,9 @@ def flip_phi(phi: float) -> float:
     :return: phi in >=0 and <=2Pi
     """
     if phi < 0:
-        phi_out = phi + (2 * math.pi)
-    elif phi > (2 * math.pi):
-        phi_out = phi - (2 * math.pi)
+        phi_out = phi + (TwoPi)
+    elif phi > (TwoPi):
+        phi_out = phi % TwoPi
     else:
         phi_out = phi
     return phi_out
@@ -789,8 +790,6 @@ class Ring:
         if data2D.__class__.__name__ not in ["Data2D", "plottable_2D"]:
             raise RuntimeError("Ring averaging only take plottable_2D objects")
 
-        Pi = math.pi
-
         # Get data
         data = data2D.data[np.isfinite(data2D.data)]
         q_data = data2D.q_data[np.isfinite(data2D.data)]
@@ -847,7 +846,7 @@ class Ring:
         for i in range(self.nbins_phi):
             phi_bins[i] = phi_bins[i] / phi_counts[i]
             phi_err[i] = math.sqrt(phi_err[i]) / phi_counts[i]
-            phi_values[i] = 2.0 * math.pi / self.nbins_phi * (1.0 * i)
+            phi_values[i] = TwoPi / self.nbins_phi * (1.0 * i)
 
         idx = (np.isfinite(phi_bins))
 
@@ -870,7 +869,7 @@ class _Sector:
     starting from the negative x-axis.
     """
 
-    def __init__(self, r_min, r_max, phi_min=0, phi_max=2 * math.pi, nbins=20,
+    def __init__(self, r_min, r_max, phi_min=0, phi_max=TwoPi, nbins=20,
                  base=None):
         '''
         :param base: must be a valid base for an algorithm, i.e.,
@@ -919,13 +918,31 @@ class _Sector:
         x_err = np.zeros(self.nbins)
         y_counts = np.zeros(self.nbins)  # Cycle counts (for the mean)
 
+        # Compute original span in a robust way with the inputs
+        # and take modulo 2pi so that a full span is normalised to a full circle
+        # and multiples of 2pi are recognized.
+        # This avoids zero width when phi_max == phi_min + 2pi.
+        span = (self.phi_max - self.phi_min)
+        span_mod = span % TwoPi
+
         # Get the min and max into the region: 0 <= phi < 2Pi
         phi_min = flip_phi(self.phi_min)
-        phi_max = flip_phi(self.phi_max)
+
+        # If the original specified span corresponds to a full circle (or very close),
+        # construct a continuous interval for binning from phi_min to phi_min + 2pi.
+        if math.isclose(span_mod, 0.0, abs_tol=1e-12) and abs(span) >= TwoPi:
+            # Treat as full circle
+            phi_max = phi_min + TwoPi
+        else:
+            # Normal case: map phi_max into [0,2pi] for bins
+            phi_max = flip_phi(self.phi_max)
+
+
+
         # Now calculate the angles for the opposite side sector, here referred
         # to as "minor wing," and ensure these too are within 0 to 2pi
-        phi_min_minor = flip_phi(phi_min - math.pi)
-        phi_max_minor = flip_phi(phi_max - math.pi)
+        phi_min_minor = flip_phi(phi_min - Pi)
+        phi_max_minor = flip_phi(phi_max - Pi)
 
         #  set up the bins by creating a binning object
         if run.lower() == 'phi':
@@ -937,7 +954,7 @@ class _Sector:
             # Note that their values must not be altered, as they are used to
             # determine what points (also in the range 0, 2pi) are in the ROI.
             if phi_min > phi_max:
-                binning = Binning(phi_min, phi_max + 2 * np.pi, self.nbins, self.base)
+                binning = Binning(phi_min, phi_max + TwoPi, self.nbins, self.base)
             else:
                 binning = Binning(phi_min, phi_max, self.nbins, self.base)
         elif self.fold:
@@ -960,7 +977,7 @@ class _Sector:
             # calculate the phi-value of the pixel (j,i) and convert the range
             # [-pi,pi] returned by the atan2 function to the [0,2pi] range used
             # as the reference frame for these calculations
-            phi_value = math.atan2(qy_data[n], qx_data[n]) + math.pi
+            phi_value = math.atan2(qy_data[n], qx_data[n]) + Pi
 
             # No need to calculate: data outside of the radius
             if self.r_min > q_value or q_value > self.r_max:
@@ -1007,7 +1024,7 @@ class _Sector:
                 # then phi_value needs to be shifted too so that it falls in
                 # the continuous range set up for the binning process.
                 if phi_min > phi_value:
-                    i_bin = binning.get_bin_index(phi_value + 2 * np.pi)
+                    i_bin = binning.get_bin_index(phi_value + TwoPi)
                 else:
                     i_bin = binning.get_bin_index(phi_value)
             else:
@@ -1229,7 +1246,7 @@ class Sectorcut:
     and (phi_max-phi_min) should not be larger than pi
     """
 
-    def __init__(self, phi_min=0, phi_max=math.pi):
+    def __init__(self, phi_min=0, phi_max=Pi):
         self.phi_min = phi_min
         self.phi_max = phi_max
 
@@ -1259,7 +1276,6 @@ class Sectorcut:
         """
         if data2D.__class__.__name__ not in ["Data2D", "plottable_2D"]:
             raise RuntimeError("Sectorcut take only plottable_2D objects")
-        Pi = math.pi
         # Get data
         qx_data = data2D.qx_data
         qy_data = data2D.qy_data
