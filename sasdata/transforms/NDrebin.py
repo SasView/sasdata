@@ -190,7 +190,6 @@ class NDRebin:
 
     def __call__(self):
         self.run()
-        return self.binned_data
 
     def run(self) -> None:
         """Bin the data into the defined bins."""
