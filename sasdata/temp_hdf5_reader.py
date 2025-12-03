@@ -33,6 +33,7 @@ from sasdata.quantities.unit_parser import parse
 test_file = "./example_data/2d_data/BAM_2D.h5"
 # test_file = "./example_data/2d_data/14250_2D_NoDetInfo_NXcanSAS_v3.h5"
 # test_file = "./example_data/2d_data/33837rear_2D_1.75_16.5_NXcanSAS_v3.h5"
+test_file = "./test/sasdataloader/data/nxcansas_1Dand2D_multisasentry_multisasdata.h5"
 
 logger = logging.getLogger(__name__)
 
@@ -178,11 +179,8 @@ def find_canSAS_key(node: HDF5Group, canSAS_class: str):
     return matches
 
 def parse_quantity(node : HDF5Group) -> Quantity[float]:
-    """Pull a single quantity with length units out of an HDF5 node"""
-    if node.shape == (): # scalar dataset
-        magnitude =  node.astype(float)[()]
-    else: # vector dataset
-        magnitude =  node.astype(float)[0]
+    """Pull a single quantity with units out of an HDF5 node"""
+    magnitude = parse_float(node)
     unit = node.attrs["units"]
     return Quantity(magnitude, parse(unit))
 
@@ -193,7 +191,7 @@ def parse_string(node : HDF5Group) -> str:
     else: # vector dataset
         return node.asstr()[0]
 
-def parse_float_first(node: HDF5Group) -> float:
+def parse_float(node: HDF5Group) -> float:
     """Return the first element (or scalar) of a numeric dataset as float."""
     if node.shape == ():
         return float(node[()].astype(str))
@@ -319,7 +317,7 @@ def parse_sample(node : HDF5Group) -> Sample:
     name = attr_parse(node, "name")
     sample_id = opt_parse(node, "ID", parse_string)
     thickness = opt_parse(node, "thickness", parse_quantity)
-    transmission = opt_parse(node, "transmission", parse_float_first)
+    transmission = opt_parse(node, "transmission", parse_float)
     temperature = opt_parse(node, "temperature", parse_quantity)
     position = opt_parse(node, "position", parse_vec3)
     orientation = opt_parse(node, "orientation", parse_rot3)
