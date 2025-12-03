@@ -55,13 +55,3 @@ def deduce_qz(data: SasData):
 
             data._data_contents['Qz'] = qz
 
-if __name__ == "__main__":
-    from sasdata.temp_hdf5_reader import load_data
-    test_file = "/Users/pmneves/Downloads/108854.nxcansas.h5"
-    data = load_data(test_file)
-
-    for dataset in data.values():
-        deduce_qz(dataset)
-        print(dataset.summary())
-
-        print(dataset._data_contents)
