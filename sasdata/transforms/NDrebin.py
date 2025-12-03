@@ -98,7 +98,7 @@ class NDRebin:
         in each dimension
     step_size : 
         is a list of Ndims numbers, contains the step size
-        along each dimensino
+        along each dimension
     num_bins : 
         is a list of Ndims numbers, contains the number
         of bins along each dimension
@@ -111,42 +111,42 @@ class NDRebin:
     Typical usage
     -------------
     .. code-block::
-    # test syntax 1
-    Ndims = 4
-    Nvals = int(1e4)
-    qmat = np.random.rand(Ndims, Nvals)
-    Imat = np.random.rand(Nvals)
+        # test syntax 1
+        Ndims = 4
+        Nvals = int(1e4)
+        qmat = np.random.rand(Ndims, Nvals)
+        Imat = np.random.rand(Nvals)
 
-    rebin = NDRebin(Imat, qmat,
-        step_size=0.1*np.random.rand(Ndims)+0.05,
-        lower=0.1*np.random.rand(Ndims)+0.0,
-        upper=0.1*np.random.rand(Ndims)+0.9)
-    rebin.run()
+        rebin = NDRebin(Imat, qmat,
+            step_size=0.1*np.random.rand(Ndims)+0.05,
+            lower=0.1*np.random.rand(Ndims)+0.0,
+            upper=0.1*np.random.rand(Ndims)+0.9)
+        rebin.run()
 
-    Ibin = rebin.binned_data
-    qbin = rebin.bin_centers_list
+        Ibin = rebin.binned_data
+        qbin = rebin.bin_centers_list
 
 
-    # test syntax 2
-    Ndims = 2
-    Nvals = int(1e4)
-    qmat = np.random.rand(Ndims, 100, Nvals)
-    Imat = np.random.rand(100, Nvals)
-    Imat_errs = np.random.rand(100, Nvals)
+        # test syntax 2
+        Ndims = 2
+        Nvals = int(1e4)
+        qmat = np.random.rand(Ndims, 100, Nvals)
+        Imat = np.random.rand(100, Nvals)
+        Imat_errs = np.random.rand(100, Nvals)
 
-    rebin = NDRebin(Imat, qmat,
-        data_errs = Imat_errs,
-        num_bins=[10,20],
-        axes = np.eye(2),
-        fractional=True)
-    rebin.run()
+        rebin = NDRebin(Imat, qmat,
+            data_errs = Imat_errs,
+            num_bins=[10,20],
+            axes = np.eye(2),
+            fractional=True)
+        rebin.run()
 
-    Ibin = rebin.binned_data
-    qbin = rebin.bin_centers_list
-    Ibin_errs = rebin.binned_data_errs
-    bins_list = rebin.bins_list
-    step_size = rebin.step_size
-    num_bins = rebin.num_bins
+        Ibin = rebin.binned_data
+        qbin = rebin.bin_centers_list
+        Ibin_errs = rebin.binned_data_errs
+        bins_list = rebin.bins_list
+        step_size = rebin.step_size
+        num_bins = rebin.num_bins
     """
 
     def __init__(
@@ -398,7 +398,8 @@ class NDRebin:
             self.bin_inds[self.coords_flat[:, ind]> self.bins_list[ind][-1], ind] = np.nan
 
     def _calculate_bins(self):
-        # this is a non-vector way of binning the data:
+        # For readibility, this is a non-vector way of binning the data
+        # which in the following will be vectorized for efficiency:
         # for ind in range(Nvals):
         #     this_bin_ind = bin_inds[ind,:]
         #     if not np.isnan(this_bin_ind).any():
