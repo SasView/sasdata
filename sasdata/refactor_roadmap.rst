@@ -1,4 +1,4 @@
-* percentages updated last on 08/10/2025
+* percentages updated last on 8th October 2025
 
 SasData Side
 ============
