@@ -122,7 +122,7 @@ def test_conversion_errors(unit_1, unit_2):
 
     else:
         with pytest.raises(UnitError):
-            Quantity(1, units.seconds).in_units_of(units.meters)
+            Quantity(1, unit_1).in_units_of(unit_2)
 
 
 @pytest.mark.quantity

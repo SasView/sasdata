@@ -1,5 +1,6 @@
 import hashlib
 import json
+from math import e, log
 from typing import Any, Self, TypeVar, Union
 
 import h5py
@@ -796,7 +797,27 @@ class Pow(Operation):
         if isinstance(other, Pow):
             return self.a == other.a and self.power == other.power
 
+class Log(BinaryOperation):
+    serialisation_name = "log"
 
+    def _self_cls(self) -> type:
+        return Log
+
+    def evaluate(self, variables: dict[int, T]) -> Operation:
+        return log(self.a.evaluate(variables), self.b.evaluate(variables))
+
+    def _derivative(self, hash_value: int) -> Operation:
+        # TODO: Check this derivative is right
+        return Inv(Mul(self.a), Ln(self.b))
+
+class Ln(Log):
+    serialisation_name = "ln"
+
+    def _self_cls(self) -> type:
+        return Ln
+
+    def __init__(self, a):
+        super().__init__(a, Constant(e))
 
 #
 # Matrix operations
