@@ -15,9 +15,6 @@ from sasdata.quantities.units import NamedUnit, Unit
 T = TypeVar("T")
 
 
-
-
-
 ################### Quantity based operations, need to be here to avoid cyclic dependencies #####################
 
 def transpose(a: Union["Quantity[ArrayLike]", ArrayLike], axes: tuple | None = None):
@@ -128,13 +125,15 @@ def hash_and_name(hash_or_name: int | str):
     else:
         raise TypeError("Variable name_or_hash_value must be either str or int")
 
+
 class Operation:
 
     serialisation_name = "unknown"
+
     def summary(self, indent_amount: int = 0, indent: str="  "):
         """ Summary of the operation tree"""
 
-        s = f"{indent_amount*indent}{self._summary_open()}(\n"
+        s = f"{indent_amount*indent}{self.__class__.__name__}(\n"
 
         for chunk in self._summary_components():
             s += chunk.summary(indent_amount+1, indent) + "\n"
@@ -142,8 +141,6 @@ class Operation:
         s += f"{indent_amount*indent})"
 
         return s
-    def _summary_open(self):
-        """ First line of summary """
 
     def _summary_components(self) -> list["Operation"]:
         return []
@@ -208,13 +205,12 @@ class Operation:
 
         operation = json_data["operation"]
         parameters = json_data["parameters"]
-        cls = _serialisation_lookup[operation]
+        class_ = _serialisation_lookup[operation]
 
         try:
-            return cls._deserialise(parameters)
-
+            return class_._deserialise(parameters)
         except NotImplementedError:
-            raise NotImplementedError(f"No method to deserialise {operation} with {parameters} (cls={cls})")
+            raise NotImplementedError(f"No method to deserialise {operation} with {parameters} (class={class_})")
 
     @staticmethod
     def _deserialise(parameters: dict) -> "Operation":
@@ -228,7 +224,7 @@ class Operation:
                 "parameters": self._serialise_parameters()}
 
     def _serialise_parameters(self) -> dict[str, Any]:
-        raise NotImplementedError("_serialise_parameters not implemented")
+        raise NotImplementedError("_serialise_parameters not implemented for this class")
 
     def __eq__(self, other: "Operation"):
         return NotImplemented
@@ -239,10 +235,11 @@ class ConstantBase(Operation):
 class AdditiveIdentity(ConstantBase):
 
     serialisation_name = "zero"
+
     def evaluate(self, variables: dict[int, T]) -> T:
         return 0
 
-    def _derivative(self, hash_value: int) -> Operation:
+    def _derivative(self, hash_value: int) -> "Operation":
         return AdditiveIdentity()
 
     @staticmethod
@@ -265,7 +262,6 @@ class AdditiveIdentity(ConstantBase):
         return False
 
 
-
 class MultiplicativeIdentity(ConstantBase):
 
     serialisation_name = "one"
@@ -279,7 +275,6 @@ class MultiplicativeIdentity(ConstantBase):
     @staticmethod
     def _deserialise(parameters: dict) -> "Operation":
         return MultiplicativeIdentity()
-
 
     def _serialise_parameters(self) -> dict[str, Any]:
         return {}
@@ -301,6 +296,7 @@ class MultiplicativeIdentity(ConstantBase):
 class Constant(ConstantBase):
 
     serialisation_name = "constant"
+
     def __init__(self, value):
         self.value = value
 
@@ -326,7 +322,6 @@ class Constant(ConstantBase):
         value = numerical_decode(parameters["value"])
         return Constant(value)
 
-
     def _serialise_parameters(self) -> dict[str, Any]:
         return {"value": numerical_encode(self.value)}
 
@@ -341,8 +336,7 @@ class Constant(ConstantBase):
             return self.value == 1
 
         elif isinstance(other, Constant):
-            if other.value == self.value:
-                return True
+            return other.value == self.value
 
         return False
 
@@ -350,6 +344,7 @@ class Constant(ConstantBase):
 class Variable(Operation):
 
     serialisation_name = "variable"
+
     def __init__(self, name_or_hash_value: int | str | tuple[int, str]):
         self.hash_value, self.name = hash_and_name(name_or_hash_value)
 
@@ -382,8 +377,8 @@ class Variable(Operation):
     def __eq__(self, other):
         if isinstance(other, Variable):
             return self.hash_value == other.hash_value
-
         return False
+
 
 class UnaryOperation(Operation):
 
@@ -393,15 +388,23 @@ class UnaryOperation(Operation):
     def _serialise_parameters(self) -> dict[str, Any]:
         return {"a": self.a._serialise_json()}
 
+    @classmethod
+    def _deserialise(cls, parameters: dict) -> "UnaryOperation":
+        return cls(Operation.deserialise_json(parameters["a"]))
+
     def _summary_components(self) -> list["Operation"]:
         return [self.a]
 
-
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.a == other.a
+        return False
 
 
 class Neg(UnaryOperation):
 
     serialisation_name = "neg"
+
     def evaluate(self, variables: dict[int, T]) -> T:
         return -self.a.evaluate(variables)
 
@@ -422,25 +425,13 @@ class Neg(UnaryOperation):
         else:
             return Neg(clean_a)
 
-    @staticmethod
-    def _deserialise(parameters: dict) -> "Operation":
-        return Neg(Operation.deserialise_json(parameters["a"]))
-
-
-    def _summary_open(self):
-        return "Neg"
-
-    def __eq__(self, other):
-        if isinstance(other, Neg):
-            return other.a == self.a
-
 
 class Inv(UnaryOperation):
 
     serialisation_name = "reciprocal"
 
     def evaluate(self, variables: dict[int, T]) -> T:
-        return 1/self.a.evaluate(variables)
+        return 1.0 / self.a.evaluate(variables)
 
     def _derivative(self, hash_value: int) -> Operation:
         return Neg(Div(self.a._derivative(hash_value), Mul(self.a, self.a)))
@@ -458,23 +449,36 @@ class Inv(UnaryOperation):
             return Neg(Inv(clean_a.a))
 
         elif isinstance(clean_a, Constant):
-            return Constant(1/clean_a.value)._clean()
+            return Constant(1.0 / clean_a.value)._clean()
 
         else:
             return Inv(clean_a)
 
 
-    @staticmethod
-    def _deserialise(parameters: dict) -> "Operation":
-        return Inv(Operation.deserialise_json(parameters["a"]))
+class Ln(UnaryOperation):
 
-    def _summary_open(self):
-        return "Inv"
+    serialisation_name = "ln"
 
+    def evaluate(self, variables: dict[int, T]) -> Operation:
+        return log(self.a.evaluate(variables))
 
-    def __eq__(self, other):
-        if isinstance(other, Inv):
-            return other.a == self.a
+    def _derivative(self, hash_value: int) -> Operation:
+        return Inv(self.a)
+
+    def _clean(self, a):
+        clean_a = self.a._clean()
+
+        if isinstance(a, MultiplicativeIdentity):
+            # Convert ln(1) to 0
+            return AdditiveIdentity()
+
+        elif a == e:
+            # Convert ln(e) to 1
+            return MultiplicativeIdentity()
+
+        else:
+            return Log(clean_a)
+
 
 class BinaryOperation(Operation):
     def __init__(self, a: Operation, b: Operation):
@@ -491,29 +495,28 @@ class BinaryOperation(Operation):
         return {"a": self.a._serialise_json(),
                 "b": self.b._serialise_json()}
 
+    @classmethod
+    def _deserialise(cls, parameters: dict) -> "BinaryOperation":
+        return cls(*BinaryOperation._deserialise_ab(parameters))
+
     @staticmethod
     def _deserialise_ab(parameters) -> tuple[Operation, Operation]:
         return (Operation.deserialise_json(parameters["a"]),
                 Operation.deserialise_json(parameters["b"]))
 
-
     def _summary_components(self) -> list["Operation"]:
         return [self.a, self.b]
 
-    def _self_cls(self) -> type:
-        """ Own class"""
-        pass
-
     def __eq__(self, other):
-        if isinstance(other, self._self_cls()):
-            return other.a == self.a and self.b == other.b
+        if isinstance(other, self.__class__):
+            return self.a == other.a and self.b == other.b
+        return False
+
 
 class Add(BinaryOperation):
 
     serialisation_name = "add"
 
-    def _self_cls(self) -> type:
-        return Add
     def evaluate(self, variables: dict[int, T]) -> T:
         return self.a.evaluate(variables) + self.b.evaluate(variables)
 
@@ -552,20 +555,11 @@ class Add(BinaryOperation):
         else:
             return Add(a, b)
 
-    @staticmethod
-    def _deserialise(parameters: dict) -> "Operation":
-        return Add(*BinaryOperation._deserialise_ab(parameters))
-
-    def _summary_open(self):
-        return "Add"
 
 class Sub(BinaryOperation):
 
     serialisation_name = "sub"
 
-
-    def _self_cls(self) -> type:
-        return Sub
     def evaluate(self, variables: dict[int, T]) -> T:
         return self.a.evaluate(variables) - self.b.evaluate(variables)
 
@@ -603,21 +597,11 @@ class Sub(BinaryOperation):
         else:
             return Sub(a, b)
 
-    @staticmethod
-    def _deserialise(parameters: dict) -> "Operation":
-        return Sub(*BinaryOperation._deserialise_ab(parameters))
-
-
-    def _summary_open(self):
-        return "Sub"
 
 class Mul(BinaryOperation):
 
     serialisation_name = "mul"
 
-
-    def _self_cls(self) -> type:
-        return Mul
     def evaluate(self, variables: dict[int, T]) -> T:
         return self.a.evaluate(variables) * self.b.evaluate(variables)
 
@@ -673,21 +657,9 @@ class Mul(BinaryOperation):
             return Mul(a, b)
 
 
-    @staticmethod
-    def _deserialise(parameters: dict) -> "Operation":
-        return Mul(*BinaryOperation._deserialise_ab(parameters))
-
-
-    def _summary_open(self):
-        return "Mul"
-
 class Div(BinaryOperation):
 
     serialisation_name = "div"
-
-
-    def _self_cls(self) -> type:
-        return Div
 
     def evaluate(self, variables: dict[int, T]) -> T:
         return self.a.evaluate(variables) / self.b.evaluate(variables)
@@ -712,7 +684,6 @@ class Div(BinaryOperation):
         elif isinstance(a, ConstantBase) and isinstance(b, ConstantBase):
             # Convert constants "a"/"b" to "a/b"
             return Constant(self.a.evaluate({}) / self.b.evaluate({}))._clean()
-
 
         elif isinstance(a, Inv) and isinstance(b, Inv):
             return Div(b.a, a.a)
@@ -739,12 +710,28 @@ class Div(BinaryOperation):
             return Div(a, b)
 
 
-    @staticmethod
-    def _deserialise(parameters: dict) -> "Operation":
-        return Div(*BinaryOperation._deserialise_ab(parameters))
+class Log(BinaryOperation):
 
-    def _summary_open(self):
-        return "Div"
+    serialisation_name = "log"
+
+    def evaluate(self, variables: dict[int, T]) -> Operation:
+        return log(self.a.evaluate(variables), self.b.evaluate(variables))
+
+    def _derivative(self, hash_value: int) -> Operation:
+        return Inv(Mul(self.a, Ln(self.b)))
+
+    def _clean_ab(self, a, b):
+        if isinstance(a, MultiplicativeIdentity):
+            # Convert log(1) to 0
+            return AdditiveIdentity()
+
+        elif a == b:
+            # Convert log(b) to 1
+            return MultiplicativeIdentity()
+
+        else:
+            return Log(a, b)
+
 
 class Pow(Operation):
 
@@ -801,70 +788,6 @@ class Pow(Operation):
         if isinstance(other, Pow):
             return self.a == other.a and self.power == other.power
 
-class Log(BinaryOperation):
-    serialisation_name = "log"
-
-    def _self_cls(self) -> type:
-        return Log
-
-    def evaluate(self, variables: dict[int, T]) -> Operation:
-        return log(self.a.evaluate(variables), self.b.evaluate(variables))
-
-    def _derivative(self, hash_value: int) -> Operation:
-        return Inv(Mul(self.a, Ln(self.b)))
-
-    def _clean_ab(self, a, b):
-        if isinstance(a, MultiplicativeIdentity):
-            # Convert log(1) to 0
-            return AdditiveIdentity()
-
-        elif a == b:
-            # Convert log(b) to 1
-            return MultiplicativeIdentity()
-
-        else:
-            return Log(a, b)
-
-    @staticmethod
-    def _deserialise(parameters: dict) -> "Operation":
-        return Log(*BinaryOperation._deserialise_ab(parameters))
-
-    def _summary_open(self):
-        return "Log"
-
-
-class Ln(UnaryOperation):
-    serialisation_name = "ln"
-
-    def _self_cls(self) -> type:
-        return Ln
-
-    def evaluate(self, variables: dict[int, T]) -> Operation:
-        return log(self.a.evaluate(variables))
-
-    def _derivative(self, hash_value: int) -> Operation:
-        return Inv(self.a)
-
-    def _clean(self, a):
-        clean_a = self.a._clean()
-
-        if isinstance(a, MultiplicativeIdentity):
-            # Convert log(1) to 0
-            return AdditiveIdentity()
-
-        elif a == b:
-            # Convert log(b) to 1
-            return MultiplicativeIdentity()
-
-        else:
-            return Log(clean_a)
-
-    @staticmethod
-    def _deserialise(parameters: dict) -> "Operation":
-        return Ln(Operation.deserialise_json(parameters["a"]))
-
-    def _summary_open(self):
-        return "Ln"
 
 #
 # Matrix operations
@@ -910,10 +833,6 @@ class Transpose(Operation):
             return Transpose(
                 a=Operation.deserialise_json(parameters["a"]))
 
-
-    def _summary_open(self):
-        return "Transpose"
-
     def __eq__(self, other):
         if isinstance(other, Transpose):
             return other.a == self.a
@@ -937,13 +856,6 @@ class Dot(BinaryOperation):
     def _clean_ab(self, a, b):
         return Dot(a, b) # Do nothing for now
 
-
-    @staticmethod
-    def _deserialise(parameters: dict) -> "Operation":
-        return Dot(*BinaryOperation._deserialise_ab(parameters))
-
-    def _summary_open(self):
-        return "Dot"
 
 
 # TODO: Add to base operation class, and to quantities
@@ -981,14 +893,9 @@ class MatMul(BinaryOperation):
         return MatMul(a, b)
 
 
-    @staticmethod
-    def _deserialise(parameters: dict) -> "Operation":
-        return MatMul(*BinaryOperation._deserialise_ab(parameters))
-
-    def _summary_open(self):
-        return "MatMul"
 
 class TensorDot(Operation):
+
     serialisation_name = "tensor_product"
 
     def __init__(self, a: Operation, b: Operation, a_index: int, b_index: int):
@@ -1015,17 +922,14 @@ class TensorDot(Operation):
                          a_index=int(parameters["a_index"]),
                          b_index=int(parameters["b_index"]))
 
-    def _summary_open(self):
-        return "TensorProduct"
-
 
 _serialisable_classes = [AdditiveIdentity, MultiplicativeIdentity, Constant,
                          Variable,
-                         Neg, Inv,
-                         Add, Sub, Mul, Div, Pow,
+                         Neg, Inv, Ln,
+                         Add, Sub, Mul, Div, Pow, Log,
                          Transpose, Dot, MatMul, TensorDot]
 
-_serialisation_lookup = {cls.serialisation_name: cls for cls in _serialisable_classes}
+_serialisation_lookup = {class_.serialisation_name: class_ for class_ in _serialisable_classes}
 
 
 class UnitError(Exception):
