@@ -1,6 +1,6 @@
 import hashlib
 import json
-from math import e, log
+from math import log
 from typing import Any, Self, TypeVar, Union
 
 import h5py
@@ -833,21 +833,35 @@ class Log(BinaryOperation):
         return "Log"
 
 
-class Ln(Log):
+class Ln(UnaryOperation):
     serialisation_name = "ln"
 
     def _self_cls(self) -> type:
         return Ln
 
-    def __init__(self, a):
-        super().__init__(a, Constant(e))
+    def evaluate(self, variables: dict[int, T]) -> Operation:
+        return log(self.a.evaluate(variables))
 
     def _derivative(self, hash_value: int) -> Operation:
         return Inv(self.a)
 
+    def _clean(self, a):
+        clean_a = self.a._clean()
+
+        if isinstance(a, MultiplicativeIdentity):
+            # Convert log(1) to 0
+            return AdditiveIdentity()
+
+        elif a == b:
+            # Convert log(b) to 1
+            return MultiplicativeIdentity()
+
+        else:
+            return Log(clean_a)
+
     @staticmethod
     def _deserialise(parameters: dict) -> "Operation":
-        return Ln(BinaryOperation._deserialise_ab(parameters)[0])
+        return Ln(Operation.deserialise_json(parameters["a"]))
 
     def _summary_open(self):
         return "Ln"
