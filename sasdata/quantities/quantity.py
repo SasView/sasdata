@@ -147,12 +147,14 @@ class Operation:
 
     def _summary_components(self) -> list["Operation"]:
         return []
-    def evaluate(self, variables: dict[int, T]) -> T:
 
+    def evaluate(self, variables: dict[int, T]) -> T:
         """ Evaluate this operation """
+        pass
 
     def _derivative(self, hash_value: int) -> "Operation":
         """ Get the derivative of this operation """
+        pass
 
     def _clean(self):
         """ Clean up this operation - i.e. remove silly things like 1*x """
@@ -500,6 +502,8 @@ class BinaryOperation(Operation):
 
     def _self_cls(self) -> type:
         """ Own class"""
+        pass
+
     def __eq__(self, other):
         if isinstance(other, self._self_cls()):
             return other.a == self.a and self.b == other.b
@@ -807,8 +811,27 @@ class Log(BinaryOperation):
         return log(self.a.evaluate(variables), self.b.evaluate(variables))
 
     def _derivative(self, hash_value: int) -> Operation:
-        # TODO: Check this derivative is right
-        return Inv(Mul(self.a), Ln(self.b))
+        return Inv(Mul(self.a, Ln(self.b)))
+
+    def _clean_ab(self, a, b):
+        if isinstance(a, MultiplicativeIdentity):
+            # Convert log(1) to 0
+            return AdditiveIdentity()
+
+        elif a == b:
+            # Convert log(b) to 1
+            return MultiplicativeIdentity()
+
+        else:
+            return Log(a, b)
+
+    @staticmethod
+    def _deserialise(parameters: dict) -> "Operation":
+        return Log(*BinaryOperation._deserialise_ab(parameters))
+
+    def _summary_open(self):
+        return "Log"
+
 
 class Ln(Log):
     serialisation_name = "ln"
@@ -818,6 +841,16 @@ class Ln(Log):
 
     def __init__(self, a):
         super().__init__(a, Constant(e))
+
+    def _derivative(self, hash_value: int) -> Operation:
+        return Inv(self.a)
+
+    @staticmethod
+    def _deserialise(parameters: dict) -> "Operation":
+        return Ln(BinaryOperation._deserialise_ab(parameters)[0])
+
+    def _summary_open(self):
+        return "Ln"
 
 #
 # Matrix operations
