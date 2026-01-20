@@ -21,10 +21,10 @@ def local_load(path: str) -> SasData:
 
 
 test_file_names = [
-    ("ISIS_1_1", ":3qQF1eQnIT9zeTFED0zBJN"),
-    ("cansas1d", ":5asXXNUpxoklY8ZNhhCNkM"),
-    ("MAR07232_rest", ":2Y0qTTb054KSJnJaJv0rFl"),
-    ("simpleexamplefile", ":/sasentry01/sasdata01/Q:uoHMeB8mukElC1uLCy7Sd"),
+    ("ISIS_1_1", "TK49 c10_SANS:79680:3qQF1eQnIT9zeTFED0zBJN"),
+    ("cansas1d", "Test title:1234:5asXXNUpxoklY8ZNhhCNkM"),
+    ("MAR07232_rest", "MAR07232_rest_out.dat:2:2Y0qTTb054KSJnJaJv0rFl"),
+    ("simpleexamplefile", "::/sasentry01/sasdata01/Q:uoHMeB8mukElC1uLCy7Sd"),
 ]
 
 
@@ -33,4 +33,6 @@ test_file_names = [
 def test_quantity_name(x):
     (f, expected) = x
     data = [v for v in local_load(f"data/{f}").values()][0]
+    if data.metadata.title is not None:
+        assert data.abscissae.unique_id.startswith(data.metadata.title)
     assert data.abscissae.unique_id == expected
