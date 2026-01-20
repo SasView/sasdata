@@ -1095,15 +1095,15 @@ class QuantityHistory:
 
 
 class Quantity[QuantityType]:
-    def __init__(
-        self,
-        value: QuantityType,
-        units: Unit,
-        standard_error: QuantityType | None = None,
-        hash_seed="",
-        name="",
-        id_header="",
-    ):
+
+
+    def __init__(self,
+                 value: QuantityType,
+                 units: Unit,
+                 standard_error: QuantityType | None = None,
+                 hash_seed = "",
+                 id_header = ""):
+
         self.value = value
         """ Numerical value of this data, in the specified units"""
 
@@ -1126,6 +1126,8 @@ class Quantity[QuantityType]:
             self.hash_value = hash_data_via_numpy(hash_seed, value, standard_error)
 
         self.history = QuantityHistory.variable(self)
+
+        self._id_header = id_header
 
     # TODO: Adding this method as a temporary measure but we need a single
     # method that does this.
@@ -1151,26 +1153,9 @@ class Quantity[QuantityType]:
         else:
             return Quantity(self._variance, self.units**2)
 
-
     @property
     def unique_id(self) -> str:
-        """Get a human readable unique id for a data set"""
-        return f"{self._id_header}:{self.name}:{self._base62_hash()}"
-
-    def _base62_hash(self) -> str:
-        """Encode the hash_value in base62 for better readability"""
-        hashed = ""
-        current_hash = self.hash_value
-        while current_hash:
-            digit = current_hash % 62
-            if digit < 10:
-                hashed = f"{digit}{hashed}"
-            elif digit < 36:
-                hashed = f"{chr(55 + digit)}{hashed}"
-            else:
-                hashed = f"{chr(61 + digit)}{hashed}"
-            current_hash = (current_hash - digit) // 62
-        return hashed
+        return f"{self._id_header}:{hex(self.hash_value)}"
 
     def standard_deviation(self) -> "Quantity":
         return self.variance**0.5
