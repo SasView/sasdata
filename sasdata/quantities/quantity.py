@@ -1081,15 +1081,15 @@ class QuantityHistory:
 
 
 class Quantity[QuantityType]:
-    def __init__(
-        self,
-        value: QuantityType,
-        units: Unit,
-        standard_error: QuantityType | None = None,
-        hash_seed="",
-        name="",
-        id_header="",
-    ):
+
+
+    def __init__(self,
+                 value: QuantityType,
+                 units: Unit,
+                 standard_error: QuantityType | None = None,
+                 hash_seed = "",
+                 id_header = ""):
+
         self.value = value
         """ Numerical value of this data, in the specified units"""
 
@@ -1116,6 +1116,8 @@ class Quantity[QuantityType]:
         self._id_header = id_header
         self.name = name
 
+        self._id_header = id_header
+
     # TODO: Adding this method as a temporary measure but we need a single
     # method that does this.
     def with_standard_error(self, standard_error: "Quantity"):
@@ -1139,6 +1141,10 @@ class Quantity[QuantityType]:
             return Quantity(np.zeros_like(self.value), self.units**2, name=self.name, id_header=self._id_header)
         else:
             return Quantity(self._variance, self.units**2)
+
+    @property
+    def unique_id(self) -> str:
+        return f"{self._id_header}:{hex(self.hash_value)}"
 
     def _base62_hash(self) -> str:
         """Encode the hash_value in base62 for better readability"""
