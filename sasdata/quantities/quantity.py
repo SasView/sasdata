@@ -1143,26 +1143,11 @@ class Quantity[QuantityType]:
             return Quantity(self._variance, self.units**2)
 
 
-    def unique_id(self) -> str:
-
-        # Encode the number in base62 for better readability
-        hashed = ""
-        current_hash = self.hash_value
-        while current_hash:
-            digit = current_hash % 62
-            if digit < 10:
-                hashed = f"{digit}{hashed}"
-            elif digit < 36:
-                hashed = f"{chr(55 + digit)}{hashed}"
-            else:
-                hashed = f"{chr(61 + digit)}{hashed}"
-            current_hash = (current_hash - digit) // 62
-
-        return f"{self._id_header}:{hashed}"
-
     @property
     def unique_id(self) -> str:
+        return f"{self._id_header}:{self._base62_hash()}"
 
+    def _base62_hash(self) -> str:
         # Encode the number in base62 for better readability
         hashed = ""
         current_hash = self.hash_value
@@ -1175,8 +1160,7 @@ class Quantity[QuantityType]:
             else:
                 hashed = f"{chr(61 + digit)}{hashed}"
             current_hash = (current_hash - digit) // 62
-
-        return f"{self._id_header}:{hashed}"
+        return hashed
 
     def standard_deviation(self) -> "Quantity":
         return self.variance**0.5
@@ -1478,6 +1462,11 @@ class NamedQuantity[QuantityType](Quantity[QuantityType]):
     @property
     def string_repr(self):
         return self.name
+
+    @property
+    def unique_id(self) -> str:
+        return f"{self._id_header}:{self.name}:{self._base62_hash()}"
+
 
 class DerivedQuantity[QuantityType](Quantity[QuantityType]):
     def __init__(self, value: QuantityType, units: Unit, history: QuantityHistory):
