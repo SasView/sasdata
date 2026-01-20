@@ -65,7 +65,7 @@ def recurse_hdf5(hdf5_entry):
 GET_UNITS_FROM_ELSEWHERE = units.meters
 
 
-def connected_data(node: SASDataGroup, name_prefix="") -> dict[str, Quantity]:
+def connected_data(node: SASDataGroup, name_prefix="", metadata=None) -> dict[str, Quantity]:
     """In the context of NeXus files, load a group of data entries that are organised together
     match up the units and errors with their values"""
     # Gather together data with its error terms
@@ -73,6 +73,11 @@ def connected_data(node: SASDataGroup, name_prefix="") -> dict[str, Quantity]:
     uncertainty_map = {}
     uncertainties = set()
     entries = {}
+
+    title = ""
+    if metadata.title is not None:
+        title = metadata.title
+    id_header = f"{title}:{','.join(metadata.run)}"
 
     for name in node.children:
         child = node.children[name]
@@ -82,9 +87,7 @@ def connected_data(node: SASDataGroup, name_prefix="") -> dict[str, Quantity]:
         else:
             units = GET_UNITS_FROM_ELSEWHERE
 
-        quantity = NamedQuantity(
-            name=child.name, value=child.data, units=units
-        )
+        quantity = NamedQuantity(name=child.name, value=child.data, units=units, id_header=id_header)
 
         # Turns out people can't be trusted to use the same keys here
         if "uncertainty" in child.attributes or "uncertainties" in child.attributes:
@@ -113,7 +116,8 @@ def connected_data(node: SASDataGroup, name_prefix="") -> dict[str, Quantity]:
 
 ### Begin metadata parsing code
 
-def get_canSAS_class(node : HDF5Group) -> str | None:
+
+def get_canSAS_class(node: HDF5Group) -> str | None:
     # Check if attribute exists
     if "canSAS_class" in node.attrs:
         cls = node.attrs["canSAS_class"]
@@ -301,7 +305,7 @@ def parse_collimation(node: HDF5Group) -> Collimation:
     return Collimation(length=length, apertures=apertures)
 
 
-def parse_instrument(node : HDF5Group) -> Instrument:
+def parse_instrument(node: HDF5Group) -> Instrument:
     keys = find_canSAS_key(node, "SAScollimation")
     keys = list(keys) if keys is not None else []  # list([1,2,3]) returns [1,2,3] and list("string") returns ["string"]
     collimations = [parse_collimation(node[p]) for p in keys]  # Empty list of keys will give an empty collimations list
@@ -379,7 +383,7 @@ def load_raw(node: HDF5Group | HDF5Dataset) -> MetaNode:
             else:
                 if "units" in attrib and attrib["units"]:
                     data = node[()] if node.shape == () else node[:]
-                    contents = Quantity(data, parse(attrib["units"]))
+                    contents = Quantity(data, parse(attrib["units"]), id_header=node.name)
                 else:
                     contents = node[()] if node.shape == () else node[:]
             return MetaNode(name=name, attrs=attrib, contents=contents)
@@ -432,13 +436,13 @@ def load_data(filename: str) -> dict[str, SasData]:
                 logger.warning("No sasdata or data key")
                 logger.warning(f"Known keys: {[k for k in entry_keys]}")
 
+            metadata = parse_metadata(f[root_key])
+
             for key in entry_keys:
                 component = entry[key]
-                if get_canSAS_class(entry[key])=='SASdata':
+                if get_canSAS_class(entry[key]) == "SASdata":
                     datum = recurse_hdf5(component)
-                    data_contents = connected_data(datum, str(filename))
-
-            metadata = parse_metadata(f[root_key])
+                    data_contents = connected_data(datum, str(filename), metadata)
 
             if "Qz" in data_contents:
                 dataset_type = three_dim
