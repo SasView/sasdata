@@ -24,7 +24,7 @@ test_file_names = [
     ("ISIS_1_1", ":3qQF1eQnIT9zeTFED0zBJN"),
     ("cansas1d", ":5asXXNUpxoklY8ZNhhCNkM"),
     ("MAR07232_rest", ":2Y0qTTb054KSJnJaJv0rFl"),
-    ("simpleexamplefile", ":1PwkbIa5MxxcAiicyHDxB9"),
+    ("simpleexamplefile", ":/sasentry01/sasdata01/Q:uoHMeB8mukElC1uLCy7Sd"),
 ]
 
 
