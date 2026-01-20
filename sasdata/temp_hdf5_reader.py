@@ -90,7 +90,7 @@ def connected_data(node: SASDataGroup, name_prefix="") -> dict[str, Quantity]:
             units = GET_UNITS_FROM_ELSEWHERE
 
         quantity = NamedQuantity(
-            name=name_prefix + child.name, value=child.data, units=units
+            name=child.name, value=child.data, units=units
         )
 
         # Turns out people can't be trusted to use the same keys here
