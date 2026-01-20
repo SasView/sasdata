@@ -1117,6 +1117,7 @@ class Quantity[QuantityType]:
         self.name = name
 
         self._id_header = id_header
+        # print(f"ID Header: {self._id_header}, Quant: {self.value}")
 
     # TODO: Adding this method as a temporary measure but we need a single
     # method that does this.
@@ -1125,7 +1126,8 @@ class Quantity[QuantityType]:
             return Quantity(
                 value=self.value,
                 units=self.units,
-                standard_error=standard_error.in_units_of(self.units),)
+                standard_error=standard_error.in_units_of(self.units),
+                id_header=self._id_header)
         else:
             raise UnitError(f"Standard error units ({standard_error.units}) "
                             f"are not compatible with value units ({self.units})")
