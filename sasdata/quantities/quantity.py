@@ -1142,12 +1142,10 @@ class Quantity[QuantityType]:
         else:
             return Quantity(self._variance, self.units**2)
 
-    @property
-    def unique_id(self) -> str:
-        return f"{self._id_header}:{hex(self.hash_value)}"
 
-    def _base62_hash(self) -> str:
-        """Encode the hash_value in base62 for better readability"""
+    def unique_id(self) -> str:
+
+        # Encode the number in base62 for better readability
         hashed = ""
         current_hash = self.hash_value
         while current_hash:
@@ -1159,12 +1157,26 @@ class Quantity[QuantityType]:
             else:
                 hashed = f"{chr(61 + digit)}{hashed}"
             current_hash = (current_hash - digit) // 62
-        return hashed
+
+        return f"{self._id_header}:{hashed}"
 
     @property
     def unique_id(self) -> str:
-        """Get a human readable unique id for a data set"""
-        return f"{self._id_header}:{self.name}:{self._base62_hash()}"
+
+        # Encode the number in base62 for better readability
+        hashed = ""
+        current_hash = self.hash_value
+        while current_hash:
+            digit = current_hash % 62
+            if digit < 10:
+                hashed = f"{digit}{hashed}"
+            elif digit < 36:
+                hashed = f"{chr(55 + digit)}{hashed}"
+            else:
+                hashed = f"{chr(61 + digit)}{hashed}"
+            current_hash = (current_hash - digit) // 62
+
+        return f"{self._id_header}:{hashed}"
 
     def standard_deviation(self) -> "Quantity":
         return self.variance**0.5
