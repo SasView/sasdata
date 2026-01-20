@@ -21,10 +21,10 @@ def local_load(path: str) -> SasData:
 
 
 test_file_names = [
-    ("ISIS_1_1", ":0x7e5a2c481e82056d2d69c005af3eb655"),
-    ("cansas1d", ":0xb7d42213981e09c208e32527729f8dc6"),
-    ("MAR07232_rest", ":0x53bd3d9e0644c62c00db705b58a69f55"),
-    ("simpleexamplefile", ":0x2e9b96e912dd0af39b9f44f139d6fc47"),
+    ("ISIS_1_1", ":3qQF1eQnIT9zeTFED0zBJN"),
+    ("cansas1d", ":5asXXNUpxoklY8ZNhhCNkM"),
+    ("MAR07232_rest", ":2Y0qTTb054KSJnJaJv0rFl"),
+    ("simpleexamplefile", ":1PwkbIa5MxxcAiicyHDxB9"),
 ]
 
 
