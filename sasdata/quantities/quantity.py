@@ -1128,6 +1128,7 @@ class Quantity[QuantityType]:
         self.history = QuantityHistory.variable(self)
 
         self._id_header = id_header
+        # print(f"ID Header: {self._id_header}, Quant: {self.value}")
 
     # TODO: Adding this method as a temporary measure but we need a single
     # method that does this.
@@ -1136,7 +1137,8 @@ class Quantity[QuantityType]:
             return Quantity(
                 value=self.value,
                 units=self.units,
-                standard_error=standard_error.in_units_of(self.units),)
+                standard_error=standard_error.in_units_of(self.units),
+                id_header=self._id_header)
         else:
             raise UnitError(f"Standard error units ({standard_error.units}) "
                             f"are not compatible with value units ({self.units})")
@@ -1149,7 +1151,7 @@ class Quantity[QuantityType]:
     def variance(self) -> "Quantity":
         """Get the variance of this object"""
         if self._variance is None:
-            return Quantity(np.zeros_like(self.value), self.units**2, name=self.name, id_header=self._id_header)
+            return Quantity(np.zeros_like(self.value), self.units**2, id_header = self._id_header)
         else:
             return Quantity(self._variance, self.units**2)
 
@@ -1184,13 +1186,11 @@ class Quantity[QuantityType]:
 
     def to_units_of(self, new_units: Unit) -> "Quantity[QuantityType]":
         new_value, new_error = self.in_units_of_with_standard_error(new_units)
-        return Quantity(
-            value=new_value,
-            units=new_units,
-            standard_error=new_error,
-            hash_seed=self._hash_seed,
-            id_header=self._id_header,
-        )
+        return Quantity(value=new_value,
+                        units=new_units,
+                        standard_error=new_error,
+                        hash_seed=self._hash_seed,
+                        id_header=self._id_header)
 
     def variance_in_units_of(self, units: Unit) -> QuantityType:
         """Get the variance of quantity in other units"""
@@ -1443,10 +1443,15 @@ class Quantity[QuantityType]:
 
 
 class NamedQuantity[QuantityType](Quantity[QuantityType]):
-    def __init__(
-        self, name: str, value: QuantityType, units: Unit, standard_error: QuantityType | None = None, id_header=""
-    ):
-        super().__init__(value, units, standard_error=standard_error, hash_seed=name, name=name, id_header=id_header)
+    def __init__(self,
+                 name: str,
+                 value: QuantityType,
+                 units: Unit,
+                 standard_error: QuantityType | None = None,
+                 id_header = ""):
+
+        super().__init__(value, units, standard_error=standard_error, hash_seed=name, id_header=id_header)
+        self.name = name
 
     def __repr__(self):
         return f"[{self.name}] " + super().__repr__()
