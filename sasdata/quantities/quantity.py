@@ -1088,7 +1088,8 @@ class Quantity[QuantityType]:
                  value: QuantityType,
                  units: Unit,
                  standard_error: QuantityType | None = None,
-                 hash_seed = ""):
+                 hash_seed = "",
+                 id_header = ""):
 
         self.value = value
         """ Numerical value of this data, in the specified units"""
@@ -1113,6 +1114,8 @@ class Quantity[QuantityType]:
 
         self.history = QuantityHistory.variable(self)
 
+        self._id_header = id_header
+
     # TODO: Adding this method as a temporary measure but we need a single
     # method that does this.
     def with_standard_error(self, standard_error: "Quantity"):
@@ -1136,6 +1139,10 @@ class Quantity[QuantityType]:
             return Quantity(np.zeros_like(self.value), self.units**2)
         else:
             return Quantity(self._variance, self.units**2)
+
+    @property
+    def unique_id(self) -> str:
+        return f"{self._id_header}:{hex(self.hash_value)}"
 
     def standard_deviation(self) -> "Quantity":
         return self.variance ** 0.5
