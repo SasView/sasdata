@@ -21,8 +21,8 @@ def local_load(path: str) -> SasData:
 
 
 test_file_names = [
-    ("ISIS_1_1", "TK49 c10_SANS:79680:foo:3qQF1eQnIT9zeTFED0zBJN"),
-    ("cansas1d", "Test title:1234:foo:5asXXNUpxoklY8ZNhhCNkM"),
+    ("ISIS_1_1", "TK49 c10_SANS:79680:Q:4TghWEoJi6xxhyeDXhS751"),
+    ("cansas1d", "Test title:1234:Q:440tNBqdx9jvci6CgjmrmD"),
     ("MAR07232_rest", "MAR07232_rest_out.dat:2:/sasentry01/sasdata01/Qx:2Y0qTTb054KSJnJaJv0rFl"),
     ("simpleexamplefile", "::/sasentry01/sasdata01/Q:uoHMeB8mukElC1uLCy7Sd"),
 ]
