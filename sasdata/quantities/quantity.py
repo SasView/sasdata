@@ -440,7 +440,7 @@ class Inv(UnaryOperation):
         clean_a = self.a._clean()
 
         if isinstance(clean_a, Inv):
-            # Removes double negations
+            # Removes double inversions
             return clean_a.a
 
         elif isinstance(clean_a, Neg):
@@ -665,8 +665,11 @@ class Div(BinaryOperation):
         return self.a.evaluate(variables) / self.b.evaluate(variables)
 
     def _derivative(self, hash_value: int) -> Operation:
-        return Sub(Div(self.a.derivative(hash_value), self.b),
-                   Div(Mul(self.a, self.b.derivative(hash_value)), Mul(self.b, self.b)))
+        return Div(
+                    Sub(Mul(self.a.derivative(hash_value), self.b),
+                        Mul(self.a, self.b.derivative(hash_value))),
+                    Mul(self.b, self.b)
+                    )
 
     def _clean_ab(self, a, b):
         if isinstance(a, AdditiveIdentity):
@@ -812,7 +815,6 @@ class Transpose(Operation):
         clean_a = self.a._clean()
         return Transpose(clean_a)
 
-
     def _serialise_parameters(self) -> dict[str, Any]:
         if self.axes is None:
             return { "a": self.a._serialise_json() }
@@ -821,7 +823,6 @@ class Transpose(Operation):
                 "a": self.a._serialise_json(),
                 "axes": list(self.axes)
             }
-
 
     @staticmethod
     def _deserialise(parameters: dict) -> "Operation":
