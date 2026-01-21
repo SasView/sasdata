@@ -69,7 +69,7 @@ class SasData:
                 # TODO: Won't work when there's errors involved. On reflection, we
                 # probably want to avoid creating a new Quantity but at the moment I
                 # can't see a way around it.
-                return Quantity(data_contents, reference_data_content.units, id_header=self._data_contents["Qx"]._id_header)
+                return Quantity(data_contents, reference_data_content.units, name=self._data_contents["Qx"].name, id_header=self._data_contents["Qx"]._id_header)
             case dataset_types.sesans:
                 return self._data_contents["SpinEchoLength"]
             case _:
