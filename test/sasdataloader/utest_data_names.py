@@ -3,6 +3,7 @@ Tests for generation of unique, but reproducible, names for data quantities
 """
 
 import os
+
 import pytest
 
 from sasdata.data import SasData
