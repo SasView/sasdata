@@ -242,13 +242,9 @@ def parse_data(node: etree._Element, version: str, metadata: Metadata) -> dict[s
     uncertainties = set([x for x in keys if x.endswith("dev") and x[:-3] in keys])
     keys = keys.difference(uncertainties)
 
-    id_header = ""
-    if metadata.title is not None:
-        id_header = metadata.title
-    id_header += ":" + ",".join(metadata.run)
     result: dict[str, Quantity] = {}
     for k in keys:
-        result[k] = NamedQuantity(k, np.array(soa[k]), us[k], id_header=id_header)
+        result[k] = NamedQuantity(k, np.array(soa[k]), us[k], id_header=metadata.id_header)
         if k + "dev" in uncertainties:
             result[k] = result[k].with_standard_error(
                 Quantity(np.array(soa[k + "dev"]), us[k + "dev"])
