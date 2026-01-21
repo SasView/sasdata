@@ -1144,7 +1144,7 @@ class Quantity[QuantityType]:
             return Quantity(self._variance, self.units**2)
 
     def _base62_hash(self) -> str:
-        # Encode the number in base62 for better readability
+        """Encode the hash_value in base62 for better readability"""
         hashed = ""
         current_hash = self.hash_value
         while current_hash:
@@ -1160,6 +1160,7 @@ class Quantity[QuantityType]:
 
     @property
     def unique_id(self) -> str:
+        """Get a human readable unique id for a data set"""
         return f"{self._id_header}:{self.name}:{self._base62_hash()}"
 
     def standard_deviation(self) -> "Quantity":
@@ -1446,7 +1447,10 @@ class NamedQuantity[QuantityType](Quantity[QuantityType]):
 
     def to_units_of(self, new_units: Unit) -> "NamedQuantity[QuantityType]":
         new_value, new_error = self.in_units_of_with_standard_error(new_units)
-        return NamedQuantity(value=new_value, units=new_units, standard_error=new_error, name=self.name)
+        return NamedQuantity(value=new_value,
+                             units=new_units,
+                             standard_error=new_error,
+                             name=self.name)
 
     def with_standard_error(self, standard_error: Quantity):
         if standard_error.units.equivalent(self.units):
@@ -1466,7 +1470,6 @@ class NamedQuantity[QuantityType](Quantity[QuantityType]):
     @property
     def string_repr(self):
         return self.name
-
 
 class DerivedQuantity[QuantityType](Quantity[QuantityType]):
     def __init__(self, value: QuantityType, units: Unit, history: QuantityHistory):
