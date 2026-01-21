@@ -74,11 +74,6 @@ def connected_data(node: SASDataGroup, name_prefix="", metadata=None) -> dict[st
     uncertainties = set()
     entries = {}
 
-    title = ""
-    if metadata.title is not None:
-        title = metadata.title
-    id_header = f"{title}:{','.join(metadata.run)}"
-
     for name in node.children:
         child = node.children[name]
 
@@ -87,7 +82,7 @@ def connected_data(node: SASDataGroup, name_prefix="", metadata=None) -> dict[st
         else:
             units = GET_UNITS_FROM_ELSEWHERE
 
-        quantity = NamedQuantity(name=child.name, value=child.data, units=units, id_header=id_header)
+        quantity = NamedQuantity(name=child.name, value=child.data, units=units, id_header=metadata.id_header)
 
         # Turns out people can't be trusted to use the same keys here
         if "uncertainty" in child.attributes or "uncertainties" in child.attributes:
