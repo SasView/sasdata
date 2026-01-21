@@ -145,12 +145,8 @@ def load_quantities(params: AsciiReaderParams, filename: str, metadata: Metadata
                 # should be ignored entirely.
                 print(f"Line {i + 1} skipped.")
                 continue
-    id_header = ""
-    if metadata.title is not None:
-        id_header = metadata.title
-    id_header += ":" + ",".join(metadata.run)
     file_quantities = {
-        name: NamedQuantity(name, arrays[i], unit, id_header=id_header)
+        name: NamedQuantity(name, arrays[i], unit, id_header=metadata.id_header)
         for i, (name, unit) in enumerate(params.columns_included)
     }
     return file_quantities
