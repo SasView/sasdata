@@ -21,7 +21,7 @@ from sasdata.metadata import (
     Source,
     Vec3,
 )
-from sasdata.quantities.quantity import Quantity
+from sasdata.quantities.quantity import NamedQuantity, Quantity
 from sasdata.quantities.units import Unit
 from sasdata.quantities.units import none as unitless
 
@@ -248,7 +248,7 @@ def parse_data(node: etree._Element, version: str, metadata: Metadata) -> dict[s
     id_header += ":" + ",".join(metadata.run)
     result: dict[str, Quantity] = {}
     for k in keys:
-        result[k] = Quantity(np.array(soa[k]), us[k], id_header=id_header)
+        result[k] = NamedQuantity(k, np.array(soa[k]), us[k], id_header=id_header)
         if k + "dev" in uncertainties:
             result[k] = result[k].with_standard_error(
                 Quantity(np.array(soa[k + "dev"]), us[k + "dev"])
