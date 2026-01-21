@@ -569,6 +569,7 @@ class Metadata:
 
     @property
     def id_header(self):
+        """Generate a header for used in the unique_id for datasets"""
         title = ""
         if self.title is not None:
             title = self.title
