@@ -1081,15 +1081,13 @@ class QuantityHistory:
 
 
 class Quantity[QuantityType]:
-
-
     def __init__(self,
                  value: QuantityType,
                  units: Unit,
                  standard_error: QuantityType | None = None,
-                 hash_seed = "",
-                 id_header = ""):
-
+                 hash_seed="",
+                 name="",
+                 id_header=""):
         self.value = value
         """ Numerical value of this data, in the specified units"""
 
@@ -1117,6 +1115,7 @@ class Quantity[QuantityType]:
         self.name = name
 
         self._id_header = id_header
+        self.name = name
         # print(f"ID Header: {self._id_header}, Quant: {self.value}")
 
     # TODO: Adding this method as a temporary measure but we need a single
@@ -1127,7 +1126,9 @@ class Quantity[QuantityType]:
                 value=self.value,
                 units=self.units,
                 standard_error=standard_error.in_units_of(self.units),
-                id_header=self._id_header)
+                name=self.name,
+                id_header=self._id_header,
+            )
         else:
             raise UnitError(f"Standard error units ({standard_error.units}) "
                             f"are not compatible with value units ({self.units})")
@@ -1163,6 +1164,10 @@ class Quantity[QuantityType]:
                 hashed = f"{chr(61 + digit)}{hashed}"
             current_hash = (current_hash - digit) // 62
         return hashed
+
+    @property
+    def unique_id(self) -> str:
+        return f"{self._id_header}:{self.name}:{self._base62_hash()}"
 
     def standard_deviation(self) -> "Quantity":
         return self.variance**0.5
@@ -1434,9 +1439,12 @@ class Quantity[QuantityType]:
 
 
 class NamedQuantity[QuantityType](Quantity[QuantityType]):
-    def __init__(
-        self, name: str, value: QuantityType, units: Unit, standard_error: QuantityType | None = None, id_header=""
-    ):
+    def __init__(self,
+                 name: str,
+                 value: QuantityType,
+                 units: Unit,
+                 standard_error: QuantityType | None = None,
+                 id_header=""):
         super().__init__(value, units, standard_error=standard_error, hash_seed=name, name=name, id_header=id_header)
 
     def __repr__(self):
@@ -1464,10 +1472,6 @@ class NamedQuantity[QuantityType](Quantity[QuantityType]):
     @property
     def string_repr(self):
         return self.name
-
-    @property
-    def unique_id(self) -> str:
-        return f"{self._id_header}:{self.name}:{self._base62_hash()}"
 
 
 class DerivedQuantity[QuantityType](Quantity[QuantityType]):
