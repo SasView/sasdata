@@ -23,18 +23,17 @@ from sasdata.quantities.quantity import (
     Variable,
 )
 
-operation_with_everything = \
-    Div(
-        Pow(
-            Mul(
-                Sub(
-                    Add(
-                        Neg(Inv(MultiplicativeIdentity())),
-                        Ln(Transpose(Variable("x")))),
-                    Log(Constant(7), 2)),
-                AdditiveIdentity()),
-            2),
-        Variable("y"))
+operation_with_everything = Div(
+    Pow(
+        Mul(
+            Sub(Add(Neg(Inv(MultiplicativeIdentity())), Ln(Transpose(Variable("x")))), Log(Constant(7), 2)),
+            AdditiveIdentity(),
+        ),
+        2,
+    ),
+    Variable("y"),
+)
+
 
 def test_serialise_deserialise():
     serialised = operation_with_everything.serialise()
@@ -46,11 +45,8 @@ def test_serialise_deserialise():
 
 @pytest.mark.parametrize(
     "op, summary",
-    [
-        (AdditiveIdentity, "0 [Add.Id.]"),
-        (MultiplicativeIdentity, "1 [Mul.Id.]"),
-        (Operation, "Operation(\n)")
-    ])
+    [(AdditiveIdentity, "0 [Add.Id.]"), (MultiplicativeIdentity, "1 [Mul.Id.]"), (Operation, "Operation(\n)")],
+)
 def test_summary(op, summary):
     f = op()
     assert f.summary() == summary
@@ -73,62 +69,68 @@ def test_binary_summary(op):
     assert f.summary() == f"{op.__name__}(\n  1\n  1\n)"
 
 
-@pytest.mark.parametrize(
-    "op, result",
-    [
-        (AdditiveIdentity, 0),
-        (MultiplicativeIdentity, 1),
-        (Operation, None)
-    ])
+@pytest.mark.parametrize("op, result", [(AdditiveIdentity, 0), (MultiplicativeIdentity, 1), (Operation, None)])
 def test_evaluation(op, result):
     f = op()
     assert f.evaluate({}) == result
 
 
-@pytest.mark.parametrize("op, a, result", [
-    (Neg, 1, -1),
-    (Neg, -7, 7),
-    (Inv, 2, 0.5),
-    (Inv, 0.125, 8),
-    (Ln, e**5, 5),
-    (Ln, sqrt(e), 0.5),
-    ])
+@pytest.mark.parametrize(
+    "op, a, result",
+    [
+        (Neg, 1, -1),
+        (Neg, -7, 7),
+        (Inv, 2, 0.5),
+        (Inv, 0.125, 8),
+        (Ln, e**5, 5),
+        (Ln, sqrt(e), 0.5),
+    ],
+)
 def test_unary_evaluation(op, a, result):
     f = op(Constant(a))
     assert f.evaluate({}) == result
 
 
-@pytest.mark.parametrize("op, a, b, result", [
-    (Add, 1, 1, 2),
-    (Add, 7, 8, 15),
-    (Sub, 1, 1, 0),
-    (Sub, 7, 8, -1),
-    (Mul, 1, 1, 1),
-    (Mul, 7, 8, 56),
-    (Div, 1, 1, 1),
-    (Div, 7, 8, 7.0/8.0),
-    (Dot, [1, 2], [2, 1], 4),
-    (Dot, [7, 8], [8, 7], 112),
-    (Pow, 1, 1, 1),
-    (Pow, 7, 2, 49),
-    (Log, 100, 10, 2),
-    (Log, 256, 2, 8)])
+@pytest.mark.parametrize(
+    "op, a, b, result",
+    [
+        (Add, 1, 1, 2),
+        (Add, 7, 8, 15),
+        (Sub, 1, 1, 0),
+        (Sub, 7, 8, -1),
+        (Mul, 1, 1, 1),
+        (Mul, 7, 8, 56),
+        (Div, 1, 1, 1),
+        (Div, 7, 8, 7.0 / 8.0),
+        (Dot, [1, 2], [2, 1], 4),
+        (Dot, [7, 8], [8, 7], 112),
+        (Pow, 1, 1, 1),
+        (Pow, 7, 2, 49),
+        (Log, 100, 10, 2),
+        (Log, 256, 2, 8),
+    ],
+)
 def test_binary_evaluation(op, a, b, result):
     f = op(Constant(a), b if op == Log or op == Pow else Constant(b))
     assert f.evaluate({}) == result
 
-@pytest.mark.parametrize("op, a, b, result", [
-    (MatMul, np.array([[1, 1], [1, 1]]), np.array([[1, 1], [1, 1]]), np.array([[2, 2], [2, 2]])),
-    (MatMul, np.array([[7, 7], [7, 7]]), np.array([[8, 8], [8, 8]]), np.array([[112, 112], [112, 112]])),
-])
+
+@pytest.mark.parametrize(
+    "op, a, b, result",
+    [
+        (MatMul, np.array([[1, 1], [1, 1]]), np.array([[1, 1], [1, 1]]), np.array([[2, 2], [2, 2]])),
+        (MatMul, np.array([[7, 7], [7, 7]]), np.array([[8, 8], [8, 8]]), np.array([[112, 112], [112, 112]])),
+    ],
+)
 def test_matmul_evaluation(op, a, b, result):
     f = op(Constant(a), Constant(b))
     assert (f.evaluate({}) == result).all()
 
-@pytest.mark.parametrize("op, a, result", [
-    (Transpose, np.array([[1, 2]]), np.array([[1], [2]])),
-    (Transpose, [[1, 2], [3, 4]], [[1, 3], [2, 4]])
-])
+
+@pytest.mark.parametrize(
+    "op, a, result",
+    [(Transpose, np.array([[1, 2]]), np.array([[1], [2]])), (Transpose, [[1, 2], [3, 4]], [[1, 3], [2, 4]])],
+)
 def test_transpose_evaluation(op, a, result):
     f = op(Constant(a))
     assert (f.evaluate({}) == result).all()
@@ -136,11 +138,8 @@ def test_transpose_evaluation(op, a, result):
 
 @pytest.mark.parametrize(
     "op, result",
-    [
-        (AdditiveIdentity, AdditiveIdentity()),
-        (MultiplicativeIdentity, AdditiveIdentity()),
-        (Operation, None)
-    ])
+    [(AdditiveIdentity, AdditiveIdentity()), (MultiplicativeIdentity, AdditiveIdentity()), (Operation, None)],
+)
 def test_derivative(op, result):
     f = op()
     assert f.derivative(Variable("x"), simplify=False) == result
@@ -149,11 +148,16 @@ def test_derivative(op, result):
 x = Variable("x")
 y = Variable("y")
 z = Variable("z")
-@pytest.mark.parametrize("x_over_x", [
-                         Div(x, x),
-                         Mul(Inv(x), x),
-                         Mul(x, Inv(x)),
-])
+
+
+@pytest.mark.parametrize(
+    "x_over_x",
+    [
+        Div(x, x),
+        Mul(Inv(x), x),
+        Mul(x, Inv(x)),
+    ],
+)
 def test_dx_over_x_by_dx_should_be_zero(x_over_x):
     dfdx = x_over_x.derivative(x)
     assert dfdx == AdditiveIdentity()
@@ -162,5 +166,3 @@ def test_dx_over_x_by_dx_should_be_zero(x_over_x):
 def test_d_xyz_by_components_should_be_1():
     f = Mul(Mul(x, y), z)
     assert f.derivative(x).derivative(y).derivative(z) == MultiplicativeIdentity()
-
-
