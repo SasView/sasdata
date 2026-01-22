@@ -782,7 +782,7 @@ class Pow(Operation):
         return Pow(Operation.deserialise_json(parameters["a"]), parameters["power"])
 
     def summary(self, indent_amount: int=0, indent="  "):
-        return (f"{indent_amount*indent}Pow\n" +
+        return (f"{indent_amount*indent}Pow(\n" +
                 self.a.summary(indent_amount+1, indent) + "\n" +
                 f"{(indent_amount+1)*indent}{self.power}\n" +
                 f"{indent_amount*indent})")
@@ -790,6 +790,7 @@ class Pow(Operation):
     def __eq__(self, other):
         if isinstance(other, Pow):
             return self.a == other.a and self.power == other.power
+        return False
 
 
 #
@@ -834,9 +835,21 @@ class Transpose(Operation):
             return Transpose(
                 a=Operation.deserialise_json(parameters["a"]))
 
+    def summary(self, indent_amount: int=0, indent="  "):
+        if self.axes is None:
+            return (f"{indent_amount*indent}Transpose(\n" +
+                    self.a.summary(indent_amount+1, indent) + "\n" +
+                    f"{indent_amount*indent})")
+        else:
+            return (f"{indent_amount*indent}Transpose(\n" +
+                    self.a.summary(indent_amount+1, indent) + "\n" +
+                    f"{(indent_amount+1)*indent}{self.axes}\n" +
+                    f"{indent_amount*indent})")
+
     def __eq__(self, other):
         if isinstance(other, Transpose):
             return other.a == self.a
+        return False
 
 
 class Dot(BinaryOperation):
