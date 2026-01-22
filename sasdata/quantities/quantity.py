@@ -713,27 +713,52 @@ class Div(BinaryOperation):
             return Div(a, b)
 
 
-class Log(BinaryOperation):
+class Log(Operation):
 
     serialisation_name = "log"
 
+    def __init__(self, a: Operation, base: float):
+        self.a = a
+        self.base = base
+
     def evaluate(self, variables: dict[int, T]) -> Operation:
-        return log(self.a.evaluate(variables), self.b.evaluate(variables))
+        return log(self.a.evaluate(variables), self.base)
 
     def _derivative(self, hash_value: int) -> Operation:
-        return Inv(Mul(self.a, Ln(self.b)))
+        return Inv(Mul(self.a, Ln(Constant(self.base))))
 
-    def _clean_ab(self, a, b):
+    def _clean_ab(self) -> Operation:
+        a = self.a._clean()
+
         if isinstance(a, MultiplicativeIdentity):
             # Convert log(1) to 0
             return AdditiveIdentity()
 
-        elif a == b:
-            # Convert log(b) to 1
+        elif a == self.base:
+            # Convert log(base) to 1
             return MultiplicativeIdentity()
 
         else:
-            return Log(a, b)
+            return Log(a, self.base)
+
+    def _serialise_parameters(self) -> dict[str, Any]:
+        return {"a": Operation._serialise_json(self.a),
+                "base": self.base}
+
+    @staticmethod
+    def _deserialise(parameters: dict) -> "Operation":
+        return Log(Operation.deserialise_json(parameters["a"]), parameters["base"])
+
+    def summary(self, indent_amount: int=0, indent="  "):
+        return (f"{indent_amount*indent}Log(\n" +
+                self.a.summary(indent_amount+1, indent) + "\n" +
+                f"{(indent_amount+1)*indent}{self.base}\n" +
+                f"{indent_amount*indent})")
+
+    def __eq__(self, other):
+        if isinstance(other, Log):
+            return self.a == other.a and self.base == other.base
+        return False
 
 
 class Pow(Operation):

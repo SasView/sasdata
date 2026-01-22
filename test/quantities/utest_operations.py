@@ -31,7 +31,7 @@ operation_with_everything = \
                     Add(
                         Neg(Inv(MultiplicativeIdentity())),
                         Ln(Transpose(Variable("x")))),
-                    Log(Constant(7), Constant(2))),
+                    Log(Constant(7), 2)),
                 AdditiveIdentity()),
             2),
         Variable("y"))
@@ -69,7 +69,7 @@ def test_unary_summary(op):
 
 @pytest.mark.parametrize("op", [Add, Div, Dot, Log, MatMul, Mul, Pow, Sub])
 def test_binary_summary(op):
-    f = op(Constant(1), 1 if op == Pow else Constant(1))
+    f = op(Constant(1), 1 if op == Log or op == Pow else Constant(1))
     assert f.summary() == f"{op.__name__}(\n  1\n  1\n)"
 
 
@@ -114,7 +114,7 @@ def test_unary_evaluation(op, a, result):
     (Log, 100, 10, 2),
     (Log, 256, 2, 8)])
 def test_binary_evaluation(op, a, b, result):
-    f = op(Constant(a), b if op == Pow else Constant(b))
+    f = op(Constant(a), b if op == Log or op == Pow else Constant(b))
     assert f.evaluate({}) == result
 
 @pytest.mark.parametrize("op, a, b, result", [
