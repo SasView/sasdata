@@ -1082,14 +1082,13 @@ class QuantityHistory:
 
 
 class Quantity[QuantityType]:
-
-
     def __init__(self,
                  value: QuantityType,
                  units: Unit,
                  standard_error: QuantityType | None = None,
-                 hash_seed = ""):
-
+                 hash_seed="",
+                 name="",
+                 id_header=""):
         self.value = value
         """ Numerical value of this data, in the specified units"""
 
@@ -1113,6 +1112,9 @@ class Quantity[QuantityType]:
 
         self.history = QuantityHistory.variable(self)
 
+        self._id_header = id_header
+        self.name = name
+
     # TODO: Adding this method as a temporary measure but we need a single
     # method that does this.
     def with_standard_error(self, standard_error: "Quantity"):
@@ -1120,7 +1122,10 @@ class Quantity[QuantityType]:
             return Quantity(
                 value=self.value,
                 units=self.units,
-                standard_error=standard_error.in_units_of(self.units),)
+                standard_error=standard_error.in_units_of(self.units),
+                name=self.name,
+                id_header=self._id_header,
+            )
         else:
             raise UnitError(f"Standard error units ({standard_error.units}) "
                             f"are not compatible with value units ({self.units})")
@@ -1133,9 +1138,29 @@ class Quantity[QuantityType]:
     def variance(self) -> "Quantity":
         """ Get the variance of this object"""
         if self._variance is None:
-            return Quantity(np.zeros_like(self.value), self.units**2)
+            return Quantity(np.zeros_like(self.value), self.units**2, name=self.name, id_header=self._id_header)
         else:
             return Quantity(self._variance, self.units**2)
+
+    def _base62_hash(self) -> str:
+        """Encode the hash_value in base62 for better readability"""
+        hashed = ""
+        current_hash = self.hash_value
+        while current_hash:
+            digit = current_hash % 62
+            if digit < 10:
+                hashed = f"{digit}{hashed}"
+            elif digit < 36:
+                hashed = f"{chr(55 + digit)}{hashed}"
+            else:
+                hashed = f"{chr(61 + digit)}{hashed}"
+            current_hash = (current_hash - digit) // 62
+        return hashed
+
+    @property
+    def unique_id(self) -> str:
+        """Get a human readable unique id for a data set"""
+        return f"{self._id_header}:{self.name}:{self._base62_hash()}"
 
     def standard_deviation(self) -> "Quantity":
         return self.variance ** 0.5
@@ -1152,7 +1177,8 @@ class Quantity[QuantityType]:
         return Quantity(value=new_value,
                         units=new_units,
                         standard_error=new_error,
-                        hash_seed=self._hash_seed)
+                        hash_seed=self._hash_seed,
+                        id_header=self._id_header)
 
     def variance_in_units_of(self, units: Unit) -> QuantityType:
         """ Get the variance of quantity in other units """
@@ -1411,10 +1437,9 @@ class NamedQuantity[QuantityType](Quantity[QuantityType]):
                  name: str,
                  value: QuantityType,
                  units: Unit,
-                 standard_error: QuantityType | None = None):
-
-        super().__init__(value, units, standard_error=standard_error, hash_seed=name)
-        self.name = name
+                 standard_error: QuantityType | None = None,
+                 id_header=""):
+        super().__init__(value, units, standard_error=standard_error, hash_seed=name, name=name, id_header=id_header)
 
     def __repr__(self):
         return f"[{self.name}] " + super().__repr__()
@@ -1432,7 +1457,9 @@ class NamedQuantity[QuantityType](Quantity[QuantityType]):
                 value=self.value,
                 units=self.units,
                 standard_error=standard_error.in_units_of(self.units),
-                name=self.name)
+                name=self.name,
+                id_header=self._id_header,
+            )
 
         else:
             raise UnitError(f"Standard error units ({standard_error.units}) "

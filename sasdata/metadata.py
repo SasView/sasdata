@@ -567,6 +567,14 @@ class Metadata:
             raw=MetaNode.from_json(obj["raw"]),
         )
 
+    @property
+    def id_header(self):
+        """Generate a header for used in the unique_id for datasets"""
+        title = ""
+        if self.title is not None:
+            title = self.title
+        return f"{title}:{",".join(self.run)}"
+
     def as_h5(self, f: h5py.Group):
         """Export data onto an HDF5 group"""
         for idx, run in enumerate(self.run):
