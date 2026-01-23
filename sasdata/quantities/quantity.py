@@ -1114,7 +1114,6 @@ class Quantity[QuantityType]:
 
         self._id_header = id_header
         self.name = name
-        # print(f"ID Header: {self._id_header}, Quant: {self.value}")
 
     # TODO: Adding this method as a temporary measure but we need a single
     # method that does this.
