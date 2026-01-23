@@ -21,7 +21,7 @@ from sasdata.metadata import (
     Source,
     Vec3,
 )
-from sasdata.quantities.quantity import Quantity
+from sasdata.quantities.quantity import NamedQuantity, Quantity
 from sasdata.quantities.units import Unit
 from sasdata.quantities.units import none as unitless
 
@@ -205,7 +205,7 @@ def parse_sample(node: etree._Element, version: str) -> Sample:
     )
 
 
-def parse_data(node: etree._Element, version: str) -> dict[str, Quantity]:
+def parse_data(node: etree._Element, version: str, metadata: Metadata) -> dict[str, Quantity]:
     """Parse scattering data"""
     aos = []
     keys = set()
@@ -244,7 +244,7 @@ def parse_data(node: etree._Element, version: str) -> dict[str, Quantity]:
 
     result: dict[str, Quantity] = {}
     for k in keys:
-        result[k] = Quantity(np.array(soa[k]), us[k])
+        result[k] = NamedQuantity(k, np.array(soa[k]), us[k], id_header=metadata.id_header)
         if k + "dev" in uncertainties:
             result[k] = result[k].with_standard_error(
                 Quantity(np.array(soa[k + "dev"]), us[k + "dev"])
@@ -323,7 +323,7 @@ def load_data(filename: str) -> dict[str, SasData]:
         datacount = 0
         for n in entry.findall(f"{version}:SASdata", ns):
             datacount += 1
-            data_set = parse_data(n, version)
+            data_set = parse_data(n, version, metadata)
             data = data_set
             break
 

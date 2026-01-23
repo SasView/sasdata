@@ -21,7 +21,7 @@ from sasdata.guess import (
     guess_starting_position,
 )
 from sasdata.metadata import Metadata, MetaNode
-from sasdata.quantities.quantity import Quantity
+from sasdata.quantities.quantity import NamedQuantity, Quantity
 from sasdata.quantities.units import NamedUnit
 
 
@@ -121,7 +121,7 @@ def split_line(separator_dict: dict[str, bool], line: str) -> list[str]:
 
 
 # TODO: Implement error handling.
-def load_quantities(params: AsciiReaderParams, filename: str) -> dict[str, Quantity]:
+def load_quantities(params: AsciiReaderParams, filename: str, metadata: Metadata) -> dict[str, Quantity]:
     """Load a list of quantities from the filename based on the params."""
     with open(filename) as ascii_file:
         lines = ascii_file.readlines()
@@ -146,7 +146,7 @@ def load_quantities(params: AsciiReaderParams, filename: str) -> dict[str, Quant
                 print(f"Line {i + 1} skipped.")
                 continue
     file_quantities = {
-        name: Quantity(arrays[i], unit)
+        name: NamedQuantity(name, arrays[i], unit, id_header=metadata.id_header)
         for i, (name, unit) in enumerate(params.columns_included)
     }
     return file_quantities
@@ -194,7 +194,6 @@ def load_data(params: AsciiReaderParams) -> list[SasData]:
     list contained in the params."""
     loaded_data: list[SasData] = []
     for filename in params.filenames:
-        quantities = load_quantities(params, filename)
         raw_metadata = import_metadata(
             params.metadata.all_file_metadata(path.basename(filename))
         )
@@ -207,6 +206,7 @@ def load_data(params: AsciiReaderParams) -> list[SasData]:
             process=None,
             raw=raw_metadata,
         )
+        quantities = load_quantities(params, filename, metadata)
         data = SasData(
             path.basename(filename),
             merge_uncertainties(quantities),
