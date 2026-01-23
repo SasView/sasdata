@@ -38,7 +38,6 @@ test_file_names = [
 def test_quantity_name(x):
     (f, expected) = x
     data = [v for v in local_load(f"data/{f}")][0]
-    print(data.metadata.title)
     if data.metadata.title is not None:
         assert data.abscissae.unique_id.startswith(data.metadata.title)
     assert data.abscissae.unique_id == expected
