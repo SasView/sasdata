@@ -317,7 +317,7 @@ def _format_unit_structure(unit: str | None = None) -> list[str]:
     all_prefixes = list(PREFIX.keys())
     all_prefixes.extend(list(SHORT_PREFIX.keys()))
     for prefix in all_prefixes:
-        unit = unit.replace(prefix + "*", prefix)
+        unit = unit.replace("".join([prefix, "*"]), prefix)
     # a^-m*b^-n -> a^-m b^-n
     unit = unit.replace('*', ' ')
     # invUnit or 1/unit -> /unit
