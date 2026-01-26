@@ -88,7 +88,7 @@ def position_and_wavelength_to_q(dx: float, dy: float, detector_distance: float,
     plane_dist = math.sqrt(dx * dx + dy * dy)
     # Half of the scattering angle
     theta = 0.5 * math.atan(plane_dist / detector_distance)
-    return (4.0 * math.pi / wavelength) * math.sin(theta)
+    return (2.0* TwoPi / wavelength) * math.sin(theta)
 
 
 def get_q_compo(dx: float, dy: float, detector_distance: float, wavelength: float, compo: str | None = None) -> float:
@@ -100,7 +100,7 @@ def get_q_compo(dx: float, dy: float, detector_distance: float, wavelength: floa
         if dx >= 0:
             angle_xy = 0
         else:
-            angle_xy = math.pi
+            angle_xy = Pi
     else:
         angle_xy = math.atan(dx / dy)
 
@@ -121,9 +121,9 @@ def flip_phi(phi: float) -> float:
     :return: phi in >=0 and <=2Pi
     """
     if phi < 0:
-        phi_out = phi + (2 * math.pi)
-    elif phi > (2 * math.pi):
-        phi_out = phi - (2 * math.pi)
+        phi_out = phi + (TwoPi)
+    elif phi > (TwoPi):
+        phi_out = phi % TwoPi
     else:
         phi_out = phi
     return phi_out
