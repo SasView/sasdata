@@ -19,6 +19,7 @@ PYTHONPATH=../src/ python2  -m sasmanipulations.test.utest_averaging DataInfoTes
 
 # TODO: copy the meta data from the 2D object to the resulting 1D object
 import math
+from sasdata.quantities.constants import Pi, TwoPi
 from warnings import warn
 
 import numpy as np
@@ -53,7 +54,7 @@ from sasdata.data_util.averaging import (
     Sectorcut as AvgSectorcut,
 )
 from sasdata.data_util.averaging import (
-    SectorPhi as AvgSectorPhi,
+    WedgePhi as AvgSectorPhi,
 )
 from sasdata.data_util.averaging import (
     SectorQ as AvgSectorQ,
@@ -88,7 +89,7 @@ def position_and_wavelength_to_q(dx: float, dy: float, detector_distance: float,
     plane_dist = math.sqrt(dx * dx + dy * dy)
     # Half of the scattering angle
     theta = 0.5 * math.atan(plane_dist / detector_distance)
-    return (2.0* TwoPi / wavelength) * math.sin(theta)
+    return (2.0 * TwoPi / wavelength) * math.sin(theta)
 
 
 def get_q_compo(dx: float, dy: float, detector_distance: float, wavelength: float, compo: str | None = None) -> float:
@@ -450,6 +451,9 @@ class Ring:
     """
     def __init__(self, r_min=0.0, r_max=0.0, center_x=0.0, center_y=0.0, nbins=36):
         self._impl = AvgRing(r_range=(r_min, r_max), center=(center_x, center_y),nbins=nbins)
+        self.nbins_phi = nbins
+        # new attribute
+        self.nbins = nbins
 
     def __call__(self, data2D):
         return self._impl(data2D)
@@ -460,10 +464,16 @@ class SectorPhi:
     Backwards-compatible name for angular sector averaging.
     Delegates to new SectorPhi/WedgePhi implementation.
     """
-    def __init__(self, r_min=0.0, r_max=0.0, phi_min=0.0, phi_max=2 * math.pi, center_x=0.0, center_y=0.0, nbins=20):
+    def __init__(self, r_min=0.0, r_max=0.0, phi_min=0.0, phi_max = TwoPi, center_x=0.0, center_y=0.0, nbins=20):
         # SectorPhi in new module is essentially WedgePhi; pass through phi_range and nbins
         self._impl = AvgSectorPhi(r_range=(r_min, r_max), phi_range=(phi_min, phi_max),center=(center_x, center_y),
                                   nbins=nbins)
+        # Ensure legacy attribute names exist on the instance (defensive).
+        self.r_min = float(r_min)
+        self.r_max = float(r_max)
+        self.phi_min = float(phi_min)
+        self.phi_max = float(phi_max)
+        self.nbins = int(nbins)
 
     def __call__(self, data2D):
         return self._impl(data2D)
@@ -476,7 +486,7 @@ class SectorQ:
     New signature: SectorQ(r_range, phi_range=(0,2pi), nbins=100, fold=True)
     Keeps the same default folding behaviour (fold True).
     """
-    def __init__(self, r_min, r_max, phi_min=0, phi_max=2 * math.pi, center_x=0.0, center_y=0.0, nbins=20, base=None):
+    def __init__(self, r_min, r_max, phi_min=0, phi_max=TwoPi, center_x=0.0, center_y=0.0, nbins=20, base=None):
         self._impl = AvgSectorQ(r_range=(r_min, r_max), phi_range=(phi_min, phi_max), center=(center_x, center_y),
                                 nbins=nbins, fold=True)
 
@@ -487,7 +497,7 @@ class WedgePhi:
     """
     Wrapper for new WedgePhi (behaviour matches legacy WedgePhi expectations).
     """
-    def __init__(self, r_min, r_max, phi_min=0, phi_max=2 * math.pi, center_x=0.0, center_y=0.0, nbins=20):
+    def __init__(self, r_min, r_max, phi_min=0, phi_max=TwoPi, center_x=0.0, center_y=0.0, nbins=20):
         self._impl = AvgWedgePhi(r_range=(r_min, r_max), phi_range=(phi_min, phi_max), center=(center_x, center_y),
                                  nbins=nbins)
 
@@ -498,7 +508,7 @@ class WedgeQ:
     """
     Wrapper for new WedgeQ (behaviour matches legacy WedgeQ expectations).
     """
-    def __init__(self, r_min, r_max, phi_min=0, phi_max=2 * math.pi, center_x=0.0, center_y=0.0, nbins=20):
+    def __init__(self, r_min, r_max, phi_min=0, phi_max=TwoPi, center_x=0.0, center_y=0.0, nbins=20):
         self._impl = AvgWedgeQ(r_range=(r_min, r_max), phi_range=(phi_min, phi_max), center=(center_x, center_y),
                                 nbins=nbins)
 
@@ -511,7 +521,7 @@ class WedgeQ:
 class Ringcut:
     def __init__(self, r_min=0.0, r_max=0.0, center_x=0.0, center_y=0.0):
         # center_x, center_y ignored for compatibility
-        self._impl = AvgRingcut(r_range=(r_min, r_max), phi_range=(0.0, 2 * math.pi), center=(center_x, center_y))
+        self._impl = AvgRingcut(r_range=(r_min, r_max), phi_range=(0.0, TwoPi), center=(center_x, center_y))
 
     def __call__(self, data2D):
         return self._impl(data2D)
@@ -530,7 +540,7 @@ class Boxcut:
 
 
 class Sectorcut:
-    def __init__(self, phi_min=0.0, phi_max=math.pi, center_x=0.0, center_y=0.0):
+    def __init__(self, phi_min=0.0, phi_max=Pi, center_x=0.0, center_y=0.0):
         # The new Sectorcut expects a phi_range; set radial range to full image
         self._impl = AvgSectorcut(phi_range=(phi_min, phi_max), center=(center_x, center_y))
 

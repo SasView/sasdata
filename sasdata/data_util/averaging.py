@@ -9,6 +9,7 @@ from sasdata.data_util.binning import DirectionalAverage
 from sasdata.data_util.interval import IntervalType
 from sasdata.data_util.roi import CartesianROI, PolarROI
 from sasdata.dataloader.data_info import Data1D, Data2D
+from sasdata.quantities.constants import Pi, TwoPi
 
 
 class Boxsum(CartesianROI):
@@ -277,6 +278,9 @@ class Ring(PolarROI):
         :param nbins: The number of bins data is sorted into along Phi the axis
         """
         super().__init__(r_range=r_range, center=center)
+        # backward-compatible alias expected by older tests / callers
+        self.nbins_phi = nbins
+        # new attribute
         self.nbins = nbins
 
     def __call__(self, data2d: Data2D = None) -> Data1D:
@@ -322,7 +326,7 @@ class SectorQ(PolarROI):
     Data1D object where intensity is given as a function of Q only.
     """
 
-    def __init__(self, r_range: tuple[float, float], phi_range: tuple[float, float] = (0.0, 2*np.pi), center: tuple[float, float] = (0.0, 0.0), nbins: int = 100, fold: bool = True) -> None:
+    def __init__(self, r_range: tuple[float, float], phi_range: tuple[float, float] = (0.0, TwoPi), center: tuple[float, float] = (0.0, 0.0), nbins: int = 100, fold: bool = True) -> None:
         """
         Set up the ROI boundaries, the binning of the output 1D data, and fold.
 
@@ -353,13 +357,13 @@ class SectorQ(PolarROI):
         # We won't need to convert back later because we're plotting against Q.
         phi_offset = self.phi_min
         self.phi_min = 0.0
-        self.phi_max = (self.phi_max - phi_offset) % (2 * np.pi)
-        self.phi_data = (self.phi_data - phi_offset) % (2 * np.pi)
+        self.phi_max = (self.phi_max - phi_offset) % (TwoPi)
+        self.phi_data = (self.phi_data - phi_offset) % (TwoPi)
 
         major_lims = (self.r_min, self.r_max)
         minor_lims = (self.phi_min, self.phi_max)
         # Secondary region of interest covers angles on opposite side of origin
-        minor_lims_alt = (self.phi_min + np.pi, self.phi_max + np.pi)
+        minor_lims_alt = (self.phi_min + Pi, self.phi_max + Pi)
 
         primary_region = DirectionalAverage(major_axis=self.q_data,
                                             minor_axis=self.phi_data,
@@ -431,7 +435,7 @@ class WedgeQ(PolarROI):
     Data1D object where intensity is given as a function of Q only.
     """
 
-    def __init__(self, r_range: tuple[float, float], phi_range: tuple[float, float] = (0.0, 2*np.pi), center: tuple[float, float] = (0.0, 0.0),nbins: int = 100) -> None:
+    def __init__(self, r_range: tuple[float, float], phi_range: tuple[float, float] = (0.0, TwoPi), center: tuple[float, float] = (0.0, 0.0),nbins: int = 100) -> None:
         """
         Set up the ROI boundaries, and the binning of the output 1D data.
 
@@ -458,8 +462,8 @@ class WedgeQ(PolarROI):
         # We won't need to convert back later because we're plotting against Q.
         phi_offset = self.phi_min
         self.phi_min = 0.0
-        self.phi_max = (self.phi_max - phi_offset) % (2 * np.pi)
-        self.phi_data = (self.phi_data - phi_offset) % (2 * np.pi)
+        self.phi_max = (self.phi_max - phi_offset) % (TwoPi)
+        self.phi_data = (self.phi_data - phi_offset) % (TwoPi)
 
         # Averaging takes place between radial and angular limits
         major_lims = (self.r_min, self.r_max)
@@ -492,7 +496,7 @@ class WedgePhi(PolarROI):
     Data1D object where intensity is given as a function of Q only.
     """
 
-    def __init__(self, r_range: tuple[float, float], phi_range: tuple[float, float] = (0.0, 2*np.pi), center: tuple[float, float] = (0.0, 0.0), nbins: int = 100) -> None:
+    def __init__(self, r_range: tuple[float, float], phi_range: tuple[float, float] = (0.0, TwoPi), center: tuple[float, float] = (0.0, 0.0), nbins: int = 100) -> None:
         """
         Set up the ROI boundaries, and the binning of the output 1D data.
 
@@ -519,8 +523,8 @@ class WedgePhi(PolarROI):
         # Remember to transform back afterward as we're plotting against phi.
         phi_offset = self.phi_min
         self.phi_min = 0.0
-        self.phi_max = (self.phi_max - phi_offset) % (2 * np.pi)
-        self.phi_data = (self.phi_data - phi_offset) % (2 * np.pi)
+        self.phi_max = (self.phi_max - phi_offset) % (TwoPi)
+        self.phi_data = (self.phi_data - phi_offset) % (TwoPi)
 
         # Averaging takes place between angular and radial limits
         # When phi_max and phi_min have the same angle, ROI is a full circle.
@@ -560,6 +564,24 @@ class SectorPhi(WedgePhi):
     # scripts, SectorPhi was never used by SasView. The functionality is now in
     # use through WedgeSlicer.py, so the rewritten version of this class has
     # been named WedgePhi.
+    # Backwards-compatible constructor that accepts legacy keyword names
+    # (r_min, r_max, phi_min, phi_max) and forwards them to the modern
+    # initializer used by the parent classes.
+    def __init__(self, r_min: float, r_max: float,
+                phi_min: float = 0.0, phi_max: float = TwoPi,
+                center: tuple[float, float] = (0.0, 0.0),
+                nbins: int = 100) -> None:
+
+    # Forward to WedgePhi using the tuple-based it expects.
+
+        super().__init__(r_range=(self.r_min, self.r_max),phi_range=(self.phi_min, self.phi_max), center=center,nbins=self.nbins)
+        
+        # Ensure legacy attribute names exist on the instance (defensive).
+        self.r_min = float(r_min)
+        self.r_max = float(r_max)
+        self.phi_min = float(phi_min)
+        self.phi_max = float(phi_max)
+        self.nbins = int(nbins)
 
 ################################################################################
 
@@ -575,7 +597,7 @@ class Ringcut(PolarROI):
     in anti-clockwise starting from the x- axis on the left-hand side
     """
 
-    def __init__(self, r_range: tuple[float, float] = (0.0, 0.0), phi_range: tuple[float, float] = (0.0, 2*np.pi), center: tuple[float, float] = (0.0, 0.0)):
+    def __init__(self, r_range: tuple[float, float] = (0.0, 0.0), phi_range: tuple[float, float] = (0.0, TwoPi), center: tuple[float, float] = (0.0, 0.0)):
 
         super().__init__(r_range, phi_range, center)
 
@@ -631,7 +653,7 @@ class Sectorcut(PolarROI):
     and (phi_max-phi_min) should not be larger than pi
     """
 
-    def __init__(self, phi_range: tuple[float, float] = (0.0, np.pi), center: tuple[float, float] = (0.0, 0.0)):
+    def __init__(self, phi_range: tuple[float, float] = (0.0, Pi), center: tuple[float, float] = (0.0, 0.0)):
         super().__init__(r_range=(0, np.inf), phi_range=phi_range, center=center)
 
     def __call__(self, data2D: Data2D) -> np.ndarray[bool]:
@@ -650,9 +672,9 @@ class Sectorcut(PolarROI):
 
         phi_offset = self.phi_min
         self.phi_min = 0.0
-        self.phi_max = (self.phi_max - phi_offset) % (2 * np.pi)
-        self.phi_data = (self.phi_data - phi_offset) % (2 * np.pi)
-        phi_shifted = self.phi_data - np.pi
+        self.phi_max = (self.phi_max - phi_offset) % (TwoPi)
+        self.phi_data = (self.phi_data - phi_offset) % (TwoPi)
+        phi_shifted = self.phi_data - Pi
 
         # Determine angular bounds for both upper and lower half of image
         phi_min_angle, phi_max_angle = (self.phi_min, self.phi_max)

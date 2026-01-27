@@ -5,7 +5,7 @@ import unittest
 
 import numpy as np
 from scipy import integrate
-
+from sasdata.quantities.constants import Pi, TwoPi
 from sasdata.data_util.averaging import CircularAverage, Ring, SectorQ, WedgePhi, WedgeQ
 from test.sasmanipulations.helper import CircularTestingMatrix, MatrixToData2D
 
@@ -188,7 +188,7 @@ class SectorQTests(unittest.TestCase):
         r_min = 0
         r_max = 1
         phi_min = 0
-        phi_max = np.pi
+        phi_max = Pi
         nbins = 100
         # base = 10
 
@@ -222,8 +222,8 @@ class SectorQTests(unittest.TestCase):
 
         r_min = 0
         r_max = 0.9 * averager_data.qmax
-        phi_min = np.pi/6
-        phi_max = 5*np.pi/6
+        phi_min = Pi/6
+        phi_max = 5*Pi/6
         nbins = int(test_data.matrix_size * np.sqrt(2)/4)  # usually reliable
 
         wedge_object = SectorQ(r_range=(r_min, r_max), phi_range=(phi_min,phi_max), nbins=nbins)
@@ -238,8 +238,8 @@ class SectorQTests(unittest.TestCase):
         # to the one specified is also graphed as negative Q values. Therefore,
         # the area of this other half needs to be accounted for.
         expected_area += test_data.area_under_region(r_min=r_min, r_max=r_max,
-                                                     phi_min=phi_min+np.pi,
-                                                     phi_max=phi_max+np.pi)
+                                                     phi_min=phi_min+Pi,
+                                                     phi_max=phi_max+Pi)
         actual_area = integrate.simpson(data1d.y, data1d.x)
 
         self.assertAlmostEqual(actual_area, expected_area, 1)
@@ -255,8 +255,8 @@ class SectorQTests(unittest.TestCase):
 
         r_min = 0
         r_max = 0.9 * averager_data.qmax
-        phi_min = np.pi/6
-        phi_max = 5*np.pi/6
+        phi_min = Pi/6
+        phi_max = 5*Pi/6
         nbins = int(test_data.matrix_size * np.sqrt(2)/4)  # usually reliable
 
         wedge_object = SectorQ(r_range=(r_min, r_max), phi_range=(phi_min,phi_max), nbins=nbins)
@@ -271,8 +271,8 @@ class SectorQTests(unittest.TestCase):
         # the origin to the one specified are averaged with points from the
         # specified sector.
         expected_area += test_data.area_under_region(r_min=r_min, r_max=r_max,
-                                                     phi_min=phi_min+np.pi,
-                                                     phi_max=phi_max+np.pi)
+                                                     phi_min=phi_min+Pi,
+                                                     phi_max=phi_max+Pi)
         expected_area /= 2
         actual_area = integrate.simpson(data1d.y, data1d.x)
 
@@ -294,7 +294,7 @@ class WedgeQTests(unittest.TestCase):
         r_min = 1
         r_max = 2
         phi_min = 0
-        phi_max = np.pi
+        phi_max = Pi
         nbins = 10
 
         wedge_object = WedgeQ(r_range=(r_min, r_max), phi_range=(phi_min,phi_max), nbins=nbins)
@@ -316,8 +316,8 @@ class WedgeQTests(unittest.TestCase):
 
         r_min = 0.1 * averager_data.qmax
         r_max = 0.9 * averager_data.qmax
-        phi_min = np.pi/6
-        phi_max = 5*np.pi/6
+        phi_min = Pi/6
+        phi_max = 5*Pi/6
         nbins = int(test_data.matrix_size * np.sqrt(2)/4)  # usually reliable
 
         wedge_object = WedgeQ(r_range=(r_min, r_max), phi_range=(phi_min,phi_max), nbins=nbins)
@@ -346,7 +346,7 @@ class WedgePhiTests(unittest.TestCase):
         r_min = 1
         r_max = 2
         phi_min = 0
-        phi_max = np.pi
+        phi_max = Pi
         nbins = 100
         # base = 10
 
@@ -379,8 +379,8 @@ class WedgePhiTests(unittest.TestCase):
 
         r_min = 0.1 * averager_data.qmax
         r_max = 0.9 * averager_data.qmax
-        phi_min = np.pi/6
-        phi_max = 5*np.pi/6
+        phi_min = Pi/6
+        phi_max = 5*Pi/6
         nbins = int(test_data.matrix_size * np.sqrt(2)/4)  # usually reliable
 
         wedge_object = WedgePhi(r_range=(r_min, r_max), phi_range=(phi_min,phi_max), nbins=nbins)

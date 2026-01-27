@@ -3,7 +3,7 @@ Shared test helpers for averaging tests.
 """
 import numpy as np
 from scipy import integrate
-
+from sasdata.quantities.constants import TwoPi
 from sasdata.dataloader import data_info
 
 
@@ -200,7 +200,7 @@ class CircularTestingMatrix:
         # The sinusoidal part is shifted up by 1 so its average is never 0
         self.matrix = radius * (1 + np.sin(self.freq * angle))
 
-    def area_under_region(self, r_min=0, r_max=1, phi_min=0, phi_max=2*np.pi):
+    def area_under_region(self, r_min=0, r_max=1, phi_min=0, phi_max=TwoPi):
         """
         Integral of the testing matrix along the major axis, between the limits
         specified. This can be compared to the integral under the 1D data
