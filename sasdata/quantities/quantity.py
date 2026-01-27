@@ -451,11 +451,11 @@ class Inv(UnaryOperation):
 class Ln(UnaryOperation):
     serialisation_name = "ln"
 
-    def evaluate(self, variables: dict[int, T]) -> Operation:
+    def evaluate(self, variables: dict[int, T]) -> T:
         return log(self.a.evaluate(variables))
 
     def _derivative(self, hash_value: int) -> Operation:
-        return Inv(self.a)
+        return Div(self.a._derivative(hash_value), self.a)
 
     def _clean(self, a):
         clean_a = self.a._clean()
@@ -470,6 +470,30 @@ class Ln(UnaryOperation):
 
         else:
             return Log(clean_a)
+
+
+class Exp(UnaryOperation):
+    serialisation_name = "exp"
+
+    def evaluate(self, variables: dict[int, T]) -> T:
+        return e**self.a.evaluate(variables)
+
+    def _derivative(self, hash_value: int) -> Operation:
+        return Mul(self.a._derivative(hash_value), Exp(self.a))
+
+    def _clean(self, a):
+        clean_a = self.a._clean()
+
+        if isinstance(a, MultiplicativeIdentity):
+            # Convert e**1 to e
+            return e
+
+        elif isinstance(a, AdditiveIdentity):
+            # Convert e**0 to 1
+            return 1
+
+        else:
+            return Exp(clean_a)
 
 
 class BinaryOperation(Operation):
@@ -703,11 +727,11 @@ class Log(Operation):
         self.a = a
         self.base = base
 
-    def evaluate(self, variables: dict[int, T]) -> Operation:
+    def evaluate(self, variables: dict[int, T]) -> T:
         return log(self.a.evaluate(variables), self.base)
 
     def _derivative(self, hash_value: int) -> Operation:
-        return Inv(Mul(self.a, Ln(Constant(self.base))))
+        return Div(self.a.derivative(hash_value), Mul(self.a, Ln(Constant(self.base))))
 
     def _clean_ab(self) -> Operation:
         a = self.a._clean()
