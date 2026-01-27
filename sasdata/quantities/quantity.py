@@ -496,6 +496,120 @@ class Exp(UnaryOperation):
             return Exp(clean_a)
 
 
+class Sin(UnaryOperation):
+    serialisation_name = "sin"
+
+    def evaluate(self, variables: dict[int, T]) -> T:
+        return np.sin(self.a.evaluate(variables))
+
+    def _derivative(self, hash_value: int) -> Operation:
+        return Mul(self.a._derivative(hash_value), Cos(self.a))
+
+    def _clean(self, a):
+        clean_a = self.a._clean()
+
+        if isinstance(a, ArcSin):
+            return clean_a.a
+
+        else:
+            return Sin(clean_a)
+
+
+class ArcSin(UnaryOperation):
+    serialisation_name = "arcsin"
+
+    def evaluate(self, variables: dict[int, T]) -> T:
+        return np.arcsin(self.a.evaluate(variables))
+
+    def _derivative(self, hash_value: int) -> Operation:
+        return Div(self.a._derivative(hash_value), Sqrt(Sub(MultiplicativeIdentity(), Mul(self.a, self.a))))
+
+    def _clean(self, a):
+        clean_a = self.a._clean()
+
+        if isinstance(a, Sin):
+            return clean_a.a
+
+        else:
+            return ArcSin(clean_a)
+
+
+class Cos(UnaryOperation):
+    serialisation_name = "cos"
+
+    def evaluate(self, variables: dict[int, T]) -> T:
+        return np.cos(self.a.evaluate(variables))
+
+    def _derivative(self, hash_value: int) -> Operation:
+        return Mul(self.a._derivative(hash_value), Neg(Sin(self.a)))
+
+    def _clean(self, a):
+        clean_a = self.a._clean()
+
+        if isinstance(a, ArcCos):
+            return clean_a.a
+
+        else:
+            return Cos(clean_a)
+
+
+class ArcCos(UnaryOperation):
+    serialisation_name = "arccos"
+
+    def evaluate(self, variables: dict[int, T]) -> T:
+        return np.arccos(self.a.evaluate(variables))
+
+    def _derivative(self, hash_value: int) -> Operation:
+        return Neg(Div(self.a._derivative(hash_value), Sqrt(Sub(MultiplicativeIdentity(), Mul(self.a, self.a)))))
+
+    def _clean(self, a):
+        clean_a = self.a._clean()
+
+        if isinstance(a, Cos):
+            return clean_a.a
+
+        else:
+            return ArcCos(clean_a)
+
+
+class Tan(UnaryOperation):
+    serialisation_name = "tan"
+
+    def evaluate(self, variables: dict[int, T]) -> T:
+        return np.tan(self.a.evaluate(variables))
+
+    def _derivative(self, hash_value: int) -> Operation:
+        return Div(self.a._derivative(hash_value), Mul(Cos(self.a), Cos(self.a)))
+
+    def _clean(self, a):
+        clean_a = self.a._clean()
+
+        if isinstance(a, ArcTan):
+            return clean_a.a
+
+        else:
+            return Tan(clean_a)
+
+
+class ArcTan(UnaryOperation):
+    serialisation_name = "arctan"
+
+    def evaluate(self, variables: dict[int, T]) -> T:
+        return np.arctan(self.a.evaluate(variables))
+
+    def _derivative(self, hash_value: int) -> Operation:
+        return Div(self.a._derivative(hash_value), Add(MultiplicativeIdentity(), Mul(self.a, self.a)))
+
+    def _clean(self, a):
+        clean_a = self.a._clean()
+
+        if isinstance(a, Tan):
+            return clean_a.a
+
+        else:
+            return ArcTan(clean_a)
+
+
 class BinaryOperation(Operation):
     def __init__(self, a: Operation, b: Operation):
         self.a = a
@@ -969,6 +1083,13 @@ _serialisable_classes = [
     Neg,
     Inv,
     Ln,
+    Exp,
+    Sin,
+    ArcSin,
+    Cos,
+    ArcCos,
+    Tan,
+    ArcTan,
     Add,
     Sub,
     Mul,
