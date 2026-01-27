@@ -1,4 +1,4 @@
-from math import e, sqrt
+import math
 
 import numpy as np
 import pytest
@@ -82,8 +82,8 @@ def test_evaluation(op, result):
         (Neg, -7, 7),
         (Inv, 2, 0.5),
         (Inv, 0.125, 8),
-        (Ln, e**5, 5),
-        (Ln, sqrt(e), 0.5),
+        (Ln, math.e**5, 5),
+        (Ln, np.sqrt(math.e), 0.5),
     ],
 )
 def test_unary_evaluation(op, a, result):

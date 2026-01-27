@@ -1,6 +1,6 @@
 import hashlib
 import json
-from math import e, log
+import math
 from typing import Any, Self, TypeVar, Union
 
 import h5py
@@ -452,7 +452,7 @@ class Ln(UnaryOperation):
     serialisation_name = "ln"
 
     def evaluate(self, variables: dict[int, T]) -> T:
-        return log(self.a.evaluate(variables))
+        return math.log(self.a.evaluate(variables))
 
     def _derivative(self, hash_value: int) -> Operation:
         return Div(self.a._derivative(hash_value), self.a)
@@ -464,7 +464,7 @@ class Ln(UnaryOperation):
             # Convert ln(1) to 0
             return AdditiveIdentity()
 
-        elif a == e:
+        elif a == math.e:
             # Convert ln(e) to 1
             return MultiplicativeIdentity()
 
@@ -476,7 +476,7 @@ class Exp(UnaryOperation):
     serialisation_name = "exp"
 
     def evaluate(self, variables: dict[int, T]) -> T:
-        return e**self.a.evaluate(variables)
+        return math.e**self.a.evaluate(variables)
 
     def _derivative(self, hash_value: int) -> Operation:
         return Mul(self.a._derivative(hash_value), Exp(self.a))
@@ -486,7 +486,7 @@ class Exp(UnaryOperation):
 
         if isinstance(a, MultiplicativeIdentity):
             # Convert e**1 to e
-            return e
+            return math.e
 
         elif isinstance(a, AdditiveIdentity):
             # Convert e**0 to 1
@@ -728,7 +728,7 @@ class Log(Operation):
         self.base = base
 
     def evaluate(self, variables: dict[int, T]) -> T:
-        return log(self.a.evaluate(variables), self.base)
+        return math.log(self.a.evaluate(variables), self.base)
 
     def _derivative(self, hash_value: int) -> Operation:
         return Div(self.a.derivative(hash_value), Mul(self.a, Ln(Constant(self.base))))
