@@ -3,8 +3,9 @@ Shared test helpers for averaging tests.
 """
 import numpy as np
 from scipy import integrate
-from sasdata.quantities.constants import TwoPi
+
 from sasdata.dataloader import data_info
+from sasdata.quantities.constants import TwoPi
 
 
 def make_dd_from_func(func, matrix_size=201):

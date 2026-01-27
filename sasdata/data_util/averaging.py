@@ -575,7 +575,7 @@ class SectorPhi(WedgePhi):
     # Forward to WedgePhi using the tuple-based it expects.
 
         super().__init__(r_range=(self.r_min, self.r_max),phi_range=(self.phi_min, self.phi_max), center=center,nbins=self.nbins)
-        
+
         # Ensure legacy attribute names exist on the instance (defensive).
         self.r_min = float(r_min)
         self.r_max = float(r_max)

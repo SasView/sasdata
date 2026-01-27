@@ -49,7 +49,7 @@ class GenericROI:
         # during data processing.
         self.data = data2d.data[valid_data]
         self.err_data = data2d.err_data[valid_data]
-        
+
         self.qx_data = data2d.qx_data[valid_data]-self.center_x
         self.qy_data = data2d.qy_data[valid_data]-self.center_y
         self.q_data = np.sqrt(self.qx_data * self.qx_data + self.qy_data * self.qy_data)

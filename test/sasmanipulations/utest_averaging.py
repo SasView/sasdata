@@ -1,9 +1,8 @@
-import math
 import os
 import unittest
 
 import numpy as np
-from sasdata.quantities.constants import Pi, TwoPi
+
 import sasdata.dataloader.data_info as data_info
 from sasdata.data_util.manipulations import (
     Boxavg,
@@ -18,6 +17,7 @@ from sasdata.data_util.manipulations import (
     reader2D_converter,
 )
 from sasdata.dataloader.loader import Loader
+from sasdata.quantities.constants import Pi, TwoPi
 
 
 def find(filename):

@@ -19,7 +19,6 @@ PYTHONPATH=../src/ python2  -m sasmanipulations.test.utest_averaging DataInfoTes
 
 # TODO: copy the meta data from the 2D object to the resulting 1D object
 import math
-from sasdata.quantities.constants import Pi, TwoPi
 from warnings import warn
 
 import numpy as np
@@ -54,9 +53,6 @@ from sasdata.data_util.averaging import (
     Sectorcut as AvgSectorcut,
 )
 from sasdata.data_util.averaging import (
-    WedgePhi as AvgSectorPhi,
-)
-from sasdata.data_util.averaging import (
     SectorQ as AvgSectorQ,
 )
 from sasdata.data_util.averaging import (
@@ -66,12 +62,16 @@ from sasdata.data_util.averaging import (
     SlabY as AvgSlabY,
 )
 from sasdata.data_util.averaging import (
+    WedgePhi as AvgSectorPhi,
+)
+from sasdata.data_util.averaging import (
     WedgePhi as AvgWedgePhi,
 )
 from sasdata.data_util.averaging import (
     WedgeQ as AvgWedgeQ,
 )
 from sasdata.dataloader.data_info import Data2D
+from sasdata.quantities.constants import Pi, TwoPi
 
 warn("sasdata.data_util.manipulations is deprecated. Unless otherwise noted, update your import to "
      "sasdata.data_util.averaging.", DeprecationWarning, stacklevel=2)

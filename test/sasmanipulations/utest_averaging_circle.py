@@ -5,8 +5,9 @@ import unittest
 
 import numpy as np
 from scipy import integrate
-from sasdata.quantities.constants import Pi, TwoPi
+
 from sasdata.data_util.averaging import CircularAverage, Ring, SectorQ, WedgePhi, WedgeQ
+from sasdata.quantities.constants import Pi
 from test.sasmanipulations.helper import CircularTestingMatrix, MatrixToData2D
 
 # TODO - also check the errors are being calculated correctly
