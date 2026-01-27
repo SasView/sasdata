@@ -85,7 +85,7 @@ class PolarROI(GenericROI):
     Base class for data manipulators with a polar ROI.
     """
 
-    def __init__(self, r_range: tuple[float, float], phi_range: tuple[float, float] = (0.0, 2*np.pi), center=tuple[float, float] = (0.0, 0.0)) -> None:
+    def __init__(self, r_range: tuple[float, float], phi_range: tuple[float, float] = (0.0, 2*np.pi), center: tuple[float, float] = (0.0, 0.0)) -> None:
         """
         Assign the variables used to label the properties of the Data2D object.
         Also establish the upper and lower bounds defining the ROI.
