@@ -6,9 +6,14 @@ import pytest
 from sasdata.quantities.quantity import (
     Add,
     AdditiveIdentity,
+    ArcCos,
+    ArcSin,
+    ArcTan,
     Constant,
+    Cos,
     Div,
     Dot,
+    Exp,
     Inv,
     Ln,
     Log,
@@ -18,7 +23,9 @@ from sasdata.quantities.quantity import (
     Neg,
     Operation,
     Pow,
+    Sin,
     Sub,
+    Tan,
     Transpose,
     Variable,
 )
@@ -57,7 +64,7 @@ def test_variable_summary():
     assert f.summary() == "x"
 
 
-@pytest.mark.parametrize("op", [Inv, Ln, Neg, Transpose])
+@pytest.mark.parametrize("op", [Inv, Exp, Ln, Neg, Sin, ArcSin, Cos, ArcCos, Tan, ArcTan, Transpose])
 def test_unary_summary(op):
     f = op(Constant(1))
     assert f.summary() == f"{op.__name__}(\n  1\n)"
@@ -82,8 +89,22 @@ def test_evaluation(op, result):
         (Neg, -7, 7),
         (Inv, 2, 0.5),
         (Inv, 0.125, 8),
-        (Ln, math.e**5, 5),
+        (Exp, 1, math.e),
+        (Exp, math.log(5.0), pytest.approx(5.0)),
         (Ln, np.sqrt(math.e), 0.5),
+        (Ln, math.e**5, pytest.approx(5.0)),
+        (Sin, math.pi / 6.0, pytest.approx(0.5)),
+        (Sin, 0.5 * math.pi, pytest.approx(1.0)),
+        (Cos, 0.0, pytest.approx(1.0)),
+        (Cos, math.pi / 3.0, pytest.approx(0.5)),
+        (Tan, 0.0, pytest.approx(0.0)),
+        (Tan, 0.25 * math.pi, pytest.approx(1.0)),
+        (ArcSin, 1.0, 0.5 * math.pi),
+        (ArcSin, -1.0, -0.5 * math.pi),
+        (ArcCos, 1.0, 0.0),
+        (ArcCos, -1.0, math.pi),
+        (ArcTan, 0.0, 0.0),
+        (ArcTan, -1.0, -0.25 * math.pi),
     ],
 )
 def test_unary_evaluation(op, a, result):
