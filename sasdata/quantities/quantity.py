@@ -457,14 +457,14 @@ class Ln(UnaryOperation):
     def _derivative(self, hash_value: int) -> Operation:
         return Div(self.a._derivative(hash_value), self.a)
 
-    def _clean(self, a):
+    def _clean(self):
         clean_a = self.a._clean()
 
-        if isinstance(a, MultiplicativeIdentity):
+        if isinstance(clean_a, MultiplicativeIdentity):
             # Convert ln(1) to 0
             return AdditiveIdentity()
 
-        elif a == math.e:
+        elif clean_a == math.e:
             # Convert ln(e) to 1
             return MultiplicativeIdentity()
 
@@ -481,14 +481,14 @@ class Exp(UnaryOperation):
     def _derivative(self, hash_value: int) -> Operation:
         return Mul(self.a._derivative(hash_value), Exp(self.a))
 
-    def _clean(self, a):
+    def _clean(self):
         clean_a = self.a._clean()
 
-        if isinstance(a, MultiplicativeIdentity):
+        if isinstance(clean_a, MultiplicativeIdentity):
             # Convert e**1 to e
             return math.e
 
-        elif isinstance(a, AdditiveIdentity):
+        elif isinstance(clean_a, AdditiveIdentity):
             # Convert e**0 to 1
             return 1
 
@@ -505,10 +505,10 @@ class Sin(UnaryOperation):
     def _derivative(self, hash_value: int) -> Operation:
         return Mul(self.a._derivative(hash_value), Cos(self.a))
 
-    def _clean(self, a):
+    def _clean(self):
         clean_a = self.a._clean()
 
-        if isinstance(a, ArcSin):
+        if isinstance(clean_a, ArcSin):
             return clean_a.a
 
         else:
@@ -524,10 +524,10 @@ class ArcSin(UnaryOperation):
     def _derivative(self, hash_value: int) -> Operation:
         return Div(self.a._derivative(hash_value), Sqrt(Sub(MultiplicativeIdentity(), Mul(self.a, self.a))))
 
-    def _clean(self, a):
+    def _clean(self):
         clean_a = self.a._clean()
 
-        if isinstance(a, Sin):
+        if isinstance(clean_a, Sin):
             return clean_a.a
 
         else:
@@ -543,10 +543,10 @@ class Cos(UnaryOperation):
     def _derivative(self, hash_value: int) -> Operation:
         return Mul(self.a._derivative(hash_value), Neg(Sin(self.a)))
 
-    def _clean(self, a):
+    def _clean(self):
         clean_a = self.a._clean()
 
-        if isinstance(a, ArcCos):
+        if isinstance(clean_a, ArcCos):
             return clean_a.a
 
         else:
@@ -562,10 +562,10 @@ class ArcCos(UnaryOperation):
     def _derivative(self, hash_value: int) -> Operation:
         return Neg(Div(self.a._derivative(hash_value), Sqrt(Sub(MultiplicativeIdentity(), Mul(self.a, self.a)))))
 
-    def _clean(self, a):
+    def _clean(self):
         clean_a = self.a._clean()
 
-        if isinstance(a, Cos):
+        if isinstance(clean_a, Cos):
             return clean_a.a
 
         else:
@@ -581,10 +581,10 @@ class Tan(UnaryOperation):
     def _derivative(self, hash_value: int) -> Operation:
         return Div(self.a._derivative(hash_value), Mul(Cos(self.a), Cos(self.a)))
 
-    def _clean(self, a):
+    def _clean(self):
         clean_a = self.a._clean()
 
-        if isinstance(a, ArcTan):
+        if isinstance(clean_a, ArcTan):
             return clean_a.a
 
         else:
@@ -600,10 +600,10 @@ class ArcTan(UnaryOperation):
     def _derivative(self, hash_value: int) -> Operation:
         return Div(self.a._derivative(hash_value), Add(MultiplicativeIdentity(), Mul(self.a, self.a)))
 
-    def _clean(self, a):
+    def _clean(self):
         clean_a = self.a._clean()
 
-        if isinstance(a, Tan):
+        if isinstance(clean_a, Tan):
             return clean_a.a
 
         else:
@@ -903,7 +903,7 @@ class Pow(Operation):
         else:
             return Mul(Constant(self.power), Mul(Pow(self.a, self.power - 1), self.a._derivative(hash_value)))
 
-    def _clean(self) -> Operation:
+    def _clean(self):
         a = self.a._clean()
 
         if self.power == 1:
