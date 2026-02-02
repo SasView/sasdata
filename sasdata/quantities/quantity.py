@@ -460,7 +460,11 @@ class Ln(UnaryOperation):
     def _clean(self):
         clean_a = self.a._clean()
 
-        if isinstance(clean_a, MultiplicativeIdentity):
+        if isinstance(clean_a, Exp):
+            # Convert ln(exp(x)) to x
+            return clean_a.a
+
+        elif isinstance(clean_a, MultiplicativeIdentity):
             # Convert ln(1) to 0
             return AdditiveIdentity()
 
@@ -469,7 +473,7 @@ class Ln(UnaryOperation):
             return MultiplicativeIdentity()
 
         else:
-            return Log(clean_a)
+            return Ln(clean_a)
 
 
 class Exp(UnaryOperation):
@@ -484,7 +488,11 @@ class Exp(UnaryOperation):
     def _clean(self):
         clean_a = self.a._clean()
 
-        if isinstance(clean_a, MultiplicativeIdentity):
+        if isinstance(clean_a, Ln):
+            # Convert exp(ln(x)) to x
+            return clean_a.a
+
+        elif isinstance(clean_a, MultiplicativeIdentity):
             # Convert e**1 to e
             return math.e
 

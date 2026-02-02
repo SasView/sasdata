@@ -205,6 +205,17 @@ def test_clean_double_applications(op):
 @pytest.mark.parametrize(
     "op",
     [
+        (Exp(Ln(Variable("x")))),
+        (Ln(Exp(Variable("x")))),
+    ],
+)
+def test_clean_exp_ln_functions(op):
+    assert op._clean() == Variable("x")
+
+
+@pytest.mark.parametrize(
+    "op",
+    [
         (Sin(ArcSin(Variable("x")))),
         (Cos(ArcCos(Variable("x")))),
         (Tan(ArcTan(Variable("x")))),
