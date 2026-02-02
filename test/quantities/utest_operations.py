@@ -50,6 +50,31 @@ def test_serialise_deserialise():
     assert serialised == reserialised
 
 
+@pytest.mark.parametrize("op", [Inv, Exp, Ln, Neg, Sin, ArcSin, Cos, ArcCos, Tan, ArcTan, Transpose])
+def test_unary_serialise_deserialise(op):
+    serialised = op(Variable("x")).serialise()
+    deserialised = Operation.deserialise(serialised)
+    reserialised = deserialised.serialise()
+
+    assert serialised == reserialised
+
+@pytest.mark.parametrize("op", [Add, Div, Dot, MatMul, Mul, Sub])
+def test_binary_serialise_deserialise(op):
+    serialised = op(Variable("x"), Variable("y")).serialise()
+    deserialised = Operation.deserialise(serialised)
+    reserialised = deserialised.serialise()
+
+    assert serialised == reserialised
+
+@pytest.mark.parametrize("op", [Log, Pow])
+def test_log_pow_serialise_deserialise(op):
+    serialised = op(Variable("x"), 2).serialise()
+    deserialised = Operation.deserialise(serialised)
+    reserialised = deserialised.serialise()
+
+    assert serialised == reserialised
+
+
 @pytest.mark.parametrize(
     "op, summary",
     [(AdditiveIdentity, "0 [Add.Id.]"), (MultiplicativeIdentity, "1 [Mul.Id.]"), (Operation, "Operation(\n)")],
@@ -164,6 +189,32 @@ def test_transpose_evaluation(op, a, result):
 def test_derivative(op, result):
     f = op()
     assert f.derivative(Variable("x"), simplify=False) == result
+
+
+@pytest.mark.parametrize(
+    "op",
+    [
+        (Neg(Neg(Variable("x")))),
+        (Inv(Inv(Variable("x")))),
+    ],
+)
+def test_clean_double_applications(op):
+    assert op._clean() == Variable("x")
+
+
+@pytest.mark.parametrize(
+    "op",
+    [
+        (Sin(ArcSin(Variable("x")))),
+        (Cos(ArcCos(Variable("x")))),
+        (Tan(ArcTan(Variable("x")))),
+        (ArcSin(Sin(Variable("x")))),
+        (ArcCos(Cos(Variable("x")))),
+        (ArcTan(Tan(Variable("x")))),
+    ],
+)
+def test_clean_trig_functions(op):
+    assert op._clean() == Variable("x")
 
 
 x = Variable("x")
