@@ -480,7 +480,7 @@ class Exp(UnaryOperation):
     serialisation_name = "exp"
 
     def evaluate(self, variables: dict[int, T]) -> T:
-        return math.e**self.a.evaluate(variables)
+        return math.e ** self.a.evaluate(variables)
 
     def _derivative(self, hash_value: int) -> Operation:
         return Mul(self.a._derivative(hash_value), Exp(self.a))
@@ -1233,13 +1233,15 @@ class QuantityHistory:
 
 
 class Quantity[QuantityType]:
-    def __init__(self,
-                 value: QuantityType,
-                 units: Unit,
-                 standard_error: QuantityType | None = None,
-                 hash_seed="",
-                 name="",
-                 id_header=""):
+    def __init__(
+        self,
+        value: QuantityType,
+        units: Unit,
+        standard_error: QuantityType | None = None,
+        hash_seed="",
+        name="",
+        id_header="",
+    ):
         self.value = value
         """ Numerical value of this data, in the specified units"""
 
@@ -1326,11 +1328,13 @@ class Quantity[QuantityType]:
 
     def to_units_of(self, new_units: Unit) -> "Quantity[QuantityType]":
         new_value, new_error = self.in_units_of_with_standard_error(new_units)
-        return Quantity(value=new_value,
-                        units=new_units,
-                        standard_error=new_error,
-                        hash_seed=self._hash_seed,
-                        id_header=self._id_header)
+        return Quantity(
+            value=new_value,
+            units=new_units,
+            standard_error=new_error,
+            hash_seed=self._hash_seed,
+            id_header=self._id_header,
+        )
 
     def variance_in_units_of(self, units: Unit) -> QuantityType:
         """Get the variance of quantity in other units"""
@@ -1550,12 +1554,9 @@ class Quantity[QuantityType]:
 
 
 class NamedQuantity[QuantityType](Quantity[QuantityType]):
-    def __init__(self,
-                 name: str,
-                 value: QuantityType,
-                 units: Unit,
-                 standard_error: QuantityType | None = None,
-                 id_header=""):
+    def __init__(
+        self, name: str, value: QuantityType, units: Unit, standard_error: QuantityType | None = None, id_header=""
+    ):
         super().__init__(value, units, standard_error=standard_error, hash_seed=name, name=name, id_header=id_header)
 
     def __repr__(self):

@@ -30,16 +30,35 @@ from sasdata.quantities.quantity import (
     Variable,
 )
 
+x = Variable("x")
+y = Variable("y")
+z = Variable("z")
+
 operation_with_everything = Div(
     Pow(
         Mul(
-            Sub(Add(Neg(Inv(MultiplicativeIdentity())), Ln(Transpose(Variable("x")))), Log(Constant(7), 2)),
+            Sub(Add(Neg(Inv(MultiplicativeIdentity())), Ln(Transpose(x))), Log(Constant(7), 2)),
             AdditiveIdentity(),
         ),
         2,
     ),
-    Variable("y"),
+    y,
 )
+
+
+@pytest.fixture(params=[Inv, Exp, Ln, Neg, Sin, ArcSin, Cos, ArcCos, Tan, ArcTan, Transpose])
+def unary_operation(request):
+    return request.param(x)
+
+
+@pytest.fixture(params=[Add, Div, Dot, MatMul, Mul, Sub])
+def binary_operation(request):
+    return request.param(x, y)
+
+
+@pytest.fixture(params=[Log, Pow])
+def log_pow_operation(request):
+    return request.param(x, 2)
 
 
 def test_serialise_deserialise():
@@ -50,25 +69,24 @@ def test_serialise_deserialise():
     assert serialised == reserialised
 
 
-@pytest.mark.parametrize("op", [Inv, Exp, Ln, Neg, Sin, ArcSin, Cos, ArcCos, Tan, ArcTan, Transpose])
-def test_unary_serialise_deserialise(op):
-    serialised = op(Variable("x")).serialise()
+def test_unary_serialise_deserialise(unary_operation):
+    serialised = unary_operation.serialise()
     deserialised = Operation.deserialise(serialised)
     reserialised = deserialised.serialise()
 
     assert serialised == reserialised
 
-@pytest.mark.parametrize("op", [Add, Div, Dot, MatMul, Mul, Sub])
-def test_binary_serialise_deserialise(op):
-    serialised = op(Variable("x"), Variable("y")).serialise()
+
+def test_binary_serialise_deserialise(binary_operation):
+    serialised = binary_operation.serialise()
     deserialised = Operation.deserialise(serialised)
     reserialised = deserialised.serialise()
 
     assert serialised == reserialised
 
-@pytest.mark.parametrize("op", [Log, Pow])
-def test_log_pow_serialise_deserialise(op):
-    serialised = op(Variable("x"), 2).serialise()
+
+def test_log_pow_serialise_deserialise(log_pow_operation):
+    serialised = log_pow_operation.serialise()
     deserialised = Operation.deserialise(serialised)
     reserialised = deserialised.serialise()
 
@@ -85,20 +103,19 @@ def test_summary(op, summary):
 
 
 def test_variable_summary():
-    f = Variable("x")
-    assert f.summary() == "x"
+    assert x.summary() == "x"
 
 
-@pytest.mark.parametrize("op", [Inv, Exp, Ln, Neg, Sin, ArcSin, Cos, ArcCos, Tan, ArcTan, Transpose])
-def test_unary_summary(op):
-    f = op(Constant(1))
-    assert f.summary() == f"{op.__name__}(\n  1\n)"
+def test_unary_summary(unary_operation):
+    assert unary_operation.summary() == f"{unary_operation.__class__.__name__}(\n  x\n)"
 
 
-@pytest.mark.parametrize("op", [Add, Div, Dot, Log, MatMul, Mul, Pow, Sub])
-def test_binary_summary(op):
-    f = op(Constant(1), 1 if op == Log or op == Pow else Constant(1))
-    assert f.summary() == f"{op.__name__}(\n  1\n  1\n)"
+def test_binary_summary(binary_operation):
+    assert binary_operation.summary() == f"{binary_operation.__class__.__name__}(\n  x\n  y\n)"
+
+
+def test_log_pow_summary(log_pow_operation):
+    assert log_pow_operation.summary() == f"{log_pow_operation.__class__.__name__}(\n  x\n  2\n)"
 
 
 @pytest.mark.parametrize("op, result", [(AdditiveIdentity, 0), (MultiplicativeIdentity, 1), (Operation, None)])
@@ -188,49 +205,44 @@ def test_transpose_evaluation(op, a, result):
 )
 def test_derivative(op, result):
     f = op()
-    assert f.derivative(Variable("x"), simplify=False) == result
+    assert f.derivative(x, simplify=False) == result
 
 
 @pytest.mark.parametrize(
     "op",
     [
-        (Neg(Neg(Variable("x")))),
-        (Inv(Inv(Variable("x")))),
+        (Neg(Neg(x))),
+        (Inv(Inv(x))),
     ],
 )
 def test_clean_double_applications(op):
-    assert op._clean() == Variable("x")
+    assert op._clean() == x
 
 
 @pytest.mark.parametrize(
     "op",
     [
-        (Exp(Ln(Variable("x")))),
-        (Ln(Exp(Variable("x")))),
+        (Exp(Ln(x))),
+        (Ln(Exp(x))),
     ],
 )
 def test_clean_exp_ln_functions(op):
-    assert op._clean() == Variable("x")
+    assert op._clean() == x
 
 
 @pytest.mark.parametrize(
     "op",
     [
-        (Sin(ArcSin(Variable("x")))),
-        (Cos(ArcCos(Variable("x")))),
-        (Tan(ArcTan(Variable("x")))),
-        (ArcSin(Sin(Variable("x")))),
-        (ArcCos(Cos(Variable("x")))),
-        (ArcTan(Tan(Variable("x")))),
+        (Sin(ArcSin(x))),
+        (Cos(ArcCos(x))),
+        (Tan(ArcTan(x))),
+        (ArcSin(Sin(x))),
+        (ArcCos(Cos(x))),
+        (ArcTan(Tan(x))),
     ],
 )
 def test_clean_trig_functions(op):
-    assert op._clean() == Variable("x")
-
-
-x = Variable("x")
-y = Variable("y")
-z = Variable("z")
+    assert op._clean() == x
 
 
 @pytest.mark.parametrize(
