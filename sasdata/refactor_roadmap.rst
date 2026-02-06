@@ -1,4 +1,4 @@
-* percentages updated last on 8th October 2025
+* percentages updated last on 6th February 2026
 
 SasData Side
 ============
@@ -33,12 +33,12 @@ SasData Side
   * Operations on Quantities
 
     * Arithmetic operations (95%)
-    * Special and not so special functions (50%)
+    * Special and not so special functions (90%)
     * Linear algebra (30%)
 
 * Operation on datasets
 
-  * Rebinning (35%)
+  * Rebinning (60%)
   * Slicing backend [integration] (see above)
   * Adding extra annotations (0%)
 
