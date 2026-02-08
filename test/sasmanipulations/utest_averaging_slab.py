@@ -193,7 +193,7 @@ class SlabYTests(unittest.TestCase):
         qx_max = averager_data.qmax  # = 1
         qy_min = -0.5 * averager_data.qmax  # = -0.5
         qy_max = averager_data.qmax  # = 1
-        nbins = int((qx_max - qx_min) / 2 * matrix_size)
+        nbins = int((qy_max - qy_min) / 2 * matrix_size)
         # Explicitly not using fold in this test
         fold = False
 
@@ -205,7 +205,7 @@ class SlabYTests(unittest.TestCase):
 
         self.assertAlmostEqual(actual_area, expected_area, 2)
 
-    def test_slab_averaging_y_with_fold(self):
+    def test_slaby_averaging_with_fold(self):
         """
         Test that SlabY can average correctly when y is the major axis
         """
@@ -219,7 +219,7 @@ class SlabYTests(unittest.TestCase):
         qx_max = averager_data.qmax  # = 1
         qy_min = -0.5 * averager_data.qmax  # = -0.5
         qy_max = averager_data.qmax  # = 1
-        nbins = int((qx_max - qx_min) / 2 * matrix_size)
+        nbins = int((qy_max - qy_min) / 2 * matrix_size)
         # Explicitly using fold in this test
         fold = True
 

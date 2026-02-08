@@ -21,6 +21,8 @@ PYTHONPATH=../src/ python2  -m sasmanipulations.test.utest_averaging DataInfoTes
 import math
 from warnings import warn
 
+from sasdata.dataloader.data_info import reader2D_converter as _di_reader2D_converter
+
 import numpy as np
 
 from sasdata.data_util.averaging import (
@@ -296,33 +298,11 @@ def reader2D_converter(data2d: Data2D | None = None) -> Data2D:
     :return: 1d arrays of Data2D object
 
     """
-    warn("reader2D_converter should be imported in the future sasdata.dataloader.data_info.",
+    warn("reader2D_converter should be delegated in the future sasdata.dataloader.data_info.",
          DeprecationWarning, stacklevel=2)
-    if data2d.data is None or data2d.x_bins is None or data2d.y_bins is None:
-        raise ValueError("Can't convert this data: data=None...")
-    new_x = np.tile(data2d.x_bins, (len(data2d.y_bins), 1))
-    new_y = np.tile(data2d.y_bins, (len(data2d.x_bins), 1))
-    new_y = new_y.swapaxes(0, 1)
+    # Delegate to the implementation in data_info
 
-    new_data = data2d.data.flatten()
-    qx_data = new_x.flatten()
-    qy_data = new_y.flatten()
-    q_data = np.sqrt(qx_data * qx_data + qy_data * qy_data)
-    if data2d.err_data is None or np.any(data2d.err_data <= 0):
-        new_err_data = np.sqrt(np.abs(new_data))
-    else:
-        new_err_data = data2d.err_data.flatten()
-    mask = np.ones(len(new_data), dtype=bool)
-
-    output = data2d
-    output.data = new_data
-    output.err_data = new_err_data
-    output.qx_data = qx_data
-    output.qy_data = qy_data
-    output.q_data = q_data
-    output.mask = mask
-
-    return output
+    return _di_reader2D_converter(data2d)
 
 ################################################################################
 
@@ -333,11 +313,11 @@ class Binning:
     either linear or log
     """
 
-    def __init__(self, min_value, max_value, n_bins, base=None):
+    def __init__(self, min_value, max_value, nbins, base=None):
         """
         :param min_value: the value defining the start of the binning interval.
         :param max_value: the value defining the end of the binning interval.
-        :param n_bins: the number of bins.
+        :param nbins: the number of bins.
         :param base: the base used for log, linear binning if None.
 
         Beware that min_value should always be numerically smaller than
@@ -346,7 +326,7 @@ class Binning:
         """
         self.min = min_value
         self.max = max_value
-        self.n_bins = n_bins
+        self.nbins = nbins
         self.base = base
 
     def get_bin_index(self, value):
@@ -358,10 +338,10 @@ class Binning:
         bin = floor(N * (log(x) - log(min)) / (log(max) - log(min)))
         """
         if self.base:
-            temp_x = self.n_bins * (math.log(value, self.base) - math.log(self.min, self.base))
+            temp_x = self.nbins * (math.log(value, self.base) - math.log(self.min, self.base))
             temp_y = math.log(self.max, self.base) - math.log(self.min, self.base)
         else:
-            temp_x = self.n_bins * (value - self.min)
+            temp_x = self.nbins * (value - self.min)
             temp_y = self.max - self.min
         # Bin index calulation
         return int(math.floor(temp_x / temp_y))
@@ -379,9 +359,20 @@ class SlabX:
     """
     def __init__(self, x_min=0.0, x_max=0.0, y_min=0.0,
                  y_max=0.0, bin_width=0.001, fold=False):
+        if fold:
+                # Set x_max based on which is further from Qx = 0
+                x_max = max(abs(self.x_min),abs(self.x_max))
+                # Set x_min based on which is closer to Qx = 0, but will have different limits depending on whether
+                # x_min and x_max are on the same side of Qx = 0
+                if self.x_min*self.x_max >= 0: # If on same side
+                    x_min = min(abs(self.x_min),abs(self.x_max))
+                else:
+                    x_min = 0.0
+
         # protect against zero-width or negative widths
         width = max(abs(x_max - x_min), 1e-12)
         nbins = int(math.ceil(width / abs(bin_width))) if bin_width != 0 else 1
+        self.nbins=nbins
         self._impl = AvgSlabX(qx_range=(x_min, x_max), qy_range=(y_min, y_max),
                               nbins=nbins, fold=fold)
 
@@ -395,8 +386,20 @@ class SlabY:
     """
     def __init__(self, x_min=0.0, x_max=0.0, y_min=0.0,
                  y_max=0.0, bin_width=0.001, fold=False):
+        if fold:
+            # Set y_max based on which is further from Qy = 0
+            y_max = max(abs(self.y_min),abs(self.y_max))
+            # Set y_min based on which is closer to Qy = 0, but will have different limits depending on whether
+            # y_min and y_max are on the same side of Qy = 0
+            if self.y_min*self.y_max >= 0: # If on same side
+                y_min = min(abs(self.y_min),abs(self.y_max))
+            else:
+                y_min = 0.0
+
+        # protect against zero-width or negative widths
         height = max(abs(y_max - y_min), 1e-12)
         nbins = int(math.ceil(height / abs(bin_width))) if bin_width != 0 else 1
+        self.nbins=nbins
         self._impl = AvgSlabY(qx_range=(x_min, x_max), qy_range=(y_min, y_max),
                               nbins=nbins, fold=fold)
 
@@ -445,9 +448,6 @@ class CircularAverage:
 class Ring:
     """
     Wrapper for new Ring.
-    Old signature: Ring(r_min=0, r_max=0, center_x=0, center_y=0, nbins=36)
-    New signature: Ring(r_range, nbins)
-    center_x/center_y are ignored for compatibility.
     """
     def __init__(self, r_min=0.0, r_max=0.0, center_x=0.0, center_y=0.0, nbins=36):
         self._impl = AvgRing(r_range=(r_min, r_max), center=(center_x, center_y),nbins=nbins)
@@ -468,12 +468,7 @@ class SectorPhi:
         # SectorPhi in new module is essentially WedgePhi; pass through phi_range and nbins
         self._impl = AvgSectorPhi(r_range=(r_min, r_max), phi_range=(phi_min, phi_max),center=(center_x, center_y),
                                   nbins=nbins)
-        # Ensure legacy attribute names exist on the instance (defensive).
-        self.r_min = float(r_min)
-        self.r_max = float(r_max)
-        self.phi_min = float(phi_min)
-        self.phi_max = float(phi_max)
-        self.nbins = int(nbins)
+       
 
     def __call__(self, data2D):
         return self._impl(data2D)
@@ -486,7 +481,7 @@ class SectorQ:
     New signature: SectorQ(r_range, phi_range=(0,2pi), nbins=100, fold=True)
     Keeps the same default folding behaviour (fold True).
     """
-    def __init__(self, r_min, r_max, phi_min=0, phi_max=TwoPi, center_x=0.0, center_y=0.0, nbins=20, base=None):
+    def __init__(self, r_min, r_max, phi_min=0, phi_max=TwoPi, center_x=0.0, center_y=0.0, nbins=10, base=None):
         self._impl = AvgSectorQ(r_range=(r_min, r_max), phi_range=(phi_min, phi_max), center=(center_x, center_y),
                                 nbins=nbins, fold=True)
 
@@ -497,7 +492,7 @@ class WedgePhi:
     """
     Wrapper for new WedgePhi (behaviour matches legacy WedgePhi expectations).
     """
-    def __init__(self, r_min, r_max, phi_min=0, phi_max=TwoPi, center_x=0.0, center_y=0.0, nbins=20):
+    def __init__(self, r_min, r_max, phi_min=0, phi_max=TwoPi, center_x=0.0, center_y=0.0, nbins=10):
         self._impl = AvgWedgePhi(r_range=(r_min, r_max), phi_range=(phi_min, phi_max), center=(center_x, center_y),
                                  nbins=nbins)
 
@@ -508,7 +503,7 @@ class WedgeQ:
     """
     Wrapper for new WedgeQ (behaviour matches legacy WedgeQ expectations).
     """
-    def __init__(self, r_min, r_max, phi_min=0, phi_max=TwoPi, center_x=0.0, center_y=0.0, nbins=20):
+    def __init__(self, r_min, r_max, phi_min=0, phi_max=TwoPi, center_x=0.0, center_y=0.0, nbins=10):
         self._impl = AvgWedgeQ(r_range=(r_min, r_max), phi_range=(phi_min, phi_max), center=(center_x, center_y),
                                 nbins=nbins)
 

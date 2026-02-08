@@ -166,7 +166,7 @@ class SlabY(CartesianROI):
     resulting in a 1D plot with only positive Q values shown.
     """
 
-    def __init__(self, qx_range: tuple[float, float] = (0.0, 0.0), qy_range: tuple[float, float] = (0.0, 0), nbins: int = 100, fold: bool = False):
+    def __init__(self, qx_range: tuple[float, float] = (0.0, 0.0), qy_range: tuple[float, float] = (0.0, 0.0), nbins: int = 100, fold: bool = False):
         """
         Set up the ROI boundaries, the binning of the output 1D data, and fold.
 
@@ -279,7 +279,7 @@ class Ring(PolarROI):
         """
         super().__init__(r_range=r_range, center=center)
         # backward-compatible alias expected by older tests / callers
-        self.nbins_phi = nbins
+        #self.nbins_phi = nbins
         # new attribute
         self.nbins = nbins
 
@@ -574,14 +574,9 @@ class SectorPhi(WedgePhi):
 
     # Forward to WedgePhi using the tuple-based it expects.
 
-        super().__init__(r_range=(self.r_min, self.r_max),phi_range=(self.phi_min, self.phi_max), center=center,nbins=self.nbins)
+        super().__init__(r_range=(r_min, r_max), phi_range=(phi_min, phi_max), center=center, nbins=nbins)
 
-        # Ensure legacy attribute names exist on the instance (defensive).
-        self.r_min = float(r_min)
-        self.r_max = float(r_max)
-        self.phi_min = float(phi_min)
-        self.phi_max = float(phi_max)
-        self.nbins = int(nbins)
+
 
 ################################################################################
 
