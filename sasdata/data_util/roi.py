@@ -10,21 +10,21 @@ class GenericROI:
     This class performs any coordinate system independent setup and validation.
     """
 
-    def __init__(self):
+    def __init__(self, center: tuple[float, float] = (0.0, 0.0)):
         """
         Assign the variables used to label the properties of the Data2D object.
 
         In classes inheriting from GenericROI, the variables used to define the
         boundaries of the Region Of Interest are also set up during __init__.
         """
-
+        center_x, center_y = center
+        self.center_x = center_x 
+        self.center_y = center_y 
         self.data = None
         self.err_data = None
         self.q_data = None
         self.qx_data = None
         self.qy_data = None
-        self.center_x =0.0
-        self.center_y =0.0
 
     def validate_and_assign_data(self, data2d: Data2D = None) -> None:
         """
@@ -53,6 +53,11 @@ class GenericROI:
         self.qx_data = data2d.qx_data[valid_data]-self.center_x
         self.qy_data = data2d.qy_data[valid_data]-self.center_y
         self.q_data = np.sqrt(self.qx_data * self.qx_data + self.qy_data * self.qy_data)
+
+        # Compute phi in the legacy convention: atan2(qy,qx) + pi
+        # (legacy code used this origin; keeping it here makes all polar
+        #  averaging implementations agree and restores the tests).
+        self.phi_data = np.arctan2(self.qy_data, self.qx_data) + np.pi
 
         # No points should have zero error, if they do then assume the error is
         # the square root of the data. This code was added to replicate
@@ -100,8 +105,7 @@ class PolarROI(GenericROI):
         """
         r_min, r_max = r_range
         phi_min, phi_max = phi_range
-        center_x, center_y = center
-        super().__init__()
+        super().__init__(center = center)
 
         self.phi_data = None
 
@@ -113,8 +117,6 @@ class PolarROI(GenericROI):
         self.r_max = r_max
         self.phi_min = phi_min
         self.phi_max = phi_max
-        self.center_x = center_x = 0.0 if center_x is None else float(center_x)
-        self.center_y = center_y = 0.0 if center_y is None else float(center_y)
 
     def validate_and_assign_data(self, data2d: Data2D = None) -> None:
         """
@@ -127,5 +129,3 @@ class PolarROI(GenericROI):
 
         # Most validation and pre-processing is taken care of by GenericROI.
         super().validate_and_assign_data(data2d)
-        # Phi data can be calculated from the Cartesian Q coordinates.
-        self.phi_data = np.arctan2(self.qy_data, self.qx_data)

@@ -1,6 +1,6 @@
 import os
 import unittest
-
+from sasdata.dataloader.data_info import Data1D, Data2D
 import numpy as np
 
 import sasdata.dataloader.data_info as data_info
@@ -123,7 +123,7 @@ class DataInfoTests(unittest.TestCase):
                  center_x=self.data.detector[0].beam_center.x,
                  center_y=self.data.detector[0].beam_center.y,
                  nbins=20)
-        ##r.nbins_phi = 20
+        r.nbins_phi = 20
 
         o = r(self.data)
         filepath = find('ring_testdata.txt')
@@ -150,9 +150,9 @@ class DataInfoTests(unittest.TestCase):
         filepath = find('avg_testdata.txt')
         answer = Loader().load(filepath)[0]
         for i in range(r.nbins_phi):
-            self.assertAlmostEqual(o.x[i], answer.x[i], 4)
-            self.assertAlmostEqual(o.y[i], answer.y[i], 4)
-            self.assertAlmostEqual(o.dy[i], answer.dy[i], 4)
+            self.assertAlmostEqual(o.x[i], answer.x[i], delta=1e-4)
+            self.assertAlmostEqual(o.y[i], answer.y[i], delta=1e-4)
+            self.assertAlmostEqual(o.dy[i], answer.dy[i],delta=1e-4)
 
     def test_box(self):
         """

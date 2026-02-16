@@ -1,4 +1,5 @@
 import numpy as np
+import math
 from numpy.typing import ArrayLike
 
 from sasdata.data_util.interval import IntervalType
@@ -22,15 +23,14 @@ class DirectionalAverage:
     coordinate system dependent pre-processing.
 
     Note that the old version of manipulations.py had an option for logarithmic
-    binning which was only used by SectorQ. This functionality is never called
-    upon by SasView however, so I haven't implemented it here (yet).
+    binning which is used by SectorQ.
     """
 
     def __init__(self,
                  major_axis: ArrayLike,
                  minor_axis: ArrayLike,
                  lims: tuple[tuple[float, float] | None, tuple[float, float] | None] | None = None,
-                 nbins: int = 100):
+                 nbins: int = 100, base=None):
         """
         Set up direction of averaging, limits on the ROI, & the number of bins.
 
@@ -41,13 +41,15 @@ class DirectionalAverage:
         :param lims: Tuple (major_lims, minor_lims). Each element may be a
                      2-tuple or None. 
         :param nbins: The number of bins the major axis is divided up into.
+        :param base: the base used for log, linear binning if None.
         """
 
         # Step 1: quick checks and parsing
         self._validate_coordinate_arrays(major_axis, minor_axis)
         major_lims, minor_lims = self._parse_lims(lims)
         self.nbins = self._coerce_nbins(nbins)
-
+        self.base = base
+        print(nbins)
         # Step 2: assign arrays and check sizes
         self.major_axis, self.minor_axis = self._assign_axes_and_check_lengths(major_axis, minor_axis)
 
@@ -145,12 +147,23 @@ class DirectionalAverage:
     def get_bin_index(self, value):
         """
         Return the index of the bin to which the supplied value belongs.
+        Beware that min_value should always be numerically smaller than
+        max_value. Take particular care when binning angles across the
+        2pi to 0 discontinuity.
 
-        :param value: A coordinate value from somewhere along the major axis.
+        :param value: A coordinate value in the binning interval along the major axis,
+        whose bin index should be returned. Must be between min_value and max_value.
+
+        The general formula logarithm binning is:
+        bin = floor(N * (log(x) - log(min)) / (log(max) - log(min)))
         """
-        numerator = value - self.major_lims[0]
-        denominator = self.major_lims[1] - self.major_lims[0]
-        bin_index = int(np.floor(self.nbins * numerator / denominator))
+        if self.base:
+            numerator  = self.nbins * (math.log(value, self.base) - math.log(self.major_lims[0], self.base))
+            denominator = math.log(self.major_lims[1], self.base) - math.log(self.major_lims[0], self.base)
+        else:
+            numerator = self.nbins *(value - self.major_lims[0])
+            denominator = self.major_lims[1] - self.major_lims[0]
+        bin_index = int(math.floor(numerator / denominator))
 
         # Bins are indexed from 0 to nbins-1, so this check protects against
         # out-of-range indices when value == self.major_lims[1]
