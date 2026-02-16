@@ -1,3 +1,4 @@
+import math
 import sasdata.quantities.units as units
 from sasdata.quantities.units import Unit
 
@@ -41,6 +42,10 @@ tests = [
     EquivalentButUnequalUnits("Angular frequency",
                units.rotations / units.minutes,
                units.degrees * units.hertz),
+
+    EqualUnits("Angular frequency",
+               (units.rotations/units.minutes ),
+               (units.radians*units.hertz) * 2 * math.pi/60.0),
 
 
 ]
