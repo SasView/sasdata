@@ -18,8 +18,8 @@ class GenericROI:
         boundaries of the Region Of Interest are also set up during __init__.
         """
         center_x, center_y = center
-        self.center_x = center_x 
-        self.center_y = center_y 
+        self.center_x = center_x
+        self.center_y = center_y
         self.data = None
         self.err_data = None
         self.q_data = None

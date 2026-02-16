@@ -3,8 +3,9 @@ This module contains various data processors used by Sasview's slicers.
 """
 
 
-import numpy as np
 import math
+
+import numpy as np
 
 from sasdata.data_util.binning import DirectionalAverage
 from sasdata.data_util.interval import IntervalType
@@ -588,7 +589,7 @@ class SectorQ(PolarROI):
         # eliminating errors when the ROI straddles the 2π -> 0 discontinuity.
         # We won't need to convert back later because we're plotting against Q.
         phi_offset = self.phi_min
-        self.phi_min = 0.0 
+        self.phi_min = 0.0
         self.phi_max = (self.phi_max - phi_offset ) % (TwoPi)
         self.phi_data = (self.phi_data - phi_offset ) % (TwoPi)
 
@@ -779,7 +780,7 @@ class WedgePhi(PolarROI):
         # Transform all angles to the range [0,2π) where phi_min is at zero,
         # eliminating errors when the ROI straddles the 2π -> 0 discontinuity.
         # Remember to transform back afterward as we're plotting against phi.
-        phi_offset = self.phi_min 
+        phi_offset = self.phi_min
         self.phi_min = 0.0
         self.phi_max = (self.phi_max - phi_offset) % (TwoPi)
         self.phi_data = (self.phi_data - phi_offset) % (TwoPi)
@@ -810,7 +811,7 @@ class WedgePhi(PolarROI):
 
         # Shift back to original phi range
         full_phi = (full_phi + phi_offset) % (TwoPi)
-        
+
        # Determine which bins were populated using the weights (preserves full bin index space)
         weights = directional_average.compute_weights()
         populated = np.sum(weights, axis=1) > 0

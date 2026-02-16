@@ -21,14 +21,7 @@ PYTHONPATH=../src/ python2  -m sasmanipulations.test.utest_averaging DataInfoTes
 import math
 from warnings import warn
 
-from sasdata.data_util.binning import DirectionalAverage
-from sasdata.dataloader.data_info import reader2D_converter as _di_reader2D_converter
-from sasdata.dataloader.data_info import Data1D, Data2D
-
 import numpy as np
-
-from sasdata.data_util.averaging import Boxavg
-from sasdata.data_util.averaging import Boxcut
 
 ################################################################################
 # Backwards-compatible wrappers that delegate to the new implementations
@@ -37,19 +30,21 @@ from sasdata.data_util.averaging import Boxcut
 # The wrappers below translate the old style
 # parameters to the new classes to preserve external behaviour.
 ################################################################################
-from sasdata.data_util.averaging import Boxsum
-from sasdata.data_util.averaging import Ring
-
-from sasdata.data_util.averaging import Ringcut
-
-from sasdata.data_util.averaging import Sectorcut
-from sasdata.data_util.averaging import SectorQ
-from sasdata.data_util.averaging import SlabX
-from sasdata.data_util.averaging import SlabY
-from sasdata.data_util.averaging import WedgePhi
-from sasdata.data_util.averaging import WedgeQ
-
-from sasdata.dataloader.data_info import Data2D
+from sasdata.data_util.averaging import (
+    Boxavg,
+    Boxcut,
+    Boxsum,
+    Ring,
+    Ringcut,
+    Sectorcut,
+    SectorQ,
+    SlabX,
+    SlabY,
+    WedgePhi,
+    WedgeQ,
+)
+from sasdata.dataloader.data_info import Data1D, Data2D
+from sasdata.dataloader.data_info import reader2D_converter as _di_reader2D_converter
 from sasdata.quantities.constants import Pi, TwoPi
 
 warn("sasdata.data_util.manipulations is deprecated. Unless otherwise noted, update your import to "
@@ -515,17 +510,17 @@ class Ring(Ring):
     Wrapper for new Ring.
     """
 
-        
+
     @property
     def nbins_phi(self):
         return self.nbins
-        
+
     @nbins_phi.setter
     def nbins_phi(self, value):
         self.nbins = value
 
     def __init__(self, r_min=0.0, r_max=0.0, center_x=0.0, center_y=0.0, nbins=36):
-        
+
         super().__init__(
             r_range=(r_min, r_max),
             center=(center_x, center_y),

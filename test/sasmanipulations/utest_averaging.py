@@ -1,6 +1,6 @@
 import os
 import unittest
-from sasdata.dataloader.data_info import Data1D, Data2D
+
 import numpy as np
 
 import sasdata.dataloader.data_info as data_info

@@ -1,5 +1,6 @@
-import numpy as np
 import math
+
+import numpy as np
 from numpy.typing import ArrayLike
 
 from sasdata.data_util.interval import IntervalType
