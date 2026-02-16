@@ -36,7 +36,11 @@ tests = [
     EqualUnits("Resistance",
                units.ohms,
                units.volts / units.amperes,
-               1e-3/units.millisiemens)
+               1e-3/units.millisiemens),
+
+    EquivalentButUnequalUnits("Angular frequency",
+               units.rotations / units.minutes,
+               units.degrees * units.hertz),
 
 
 ]
