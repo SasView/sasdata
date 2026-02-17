@@ -10,7 +10,7 @@ class EqualUnits:
 
     def run_test(self):
         for i, unit_1 in enumerate(self.units):
-            for unit_2 in self.units[i+1:]:
+            for unit_2 in self.units[i + 1 :]:
                 assert unit_1.equivalent(unit_2), "Units should be equivalent"
                 assert unit_1 == unit_2, "Units should be equal"
 
@@ -22,9 +22,10 @@ class EquivalentButUnequalUnits:
 
     def run_test(self):
         for i, unit_1 in enumerate(self.units):
-            for unit_2 in self.units[i+1:]:
+            for unit_2 in self.units[i + 1 :]:
                 assert unit_1.equivalent(unit_2), "Units should be equivalent"
                 assert unit_1 != unit_2, "Units should not be equal"
+
 
 class DissimilarUnits:
     def __init__(self, test_name: str, *units):
@@ -33,7 +34,7 @@ class DissimilarUnits:
 
     def run_test(self):
         for i, unit_1 in enumerate(self.units):
-            for unit_2 in self.units[i+1:]:
+            for unit_2 in self.units[i + 1 :]:
                 assert not unit_1.equivalent(unit_2), "Units should not be equivalent"
 
 
