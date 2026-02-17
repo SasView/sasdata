@@ -480,7 +480,7 @@ class Exp(UnaryOperation):
     serialisation_name = "exp"
 
     def evaluate(self, variables: dict[int, T]) -> T:
-        return math.e ** self.a.evaluate(variables)
+        return math.exp(self.a.evaluate(variables))
 
     def _derivative(self, hash_value: int) -> Operation:
         return Mul(self.a._derivative(hash_value), Exp(self.a))
@@ -519,6 +519,10 @@ class Sin(UnaryOperation):
         if isinstance(clean_a, ArcSin):
             return clean_a.a
 
+        elif isinstance(clean_a, AdditiveIdentity):
+            # Convert sin(0) to 0
+            return AdditiveIdentity()
+
         else:
             return Sin(clean_a)
 
@@ -537,6 +541,14 @@ class ArcSin(UnaryOperation):
 
         if isinstance(clean_a, Sin):
             return clean_a.a
+
+        elif isinstance(clean_a, AdditiveIdentity):
+            # Convert arcsin(0) to 0
+            return AdditiveIdentity()
+
+        elif isinstance(clean_a, MultiplicativeIdentity):
+            # Convert arcsin(1) to pi/2
+            return Constant(0.5 * math.pi)
 
         else:
             return ArcSin(clean_a)
@@ -557,6 +569,10 @@ class Cos(UnaryOperation):
         if isinstance(clean_a, ArcCos):
             return clean_a.a
 
+        elif isinstance(clean_a, AdditiveIdentity):
+            # Convert cos(0) to 1
+            return MultiplicativeIdentity()
+
         else:
             return Cos(clean_a)
 
@@ -575,6 +591,14 @@ class ArcCos(UnaryOperation):
 
         if isinstance(clean_a, Cos):
             return clean_a.a
+
+        elif isinstance(clean_a, AdditiveIdentity):
+            # Convert arccos(0) to pi/2
+            return Constant(0.5 * math.pi)
+
+        elif isinstance(clean_a, MultiplicativeIdentity):
+            # Convert arccos(1) to 0
+            return AdditiveIdentity()
 
         else:
             return ArcCos(clean_a)
@@ -595,6 +619,10 @@ class Tan(UnaryOperation):
         if isinstance(clean_a, ArcTan):
             return clean_a.a
 
+        elif isinstance(clean_a, AdditiveIdentity):
+            # Convert tan(0) to 0
+            return AdditiveIdentity()
+
         else:
             return Tan(clean_a)
 
@@ -613,6 +641,14 @@ class ArcTan(UnaryOperation):
 
         if isinstance(clean_a, Tan):
             return clean_a.a
+
+        elif isinstance(clean_a, AdditiveIdentity):
+            # Convert arctan(0) to 0
+            return AdditiveIdentity()
+
+        elif isinstance(clean_a, MultiplicativeIdentity):
+            # Convert arctan(1) to pi/4
+            return Constant(0.25 * math.pi)
 
         else:
             return ArcTan(clean_a)
