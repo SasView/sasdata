@@ -299,16 +299,19 @@ class Unit:
         pass
 
     def __mul__(self: Self, other: "Unit"):
-        if not isinstance(other, Unit):
-            return NotImplemented
-
-        return Unit(self.scale * other.scale, self.dimensions * other.dimensions)
+        if isinstance(other, Unit):
+            return Unit(self.scale * other.scale, self.dimensions * other.dimensions)
+        elif isinstance(other, (int, float)):
+            return Unit(other * self.scale, self.dimensions)
+        return NotImplemented
 
     def __truediv__(self: Self, other: "Unit"):
-        if not isinstance(other, Unit):
+        if isinstance(other, Unit):
+            return Unit(self.scale / other.scale, self.dimensions / other.dimensions)
+        elif isinstance(other, (int, float)):
+            return Unit(self.scale / other, self.dimensions)
+        else:
             return NotImplemented
-
-        return Unit(self.scale / other.scale, self.dimensions / other.dimensions)
 
     def __rtruediv__(self: Self, other: "Unit"):
         if isinstance(other, Unit):
@@ -692,6 +695,7 @@ days = NamedUnit(86400, Dimensions(0, 1, 0, 0, 0, 0, 0),name='days',ascii_symbol
 years = NamedUnit(31556952.0, Dimensions(0, 1, 0, 0, 0, 0, 0),name='years',ascii_symbol='y',symbol='y')
 degrees = NamedUnit(57.29577951308232, Dimensions(0, 0, 0, 0, 0, 0, 1),name='degrees',ascii_symbol='deg',symbol='deg')
 radians = NamedUnit(1, Dimensions(0, 0, 0, 0, 0, 0, 1),name='radians',ascii_symbol='rad',symbol='rad')
+rotations = NamedUnit(6.283185307179586, Dimensions(0, 0, 0, 0, 0, 0, 1),name='rotations',ascii_symbol='rot',symbol='rot')
 stradians = NamedUnit(1, Dimensions(0, 0, 0, 0, 0, 0, 2),name='stradians',ascii_symbol='sr',symbol='sr')
 litres = NamedUnit(0.001, Dimensions(3, 0, 0, 0, 0, 0, 0),name='litres',ascii_symbol='l',symbol='l')
 electronvolts = NamedUnit(1.602176634e-19, Dimensions(2, -2, 1, 0, 0, 0, 0),name='electronvolts',ascii_symbol='eV',symbol='eV')
@@ -2052,6 +2056,7 @@ symbol_lookup = {
         "y": years,
         "deg": degrees,
         "rad": radians,
+        "rot": rotations,
         "sr": stradians,
         "l": litres,
         "eV": electronvolts,
@@ -3385,6 +3390,7 @@ angle = UnitGroup(
   units = [
     degrees,
     radians,
+    rotations,
 ])
 
 solid_angle = UnitGroup(

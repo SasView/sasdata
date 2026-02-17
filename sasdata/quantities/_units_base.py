@@ -214,16 +214,19 @@ class Unit:
         pass
 
     def __mul__(self: Self, other: "Unit"):
-        if not isinstance(other, Unit):
-            return NotImplemented
-
-        return Unit(self.scale * other.scale, self.dimensions * other.dimensions)
+        if isinstance(other, Unit):
+            return Unit(self.scale * other.scale, self.dimensions * other.dimensions)
+        elif isinstance(other, (int, float)):
+            return Unit(other * self.scale, self.dimensions)
+        return NotImplemented
 
     def __truediv__(self: Self, other: "Unit"):
-        if not isinstance(other, Unit):
+        if isinstance(other, Unit):
+            return Unit(self.scale / other.scale, self.dimensions / other.dimensions)
+        elif isinstance(other, (int, float)):
+            return Unit(self.scale / other, self.dimensions)
+        else:
             return NotImplemented
-
-        return Unit(self.scale / other.scale, self.dimensions / other.dimensions)
 
     def __rtruediv__(self: Self, other: "Unit"):
         if isinstance(other, Unit):
