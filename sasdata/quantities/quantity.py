@@ -1,6 +1,6 @@
 import hashlib
 import json
-from math import e, log
+import math
 from typing import Any, Self, TypeVar, Union
 
 import h5py
@@ -451,25 +451,207 @@ class Inv(UnaryOperation):
 class Ln(UnaryOperation):
     serialisation_name = "ln"
 
-    def evaluate(self, variables: dict[int, T]) -> Operation:
-        return log(self.a.evaluate(variables))
+    def evaluate(self, variables: dict[int, T]) -> T:
+        return math.log(self.a.evaluate(variables))
 
     def _derivative(self, hash_value: int) -> Operation:
-        return Inv(self.a)
+        return Div(self.a._derivative(hash_value), self.a)
 
-    def _clean(self, a):
+    def _clean(self):
         clean_a = self.a._clean()
 
-        if isinstance(a, MultiplicativeIdentity):
+        if isinstance(clean_a, Exp):
+            # Convert ln(exp(x)) to x
+            return clean_a.a
+
+        elif isinstance(clean_a, MultiplicativeIdentity):
             # Convert ln(1) to 0
             return AdditiveIdentity()
 
-        elif a == e:
+        elif clean_a == math.e:
             # Convert ln(e) to 1
             return MultiplicativeIdentity()
 
         else:
-            return Log(clean_a)
+            return Ln(clean_a)
+
+
+class Exp(UnaryOperation):
+    serialisation_name = "exp"
+
+    def evaluate(self, variables: dict[int, T]) -> T:
+        return math.exp(self.a.evaluate(variables))
+
+    def _derivative(self, hash_value: int) -> Operation:
+        return Mul(self.a._derivative(hash_value), Exp(self.a))
+
+    def _clean(self):
+        clean_a = self.a._clean()
+
+        if isinstance(clean_a, Ln):
+            # Convert exp(ln(x)) to x
+            return clean_a.a
+
+        elif isinstance(clean_a, MultiplicativeIdentity):
+            # Convert e**1 to e
+            return math.e
+
+        elif isinstance(clean_a, AdditiveIdentity):
+            # Convert e**0 to 1
+            return 1
+
+        else:
+            return Exp(clean_a)
+
+
+class Sin(UnaryOperation):
+    serialisation_name = "sin"
+
+    def evaluate(self, variables: dict[int, T]) -> T:
+        return np.sin(self.a.evaluate(variables))
+
+    def _derivative(self, hash_value: int) -> Operation:
+        return Mul(self.a._derivative(hash_value), Cos(self.a))
+
+    def _clean(self):
+        clean_a = self.a._clean()
+
+        if isinstance(clean_a, ArcSin):
+            return clean_a.a
+
+        elif isinstance(clean_a, AdditiveIdentity):
+            # Convert sin(0) to 0
+            return AdditiveIdentity()
+
+        else:
+            return Sin(clean_a)
+
+
+class ArcSin(UnaryOperation):
+    serialisation_name = "arcsin"
+
+    def evaluate(self, variables: dict[int, T]) -> T:
+        return np.arcsin(self.a.evaluate(variables))
+
+    def _derivative(self, hash_value: int) -> Operation:
+        return Div(self.a._derivative(hash_value), Sqrt(Sub(MultiplicativeIdentity(), Mul(self.a, self.a))))
+
+    def _clean(self):
+        clean_a = self.a._clean()
+
+        if isinstance(clean_a, Sin):
+            return clean_a.a
+
+        elif isinstance(clean_a, AdditiveIdentity):
+            # Convert arcsin(0) to 0
+            return AdditiveIdentity()
+
+        elif isinstance(clean_a, MultiplicativeIdentity):
+            # Convert arcsin(1) to pi/2
+            return Constant(0.5 * math.pi)
+
+        else:
+            return ArcSin(clean_a)
+
+
+class Cos(UnaryOperation):
+    serialisation_name = "cos"
+
+    def evaluate(self, variables: dict[int, T]) -> T:
+        return np.cos(self.a.evaluate(variables))
+
+    def _derivative(self, hash_value: int) -> Operation:
+        return Mul(self.a._derivative(hash_value), Neg(Sin(self.a)))
+
+    def _clean(self):
+        clean_a = self.a._clean()
+
+        if isinstance(clean_a, ArcCos):
+            return clean_a.a
+
+        elif isinstance(clean_a, AdditiveIdentity):
+            # Convert cos(0) to 1
+            return MultiplicativeIdentity()
+
+        else:
+            return Cos(clean_a)
+
+
+class ArcCos(UnaryOperation):
+    serialisation_name = "arccos"
+
+    def evaluate(self, variables: dict[int, T]) -> T:
+        return np.arccos(self.a.evaluate(variables))
+
+    def _derivative(self, hash_value: int) -> Operation:
+        return Neg(Div(self.a._derivative(hash_value), Sqrt(Sub(MultiplicativeIdentity(), Mul(self.a, self.a)))))
+
+    def _clean(self):
+        clean_a = self.a._clean()
+
+        if isinstance(clean_a, Cos):
+            return clean_a.a
+
+        elif isinstance(clean_a, AdditiveIdentity):
+            # Convert arccos(0) to pi/2
+            return Constant(0.5 * math.pi)
+
+        elif isinstance(clean_a, MultiplicativeIdentity):
+            # Convert arccos(1) to 0
+            return AdditiveIdentity()
+
+        else:
+            return ArcCos(clean_a)
+
+
+class Tan(UnaryOperation):
+    serialisation_name = "tan"
+
+    def evaluate(self, variables: dict[int, T]) -> T:
+        return np.tan(self.a.evaluate(variables))
+
+    def _derivative(self, hash_value: int) -> Operation:
+        return Div(self.a._derivative(hash_value), Mul(Cos(self.a), Cos(self.a)))
+
+    def _clean(self):
+        clean_a = self.a._clean()
+
+        if isinstance(clean_a, ArcTan):
+            return clean_a.a
+
+        elif isinstance(clean_a, AdditiveIdentity):
+            # Convert tan(0) to 0
+            return AdditiveIdentity()
+
+        else:
+            return Tan(clean_a)
+
+
+class ArcTan(UnaryOperation):
+    serialisation_name = "arctan"
+
+    def evaluate(self, variables: dict[int, T]) -> T:
+        return np.arctan(self.a.evaluate(variables))
+
+    def _derivative(self, hash_value: int) -> Operation:
+        return Div(self.a._derivative(hash_value), Add(MultiplicativeIdentity(), Mul(self.a, self.a)))
+
+    def _clean(self):
+        clean_a = self.a._clean()
+
+        if isinstance(clean_a, Tan):
+            return clean_a.a
+
+        elif isinstance(clean_a, AdditiveIdentity):
+            # Convert arctan(0) to 0
+            return AdditiveIdentity()
+
+        elif isinstance(clean_a, MultiplicativeIdentity):
+            # Convert arctan(1) to pi/4
+            return Constant(0.25 * math.pi)
+
+        else:
+            return ArcTan(clean_a)
 
 
 class BinaryOperation(Operation):
@@ -703,11 +885,11 @@ class Log(Operation):
         self.a = a
         self.base = base
 
-    def evaluate(self, variables: dict[int, T]) -> Operation:
-        return log(self.a.evaluate(variables), self.base)
+    def evaluate(self, variables: dict[int, T]) -> T:
+        return math.log(self.a.evaluate(variables), self.base)
 
     def _derivative(self, hash_value: int) -> Operation:
-        return Inv(Mul(self.a, Ln(Constant(self.base))))
+        return Div(self.a.derivative(hash_value), Mul(self.a, Ln(Constant(self.base))))
 
     def _clean_ab(self) -> Operation:
         a = self.a._clean()
@@ -765,7 +947,7 @@ class Pow(Operation):
         else:
             return Mul(Constant(self.power), Mul(Pow(self.a, self.power - 1), self.a._derivative(hash_value)))
 
-    def _clean(self) -> Operation:
+    def _clean(self):
         a = self.a._clean()
 
         if self.power == 1:
@@ -945,6 +1127,13 @@ _serialisable_classes = [
     Neg,
     Inv,
     Ln,
+    Exp,
+    Sin,
+    ArcSin,
+    Cos,
+    ArcCos,
+    Tan,
+    ArcTan,
     Add,
     Sub,
     Mul,
@@ -1080,13 +1269,15 @@ class QuantityHistory:
 
 
 class Quantity[QuantityType]:
-    def __init__(self,
-                 value: QuantityType,
-                 units: Unit,
-                 standard_error: QuantityType | None = None,
-                 hash_seed="",
-                 name="",
-                 id_header=""):
+    def __init__(
+        self,
+        value: QuantityType,
+        units: Unit,
+        standard_error: QuantityType | None = None,
+        hash_seed="",
+        name="",
+        id_header="",
+    ):
         self.value = value
         """ Numerical value of this data, in the specified units"""
 
@@ -1173,11 +1364,13 @@ class Quantity[QuantityType]:
 
     def to_units_of(self, new_units: Unit) -> "Quantity[QuantityType]":
         new_value, new_error = self.in_units_of_with_standard_error(new_units)
-        return Quantity(value=new_value,
-                        units=new_units,
-                        standard_error=new_error,
-                        hash_seed=self._hash_seed,
-                        id_header=self._id_header)
+        return Quantity(
+            value=new_value,
+            units=new_units,
+            standard_error=new_error,
+            hash_seed=self._hash_seed,
+            id_header=self._id_header,
+        )
 
     def variance_in_units_of(self, units: Unit) -> QuantityType:
         """Get the variance of quantity in other units"""
@@ -1397,12 +1590,9 @@ class Quantity[QuantityType]:
 
 
 class NamedQuantity[QuantityType](Quantity[QuantityType]):
-    def __init__(self,
-                 name: str,
-                 value: QuantityType,
-                 units: Unit,
-                 standard_error: QuantityType | None = None,
-                 id_header=""):
+    def __init__(
+        self, name: str, value: QuantityType, units: Unit, standard_error: QuantityType | None = None, id_header=""
+    ):
         super().__init__(value, units, standard_error=standard_error, hash_seed=name, name=name, id_header=id_header)
 
     def __repr__(self):
