@@ -166,7 +166,7 @@ def parse_data(lines: list[str], kvs: dict[str, str]) -> dict[str, Quantity]:
         for idx, v in enumerate(values):
             points[headers[idx]].append(float(v))
 
-    for h in points:
+    for h in points.keys():
         if h.endswith("_error") and h[:-6] in headers:
             # This was an error line
             continue

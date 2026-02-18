@@ -23,7 +23,7 @@ Collimation:
    Length: None
 Detector:
    Name:         front-detector
-   Distance:     2845.260009765625 mm
+   Distance:     2845.26 mm
    Offset:       None
    Orientation:  None
    Beam center:  None
@@ -31,7 +31,7 @@ Detector:
    Slit length:  None
 Detector:
    Name:         rear-detector
-   Distance:     4385.27978515625 mm
+   Distance:     4385.28 mm
    Offset:       None
    Orientation:  None
    Beam center:  None

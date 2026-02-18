@@ -72,7 +72,7 @@ class Dimensions:
 
     def __pow__(self, power: int | float):
 
-        if not isinstance(power, (int | float)):
+        if not isinstance(power, (int, float)):
             return NotImplemented
 
         frac = Fraction(power).limit_denominator(500) # Probably way bigger than needed, 10 would probably be fine
@@ -231,7 +231,7 @@ class Unit:
     def __rtruediv__(self: Self, other: "Unit"):
         if isinstance(other, Unit):
             return Unit(other.scale / self.scale, other.dimensions / self.dimensions)
-        elif isinstance(other, (int | float)):
+        elif isinstance(other, (int, float)):
             return Unit(other / self.scale, self.dimensions ** -1)
         else:
             return NotImplemented
@@ -348,7 +348,6 @@ class RequiredUnitFormatProcessor(UnitFormatProcessor):
         token = ProcessedUnitToken(self.unit, self.power)
 
         return new_scale, new_dimensions, token
-
 class GreedyAbsDimensionUnitFormatProcessor(UnitFormatProcessor):
     """ This processor minimises the dimensionality of the unit by multiplying by as many
     units of the specified type as needed """
@@ -357,6 +356,9 @@ class GreedyAbsDimensionUnitFormatProcessor(UnitFormatProcessor):
 
     def apply(self, scale, dimensions) -> tuple[ProcessedUnitToken, float, Dimensions]:
         pass
+
+class GreedyAbsDimensionUnitFormatProcessor(UnitFormatProcessor):
+    pass
 
 class UnitGroup:
     """ A group of units that all have the same dimensionality """
