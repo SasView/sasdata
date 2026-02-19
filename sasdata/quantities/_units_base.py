@@ -392,11 +392,14 @@ class ArbitraryUnit(NamedUnit):
         # else:
             return NotImplemented
 
-    def __pow__(self, power: int | float):
-        # if not isinstance(power, int | float):
-        #     return NotImplemented
-
-        return Unit(self.scale**power, self.dimensions**power)
+    def __pow__(self, power: int):
+        match power:
+            case int():
+                result = ArbitraryUnit(sorted(self._numerator * power), sorted(self._denominator * power))
+                result._unit = self._unit ** power
+                return result
+            case _:
+                return NotImplemented
 
 
     def equivalent(self: Self, other: "Unit"):
