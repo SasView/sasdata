@@ -93,3 +93,22 @@ def test_unit_dissimilar(dissimilar_term):
         for unit_2 in units[i + 1 :]:
             print(unit_1, unit_2)
             assert not unit_1.equivalent(unit_2), "Units should not be equivalent"
+
+
+def test_unit_names():
+    pizza = ArbitraryUnit(["Pizza"])
+    slice = ArbitraryUnit(["Slice"])
+    pineapple = ArbitraryUnit(["Pineapple"])
+    pie = ArbitraryUnit(["Pie"])
+    empty = ArbitraryUnit([])
+
+    assert str(empty) == ""
+
+    assert str(pizza) == "Pizza"
+    assert str((pizza * pineapple)) == "Pineapple Pizza"
+    assert str((pizza * pizza)) == "Pizza^2"
+
+    assert str((slice / pizza)) == "Slice / Pizza"
+    assert str((slice / pizza) ** 2) == "Slice^2 / Pizza^2"
+
+    assert str((pie**0.5)) == "Pie^0.5"  # A valid unit, because pie are square
