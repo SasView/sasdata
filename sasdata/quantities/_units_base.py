@@ -400,10 +400,6 @@ class ArbitraryUnit(NamedUnit):
             case _:
                 return False
 
-    def __eq__(self: Self, other: "Unit"):
-        """FIXME: TODO"""
-        return self.equivalent(other) and np.abs(np.log(self.scale/other.scale)) < 1e-5
-
     def si_equivalent(self):
         """ Get the SI unit corresponding to this unit"""
         """FIXME: TODO"""
@@ -416,12 +412,10 @@ class ArbitraryUnit(NamedUnit):
 
     def __repr__(self):
         """FIXME: TODO"""
-        if self.scale == 1:
-            # We're in SI
-            return self.dimensions.si_repr()
-
-        else:
-            return f"Unit[{self.scale}, {self.dimensions}]"
+        result = self._name()
+        if self._unit.__repr__():
+            result += f" {self._unit.__repr__()}"
+        return result
 
     @staticmethod
     def parse(unit_string: str) -> "Unit":
