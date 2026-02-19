@@ -358,20 +358,34 @@ class ArbitraryUnit(NamedUnit):
                 self._denominator = denominator
             case _:
                 raise TypeError
-        self._unit = Unit(1, Dimensions())  # Unitless
+        self._unit = NamedUnit(1, Dimensions(), "")  # Unitless
 
         super().__init__(si_scaling_factor=1, dimensions=self._unit.dimensions, symbol=self._name())
 
     def _name(self):
-        match (self._numerator, self._denominator):
-            case ({}, {}):
+        num = []
+        for key, value in self._numerator.items():
+            if value == 1:
+                num.append(key)
+            else:
+                num.append(f"{key}^{value}")
+        den = []
+        for key, value in self._denominator.items():
+            if value == 1:
+                den.append(key)
+            else:
+                den.append(f"{key}^{value}")
+        num.sort()
+        den.sort()
+        match (num, den):
+            case ([], []):
                 return ""
-            case (_, {}):
-                return " ".join(self._numerator)
-            case ({}, _):
-                return "1 / " + " ".join(self._denominator)
+            case (_, []):
+                return " ".join(num)
+            case ([], _):
+                return "1 / " + " ".join(den)
             case _:
-                return " ".join(self._numerator) + " / " + " ".join(self._denominator)
+                return " ".join(num) + " / " + " ".join(den)
 
     def __eq__(self, other):
         match other:
@@ -471,11 +485,12 @@ class ArbitraryUnit(NamedUnit):
         for processor in format_process:
             pass
 
-    def __repr__(self):
-        """FIXME: TODO"""
+    def __str__(self):
         result = self._name()
-        if self._unit.__repr__():
-            result += f" {self._unit.__repr__()}"
+        if type(self._unit) is NamedUnit and self._unit.name.strip():
+            result += f" {self._unit.name.strip()}"
+        if type(self._unit) is Unit and str(self._unit).strip():
+            result += f" {str(self._unit).strip()}"
         return result
 
     @staticmethod
