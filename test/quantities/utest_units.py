@@ -26,6 +26,14 @@ EQUAL_TERMS = {
         ArbitraryUnit(["Slices"], denominator=["Pizza"]) * ArbitraryUnit(["Slices"], denominator=["Pizza"]),
         ArbitraryUnit(["Slices"], denominator=["Pizza"]) ** 2,
     ],
+    "Arbitrary Fractional Power": [
+        ArbitraryUnit(["Pizza", "Pizza", "Pizza"]),
+        ArbitraryUnit(["Pizza", "Pizza"]) ** 1.5,
+    ],
+    "Arbitrary Division": [
+        ArbitraryUnit("Slices") / ArbitraryUnit("Pizza"),
+        ArbitraryUnit(["Slices"], denominator=["Pizza"]),
+    ],
 }
 
 
@@ -37,8 +45,10 @@ def equal_term(request):
 def test_unit_equality(equal_term):
     for i, unit_1 in enumerate(equal_term):
         for unit_2 in equal_term[i + 1 :]:
-            print(f"A: {unit_1}")
-            print(f"B: {unit_2}")
+            if type(unit_1) is ArbitraryUnit:
+                print(f"A: {unit_1._numerator} / {unit_1._denominator}")
+            if type(unit_2) is ArbitraryUnit:
+                print(f"B: {unit_2._numerator} / {unit_2._denominator}")
             assert unit_1.equivalent(unit_2), "Units should be equivalent"
             assert unit_1 == unit_2, "Units should be equal"
 
