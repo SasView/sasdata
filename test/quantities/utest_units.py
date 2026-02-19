@@ -3,46 +3,7 @@ import math
 import pytest
 
 import sasdata.quantities.units as units
-from sasdata.quantities.units import UnknownUnit
-
-EQUAL_TERMS = {
-    "Pressure": [units.pascals, units.newtons / units.meters**2, units.micronewtons * units.millimeters**-2],
-    "Resistance": [units.ohms, units.volts / units.amperes, 1e-3 / units.millisiemens],
-    "Angular frequency": [(units.rotations / units.minutes), (units.radians * units.hertz) * 2 * math.pi / 60.0],
-    "Unknown Units": [UnknownUnit("Pizzas"), UnknownUnit(["Pizzas"])],
-    "Unknown Fractional Units": [
-        UnknownUnit("Slices", denominator=["Pizzas"]),
-        UnknownUnit(["Slices"], denominator=["Pizzas"]),
-    ],
-    "Unknown Multiplication": [
-        UnknownUnit("Pizzas") * UnknownUnit("People"),
-        UnknownUnit(["Pizzas", "People"]),
-    ],
-    "Unknown Multiplication with Units": [
-        UnknownUnit("Pizzas") * units.meters,
-        units.meters * UnknownUnit(["Pizzas"]),
-    ],
-    "Unknown Power": [
-        UnknownUnit(["Slices"], denominator=["Pizza"]) * UnknownUnit(["Slices"], denominator=["Pizza"]),
-        UnknownUnit(["Slices"], denominator=["Pizza"]) ** 2,
-    ],
-    "Unknown Fractional Power": [
-        UnknownUnit(["Pizza", "Pizza", "Pizza"]),
-        UnknownUnit(["Pizza", "Pizza"]) ** 1.5,
-    ],
-    "Unknown Division": [
-        UnknownUnit("Slices") / UnknownUnit("Pizza"),
-        UnknownUnit(["Slices"], denominator=["Pizza"]),
-        (1 / UnknownUnit("Pizza")) * UnknownUnit("Slices"),
-        1 / (UnknownUnit("Pizza") / UnknownUnit("Slices")),
-    ],
-    "Unknown Complicated Math": [
-        (UnknownUnit("Slices") / UnknownUnit("Person"))
-        / (UnknownUnit("Slices") / UnknownUnit("Pizzas"))
-        * UnknownUnit("Person"),
-        UnknownUnit("Pizzas"),
-    ],
-}
+from sasdata.quantities.units import Unit, ArbitraryUnit
 
 
 class EqualUnits:
@@ -53,6 +14,7 @@ class EqualUnits:
     def run_test(self):
         for i, unit_1 in enumerate(self.units):
             for unit_2 in self.units[i + 1 :]:
+                print(unit_1, unit_2)
                 assert unit_1.equivalent(unit_2), "Units should be equivalent"
                 assert unit_1 == unit_2, "Units should be equal"
 
@@ -68,10 +30,26 @@ EQUIVALENT_TERMS = {
     "Angular frequency": [units.rotations / units.minutes, units.degrees * units.hertz],
 }
 
+pizza_a = ArbitraryUnit("Pizzas")
+pizza_b = ArbitraryUnit(["Pizzas"])
+print(f"A: {pizza_a}\tB: {pizza_b}")
+
 
 @pytest.fixture(params=EQUIVALENT_TERMS)
 def equivalent_term(request):
     return EQUIVALENT_TERMS[request.param]
+
+    EqualUnits("Arbitrary Units",
+               ArbitraryUnit("Pizzas"),
+               ArbitraryUnit(["Pizzas"])),
+
+    EqualUnits("Arbitrary Units",
+               ArbitraryUnit("Slices", denominator=["Pizzas"]),
+               ArbitraryUnit(["Slices"], denominator=["Pizzas"])),
+
+    DissimilarUnits("Different Arbitrary Units",
+               ArbitraryUnit("Pizzas"),
+               ArbitraryUnit(["Doughnuts"])),
 
 
 def test_unit_equivalent(equivalent_term):
