@@ -499,12 +499,10 @@ class ArbitraryUnit(NamedUnit):
 
     def __repr__(self):
         """FIXME: TODO"""
-        if self.scale == 1:
-            # We're in SI
-            return self.dimensions.si_repr()
-
-        else:
-            return f"Unit[{self.scale}, {self.dimensions}]"
+        result = self._name()
+        if self._unit.__repr__():
+            result += f" {self._unit.__repr__()}"
+        return result
 
     @staticmethod
     def parse(unit_string: str) -> "Unit":
