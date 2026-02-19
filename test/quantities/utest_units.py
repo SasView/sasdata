@@ -1,7 +1,7 @@
 import math
 
 import sasdata.quantities.units as units
-from sasdata.quantities.units import Unit
+from sasdata.quantities.units import Unit, ArbitraryUnit
 
 
 class EqualUnits:
@@ -12,6 +12,7 @@ class EqualUnits:
     def run_test(self):
         for i, unit_1 in enumerate(self.units):
             for unit_2 in self.units[i + 1 :]:
+                print(unit_1, unit_2)
                 assert unit_1.equivalent(unit_2), "Units should be equivalent"
                 assert unit_1 == unit_2, "Units should be equal"
 
@@ -38,6 +39,10 @@ class DissimilarUnits:
             for unit_2 in self.units[i + 1 :]:
                 assert not unit_1.equivalent(unit_2), "Units should not be equivalent"
 
+pizza_a = ArbitraryUnit("Pizzas")
+pizza_b = ArbitraryUnit(["Pizzas"])
+print(f"A: {pizza_a}\tB: {pizza_b}")
+
 
 tests = [
 
@@ -62,6 +67,18 @@ tests = [
     DissimilarUnits("Frequency and Angular frequency",
                     (units.rotations/units.minutes),
                     (units.hertz)),
+
+    EqualUnits("Arbitrary Units",
+               ArbitraryUnit("Pizzas"),
+               ArbitraryUnit(["Pizzas"])),
+
+    EqualUnits("Arbitrary Units",
+               ArbitraryUnit("Slices", denominator=["Pizzas"]),
+               ArbitraryUnit(["Slices"], denominator=["Pizzas"])),
+
+    DissimilarUnits("Different Arbitrary Units",
+               ArbitraryUnit("Pizzas"),
+               ArbitraryUnit(["Doughnuts"])),
 
 
 ]
