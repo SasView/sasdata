@@ -410,12 +410,29 @@ class ArbitraryUnit(NamedUnit):
         return self * other
 
     def __truediv__(self: Self, other: "Unit"):
-        # if isinstance(other, Unit):
-        #     return Unit(self.scale / other.scale, self.dimensions / other.dimensions)
-        # elif isinstance(other, (int, float)):
-        #     return Unit(self.scale / other, self.dimensions)
-        # else:
-            return NotImplemented
+        match other:
+            case ArbitraryUnit():
+                num = dict(self._numerator)
+                for key in other._denominator:
+                    if key in num:
+                        num[key] += other._denominator[key]
+                    else:
+                        num[key] = other._denominator[key]
+                den = dict(self._denominator)
+                for key in other._numerator:
+                    if key in den:
+                        den[key] += other._numerator[key]
+                    else:
+                        den[key] = other._numerator[key]
+                result = ArbitraryUnit(num, den)
+                result._unit /= other._unit
+                return result
+            case NamedUnit() | Unit() | int() | float():
+                result = ArbitraryUnit(self._numerator, self._denominator)
+                result._unit /= other
+                return result
+            case _:
+                return NotImplemented
 
     def __rtruediv__(self: Self, other: "Unit"):
         # if isinstance(other, Unit):
@@ -427,7 +444,7 @@ class ArbitraryUnit(NamedUnit):
 
     def __pow__(self, power: int):
         match power:
-            case int():
+            case int() | float():
                 num = {key: value * power for key, value in self._numerator.items()}
                 den = {key: value * power for key, value in self._denominator.items()}
                 result = ArbitraryUnit(num, den)
