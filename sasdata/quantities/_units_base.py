@@ -337,10 +337,8 @@ class ArbitraryUnit(NamedUnit):
             case _:
                 self._denominator = denominator
         self._unit = Unit(1, Dimensions())  # Unitless
-        print("Made")
 
         super().__init__(si_scaling_factor=1, dimensions=self._unit.dimensions, symbol=self._name())
-        print("Make more")
 
     def _name(self):
         match (self._numerator, self._denominator):
@@ -362,11 +360,21 @@ class ArbitraryUnit(NamedUnit):
 
 
     def __mul__(self: Self, other: "Unit"):
-        # if isinstance(other, Unit):
-        #     return Unit(self.scale * other.scale, self.dimensions * other.dimensions)
-        # elif isinstance(other, (int, float)):
-        #     return Unit(other * self.scale, self.dimensions)
-        return NotImplemented
+        print(f"Calling mul on {self} and {other}")
+        match other:
+            case ArbitraryUnit():
+                result = ArbitraryUnit(self._numerator + other._numerator, self._denominator + other._denominator)
+                result._unit *= other._unit
+                return result
+            case NamedUnit() | Unit() | int() | float():
+                result = ArbitraryUnit(self._numerator, self._denominator)
+                result._unit *= other
+                return result
+            case _:
+                return NotImplemented
+
+    def __rmul__(self: Self, other):
+        return self * other
 
     def __truediv__(self: Self, other: "Unit"):
         # if isinstance(other, Unit):
