@@ -33,6 +33,14 @@ EQUAL_TERMS = {
     "Arbitrary Division": [
         ArbitraryUnit("Slices") / ArbitraryUnit("Pizza"),
         ArbitraryUnit(["Slices"], denominator=["Pizza"]),
+        (1 / ArbitraryUnit("Pizza")) * ArbitraryUnit("Slices"),
+        1 / (ArbitraryUnit("Pizza") / ArbitraryUnit("Slices")),
+    ],
+    "Arbitrary Complicated Math": [
+        (ArbitraryUnit("Slices") / ArbitraryUnit("Person"))
+        / (ArbitraryUnit("Slices") / ArbitraryUnit("Pizzas"))
+        * ArbitraryUnit("Person"),
+        ArbitraryUnit("Pizzas"),
     ],
 }
 
@@ -108,6 +116,7 @@ def test_unit_names():
     assert str((pizza * pineapple)) == "Pineapple Pizza"
     assert str((pizza * pizza)) == "Pizza^2"
 
+    assert str((1 / pizza)) == "1 / Pizza"
     assert str((slice / pizza)) == "Slice / Pizza"
     assert str((slice / pizza) ** 2) == "Slice^2 / Pizza^2"
 

@@ -497,7 +497,7 @@ class ArbitraryUnit(NamedUnit):
                         den[key] = other._denominator[key]
                 result = ArbitraryUnit(num, den)
                 result._unit *= other._unit
-                return result
+                return result._reduce()
             case NamedUnit() | Unit() | int() | float():
                 result = ArbitraryUnit(self._numerator, self._denominator)
                 result._unit *= other
@@ -525,7 +525,7 @@ class ArbitraryUnit(NamedUnit):
                         den[key] = other._numerator[key]
                 result = ArbitraryUnit(num, den)
                 result._unit /= other._unit
-                return result
+                return result._reduce()
             case NamedUnit() | Unit() | int() | float():
                 result = ArbitraryUnit(self._numerator, self._denominator)
                 result._unit /= other
@@ -534,12 +534,29 @@ class ArbitraryUnit(NamedUnit):
                 return NotImplemented
 
     def __rtruediv__(self: Self, other: "Unit"):
-        # if isinstance(other, Unit):
-        #     return Unit(other.scale / self.scale, other.dimensions / self.dimensions)
-        # elif isinstance(other, (int, float)):
-        #     return Unit(other / self.scale, self.dimensions ** -1)
-        # else:
-            return NotImplemented
+        match other:
+            case ArbitraryUnit():
+                num = dict(other._numerator)
+                for key in self._denominator:
+                    if key in num:
+                        num[key] += self._denominator[key]
+                    else:
+                        num[key] = self._denominator[key]
+                den = dict(other._denominator)
+                for key in self._numerator:
+                    if key in den:
+                        den[key] += self._numerator[key]
+                    else:
+                        den[key] = self._numerator[key]
+                result = ArbitraryUnit(num, den)
+                result._unit = other._unit / self._unit
+                return result._reduce()
+            case NamedUnit() | Unit() | int() | float():
+                result = ArbitraryUnit(self._denominator, self._numerator)
+                result._unit = other / result._unit
+                return result
+            case _:
+                return NotImplemented
 
     def __pow__(self, power: int):
         match power:
@@ -570,6 +587,21 @@ class ArbitraryUnit(NamedUnit):
         for processor in format_process:
             pass
 
+    def _reduce(self):
+        """Remove redundant units"""
+        for k in self._denominator:
+            if k in self._numerator:
+                common = min(self._numerator[k], self._denominator[k])
+                self._numerator[k] -= common
+                self._denominator[k] -= common
+        dead_nums = [k for k in self._numerator if self._numerator[k] == 0]
+        for k in dead_nums:
+            del self._numerator[k] 
+        dead_dens = [k for k in self._denominator if self._denominator[k] == 0]
+        for k in dead_dens:
+            del self._denominator[k] 
+        return self
+
     def __str__(self):
         result = self._name()
         if type(self._unit) is NamedUnit and self._unit.name.strip():
@@ -577,6 +609,9 @@ class ArbitraryUnit(NamedUnit):
         if type(self._unit) is Unit and str(self._unit).strip():
             result += f" {str(self._unit).strip()}"
         return result
+
+    def __repr__(self):
+        return str(self)
 
     @staticmethod
     def parse(unit_string: str) -> "Unit":
