@@ -422,10 +422,8 @@ class ArbitraryUnit(NamedUnit):
             case _:
                 self._denominator = denominator
         self._unit = Unit(1, Dimensions())  # Unitless
-        print("Made")
 
         super().__init__(si_scaling_factor=1, dimensions=self._unit.dimensions, symbol=self._name())
-        print("Make more")
 
     def _name(self):
         match (self._numerator, self._denominator):
@@ -447,6 +445,20 @@ class ArbitraryUnit(NamedUnit):
 
 
     def __mul__(self: Self, other: "Unit"):
+        print(f"Calling mul on {self} and {other}")
+        match other:
+            case ArbitraryUnit():
+                result = ArbitraryUnit(self._numerator + other._numerator, self._denominator + other._denominator)
+                result._unit *= other._unit
+                return result
+            case NamedUnit() | Unit() | int() | float():
+                result = ArbitraryUnit(self._numerator, self._denominator)
+                result._unit *= other
+                return result
+            case _:
+                return NotImplemented
+                
+                
         # if isinstance(other, Unit):
         #     return Unit(self.scale * other.scale, self.dimensions * other.dimensions)
         # elif isinstance(other, (int, float)):
@@ -482,10 +494,6 @@ class ArbitraryUnit(NamedUnit):
                 return self._unit.equivalent(other._unit) and sorted(self._numerator) == sorted(other._numerator) and sorted(self._denominator) == sorted(other._denominator)
             case _:
                 return False
-
-    def __eq__(self: Self, other: "Unit"):
-        """FIXME: TODO"""
-        return self.equivalent(other) and np.abs(np.log(self.scale/other.scale)) < 1e-5
 
     def si_equivalent(self):
         """ Get the SI unit corresponding to this unit"""

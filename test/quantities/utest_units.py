@@ -14,6 +14,14 @@ EQUAL_TERMS = {
         ArbitraryUnit("Slices", denominator=["Pizzas"]),
         ArbitraryUnit(["Slices"], denominator=["Pizzas"]),
     ],
+    "Arbitrary Multiplication": [
+        ArbitraryUnit("Pizzas") * ArbitraryUnit("People"),
+        ArbitraryUnit(["Pizzas", "People"]),
+    ],
+    "Arbitrary Multiplication with Units": [
+        ArbitraryUnit("Pizzas") * units.meters,
+        units.meters * ArbitraryUnit(["Pizzas"]),
+    ],
 }
 
 
@@ -51,6 +59,10 @@ def test_unit_equivalent(equivalent_term):
 DISSIMILAR_TERMS = {
     "Frequency and Angular frequency": [(units.rotations / units.minutes), (units.hertz)],
     "Different Arbitrary Units": [ArbitraryUnit("Pizzas"), ArbitraryUnit(["Donuts"])],
+    "Arbitrary Multiplication with Units": [
+        ArbitraryUnit("Pizzas") * units.meters,
+        units.seconds * ArbitraryUnit(["Pizzas"]),
+    ],
 }
 
 
