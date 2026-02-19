@@ -410,28 +410,50 @@ class ArbitraryUnit(NamedUnit):
     units (for example, calculating donuts per person for a meeting).
     The arbitrary unit allows for these unforseeable quantities."""
 
-    def __init__(self, numerator: str | list[str], denominator: None | list[str] = None):
+    def __init__(self,
+                 numerator: str | list[str] | dict[str, int],
+                 denominator: None | list[str] | dict[str, int]= None):
         match numerator:
-            case str(name):
-                self._numerator = [name]
-            case _:
+            case str():
+                self._numerator = {numerator: 1}
+            case list():
+                self._numerator = {}
+                for key in numerator:
+                    if key in self._numerator:
+                        self._numerator[key] += 1
+                    else:
+                        self._numerator[key] = 1
+            case dict():
                 self._numerator = numerator
+            case _:
+                raise TypeError
         match denominator:
             case None:
-                self._denominator = []
-            case _:
+                self._denominator = {}
+            case str():
+                self._denominator = {denominator: 1}
+            case list():
+                self._denominator = {}
+                for key in denominator:
+                    if key in self._denominator:
+                        self._denominator[key] += 1
+                    else:
+                        self._denominator[key] = 1
+            case dict():
                 self._denominator = denominator
+            case _:
+                raise TypeError
         self._unit = Unit(1, Dimensions())  # Unitless
 
         super().__init__(si_scaling_factor=1, dimensions=self._unit.dimensions, symbol=self._name())
 
     def _name(self):
         match (self._numerator, self._denominator):
-            case ([], []):
+            case ({}, {}):
                 return ""
-            case (_, []):
+            case (_, {}):
                 return " ".join(self._numerator)
-            case ([], _):
+            case ({}, _):
                 return "1 / " + " ".join(self._denominator)
             case _:
                 return " ".join(self._numerator) + " / " + " ".join(self._denominator)
@@ -445,10 +467,21 @@ class ArbitraryUnit(NamedUnit):
 
 
     def __mul__(self: Self, other: "Unit"):
-        print(f"Calling mul on {self} and {other}")
         match other:
             case ArbitraryUnit():
-                result = ArbitraryUnit(self._numerator + other._numerator, self._denominator + other._denominator)
+                num = dict(self._numerator)
+                for key in other._numerator:
+                    if key in num:
+                        num[key] += other._numerator[key]
+                    else:
+                        num[key] = other._numerator[key]
+                den = dict(self._denominator)
+                for key in other._denominator:
+                    if key in den:
+                        den[key] += other._denominator[key]
+                    else:
+                        den[key] = other._denominator[key]
+                result = ArbitraryUnit(num, den)
                 result._unit *= other._unit
                 return result
             case NamedUnit() | Unit() | int() | float():
@@ -480,7 +513,9 @@ class ArbitraryUnit(NamedUnit):
     def __pow__(self, power: int):
         match power:
             case int():
-                result = ArbitraryUnit(sorted(self._numerator * power), sorted(self._denominator * power))
+                num = {key: value * power for key, value in self._numerator.items()}
+                den = {key: value * power for key, value in self._denominator.items()}
+                result = ArbitraryUnit(num, den)
                 result._unit = self._unit ** power
                 return result
             case _:
