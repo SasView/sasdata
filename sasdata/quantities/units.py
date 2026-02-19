@@ -401,6 +401,115 @@ class NamedUnit(Unit):
                 or (self.ascii_symbol is not None and self.ascii_symbol.lower().startswith(prefix)) \
                 or (self.symbol is not None and self.symbol.lower().startswith(prefix))
 
+
+class ArbitraryUnit(NamedUnit):
+    """A unit for an unknown quantity
+
+    While this library attempts to handle all known SI units, it is
+    likely that users will want to express quantities of arbitrary
+    units (for example, calculating donuts per person for a meeting).
+    The arbitrary unit allows for these unforseeable quantities."""
+
+    def __init__(self, numerator: str | list[str], denominator: None | list[str] = None):
+        match numerator:
+            case str(name):
+                self._numerator = [name]
+            case _:
+                self._numerator = numerator
+        match denominator:
+            case None:
+                self._denominator = []
+            case _:
+                self._denominator = denominator
+        self._unit = Unit(1, Dimensions())  # Unitless
+        print("Made")
+
+        super().__init__(si_scaling_factor=1, dimensions=self._unit.dimensions, symbol=self._name())
+        print("Make more")
+
+    def _name(self):
+        match (self._numerator, self._denominator):
+            case ([], []):
+                return ""
+            case (_, []):
+                return " ".join(self._numerator)
+            case ([], _):
+                return "1 / " + " ".join(self._denominator)
+            case _:
+                return " ".join(self._numerator) + " / " + " ".join(self._denominator)
+
+    def __eq__(self, other):
+        match other:
+            case ArbitraryUnit():
+                return self._numerator == other._numerator and self._denominator == other._denominator and self._unit == other._unit
+            case Unit():
+                return not self._numerator and not self._denominator and self._unit == other
+
+
+    def __mul__(self: Self, other: "Unit"):
+        # if isinstance(other, Unit):
+        #     return Unit(self.scale * other.scale, self.dimensions * other.dimensions)
+        # elif isinstance(other, (int, float)):
+        #     return Unit(other * self.scale, self.dimensions)
+        return NotImplemented
+
+    def __truediv__(self: Self, other: "Unit"):
+        # if isinstance(other, Unit):
+        #     return Unit(self.scale / other.scale, self.dimensions / other.dimensions)
+        # elif isinstance(other, (int, float)):
+        #     return Unit(self.scale / other, self.dimensions)
+        # else:
+            return NotImplemented
+
+    def __rtruediv__(self: Self, other: "Unit"):
+        # if isinstance(other, Unit):
+        #     return Unit(other.scale / self.scale, other.dimensions / self.dimensions)
+        # elif isinstance(other, (int, float)):
+        #     return Unit(other / self.scale, self.dimensions ** -1)
+        # else:
+            return NotImplemented
+
+    def __pow__(self, power: int | float):
+        # if not isinstance(power, int | float):
+        #     return NotImplemented
+
+        return Unit(self.scale**power, self.dimensions**power)
+
+
+    def equivalent(self: Self, other: "Unit"):
+        match other:
+            case ArbitraryUnit():
+                return self._unit.equivalent(other._unit) and sorted(self._numerator) == sorted(other._numerator) and sorted(self._denominator) == sorted(other._denominator)
+            case _:
+                return False
+
+    def __eq__(self: Self, other: "Unit"):
+        """FIXME: TODO"""
+        return self.equivalent(other) and np.abs(np.log(self.scale/other.scale)) < 1e-5
+
+    def si_equivalent(self):
+        """ Get the SI unit corresponding to this unit"""
+        """FIXME: TODO"""
+        return Unit(1, self.dimensions)
+
+    def _format_unit(self, format_process: list["UnitFormatProcessor"]):
+        """FIXME: TODO"""
+        for processor in format_process:
+            pass
+
+    def __repr__(self):
+        """FIXME: TODO"""
+        if self.scale == 1:
+            # We're in SI
+            return self.dimensions.si_repr()
+
+        else:
+            return f"Unit[{self.scale}, {self.dimensions}]"
+
+    @staticmethod
+    def parse(unit_string: str) -> "Unit":
+        """FIXME: TODO"""
+        pass
 #
 # Parsing plan:
 #  Require unknown amounts of units to be explicitly positive or negative?
