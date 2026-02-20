@@ -53,10 +53,6 @@ def equal_term(request):
 def test_unit_equality(equal_term):
     for i, unit_1 in enumerate(equal_term):
         for unit_2 in equal_term[i + 1 :]:
-            if type(unit_1) is ArbitraryUnit:
-                print(f"A: {unit_1._numerator} / {unit_1._denominator}")
-            if type(unit_2) is ArbitraryUnit:
-                print(f"B: {unit_2._numerator} / {unit_2._denominator}")
             assert unit_1.equivalent(unit_2), "Units should be equivalent"
             assert unit_1 == unit_2, "Units should be equal"
 
@@ -75,7 +71,6 @@ def test_unit_equivalent(equivalent_term):
     units = equivalent_term
     for i, unit_1 in enumerate(units):
         for unit_2 in units[i + 1 :]:
-            print(unit_1, unit_2)
             assert unit_1.equivalent(unit_2), "Units should be equivalent"
             assert unit_1 != unit_2, "Units not should be equal"
 
@@ -99,7 +94,6 @@ def test_unit_dissimilar(dissimilar_term):
     units = dissimilar_term
     for i, unit_1 in enumerate(units):
         for unit_2 in units[i + 1 :]:
-            print(unit_1, unit_2)
             assert not unit_1.equivalent(unit_2), "Units should not be equivalent"
 
 
