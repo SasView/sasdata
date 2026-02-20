@@ -401,6 +401,222 @@ class NamedUnit(Unit):
                 or (self.ascii_symbol is not None and self.ascii_symbol.lower().startswith(prefix)) \
                 or (self.symbol is not None and self.symbol.lower().startswith(prefix))
 
+
+class ArbitraryUnit(NamedUnit):
+    """A unit for an unknown quantity
+
+    While this library attempts to handle all known SI units, it is
+    likely that users will want to express quantities of arbitrary
+    units (for example, calculating donuts per person for a meeting).
+    The arbitrary unit allows for these unforseeable quantities."""
+
+    def __init__(self,
+                 numerator: str | list[str] | dict[str, int],
+                 denominator: None | list[str] | dict[str, int]= None):
+        match numerator:
+            case str():
+                self._numerator = {numerator: 1}
+            case list():
+                self._numerator = {}
+                for key in numerator:
+                    if key in self._numerator:
+                        self._numerator[key] += 1
+                    else:
+                        self._numerator[key] = 1
+            case dict():
+                self._numerator = numerator
+            case _:
+                raise TypeError
+        match denominator:
+            case None:
+                self._denominator = {}
+            case str():
+                self._denominator = {denominator: 1}
+            case list():
+                self._denominator = {}
+                for key in denominator:
+                    if key in self._denominator:
+                        self._denominator[key] += 1
+                    else:
+                        self._denominator[key] = 1
+            case dict():
+                self._denominator = denominator
+            case _:
+                raise TypeError
+        self._unit = NamedUnit(1, Dimensions(), "")  # Unitless
+
+        super().__init__(si_scaling_factor=1, dimensions=self._unit.dimensions, symbol=self._name())
+
+    def _name(self):
+        num = []
+        for key, value in self._numerator.items():
+            if value == 1:
+                num.append(key)
+            else:
+                num.append(f"{key}^{value}")
+        den = []
+        for key, value in self._denominator.items():
+            if value == 1:
+                den.append(key)
+            else:
+                den.append(f"{key}^{value}")
+        num.sort()
+        den.sort()
+        match (num, den):
+            case ([], []):
+                return ""
+            case (_, []):
+                return " ".join(num)
+            case ([], _):
+                return "1 / " + " ".join(den)
+            case _:
+                return " ".join(num) + " / " + " ".join(den)
+
+    def __eq__(self, other):
+        match other:
+            case ArbitraryUnit():
+                return self._numerator == other._numerator and self._denominator == other._denominator and self._unit == other._unit
+            case Unit():
+                return not self._numerator and not self._denominator and self._unit == other
+
+
+    def __mul__(self: Self, other: "Unit"):
+        match other:
+            case ArbitraryUnit():
+                num = dict(self._numerator)
+                for key in other._numerator:
+                    if key in num:
+                        num[key] += other._numerator[key]
+                    else:
+                        num[key] = other._numerator[key]
+                den = dict(self._denominator)
+                for key in other._denominator:
+                    if key in den:
+                        den[key] += other._denominator[key]
+                    else:
+                        den[key] = other._denominator[key]
+                result = ArbitraryUnit(num, den)
+                result._unit *= other._unit
+                return result._reduce()
+            case NamedUnit() | Unit() | int() | float():
+                result = ArbitraryUnit(self._numerator, self._denominator)
+                result._unit *= other
+                return result
+            case _:
+                return NotImplemented
+
+    def __rmul__(self: Self, other):
+        return self * other
+
+    def __truediv__(self: Self, other: "Unit"):
+        match other:
+            case ArbitraryUnit():
+                num = dict(self._numerator)
+                for key in other._denominator:
+                    if key in num:
+                        num[key] += other._denominator[key]
+                    else:
+                        num[key] = other._denominator[key]
+                den = dict(self._denominator)
+                for key in other._numerator:
+                    if key in den:
+                        den[key] += other._numerator[key]
+                    else:
+                        den[key] = other._numerator[key]
+                result = ArbitraryUnit(num, den)
+                result._unit /= other._unit
+                return result._reduce()
+            case NamedUnit() | Unit() | int() | float():
+                result = ArbitraryUnit(self._numerator, self._denominator)
+                result._unit /= other
+                return result
+            case _:
+                return NotImplemented
+
+    def __rtruediv__(self: Self, other: "Unit"):
+        match other:
+            case ArbitraryUnit():
+                num = dict(other._numerator)
+                for key in self._denominator:
+                    if key in num:
+                        num[key] += self._denominator[key]
+                    else:
+                        num[key] = self._denominator[key]
+                den = dict(other._denominator)
+                for key in self._numerator:
+                    if key in den:
+                        den[key] += self._numerator[key]
+                    else:
+                        den[key] = self._numerator[key]
+                result = ArbitraryUnit(num, den)
+                result._unit = other._unit / self._unit
+                return result._reduce()
+            case NamedUnit() | Unit() | int() | float():
+                result = ArbitraryUnit(self._denominator, self._numerator)
+                result._unit = other / result._unit
+                return result
+            case _:
+                return NotImplemented
+
+    def __pow__(self, power: int):
+        match power:
+            case int() | float():
+                num = {key: value * power for key, value in self._numerator.items()}
+                den = {key: value * power for key, value in self._denominator.items()}
+                result = ArbitraryUnit(num, den)
+                result._unit = self._unit ** power
+                return result
+            case _:
+                return NotImplemented
+
+
+    def equivalent(self: Self, other: "Unit"):
+        match other:
+            case ArbitraryUnit():
+                return self._unit.equivalent(other._unit) and sorted(self._numerator) == sorted(other._numerator) and sorted(self._denominator) == sorted(other._denominator)
+            case _:
+                return False
+
+    def si_equivalent(self):
+        """ Get the SI unit corresponding to this unit"""
+        """FIXME: TODO"""
+        return Unit(1, self.dimensions)
+
+    def _format_unit(self, format_process: list["UnitFormatProcessor"]):
+        """FIXME: TODO"""
+        for processor in format_process:
+            pass
+
+    def _reduce(self):
+        """Remove redundant units"""
+        for k in self._denominator:
+            if k in self._numerator:
+                common = min(self._numerator[k], self._denominator[k])
+                self._numerator[k] -= common
+                self._denominator[k] -= common
+        dead_nums = [k for k in self._numerator if self._numerator[k] == 0]
+        for k in dead_nums:
+            del self._numerator[k]
+        dead_dens = [k for k in self._denominator if self._denominator[k] == 0]
+        for k in dead_dens:
+            del self._denominator[k]
+        return self
+
+    def __str__(self):
+        result = self._name()
+        if type(self._unit) is NamedUnit and self._unit.name.strip():
+            result += f" {self._unit.name.strip()}"
+        if type(self._unit) is Unit and str(self._unit).strip():
+            result += f" {str(self._unit).strip()}"
+        return result
+
+    def __repr__(self):
+        return str(self)
+
+    @staticmethod
+    def parse(unit_string: str) -> "Unit":
+        """FIXME: TODO"""
+        pass
 #
 # Parsing plan:
 #  Require unknown amounts of units to be explicitly positive or negative?
