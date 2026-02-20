@@ -481,16 +481,6 @@ class ArbitraryUnit(NamedUnit):
             case _:
                 return False
 
-    def si_equivalent(self):
-        """ Get the SI unit corresponding to this unit"""
-        """FIXME: TODO"""
-        return Unit(1, self.dimensions)
-
-    def _format_unit(self, format_process: list["UnitFormatProcessor"]):
-        """FIXME: TODO"""
-        for processor in format_process:
-            pass
-
     def _reduce(self):
         """Remove redundant units"""
         for k in self._denominator:
@@ -517,41 +507,6 @@ class ArbitraryUnit(NamedUnit):
     def __repr__(self):
         return str(self)
 
-    @staticmethod
-    def parse(unit_string: str) -> "Unit":
-        """FIXME: TODO"""
-        pass
-#
-# Parsing plan:
-#  Require unknown amounts of units to be explicitly positive or negative?
-#
-#
-
-
-    def __mul__(self: Self, other: "Unit"):
-        match other:
-            case UnknownUnit():
-                num = dict(self._numerator)
-                for key in other._numerator:
-                    if key in num:
-                        num[key] += other._numerator[key]
-                    else:
-                        num[key] = other._numerator[key]
-                den = dict(self._denominator)
-                for key in other._denominator:
-                    if key in den:
-                        den[key] += other._denominator[key]
-                    else:
-                        den[key] = other._denominator[key]
-                result = UnknownUnit(num, den)
-                result._unit *= other._unit
-                return result._reduce()
-            case NamedUnit() | Unit() | int() | float():
-                result = UnknownUnit(self._numerator, self._denominator)
-                result._unit *= other
-                return result
-            case _:
-                return NotImplemented
 
     def __rmul__(self: Self, other):
         return self * other
