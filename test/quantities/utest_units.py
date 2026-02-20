@@ -1,9 +1,9 @@
 import math
+
 import pytest
 
 import sasdata.quantities.units as units
 from sasdata.quantities.units import ArbitraryUnit
-
 
 EQUAL_TERMS = {
     "Pressure": [units.pascals, units.newtons / units.meters**2, units.micronewtons * units.millimeters**-2],
@@ -113,11 +113,11 @@ def test_unit_names():
     assert str(empty) == ""
 
     assert str(pizza) == "Pizza"
-    assert str((pizza * pineapple)) == "Pineapple Pizza"
-    assert str((pizza * pizza)) == "Pizza^2"
+    assert str(pizza * pineapple) == "Pineapple Pizza"
+    assert str(pizza * pizza) == "Pizza^2"
 
-    assert str((1 / pizza)) == "1 / Pizza"
-    assert str((slice / pizza)) == "Slice / Pizza"
+    assert str(1 / pizza) == "1 / Pizza"
+    assert str(slice / pizza) == "Slice / Pizza"
     assert str((slice / pizza) ** 2) == "Slice^2 / Pizza^2"
 
-    assert str((pie**0.5)) == "Pie^0.5"  # A valid unit, because pie are square
+    assert str(pie**0.5) == "Pie^0.5"  # A valid unit, because pie are square
