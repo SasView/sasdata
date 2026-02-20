@@ -596,10 +596,10 @@ class ArbitraryUnit(NamedUnit):
                 self._denominator[k] -= common
         dead_nums = [k for k in self._numerator if self._numerator[k] == 0]
         for k in dead_nums:
-            del self._numerator[k] 
+            del self._numerator[k]
         dead_dens = [k for k in self._denominator if self._denominator[k] == 0]
         for k in dead_dens:
-            del self._denominator[k] 
+            del self._denominator[k]
         return self
 
     def __str__(self):
