@@ -492,16 +492,6 @@ class ArbitraryUnit(NamedUnit):
             case _:
                 return False
 
-    def si_equivalent(self):
-        """ Get the SI unit corresponding to this unit"""
-        """FIXME: TODO"""
-        return Unit(1, self.dimensions)
-
-    def _format_unit(self, format_process: list["UnitFormatProcessor"]):
-        """FIXME: TODO"""
-        for processor in format_process:
-            pass
-
     def _reduce(self):
         """Remove redundant units"""
         for k in self._denominator:
@@ -527,17 +517,6 @@ class ArbitraryUnit(NamedUnit):
 
     def __repr__(self):
         return str(self)
-
-    @staticmethod
-    def parse(unit_string: str) -> "Unit":
-        """FIXME: TODO"""
-        pass
-#
-# Parsing plan:
-#  Require unknown amounts of units to be explicitly positive or negative?
-#
-#
-
 
 
 @dataclass
