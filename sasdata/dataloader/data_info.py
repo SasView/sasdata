@@ -1234,6 +1234,43 @@ class Data2D(plottable_2D, DataInfo):
         return result
 
 
+def reader2D_converter(data2d: Data2D | None = None) -> Data2D:
+    """
+    convert old 2d format opened by IhorReader or danse_reader
+    to new Data2D format
+    This is mainly used by the Readers
+
+    :param data2d: 2d array of Data2D object
+    :return: 1d arrays of Data2D object
+
+    """
+    if data2d.data is None or data2d.x_bins is None or data2d.y_bins is None:
+        raise ValueError("Can't convert this data: data=None...")
+    new_x = np.tile(data2d.x_bins, (len(data2d.y_bins), 1))
+    new_y = np.tile(data2d.y_bins, (len(data2d.x_bins), 1))
+    new_y = new_y.swapaxes(0, 1)
+
+    new_data = data2d.data.flatten()
+    qx_data = new_x.flatten()
+    qy_data = new_y.flatten()
+    q_data = np.sqrt(qx_data * qx_data + qy_data * qy_data)
+    if data2d.err_data is None or np.any(data2d.err_data <= 0):
+        new_err_data = np.sqrt(np.abs(new_data))
+    else:
+        new_err_data = data2d.err_data.flatten()
+    mask = np.ones(len(new_data), dtype=bool)
+
+    output = data2d
+    output.data = new_data
+    output.err_data = new_err_data
+    output.qx_data = qx_data
+    output.qy_data = qy_data
+    output.q_data = q_data
+    output.mask = mask
+
+    return output
+
+
 def combine_data_info_with_plottable(data, datainfo):
     """
     A function that combines the DataInfo data in self.current_datainto with a
