@@ -194,13 +194,13 @@ class Reader(XMLreader):
             self.current_datainfo.meta_data["loader"] = "CanSAS XML 1D"
             self.current_datainfo.meta_data[
                 PREPROCESS] = self.processing_instructions
-            self.base_ns = "{" + CANSAS_NS.get(self.cansas_version).get("ns") + "}"
+            self.base_ns = "".join(["{", CANSAS_NS.get(self.cansas_version).get("ns"), "}"])
         if self._is_call_local() and not recurse:
             self.current_datainfo.filename = self.filepath.name
         # Create an empty dataset if no data has been passed to the reader
         if self.current_dataset is None:
             self._initialize_new_data_set(dom)
-        self.base_ns = "{" + CANSAS_NS.get(self.cansas_version).get("ns") + "}"
+        self.base_ns = "".join(["{", CANSAS_NS.get(self.cansas_version).get("ns"), "}"])
 
         # Loop through each child in the parent element
         for node in dom:
