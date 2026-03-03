@@ -308,13 +308,12 @@ class NamedUnit(Unit):
             case _:
                 return False
 
-
     def startswith(self, prefix: str) -> bool:
         """Check if any representation of the unit begins with the prefix string"""
         prefix = prefix.lower()
         return (self.name is not None and self.name.lower().startswith(prefix)) \
-                or (self.ascii_symbol is not None and self.ascii_symbol.lower().startswith(prefix)) \
-                or (self.symbol is not None and self.symbol.lower().startswith(prefix))
+            or (self.ascii_symbol is not None and self.ascii_symbol.lower().startswith(prefix)) \
+            or (self.symbol is not None and self.symbol.lower().startswith(prefix))
 
 
 class UnknownUnit(NamedUnit):
@@ -393,7 +392,6 @@ class UnknownUnit(NamedUnit):
                 return self._numerator == other._numerator and self._denominator == other._denominator and self._unit == other._unit
             case Unit():
                 return not self._numerator and not self._denominator and self._unit == other
-
 
     def __mul__(self: Self, other: "Unit"):
         match other:
