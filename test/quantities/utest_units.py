@@ -3,44 +3,44 @@ import math
 import pytest
 
 import sasdata.quantities.units as units
-from sasdata.quantities.units import ArbitraryUnit
+from sasdata.quantities.units import UnknownUnit
 
 EQUAL_TERMS = {
     "Pressure": [units.pascals, units.newtons / units.meters**2, units.micronewtons * units.millimeters**-2],
     "Resistance": [units.ohms, units.volts / units.amperes, 1e-3 / units.millisiemens],
     "Angular frequency": [(units.rotations / units.minutes), (units.radians * units.hertz) * 2 * math.pi / 60.0],
-    "Arbitrary Units": [ArbitraryUnit("Pizzas"), ArbitraryUnit(["Pizzas"])],
-    "Arbitrary Fractional Units": [
-        ArbitraryUnit("Slices", denominator=["Pizzas"]),
-        ArbitraryUnit(["Slices"], denominator=["Pizzas"]),
+    "Unknown Units": [UnknownUnit("Pizzas"), UnknownUnit(["Pizzas"])],
+    "Unknown Fractional Units": [
+        UnknownUnit("Slices", denominator=["Pizzas"]),
+        UnknownUnit(["Slices"], denominator=["Pizzas"]),
     ],
-    "Arbitrary Multiplication": [
-        ArbitraryUnit("Pizzas") * ArbitraryUnit("People"),
-        ArbitraryUnit(["Pizzas", "People"]),
+    "Unknown Multiplication": [
+        UnknownUnit("Pizzas") * UnknownUnit("People"),
+        UnknownUnit(["Pizzas", "People"]),
     ],
-    "Arbitrary Multiplication with Units": [
-        ArbitraryUnit("Pizzas") * units.meters,
-        units.meters * ArbitraryUnit(["Pizzas"]),
+    "Unknown Multiplication with Units": [
+        UnknownUnit("Pizzas") * units.meters,
+        units.meters * UnknownUnit(["Pizzas"]),
     ],
-    "Arbitrary Power": [
-        ArbitraryUnit(["Slices"], denominator=["Pizza"]) * ArbitraryUnit(["Slices"], denominator=["Pizza"]),
-        ArbitraryUnit(["Slices"], denominator=["Pizza"]) ** 2,
+    "Unknown Power": [
+        UnknownUnit(["Slices"], denominator=["Pizza"]) * UnknownUnit(["Slices"], denominator=["Pizza"]),
+        UnknownUnit(["Slices"], denominator=["Pizza"]) ** 2,
     ],
-    "Arbitrary Fractional Power": [
-        ArbitraryUnit(["Pizza", "Pizza", "Pizza"]),
-        ArbitraryUnit(["Pizza", "Pizza"]) ** 1.5,
+    "Unknown Fractional Power": [
+        UnknownUnit(["Pizza", "Pizza", "Pizza"]),
+        UnknownUnit(["Pizza", "Pizza"]) ** 1.5,
     ],
-    "Arbitrary Division": [
-        ArbitraryUnit("Slices") / ArbitraryUnit("Pizza"),
-        ArbitraryUnit(["Slices"], denominator=["Pizza"]),
-        (1 / ArbitraryUnit("Pizza")) * ArbitraryUnit("Slices"),
-        1 / (ArbitraryUnit("Pizza") / ArbitraryUnit("Slices")),
+    "Unknown Division": [
+        UnknownUnit("Slices") / UnknownUnit("Pizza"),
+        UnknownUnit(["Slices"], denominator=["Pizza"]),
+        (1 / UnknownUnit("Pizza")) * UnknownUnit("Slices"),
+        1 / (UnknownUnit("Pizza") / UnknownUnit("Slices")),
     ],
-    "Arbitrary Complicated Math": [
-        (ArbitraryUnit("Slices") / ArbitraryUnit("Person"))
-        / (ArbitraryUnit("Slices") / ArbitraryUnit("Pizzas"))
-        * ArbitraryUnit("Person"),
-        ArbitraryUnit("Pizzas"),
+    "Unknown Complicated Math": [
+        (UnknownUnit("Slices") / UnknownUnit("Person"))
+        / (UnknownUnit("Slices") / UnknownUnit("Pizzas"))
+        * UnknownUnit("Person"),
+        UnknownUnit("Pizzas"),
     ],
 }
 
@@ -77,10 +77,10 @@ def test_unit_equivalent(equivalent_term):
 
 DISSIMILAR_TERMS = {
     "Frequency and Angular frequency": [(units.rotations / units.minutes), (units.hertz)],
-    "Different Arbitrary Units": [ArbitraryUnit("Pizzas"), ArbitraryUnit(["Donuts"])],
-    "Arbitrary Multiplication with Units": [
-        ArbitraryUnit("Pizzas") * units.meters,
-        units.seconds * ArbitraryUnit(["Pizzas"]),
+    "Different Unknown Units": [UnknownUnit("Pizzas"), UnknownUnit(["Donuts"])],
+    "Unknown Multiplication with Units": [
+        UnknownUnit("Pizzas") * units.meters,
+        units.seconds * UnknownUnit(["Pizzas"]),
     ],
 }
 
@@ -98,11 +98,11 @@ def test_unit_dissimilar(dissimilar_term):
 
 
 def test_unit_names():
-    pizza = ArbitraryUnit(["Pizza"])
-    slice = ArbitraryUnit(["Slice"])
-    pineapple = ArbitraryUnit(["Pineapple"])
-    pie = ArbitraryUnit(["Pie"])
-    empty = ArbitraryUnit([])
+    pizza = UnknownUnit(["Pizza"])
+    slice = UnknownUnit(["Slice"])
+    pineapple = UnknownUnit(["Pineapple"])
+    pie = UnknownUnit(["Pie"])
+    empty = UnknownUnit([])
 
     assert str(empty) == ""
 
