@@ -86,6 +86,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from fractions import Fraction
 from typing import Self
+import re
 
 import numpy as np
 
@@ -393,13 +394,12 @@ class NamedUnit(Unit):
             case _:
                 return False
 
-
     def startswith(self, prefix: str) -> bool:
         """Check if any representation of the unit begins with the prefix string"""
         prefix = prefix.lower()
         return (self.name is not None and self.name.lower().startswith(prefix)) \
-                or (self.ascii_symbol is not None and self.ascii_symbol.lower().startswith(prefix)) \
-                or (self.symbol is not None and self.symbol.lower().startswith(prefix))
+            or (self.ascii_symbol is not None and self.ascii_symbol.lower().startswith(prefix)) \
+            or (self.symbol is not None and self.symbol.lower().startswith(prefix))
 
 
 class UnknownUnit(NamedUnit):
@@ -412,40 +412,57 @@ class UnknownUnit(NamedUnit):
 
     def __init__(self,
                  numerator: str | list[str] | dict[str, int],
-                 denominator: None | list[str] | dict[str, int]= None):
-        match numerator:
-            case str():
-                self._numerator = {numerator: 1}
-            case list():
-                self._numerator = {}
-                for key in numerator:
-                    if key in self._numerator:
-                        self._numerator[key] += 1
-                    else:
-                        self._numerator[key] = 1
-            case dict():
-                self._numerator = numerator
-            case _:
-                raise TypeError
-        match denominator:
-            case None:
-                self._denominator = {}
-            case str():
-                self._denominator = {denominator: 1}
-            case list():
-                self._denominator = {}
-                for key in denominator:
-                    if key in self._denominator:
-                        self._denominator[key] += 1
-                    else:
-                        self._denominator[key] = 1
-            case dict():
-                self._denominator = denominator
-            case _:
-                raise TypeError
+                 denominator: None | list[str] | dict[str, int] = None):
+        if numerator is None:
+            return TypeError
+        self._numerator = UnknownUnit._parse_arg(numerator)
+        self._denominator = UnknownUnit._parse_arg(denominator)
         self._unit = NamedUnit(1, Dimensions(), "")  # Unitless
 
         super().__init__(si_scaling_factor=1, dimensions=self._unit.dimensions, symbol=self._name())
+
+    @staticmethod
+    def _parse_arg(arg: str | list[str] | dict[str, int]):
+        """Parse the different possibilities for constructor arguments
+
+        Both the numerator and the denominator could be a string, a
+        list of strings, or a dict.  Parse any of these values into a
+        dictionary of names and powers.
+
+        """
+        match arg:
+            case None:
+                return {}
+            case str():
+                return {UnknownUnit._valid_name(arg): 1}
+            case list():
+                result = {}
+                for key in arg:
+                    if key in result:
+                        result[key] += 1
+                    else:
+                        UnknownUnit._valid_name(key)
+                        result[key] = 1
+                return result
+            case dict():
+                for key in arg:
+                    UnknownUnit._valid_name(key)
+                return arg
+            case _:
+                raise TypeError
+
+    @staticmethod
+    def _valid_name(name: str) -> str:
+        """Confirms that the name of a unit is appropriate
+
+        This mostly confirms that the unit does not contain math
+        operators that would act on other units, like / or ^
+        """
+
+        if re.search(r"[*/^\s]", name):
+            raise RuntimeError(f'Unit name "{name}" contains invalid characters (*, /, ^, or whitespace)')
+
+        return name
 
     def _name(self):
         num = []
@@ -478,7 +495,6 @@ class UnknownUnit(NamedUnit):
                 return self._numerator == other._numerator and self._denominator == other._denominator and self._unit == other._unit
             case Unit():
                 return not self._numerator and not self._denominator and self._unit == other
-
 
     def __mul__(self: Self, other: "Unit"):
         match other:
@@ -568,7 +584,6 @@ class UnknownUnit(NamedUnit):
                 return result
             case _:
                 return NotImplemented
-
 
     def equivalent(self: Self, other: "Unit"):
         match other:
