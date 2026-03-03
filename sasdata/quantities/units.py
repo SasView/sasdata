@@ -82,11 +82,11 @@ HHHHHHHHH     HHHHHHHHH  aaaaaaaaaa  aaaa nnnnnn    nnnnnn   ddddddddd   ddddd
 # Included from _units_base.py
 #
 
+import re
 from collections.abc import Sequence
 from dataclasses import dataclass
 from fractions import Fraction
 from typing import Self
-import re
 
 import numpy as np
 
