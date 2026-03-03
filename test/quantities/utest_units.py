@@ -123,10 +123,10 @@ def test_unit_names():
     assert str(pizza * pineapple) == "Pineapple Pizza"
     assert str(pizza * pizza) == "Pizza^2"
 
-    assert str(1 / pizza) == "1 / Pizza"
-    assert str(1 / pizza / pineapple) == "1 / (Pineapple Pizza)"
-    assert str(slice / pizza) == "Slice / Pizza"
-    assert str(slice / pizza / pineapple) == "Slice / (Pineapple Pizza)"
-    assert str((slice / pizza) ** 2) == "Slice^2 / Pizza^2"
+    assert str(1 / pizza) == "Pizza^-1"
+    assert str(1 / pizza / pineapple) == "Pineapple^-1 Pizza^-1"
+    assert str(slice / pizza) == "Slice Pizza^-1"
+    assert str(slice / pizza / pineapple) == "Slice Pineapple^-1 Pizza^-1"
+    assert str((slice / pizza) ** 2) == "Slice^2 Pizza^-2"
 
     assert str(pie**0.5) == "Pie^0.5"  # A valid unit, because pie are square
