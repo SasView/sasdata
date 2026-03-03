@@ -99,10 +99,23 @@ def test_unit_dissimilar(dissimilar_term):
 
 def test_unit_names():
     pizza = UnknownUnit(["Pizza"])
-    slice = UnknownUnit(["Slice"])
-    pineapple = UnknownUnit(["Pineapple"])
-    pie = UnknownUnit(["Pie"])
+    slice = UnknownUnit("Slice")
+    pineapple = UnknownUnit("Pineapple")
+    pie = UnknownUnit("Pie")
     empty = UnknownUnit([])
+
+    with pytest.raises(RuntimeError):
+        UnknownUnit("a/b")
+    with pytest.raises(RuntimeError):
+        UnknownUnit(["a^b"])
+    with pytest.raises(RuntimeError):
+        UnknownUnit({"a b": 1})
+    with pytest.raises(RuntimeError):
+        UnknownUnit("a", {"a*b": 1})
+    with pytest.raises(RuntimeError):
+        UnknownUnit("a", ["a^b"])
+    with pytest.raises(RuntimeError):
+        UnknownUnit("a", "a/b")
 
     assert str(empty) == ""
 
