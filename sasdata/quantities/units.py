@@ -402,7 +402,7 @@ class NamedUnit(Unit):
                 or (self.symbol is not None and self.symbol.lower().startswith(prefix))
 
 
-class ArbitraryUnit(NamedUnit):
+class UnknownUnit(NamedUnit):
     """A unit for an unknown quantity
 
     While this library attempts to handle all known SI units, it is
@@ -474,7 +474,7 @@ class ArbitraryUnit(NamedUnit):
 
     def __eq__(self, other):
         match other:
-            case ArbitraryUnit():
+            case UnknownUnit():
                 return self._numerator == other._numerator and self._denominator == other._denominator and self._unit == other._unit
             case Unit():
                 return not self._numerator and not self._denominator and self._unit == other
@@ -482,7 +482,7 @@ class ArbitraryUnit(NamedUnit):
 
     def __mul__(self: Self, other: "Unit"):
         match other:
-            case ArbitraryUnit():
+            case UnknownUnit():
                 num = dict(self._numerator)
                 for key in other._numerator:
                     if key in num:
@@ -495,11 +495,11 @@ class ArbitraryUnit(NamedUnit):
                         den[key] += other._denominator[key]
                     else:
                         den[key] = other._denominator[key]
-                result = ArbitraryUnit(num, den)
+                result = UnknownUnit(num, den)
                 result._unit *= other._unit
                 return result._reduce()
             case NamedUnit() | Unit() | int() | float():
-                result = ArbitraryUnit(self._numerator, self._denominator)
+                result = UnknownUnit(self._numerator, self._denominator)
                 result._unit *= other
                 return result
             case _:
@@ -510,7 +510,7 @@ class ArbitraryUnit(NamedUnit):
 
     def __truediv__(self: Self, other: "Unit"):
         match other:
-            case ArbitraryUnit():
+            case UnknownUnit():
                 num = dict(self._numerator)
                 for key in other._denominator:
                     if key in num:
@@ -523,11 +523,11 @@ class ArbitraryUnit(NamedUnit):
                         den[key] += other._numerator[key]
                     else:
                         den[key] = other._numerator[key]
-                result = ArbitraryUnit(num, den)
+                result = UnknownUnit(num, den)
                 result._unit /= other._unit
                 return result._reduce()
             case NamedUnit() | Unit() | int() | float():
-                result = ArbitraryUnit(self._numerator, self._denominator)
+                result = UnknownUnit(self._numerator, self._denominator)
                 result._unit /= other
                 return result
             case _:
@@ -535,7 +535,7 @@ class ArbitraryUnit(NamedUnit):
 
     def __rtruediv__(self: Self, other: "Unit"):
         match other:
-            case ArbitraryUnit():
+            case UnknownUnit():
                 num = dict(other._numerator)
                 for key in self._denominator:
                     if key in num:
@@ -548,11 +548,11 @@ class ArbitraryUnit(NamedUnit):
                         den[key] += self._numerator[key]
                     else:
                         den[key] = self._numerator[key]
-                result = ArbitraryUnit(num, den)
+                result = UnknownUnit(num, den)
                 result._unit = other._unit / self._unit
                 return result._reduce()
             case NamedUnit() | Unit() | int() | float():
-                result = ArbitraryUnit(self._denominator, self._numerator)
+                result = UnknownUnit(self._denominator, self._numerator)
                 result._unit = other / result._unit
                 return result
             case _:
@@ -563,7 +563,7 @@ class ArbitraryUnit(NamedUnit):
             case int() | float():
                 num = {key: value * power for key, value in self._numerator.items()}
                 den = {key: value * power for key, value in self._denominator.items()}
-                result = ArbitraryUnit(num, den)
+                result = UnknownUnit(num, den)
                 result._unit = self._unit ** power
                 return result
             case _:
@@ -572,20 +572,10 @@ class ArbitraryUnit(NamedUnit):
 
     def equivalent(self: Self, other: "Unit"):
         match other:
-            case ArbitraryUnit():
+            case UnknownUnit():
                 return self._unit.equivalent(other._unit) and sorted(self._numerator) == sorted(other._numerator) and sorted(self._denominator) == sorted(other._denominator)
             case _:
                 return False
-
-    def si_equivalent(self):
-        """ Get the SI unit corresponding to this unit"""
-        """FIXME: TODO"""
-        return Unit(1, self.dimensions)
-
-    def _format_unit(self, format_process: list["UnitFormatProcessor"]):
-        """FIXME: TODO"""
-        for processor in format_process:
-            pass
 
     def _reduce(self):
         """Remove redundant units"""
@@ -612,17 +602,6 @@ class ArbitraryUnit(NamedUnit):
 
     def __repr__(self):
         return str(self)
-
-    @staticmethod
-    def parse(unit_string: str) -> "Unit":
-        """FIXME: TODO"""
-        pass
-#
-# Parsing plan:
-#  Require unknown amounts of units to be explicitly positive or negative?
-#
-#
-
 
 
 @dataclass
