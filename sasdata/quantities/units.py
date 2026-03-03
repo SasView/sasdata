@@ -690,6 +690,7 @@ attohenry = NamedUnit(1e-18, Dimensions(2, -2, 1, -2, 0, 0, 0),name='attohenry',
 angstroms = NamedUnit(1e-10, Dimensions(1, 0, 0, 0, 0, 0, 0),name='angstroms',ascii_symbol='Ang',latex_symbol=r'\AA',symbol='Å')
 microns = NamedUnit(1e-06, Dimensions(1, 0, 0, 0, 0, 0, 0),name='microns',ascii_symbol='micron',symbol='micron')
 minutes = NamedUnit(60, Dimensions(0, 1, 0, 0, 0, 0, 0),name='minutes',ascii_symbol='min',symbol='min')
+revolutions_per_minute = NamedUnit(0.016666666666666666, Dimensions(0, -1, 0, 0, 0, 0, 0),name='revolutions_per_minute',ascii_symbol='rpm',symbol='rpm')
 hours = NamedUnit(3600, Dimensions(0, 1, 0, 0, 0, 0, 0),name='hours',ascii_symbol='h',symbol='h')
 days = NamedUnit(86400, Dimensions(0, 1, 0, 0, 0, 0, 0),name='days',ascii_symbol='d',symbol='d')
 years = NamedUnit(31556952.0, Dimensions(0, 1, 0, 0, 0, 0, 0),name='years',ascii_symbol='y',symbol='y')
@@ -2051,6 +2052,7 @@ symbol_lookup = {
         "Å": angstroms,
         "micron": microns,
         "min": minutes,
+        "rpm": revolutions_per_minute,
         "h": hours,
         "d": days,
         "y": years,
@@ -2312,6 +2314,7 @@ rate = UnitGroup(
     picohertz,
     femtohertz,
     attohertz,
+    revolutions_per_minute,
 ])
 
 speed = UnitGroup(
