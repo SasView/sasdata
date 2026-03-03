@@ -484,10 +484,14 @@ class UnknownUnit(NamedUnit):
                 return ""
             case (_, []):
                 return " ".join(num)
+            case ([], [d]):
+                return f"1 / {d}"
             case ([], _):
-                return "1 / " + " ".join(den)
+                return "1 / (" + " ".join(den) + ")"
+            case (_, [d]):
+                return f"{" ".join(num)} / {d}"
             case _:
-                return " ".join(num) + " / " + " ".join(den)
+                return f"{" ".join(num)} / ({" ".join(den)})"
 
     def __eq__(self, other):
         match other:
