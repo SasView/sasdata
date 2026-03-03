@@ -388,25 +388,10 @@ class UnknownUnit(NamedUnit):
                 num.append(f"{key}^{value}")
         den = []
         for key, value in self._denominator.items():
-            if value == 1:
-                den.append(key)
-            else:
-                den.append(f"{key}^{value}")
+            den.append(f"{key}^{-value}")
         num.sort()
         den.sort()
-        match (num, den):
-            case ([], []):
-                return ""
-            case (_, []):
-                return " ".join(num)
-            case ([], [d]):
-                return f"1 / {d}"
-            case ([], _):
-                return "1 / (" + " ".join(den) + ")"
-            case (_, [d]):
-                return f"{" ".join(num)} / {d}"
-            case _:
-                return f"{" ".join(num)} / ({" ".join(den)})"
+        return " ".join(num + den)
 
     def __eq__(self, other):
         match other:
@@ -469,35 +454,18 @@ class UnknownUnit(NamedUnit):
                 return NotImplemented
 
     def __rtruediv__(self: Self, other: "Unit"):
-        match other:
-            case UnknownUnit():
-                num = dict(other._numerator)
-                for key in self._denominator:
-                    if key in num:
-                        num[key] += self._denominator[key]
-                    else:
-                        num[key] = self._denominator[key]
-                den = dict(other._denominator)
-                for key in self._numerator:
-                    if key in den:
-                        den[key] += self._numerator[key]
-                    else:
-                        den[key] = self._numerator[key]
-                result = UnknownUnit(num, den)
-                result._unit = other._unit / self._unit
-                return result._reduce()
-            case NamedUnit() | Unit() | int() | float():
-                result = UnknownUnit(self._denominator, self._numerator)
-                result._unit = other / result._unit
-                return result
-            case _:
-                return NotImplemented
+        return (self/other) ** -1
 
     def __pow__(self, power: int):
         match power:
             case int() | float():
                 num = {key: value * power for key, value in self._numerator.items()}
                 den = {key: value * power for key, value in self._denominator.items()}
+                if power < 0:
+                    num, den = den, num
+                    num = {k: -v for k,v in num.items()}
+                    den = {k: -v for k,v in den.items()}
+
                 result = UnknownUnit(num, den)
                 result._unit = self._unit ** power
                 return result
