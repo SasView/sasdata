@@ -83,14 +83,12 @@ HHHHHHHHH     HHHHHHHHH  aaaaaaaaaa  aaaa nnnnnn    nnnnnn   ddddddddd   ddddd
 #
 
 import re
-from collections.abc import Sequence
-from dataclasses import dataclass
 from fractions import Fraction
 from typing import Self
 
 import numpy as np
 
-from sasdata.quantities.unicode_superscript import int_as_unicode_superscript
+from sasdata.quantities.unicode_superscript import int_as_unicode_superscript  # type: ignore[import-untyped]
 
 
 class DimensionError(Exception):
@@ -197,15 +195,15 @@ class Dimensions:
             (self.moles_hint * numerator) // denominator,
             (self.angle_hint * numerator) // denominator)
 
-    def __eq__(self: Self, other: Self):
+    def __eq__(self: Self, other: object) -> bool:
         if isinstance(other, Dimensions):
-            return (self.length == other.length and
-                    self.time == other.time and
-                    self.mass == other.mass and
-                    self.current == other.current and
-                    self.temperature == other.temperature and
-                    self.moles_hint == other.moles_hint and
-                    self.angle_hint == other.angle_hint)
+            return (self.length == other.length
+                    and self.time == other.time
+                    and self.mass == other.mass
+                    and self.current == other.current
+                    and self.temperature == other.temperature
+                    and self.moles_hint == other.moles_hint
+                    and self.angle_hint == other.angle_hint)
 
         return NotImplemented
 
@@ -296,9 +294,6 @@ class Unit:
         self.scale = si_scaling_factor
         self.dimensions = dimensions
 
-    def _components(self, tokens: Sequence["UnitToken"]):
-        pass
-
     def __mul__(self: Self, other: "Unit"):
         if isinstance(other, Unit):
             return Unit(self.scale * other.scale, self.dimensions * other.dimensions)
@@ -332,16 +327,14 @@ class Unit:
     def equivalent(self: Self, other: "Unit"):
         return self.dimensions == other.dimensions
 
-    def __eq__(self: Self, other: "Unit"):
-        return self.equivalent(other) and np.abs(np.log(self.scale/other.scale)) < 1e-5
+    def __eq__(self: Self, other: object) -> bool:
+        if isinstance(other, Unit):
+            return self.equivalent(other) and np.abs(np.log(self.scale/other.scale)) < 1e-5
+        return False
 
     def si_equivalent(self):
         """ Get the SI unit corresponding to this unit"""
         return Unit(1, self.dimensions)
-
-    def _format_unit(self, format_process: list["UnitFormatProcessor"]):
-        for processor in format_process:
-            pass
 
     def __repr__(self):
         if self.scale == 1:
@@ -351,9 +344,6 @@ class Unit:
         else:
             return f"Unit[{self.scale}, {self.dimensions}]"
 
-    @staticmethod
-    def parse(unit_string: str) -> "Unit":
-        pass
 
 class NamedUnit(Unit):
     """ Units, but they have a name, and a symbol
@@ -411,8 +401,8 @@ class UnknownUnit(NamedUnit):
     The arbitrary unit allows for these unforseeable quantities."""
 
     def __init__(self,
-                 numerator: str | list[str] | dict[str, int],
-                 denominator: None | list[str] | dict[str, int] = None):
+                 numerator: str | list[str] | dict[str, int | float],
+                 denominator: None | list[str] | dict[str, int | float] = None):
         if numerator is None:
             return TypeError
         self._numerator = UnknownUnit._parse_arg(numerator)
@@ -422,7 +412,7 @@ class UnknownUnit(NamedUnit):
         super().__init__(si_scaling_factor=1, dimensions=self._unit.dimensions, symbol=self._name())
 
     @staticmethod
-    def _parse_arg(arg: str | list[str] | dict[str, int]):
+    def _parse_arg(arg: str | list[str] | dict[str, int | float] | None) -> dict[str, int | float]:
         """Parse the different possibilities for constructor arguments
 
         Both the numerator and the denominator could be a string, a
@@ -436,7 +426,7 @@ class UnknownUnit(NamedUnit):
             case str():
                 return {UnknownUnit._valid_name(arg): 1}
             case list():
-                result = {}
+                result: dict[str, int | float] = {}
                 for key in arg:
                     if key in result:
                         result[key] += 1
@@ -538,10 +528,10 @@ class UnknownUnit(NamedUnit):
             case _:
                 return NotImplemented
 
-    def __rtruediv__(self: Self, other: "Unit"):
+    def __rtruediv__(self: Self, other: "Unit") -> "Unit":
         return (self/other) ** -1
 
-    def __pow__(self, power: int):
+    def __pow__(self, power: int | float) -> "Unit":
         match power:
             case int() | float():
                 num = {key: value * power for key, value in self._numerator.items()}
@@ -590,42 +580,6 @@ class UnknownUnit(NamedUnit):
     def __repr__(self):
         return str(self)
 
-
-@dataclass
-class ProcessedUnitToken:
-    """ Mid processing representation of formatted units """
-    base_string: str
-    exponent_string: str
-    latex_exponent_string: str
-    exponent: int
-
-class UnitFormatProcessor:
-    """ Represents a step in the unit processing pipeline"""
-    def apply(self, scale, dimensions) -> tuple[ProcessedUnitToken, float, Dimensions]:
-        """ This will be called to deal with each processing stage"""
-
-class RequiredUnitFormatProcessor(UnitFormatProcessor):
-    """ This unit is required to exist in the formatting """
-    def __init__(self, unit: Unit, power: int = 1):
-        self.unit = unit
-        self.power = power
-    def apply(self, scale, dimensions) -> tuple[float, Dimensions, ProcessedUnitToken]:
-        new_scale = scale / (self.unit.scale * self.power)
-        new_dimensions = self.unit.dimensions / (dimensions**self.power)
-        token = ProcessedUnitToken(self.unit, self.power)
-
-        return new_scale, new_dimensions, token
-class GreedyAbsDimensionUnitFormatProcessor(UnitFormatProcessor):
-    """ This processor minimises the dimensionality of the unit by multiplying by as many
-    units of the specified type as needed """
-    def __init__(self, unit: Unit):
-        self.unit = unit
-
-    def apply(self, scale, dimensions) -> tuple[ProcessedUnitToken, float, Dimensions]:
-        pass
-
-class GreedyAbsDimensionUnitFormatProcessor(UnitFormatProcessor):
-    pass
 
 class UnitGroup:
     """ A group of units that all have the same dimensionality """
