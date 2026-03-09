@@ -97,7 +97,7 @@ def test_unit_dissimilar(dissimilar_term):
             assert not unit_1.equivalent(unit_2), "Units should not be equivalent"
 
 
-def test_unit_names():
+def test_unit_operations():
     pizza = UnknownUnit(["Pizza"])
     slice = UnknownUnit("Slice")
     pineapple = UnknownUnit("Pineapple")
