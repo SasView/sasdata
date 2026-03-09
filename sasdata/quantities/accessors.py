@@ -9479,6 +9479,14 @@ class AngleAccessor[T](QuantityAccessor[T]):
         else:
             return quantity.in_units_of(units.radians)
 
+    @property
+    def rotations(self) -> T:
+        quantity = self.quantity
+        if quantity is None:
+            return None
+        else:
+            return quantity.in_units_of(units.rotations)
+
 
 
 class SolidangleAccessor[T](QuantityAccessor[T]):
