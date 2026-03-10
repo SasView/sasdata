@@ -51,8 +51,8 @@ from typing import TypeVar
 __all__ = ['Converter', 'standardize_units']
 T = TypeVar('T')
 ConversionType = float | tuple[float, float]
-DIMENSIONS = {}  # type: Dict[str, Dict[str, ConversionType]]
-AMBIGUITIES = {}  # type: Dict[str, str]
+DIMENSIONS: dict[str, dict[str, ConversionType]] = {}
+AMBIGUITIES: dict[str, str] = {}
 PREFIX = dict(peta=1e15, tera=1e12, giga=1e9, mega=1e6, kilo=1e3, deci=1e-1, centi=1e-2, milli=1e-3, mili=1e-3,
               micro=1e-6, nano=1e-9, pico=1e-12, femto=1e-15)
 SHORT_PREFIX = dict(P=1e15, T=1e12, G=1e9, M=1e6, k=1e3, d=1e-1, c=1e-2, m=1e-3, u=1e-6, n=1e-9, p=1e-12, f=1e-15)
@@ -258,7 +258,7 @@ def _build_all_units():
     # APS files may be using 'a.u.' for 'arbitrary units'.  Other
     # facilities are leaving the units blank, using ??? or not even
     # writing the units attributes.
-    unknown = {}  # type: Dict[str, ConversionType]
+    unknown: dict[str, ConversionType] = {}
     unknown.update(
         {'None': 1, '???': 1, '': 1, 'A.U.': 1,  'a.u.': 1, 'arbitrary': 1, 'arbitrary units': 1,
          'Counts': 1, 'counts': 1, 'Cts': 1, 'cts': 1, 'unitless': 1, 'unknown': 1, 'Unknown': 1, 'Unk': 1}
@@ -356,15 +356,15 @@ class Converter:
     value name.
     """
     #: Name of the source units (km, Ang, us, ...)
-    _units = None  # type: List[str]
+    _units: list[str] = None
     #: Type of the source units (distance, time, frequency, ...)
-    dimension = None  # type: List[str]
+    dimension: list[str] = None
     #: Scale converter, mapping unit name to scale factor or (scale, offset)
     #: for temperature units.
-    scalemap = None  # type: List[Dict[str, ConversionType]]
+    scalemap: list[dict[str, ConversionType]] = None
     #: Scale base for the source units
-    scalebase = None  # type: float
-    scaleoffset = None  # type: float
+    scalebase: float = None
+    scaleoffset: float = None
 
     @property
     def units(self) -> str:
@@ -375,7 +375,7 @@ class Converter:
         self._units = standardize_units(unit)
 
     def __init__(self, units: str | None = None, dimension: list[str] | None = None):
-        self.units = units if units is not None else 'a.u.'  # type: str
+        self.units: str = units if units is not None else 'a.u.'
 
         # Lookup dimension if not given
         if dimension:

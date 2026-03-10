@@ -538,7 +538,7 @@ class Metadata:
     process: list[Process]
     sample: Sample | None
     instrument: Instrument | None
-    raw: MetaNode
+    raw: MetaNode | None
 
     def summary(self):
         run_string = str(self.run[0] if len(self.run) == 1 else self.run)
@@ -566,6 +566,14 @@ class Metadata:
             instrument=Instrument.from_json(obj["instrument"]) if obj["instrument"] else None,
             raw=MetaNode.from_json(obj["raw"]),
         )
+
+    @property
+    def id_header(self):
+        """Generate a header for used in the unique_id for datasets"""
+        title = ""
+        if self.title is not None:
+            title = self.title
+        return f"{title}:{",".join(self.run)}"
 
     def as_h5(self, f: h5py.Group):
         """Export data onto an HDF5 group"""
