@@ -61,15 +61,12 @@ derived_si_units = [
 
 non_si_dimensioned_units: list[tuple[str, str | None, str, str, float, int, int, int, int, int, int, int, list]] = [
     UnitData("Ang", "Å", r"\AA", "angstrom", "angstroms", 1e-10, 1, 0, 0, 0, 0, 0, 0, []),
-    UnitData("micron", None, None, "micron", "microns", 1e-6, 1, 0, 0, 0, 0, 0, 0, []),
     UnitData("min", None, None, "minute", "minutes", 60, 0, 1, 0, 0, 0, 0, 0, []),
-    UnitData("rpm", None, None, "revolutions per minute", "revolutions per minute", 1/60, 0, -1, 0, 0, 0, 0, 0, []),
-    UnitData("h", None, None, "hour", "hours", 3600, 0, 1, 0, 0, 0, 0, 0, []),
-    UnitData("d", None, None, "day", "days", 3600*24, 0, 1, 0, 0, 0, 0, 0, []),
-    UnitData("y", None, None, "year", "years", 3600*24*365.2425, 0, 1, 0, 0, 0, 0, 0, []),
+    UnitData("h", None, None, "hour", "hours", 360, 0, 1, 0, 0, 0, 0, 0, []),
+    UnitData("d", None, None, "day", "days", 360*24, 0, 1, 0, 0, 0, 0, 0, []),
+    UnitData("y", None, None, "year", "years", 360*24*365.2425, 0, 1, 0, 0, 0, 0, 0, []),
     UnitData("deg", None, None, "degree", "degrees", 180/np.pi, 0, 0, 0, 0, 0, 0, 1, []),
     UnitData("rad", None, None, "radian", "radians", 1, 0, 0, 0, 0, 0, 0, 1, []),
-    UnitData("rot", None, None, "rotation", "rotations", 2*np.pi, 0, 0, 0, 0, 0, 0, 1, []),
     UnitData("sr", None, None, "stradian", "stradians", 1, 0, 0, 0, 0, 0, 0, 2, []),
     UnitData("l", None, None, "litre", "litres", 1e-3, 3, 0, 0, 0, 0, 0, 0, []),
     UnitData("eV", None, None, "electronvolt", "electronvolts", 1.602176634e-19, 2, -2, 1, 0, 0, 0, 0, all_magnitudes),
@@ -112,7 +109,7 @@ aliases_2 = {
     "Ang": ["A", "Å"],
     "au": ["amu"],
     "percent": ["%"],
-    "deg": ["degr", "Deg", "degree", "degrees", "Degrees"],
+    "deg": ["degr", "Deg", "degrees", "Degrees"],
     "none": ["Counts", "counts", "cnts", "Cnts", "a.u.", "fraction", "Fraction"],
     "K": ["C"] # Ugh, cansas
 }
@@ -144,7 +141,7 @@ with open("units.py", 'w', encoding=encoding) as fid:
             # when called from units.py.  This condition patches the
             # line when the copy is made.
             if line.startswith("from unicode_superscript"):
-                fid.write(line.replace("from unicode_superscript", "\nfrom sasdata.quantities.unicode_superscript"))
+                fid.write(line.replace("from unicode_superscript", "from sasdata.quantities.unicode_superscript"))
             else:
                 fid.write(line)
 
@@ -433,22 +430,15 @@ with open("accessors.py", 'w', encoding=encoding) as fid:
                       f"\n")
 
         fid.write("\n")
-
 with open("si.py", 'w') as fid:
 
-    si_unit_names = [values.plural for values in base_si_units + derived_si_units if values.plural != "grams"] + ["kilograms"]
-    si_unit_names.sort()
-
     fid.write('"""'+(warning_text%"_build_tables.py")+'"""\n\n')
-    fid.write("from sasdata.quantities.units import (\n")
+    si_unit_names = [values.plural for values in base_si_units + derived_si_units if values.plural != "grams"] + ["kilograms"]
 
     for name in si_unit_names:
-        fid.write(f"    {name},\n")
 
-    fid.write(")\n")
+        fid.write(f"from sasdata.quantities.units import {name}\n")
     fid.write("\nall_si = [\n")
-
     for name in si_unit_names:
         fid.write(f"    {name},\n")
-
     fid.write("]\n")

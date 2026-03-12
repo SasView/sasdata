@@ -215,7 +215,7 @@ def parse_data(node: etree._Element, version: str, metadata: Metadata) -> dict[s
         struct = {}
         for value in idata.getchildren():
             name = etree.QName(value).localname
-            if value.text is None or parse_string(value, version).strip() == "":
+            if value.text is None or value.text.strip() == "":
                 continue
             if name not in us:
                 unit = (

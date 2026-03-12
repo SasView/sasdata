@@ -20,7 +20,6 @@ def test_addition_propagation(x_err, y_err, x_units, y_units):
     _, err = (x + y).in_si_with_standard_error()
 
     assert err == pytest.approx(expected_err, abs=1e-8)
-
 @pytest.mark.parametrize("x_val, y_val, x_units, y_units",
                          [(1, 1, units.meters, units.meters),
                           (1, 1, units.centimeters, units.centimeters),

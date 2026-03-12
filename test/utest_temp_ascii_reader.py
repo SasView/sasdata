@@ -1,3 +1,4 @@
+import pytest
 import os
 from typing import Literal
 
@@ -20,24 +21,11 @@ from sasdata.temp_ascii_reader import (
 # TODO: Look into parameterizing this, although its not trivial due to the setup, and tests being a bit different.
 
 
-def find(filename: str, locations: Literal["sasdataloader", "mumag"]) -> str:
-    # This match statement is here in case we want to pull data out of other locations.
-    match locations:
-        case "sasdataloader":
-            return os.path.join(
-                os.path.dirname(__file__), "sasdataloader", "data", filename
-            )
-        case "mumag":
-            return os.path.join(
-                os.path.dirname(__file__),
-                "mumag",
-                "Nanoperm_perpendicular_Honecker_et_al",
-                filename,
-            )
-
+def find(filename: str) -> str:
+    return os.path.join(os.path.dirname(__file__), 'sasdataloader', 'data', filename)
 
 def test_ascii_1():
-    filename = find("ascii_test_1.txt", "sasdataloader")
+    filename = 'ascii_test_1.txt'
     params = guess_params_from_filename(filename, one_dim)
     # Need to change the columns as they won't be right.
     # TODO: <ignore> unitless
@@ -63,6 +51,7 @@ def test_ascii_1():
             case "dI":
                 assert datum.value[0] == pytest.approx(0.002704)
                 assert datum.value[-1] == pytest.approx(0.191)
+<<<<<<< HEAD
 
 
 def test_ascii_2():
@@ -152,3 +141,23 @@ def test_mumag_metadata():
                 assert datum.metadata.raw.filter("applied_magnetic_field") == ["1270"]
                 assert datum.metadata.raw.filter("saturation_magnetization") == ["1640"]
                 assert datum.metadata.raw.filter("demagnetizing_field") == ["24"]
+||||||| parent of f7982fb1 (Wrote a test for the ASCII reader.)
+
+def test_ascii_2():
+    filename = find('test_3_columns.txt', 'sasdataloader')
+    params = guess_params_from_filename(filename, one_dim)
+    loaded_data = load_data(params)[0]
+
+    for datum in loaded_data._data_contents:
+        match datum.name:
+            case 'Q':
+                assert datum.value[0] == pytest.approx(0)
+                assert datum.value[-1] == pytest.approx(1.22449)
+            case 'I':
+                assert datum.value[0] == pytest.approx(2.83954)
+                assert datum.value[-1] == pytest.approx(7.47487)
+            case 'dI':
+                assert datum.value[0] == pytest.approx(0.6)
+                assert datum.value[-1] == pytest.approx(1.05918)
+=======
+>>>>>>> f7982fb1 (Wrote a test for the ASCII reader.)

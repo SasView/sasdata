@@ -1,12 +1,8 @@
 Sesans
-  Wavelength
-  SpinEchoLength
-  Polarisation
-  Depolarisation
 Metadata:
 
-  Polystyrene of Markus Strobl,  Full Sine, ++ only, Run: []
-  ==========================================================
+  Title, Run: []
+  ============
 
 Definition: Polystyrene of Markus Strobl,  Full Sine, ++ only
 Process:
@@ -20,7 +16,7 @@ Process:
 Sample:
    ID:           None
    Transmission: None
-   Thickness:    0.2 cm
+   Thickness:    None
    Temperature:  None
    Position:     None
    Orientation:  None
