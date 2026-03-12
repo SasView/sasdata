@@ -1,9 +1,9 @@
 from dataclasses import dataclass
 
 import numpy as np
+from transforms.operation import Operation
 
 from sasdata.metadata import Metadata
-from transforms.operation import Operation
 
 
 @dataclass

@@ -1,7 +1,6 @@
-import re
 from dataclasses import dataclass, field
-from typing import TypeVar
 from re import split as re_split
+from typing import TypeVar
 
 initial_metadata = {
     'source': ['name', 'radiation', 'type', 'probe_particle', 'beam_size_name', 'beam_size', 'beam_shape', 'wavelength', 'wavelength_min', 'wavelength_max', 'wavelength_spread'],

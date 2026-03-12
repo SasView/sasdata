@@ -3,7 +3,9 @@ Unit tests for the new recursive cansas reader
 """
 
 import os
+
 import pytest
+
 from sasdata.temp_hdf5_reader import load_data as hdf_load_data
 from sasdata.temp_xml_reader import load_data as xml_load_data
 

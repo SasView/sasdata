@@ -1,10 +1,11 @@
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Sequence, Self
 from fractions import Fraction
+from typing import Self
 
 import numpy as np
-
 from unicode_superscript import int_as_unicode_superscript
+
 
 class DimensionError(Exception):
     pass

@@ -1,9 +1,7 @@
-from django.core.exceptions import ObjectDoesNotExist
-from rest_framework import serializers
-
 from data import models
+from django.core.exceptions import ObjectDoesNotExist
 from fair_database import permissions
-
+from rest_framework import serializers
 
 # TODO: more custom validation, particularly for specific nested dictionary structures
 # TODO: custom update methods for nested structures

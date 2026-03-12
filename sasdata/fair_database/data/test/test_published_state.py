@@ -1,9 +1,8 @@
+from data.models import PublishedState, Session
 from django.contrib.auth.models import User
 from django.db.models import Max
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
-
-from data.models import PublishedState, Session
 
 
 # TODO: account for non-placeholder doi

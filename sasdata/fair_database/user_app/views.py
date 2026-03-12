@@ -1,10 +1,9 @@
-from rest_framework.response import Response
-from dj_rest_auth.views import LoginView
-from dj_rest_auth.registration.views import RegisterView, SocialLoginView
-from allauth.account.utils import complete_signup
 from allauth.account import app_settings as allauth_settings
+from allauth.account.utils import complete_signup
 from allauth.socialaccount.providers.orcid.views import OrcidOAuth2Adapter
-
+from dj_rest_auth.registration.views import RegisterView, SocialLoginView
+from dj_rest_auth.views import LoginView
+from rest_framework.response import Response
 from user_app.serializers import KnoxSerializer
 from user_app.util import create_knox_token
 

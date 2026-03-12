@@ -1,8 +1,8 @@
 
 
 
-from sasdata.quantities.quantity import NamedQuantity
 from sasdata.metadata import Metadata
+from sasdata.quantities.quantity import NamedQuantity
 
 
 class SasData:
@@ -30,7 +30,7 @@ class SasData:
         for data in self._data_contents:
             s += f"{indent}{data}\n"
 
-        s += f"Metadata:\n"
+        s += "Metadata:\n"
         s += "\n"
         s += self.metadata.summary()
 

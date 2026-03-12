@@ -1,9 +1,8 @@
+from data.models import DataSet, MetaData, OperationTree, Quantity, ReferenceQuantity
 from django.contrib.auth.models import User
 from django.db.models import Max
-from rest_framework.test import APIClient, APITestCase
 from rest_framework import status
-
-from data.models import DataSet, MetaData, OperationTree, Quantity, ReferenceQuantity
+from rest_framework.test import APIClient, APITestCase
 
 
 class TestCreateOperationTree(APITestCase):

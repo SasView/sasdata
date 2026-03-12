@@ -12,7 +12,6 @@
 #copyright 2008, University of Tennessee
 #############################################################################
 import os
-import os
 
 import numpy as np
 

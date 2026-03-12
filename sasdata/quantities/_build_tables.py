@@ -2,10 +2,11 @@
 Builds a data file containing details of units
 """
 
-import numpy as np
 from collections import defaultdict, namedtuple
-from _units_base import Dimensions
+
+import numpy as np
 from _autogen_warning import warning_text
+from _units_base import Dimensions
 
 Magnitude = namedtuple("Magnitude", ["symbol", "special_symbol", "latex_symbol", "name", "scale"])
 
@@ -133,7 +134,7 @@ with open("units.py", 'w', encoding=encoding) as fid:
               "# Included from _units_base.py\n"
               "#\n\n")
 
-    with open("_units_base.py", 'r') as base:
+    with open("_units_base.py") as base:
         for line in base:
             # unicode_superscript is a local module when called from
             # _unit_tables.py but a submodule of sasdata.quantities
@@ -405,7 +406,7 @@ with open("accessors.py", 'w', encoding=encoding) as fid:
 
     fid.write('"""'+(warning_text%"_build_tables.py, _accessor_base.py")+'"""\n\n')
 
-    with open("_accessor_base.py", 'r') as base:
+    with open("_accessor_base.py") as base:
         for line in base:
             fid.write(line)
 

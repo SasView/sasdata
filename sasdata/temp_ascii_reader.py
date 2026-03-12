@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 
+from enum import Enum
+
 from sasdata.data import SasData
 from sasdata.quantities.units import NamedUnit
-from enum import Enum
+
 
 class AsciiSeparator(Enum):
     Comma = (0,)

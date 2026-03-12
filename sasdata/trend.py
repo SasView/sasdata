@@ -2,8 +2,6 @@
 
 from dataclasses import dataclass
 
-import numpy as np
-
 from sasdata.data import SasData
 
 # Axis strs refer to the name of their associated NamedQuantity.

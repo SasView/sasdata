@@ -1,12 +1,11 @@
 import os
 import shutil
 
+from data.models import DataFile
 from django.conf import settings
 from django.contrib.auth.models import User
 from rest_framework import status
 from rest_framework.test import APITestCase
-
-from data.models import DataFile
 
 
 def find(filename):

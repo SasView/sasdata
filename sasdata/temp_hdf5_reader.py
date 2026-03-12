@@ -1,22 +1,16 @@
-import h5py
-
-
 import logging
 
+import h5py
 import numpy as np
-
-
 from h5py._hl.dataset import Dataset as HDF5Dataset
 from h5py._hl.group import Group as HDF5Group
 
-
 from sasdata.data import SasData
-from sasdata.data_backing import Dataset as SASDataDataset, Group as SASDataGroup
-from sasdata.metadata import Instrument, Collimation, Aperture, Source
-from sasdata.quantities.accessors import AccessorTarget
-
-from sasdata.quantities.quantity import NamedQuantity
+from sasdata.data_backing import Dataset as SASDataDataset
+from sasdata.data_backing import Group as SASDataGroup
+from sasdata.metadata import Aperture, Collimation, Instrument, Source
 from sasdata.quantities import units
+from sasdata.quantities.quantity import NamedQuantity
 from sasdata.quantities.unit_parser import parse
 
 # test_file = "./example_data/1d_data/33837rear_1D_1.75_16.5_NXcanSAS_v3.h5"

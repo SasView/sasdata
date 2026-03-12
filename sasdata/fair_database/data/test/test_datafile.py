@@ -1,14 +1,13 @@
 import os
 import shutil
 
-from django.conf import settings
-from django.test import TestCase
-from django.db.models import Max
-from django.contrib.auth.models import User
-from rest_framework.test import APIClient, APITestCase
-from rest_framework import status
-
 from data.models import DataFile
+from django.conf import settings
+from django.contrib.auth.models import User
+from django.db.models import Max
+from django.test import TestCase
+from rest_framework import status
+from rest_framework.test import APIClient, APITestCase
 
 
 # path to a file in example_data/1d_data

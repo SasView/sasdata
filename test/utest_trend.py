@@ -1,12 +1,11 @@
 from os import listdir, path
 
 import pytest
-from os import path, listdir
+
+import sasdata.temp_ascii_reader as ascii_reader
 from sasdata.ascii_reader_metadata import AsciiMetadataCategory
 from sasdata.quantities.units import per_nanometer
 from sasdata.temp_ascii_reader import AsciiReaderParams
-import sasdata.temp_ascii_reader as ascii_reader
-from sasdata.quantities.units import per_angstrom, per_nanometer
 from sasdata.trend import Trend
 
 test_directories = [

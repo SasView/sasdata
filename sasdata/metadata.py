@@ -1,12 +1,17 @@
-from tokenize import String
 
 import numpy as np
 from numpy.typing import ArrayLike
 
 import sasdata.quantities.units as units
 from sasdata.quantities.absolute_temperature import AbsoluteTemperatureAccessor
-from sasdata.quantities.accessors import StringAccessor, LengthAccessor, AngleAccessor, QuantityAccessor, \
-    DimensionlessAccessor, FloatAccessor, TemperatureAccessor, AccessorTarget
+from sasdata.quantities.accessors import (
+    AccessorTarget,
+    AngleAccessor,
+    FloatAccessor,
+    LengthAccessor,
+    QuantityAccessor,
+    StringAccessor,
+)
 
 
 class Detector:

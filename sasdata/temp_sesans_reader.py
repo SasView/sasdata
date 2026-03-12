@@ -2,31 +2,27 @@
 Import SESANS data in SasData format
 """
 
+import re
+from itertools import groupby
+
 from sasdata.data import SasData
 from sasdata.data_util.loader_exceptions import FileContentsException
 from sasdata.dataset_types import one_dim
-from sasdata.quantities.quantity import Quantity
 from sasdata.metadata import (
     Metadata,
-    Sample,
-    Instrument,
-    Collimation,
-    Aperture,
-    Vec3,
     MetaNode,
     Process,
+    Sample,
 )
-from sasdata.quantities import unit_parser, units
-from itertools import groupby
-import re
-import numpy as np
+from sasdata.quantities import unit_parser
+from sasdata.quantities.quantity import Quantity
 
 
 def parse_version(lines: list[str]) -> tuple[str, list[str]]:
     import re
 
     header = lines[0]
-    m = re.search("FileFormatVersion\s+(\S+)", header)
+    m = re.search(r"FileFormatVersion\s+(\S+)", header)
 
     if m is None:
         raise FileContentsException("Alleged Sesans file does not contain File Format Version header")
@@ -110,7 +106,7 @@ def parse_metadata(lines: list[str]) -> tuple[Metadata, dict[str, str], list[str
     # Parse key value store
     kvs: dict[str, str] = {}
     for line in parts[0]:
-        m = re.search("(\S+)\s+(.+)\n", line)
+        m = re.search("(\\S+)\\s+(.+)\n", line)
         if not m:
             continue
         kvs[m.group(1)] = m.group(2)

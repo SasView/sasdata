@@ -1,13 +1,10 @@
 """ Dev docs: Demo to show the behaviour of the re-binning methods """
 
+import matplotlib.pyplot as plt
 import numpy as np
 
-import matplotlib.pyplot as plt
-
-from sasdata.slicing.slicers.AnularSector import AnularSector
 from sasdata.slicing.meshes.voronoi_mesh import voronoi_mesh
-
-
+from sasdata.slicing.slicers.AnularSector import AnularSector
 
 if __name__ == "__main__":
     q_range = 1.5

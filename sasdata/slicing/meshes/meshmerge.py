@@ -1,9 +1,10 @@
+import time
+
 import numpy as np
 
-from sasdata.slicing.meshes.mesh import Mesh
 from sasdata.slicing.meshes.delaunay_mesh import delaunay_mesh
+from sasdata.slicing.meshes.mesh import Mesh
 
-import time
 
 def meshmerge(mesh_a: Mesh, mesh_b: Mesh) -> tuple[Mesh, np.ndarray, np.ndarray]:
     """ Take two lists of polygons and find their intersections
@@ -72,8 +73,8 @@ def meshmerge(mesh_a: Mesh, mesh_b: Mesh) -> tuple[Mesh, np.ndarray, np.ndarray]
     # Find the points where s and t are in (0, 1)
 
     intersection_inds = np.logical_and(
-        np.logical_and(0 < st[:, 0], st[:, 0] < 1),
-        np.logical_and(0 < st[:, 1], st[:, 1] < 1))
+        np.logical_and(st[:, 0] > 0, st[:, 0] < 1),
+        np.logical_and(st[:, 1] > 0, st[:, 1] < 1))
 
     start_points_for_intersections = p1[non_singular][intersection_inds, :]
     deltas_for_intersections = delta1[non_singular][intersection_inds, :]
