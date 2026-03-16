@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from sasdata.slicing.meshes.voronoi_mesh import voronoi_mesh
-from sasdata.slicing.slicers.AnularSector import AnularSector
+from sasdata.slicing.slicers.AnnularSector import AnnularSector
 
 if __name__ == "__main__":
     q_range = 1.5
@@ -41,7 +41,7 @@ if __name__ == "__main__":
             phi0 = np.pi/2 - size
             phi1 = np.pi/2 + size
 
-            rebinner = AnularSector(q0, q1, phi0, phi1)
+            rebinner = AnnularSector(q0, q1, phi0, phi1)
 
             data_order_neg1.append(rebinner.sum(x, y, random_lobe_data, order=-1))
             data_order_0.append(rebinner.sum(x, y, random_lobe_data, order=0))
@@ -94,7 +94,7 @@ if __name__ == "__main__":
             phi0 = np.pi/2 - size
             phi1 = np.pi/2 + size
 
-            rebinner = AnularSector(q0, q1, phi0, phi1)
+            rebinner = AnnularSector(q0, q1, phi0, phi1)
 
             data_order_neg1.append(rebinner.average(x, y, grid_ring_data, order=-1))
             data_order_0.append(rebinner.average(x, y, grid_ring_data, order=0))
