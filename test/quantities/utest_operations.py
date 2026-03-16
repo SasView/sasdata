@@ -11,6 +11,7 @@ from sasdata.quantities.quantity import (
     ArcTan,
     Constant,
     Cos,
+    Determinant,
     Div,
     Dot,
     Exp,
@@ -26,6 +27,7 @@ from sasdata.quantities.quantity import (
     Sin,
     Sub,
     Tan,
+    Trace,
     Transpose,
     Variable,
 )
@@ -46,7 +48,7 @@ operation_with_everything = Div(
 )
 
 
-@pytest.fixture(params=[Inv, Exp, Ln, Neg, Sin, ArcSin, Cos, ArcCos, Tan, ArcTan, Transpose])
+@pytest.fixture(params=[Determinant, Inv, Exp, Ln, Neg, Sin, ArcSin, Cos, ArcCos, Tan, ArcTan, Transpose])
 def unary_operation(request):
     return request.param(x)
 
@@ -93,6 +95,14 @@ def test_log_pow_serialise_deserialise(log_pow_operation):
     assert serialised == reserialised
 
 
+def test_trace_serialise_deserialise():
+    serialised = Trace(x).serialise()
+    deserialised = Operation.deserialise(serialised)
+    reserialised = deserialised.serialise()
+
+    assert serialised == reserialised
+
+
 @pytest.mark.parametrize(
     "op, summary",
     [(AdditiveIdentity, "0 [Add.Id.]"), (MultiplicativeIdentity, "1 [Mul.Id.]"), (Operation, "Operation(\n)")],
@@ -116,6 +126,11 @@ def test_binary_summary(binary_operation):
 
 def test_log_pow_summary(log_pow_operation):
     assert log_pow_operation.summary() == f"{log_pow_operation.__class__.__name__}(\n  x\n  2\n)"
+
+
+def test_trace_summary():
+    op = Trace(x)
+    assert op.summary() == f"{op.__class__.__name__}(\n  x\n  0\n  0\n  1\n)"
 
 
 @pytest.mark.parametrize("op, result", [(AdditiveIdentity, 0), (MultiplicativeIdentity, 1), (Operation, None)])
@@ -147,6 +162,10 @@ def test_evaluation(op, result):
         (ArcCos, -1.0, math.pi),
         (ArcTan, 0.0, 0.0),
         (ArcTan, -1.0, -0.25 * math.pi),
+        (Determinant, np.array([[1, 2], [3, 4]]), pytest.approx(-2.0)),
+        (Determinant, np.array([[1, 4, 1], [2, 4, 2], [3, 4, 3]]), pytest.approx(0.0)),
+        (Trace, np.array([[1, 2], [3, 4]]), pytest.approx(5.0)),
+        (Trace, np.array([[1, 4, 1], [2, 4, 2], [3, 4, 3]]), pytest.approx(8.0)),
     ],
 )
 def test_unary_evaluation(op, a, result):
