@@ -55,7 +55,7 @@ separated by whitespaces or commas or semicolons, in the following order:
     
 where *Q* is assumed to have units of 1/Angstrom, *I(Q)* is assumed to have
 units of 1/cm, *dI(Q)* is the uncertainty on the intensity value (also as 1/cm),
-and *dQ(Q)* **is the one-sigma FWHM Gaussian instrumental resolution in** *Q*,
+and *dQ(Q)* **is the one-sigma Gaussian instrumental resolution in** *Q*,
 **assumed to have arisen from pinhole geometry**. If the data are slit-smeared,
 see `Slit-Smeared Data`_.
 
