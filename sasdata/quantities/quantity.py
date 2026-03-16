@@ -5,6 +5,7 @@ from typing import Any, Self, TypeVar, Union
 
 import h5py
 import numpy as np
+import sympy as sp
 from numpy._typing import ArrayLike
 
 from sasdata.quantities import units
@@ -37,6 +38,30 @@ def transpose(a: Union["Quantity[ArrayLike]", ArrayLike], axes: tuple | None = N
 
     else:
         return np.transpose(a, axes=axes)
+
+
+def trace(a: Union["Quantity[ArrayLike]", ArrayLike], offset: int = 0, axis1: int = 0, axis2: int = 1):
+    """Find the trace of an array or an array based quantity."""
+    if isinstance(a, Quantity):
+        return DerivedQuantity(
+            value=np.trace(a.value, offset, axis1, axis2),
+            units=a.units,
+            history=QuantityHistory.apply_operation(Trace, a.history, offset=offset, axis1=axis1, axis2=axis2),
+        )
+    else:
+        return np.trace(a, offset, axis1, axis2)
+
+
+def determinant(a: Union["Quantity[ArrayLike]", ArrayLike]):
+    """Find the determinant of an array or an array based quantity."""
+    if isinstance(a, Quantity):
+        return DerivedQuantity(
+            value=np.linalg.det(a.value),
+            units=a.units,  # TODO: hmmm, need to think about this
+            history=QuantityHistory.apply_operation(Determinant, a.history),
+        )
+    else:
+        return np.linalg.det(a)
 
 
 def dot(a: Union["Quantity[ArrayLike]", ArrayLike], b: Union["Quantity[ArrayLike]", ArrayLike]):
@@ -999,14 +1024,14 @@ class Transpose(Operation):
         self.axes = axes
 
     def evaluate(self, variables: dict[int, T]) -> T:
-        return np.transpose(self.a.evaluate(variables))
+        return np.transpose(self.a.evaluate(variables), self.axes)
 
     def _derivative(self, hash_value: int) -> Operation:
-        return Transpose(self.a.derivative(hash_value))  # TODO: Check!
+        return Transpose(self.a.derivative(hash_value), self.axes)  # TODO: Check!
 
     def _clean(self):
         clean_a = self.a._clean()
-        return Transpose(clean_a)
+        return Transpose(clean_a, self.axes)
 
     def _serialise_parameters(self) -> dict[str, Any]:
         if self.axes is None:
@@ -1042,6 +1067,72 @@ class Transpose(Operation):
         if isinstance(other, Transpose):
             return other.a == self.a
         return False
+
+
+class Trace(Operation):
+    """Trace operation - as per numpy"""
+
+    serialisation_name = "trace"
+
+    def __init__(self, a: Operation, offset: int = 0, axis1: int = 0, axis2: int = 1):
+        self.a = a
+        self.offset = offset
+        self.axis1 = axis1
+        self.axis2 = axis2
+
+    def evaluate(self, variables: dict[int, T]) -> T:
+        return np.trace(self.a.evaluate(variables), self.offset, self.axis1, self.axis2)
+
+    def _derivative(self, hash_value: int) -> Operation:
+        return Trace(self.a.derivative(hash_value), self.offset, self.axis1, self.axis2)
+
+    def _clean(self):
+        clean_a = self.a._clean()
+        return Trace(clean_a, self.offset, self.axis1, self.axis2)
+
+    def _serialise_parameters(self) -> dict[str, Any]:
+        return {"a": self.a._serialise_json(), "offset": self.offset, "axis1": self.axis1, "axis2": self.axis2}
+
+    @staticmethod
+    def _deserialise(parameters: dict) -> "Operation":
+        return Trace(
+            a=Operation.deserialise_json(parameters["a"]),
+            offset=parameters["offset"],
+            axis1=parameters["axis1"],
+            axis2=parameters["axis2"],
+        )
+
+    def summary(self, indent_amount: int = 0, indent="  "):
+        return (
+            f"{indent_amount * indent}Trace(\n"
+            + self.a.summary(indent_amount + 1, indent)
+            + "\n"
+            + f"{(indent_amount + 1) * indent}{self.offset}\n"
+            + f"{(indent_amount + 1) * indent}{self.axis1}\n"
+            + f"{(indent_amount + 1) * indent}{self.axis2}\n"
+            + f"{indent_amount * indent})"
+        )
+
+    def __eq__(self, other):
+        if isinstance(other, Trace):
+            return other.a == self.a
+        return False
+
+
+class Determinant(UnaryOperation):
+    """Array Determinant - backed by numpy's det method"""
+
+    serialisation_name = "determinant"
+
+    def evaluate(self, variables: dict[int, T]) -> T:
+        return np.linalg.det(self.a.evaluate(variables))
+
+    def _derivative(self, hash_value: int) -> Operation:
+        return Trace(sp.adjugate(self.a) * self.a._derivative(hash_value))
+
+    def _clean(self):
+        clean_a = self.a._clean()
+        return Determinant(clean_a)  # Do nothing for now - can consider identity matrix and common columns
 
 
 class Dot(BinaryOperation):
@@ -1141,6 +1232,8 @@ _serialisable_classes = [
     Pow,
     Log,
     Transpose,
+    Trace,
+    Determinant,
     Dot,
     MatMul,
     TensorDot,
