@@ -12,15 +12,27 @@ from sasdata.transforms.rebinning import calculate_interpolation_matrix_1d
 # TODO: This probably shouldn't be here but will keep it here for now.
 # TODO: Not sure how to type hint the return.
 def get_metadatum_from_path(data: SasData, metadata_path: list[str]):
-    current_group = data._raw_metadata
+    current_node = data.metadata.raw
     for path_item in metadata_path:
-        current_item = current_group.children.get(path_item, None)
-        if current_item is None or (isinstance(current_item, Dataset) and path_item != metadata_path[-1]):
-            raise ValueError('Path does not lead to valid a metadatum.')
-        elif isinstance(current_item, Group):
-            current_group = current_item
+        if isinstance(current_node.contents, list):
+            # Search through list of MetaNodes
+            current_item = None
+            for node in current_node.contents:
+                if node.name == path_item:
+                    current_item = node
+                    break
         else:
-            return current_item.data
+            # Not a list, can't navigate further
+            raise ValueError('Path does not lead to a valid metadatum.')
+
+        if current_item is None:
+            raise ValueError('Path does not lead to a valid metadatum.')
+
+        # Check if we're at the end of the path
+        if path_item == metadata_path[-1]:
+            return current_item.contents
+
+        current_node = current_item
     raise ValueError('End of path without finding a dataset.')
 
 
