@@ -9,7 +9,7 @@ import numpy as np
 
 from sasdata.data_util.binning import DirectionalAverage
 from sasdata.data_util.interval import IntervalType
-from sasdata.data_util.roi import CartesianROI, PolarROI
+from sasdata.data_util.roi import CartesianROI, PolarROI, SlabROI
 from sasdata.dataloader.data_info import Data1D, Data2D
 from sasdata.quantities.constants import Pi, TwoPi
 
@@ -137,6 +137,68 @@ class Boxavg(Boxsum):
         total_sum, error, count = super()._sum()
 
         return (total_sum / count), (error / count)
+
+class SlabAngular(SlabROI):
+    """
+    Average I(Q_x, Q_y) over a slab, along an angular direction.
+
+    This class is initialised by specifying the x ands y intercepts of the slab.
+    The rotation angle is calculated from the intercepts.
+    It is called by supplying a Data2D object and returns a Data1D object.
+    The averaging process can also be thought of as projecting 2D -> 1D.
+
+    There also exists the option to "fold" the ROI, where Q data on opposite
+    sides of the origin but with equal magnitudes are averaged together,
+    resulting in a 1D plot with only positive Q values shown.
+    """
+
+    def __init__(self, qx_range: tuple[float, float] = (0.0, 0.0), qy_range: tuple[float, float] = (0.0, 0.0),
+                 nbins: int = 100, fold: bool = False, base: float = None):
+        """
+        Set up the ROI boundaries, the binning of the output 1D data, and fold.
+
+        The units of these parameters are A^-1
+        :param qx_range: The y intercepts for the slab.
+        :param qy_range: The x-intercepts for the slab.
+        :param nbins: The number of bins data is sorted into along the major axis.
+        :param fold: Whether the two halves of the ROI along Q_x should be
+                     folded together during averaging.
+        """
+        super().__init__(qx_range=qx_range,
+                         qy_range=qy_range)
+        self.nbins = nbins
+        self.fold = fold
+        self.base = base
+
+    def __call__(self, data2d: Data2D = None) -> Data1D:
+        """
+        Compute the 1D average of 2D data, projecting along the Q_x axis.
+
+        :param data2d: The Data2D object for which the average is computed.
+        :return: Data1D object for plotting.
+        """
+        self.validate_and_assign_data(data2d)
+
+        # SlabX is used by SasView's BoxInteractorX, which is designed so that
+        # the ROI is always centred on the origin. If this ever changes, then
+        # the behaviour of fold here will also need to change. Perhaps we could
+        # apply a transformation to the data like the one used in WedgePhi.
+
+        if self.fold:
+            major_lims = (0, self.qx_max)
+            self.qx_data = np.abs(self.qx_data)
+        else:
+            major_lims = (self.qx_min, self.qx_max)
+        minor_lims = (self.qy_min, self.qy_max)
+
+        directional_average = DirectionalAverage(major_axis=self.qx_data,
+                                                 minor_axis=self.qy_data,
+                                                 lims=(major_lims,minor_lims),
+                                                 nbins=self.nbins, base=self.base)
+        qx_data, intensity, error = \
+            directional_average(data=self.data, err_data=self.err_data)
+
+        return Data1D(x=qx_data, y=intensity, dy=error)
 
 class SlabX(CartesianROI):
     """
