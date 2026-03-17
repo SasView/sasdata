@@ -1,3 +1,5 @@
+import math
+
 import numpy as np
 
 from sasdata.dataloader.data_info import Data2D
@@ -129,3 +131,29 @@ class PolarROI(GenericROI):
 
         # Most validation and pre-processing is taken care of by GenericROI.
         super().validate_and_assign_data(data2d)
+
+class SlabROI(CartesianROI):
+    """
+    Base class for data manipulators that are in cartesian coordinates, and the shapes are rectangular, but the
+    Q-ranges specify the (x,y) coordinates of the corners of the ROI. This is useful mostly used for rotated
+    rectangles.
+    """
+
+    def __init__(self, qx_range: tuple[float, float] = (0.0, 0.0), qy_range: tuple[float, float] = (0.0, 0.0)) -> None:
+        """
+        Assign the variables used to label the properties of the Data2D object.
+        Also establish the upper and lower bounds defining the ROI.
+
+        The units of these parameters are A^-1
+        :param qx_range: The upper and lower qx intercepts
+        :param qy_range: The bounds of the qy intercepts
+        : param angle: The rotation angle of the slab around the center point, in radians, relative to the x-axis
+        """
+        super().__init__(qx_range, qy_range)
+        qx_min, qx_max = qx_range
+        qy_min, qy_max = qy_range
+        self.qx_center = (qx_min + qx_max) / 2
+        self.qy_center = (qy_min + qy_max) / 2
+        self.qx_width = qx_max - qx_min
+        self.qy_width = qy_max - qy_min
+        self.angle = math.tan(qy_max / qx_max)
