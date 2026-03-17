@@ -389,6 +389,8 @@ class UnknownUnit(NamedUnit):
                 return self._numerator == other._numerator and self._denominator == other._denominator and self._unit == other._unit
             case Unit():
                 return not self._numerator and not self._denominator and self._unit == other
+            case _:
+                return False
 
     def __mul__(self: Self, other: "Unit"):
         match other:
