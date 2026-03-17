@@ -52,6 +52,18 @@ def trace(a: Union["Quantity[ArrayLike]", ArrayLike], offset: int = 0, axis1: in
         return np.trace(a, offset, axis1, axis2)
 
 
+def matinv(a: Union["Quantity[ArrayLike]", ArrayLike]):
+    """Find the inverse of a matrix."""
+    if isinstance(a, Quantity):
+        return DerivedQuantity(
+            value=np.linalg.inv(a.value),
+            units=a.units,
+            history=QuantityHistory.apply_operation(MatInv, a.history),
+        )
+    else:
+        return np.linalg.inv(a)
+
+
 def determinant(a: Union["Quantity[ArrayLike]", ArrayLike]):
     """Find the determinant of an array or an array based quantity."""
     if isinstance(a, Quantity):
@@ -1180,6 +1192,32 @@ class MatMul(BinaryOperation):
         return MatMul(a, b)
 
 
+class MatInv(UnaryOperation):
+    """Matrix inversion, using numpy"""
+
+    serialisation_name = "matinv"
+
+    def evaluate(self, variables: dict[int, T]) -> T:
+        return np.linalg.inv(self.a.evaluate(variables))
+
+    def _derivative(self, hash_value: int) -> Operation:
+        return Neg(Matmul(MatMul(MatInv(self.a), self.a._derivative(hash_value)), MatInv(self.a)))
+
+    def _clean(self):
+        clean_a = self.a._clean()
+
+        if isinstance(clean_a, MatInv):
+            # Removes double inversions
+            return clean_a.a
+
+        elif isinstance(clean_a, Determinant):
+            # Inverse of determinant is determinant of inverse
+            return Determinant(MatInv(clean_a.a))
+
+        else:
+            return MatInv(clean_a)
+
+
 class TensorDot(Operation):
     serialisation_name = "tensor_product"
 
@@ -1236,6 +1274,7 @@ _serialisable_classes = [
     Determinant,
     Dot,
     MatMul,
+    MatInv,
     TensorDot,
 ]
 

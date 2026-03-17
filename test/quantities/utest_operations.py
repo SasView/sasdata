@@ -18,6 +18,7 @@ from sasdata.quantities.quantity import (
     Inv,
     Ln,
     Log,
+    MatInv,
     MatMul,
     Mul,
     MultiplicativeIdentity,
@@ -48,7 +49,7 @@ operation_with_everything = Div(
 )
 
 
-@pytest.fixture(params=[Determinant, Inv, Exp, Ln, Neg, Sin, ArcSin, Cos, ArcCos, Tan, ArcTan, Transpose])
+@pytest.fixture(params=[Determinant, Inv, Exp, Ln, MatInv, Neg, Sin, ArcSin, Cos, ArcCos, Tan, ArcTan, Transpose])
 def unary_operation(request):
     return request.param(x)
 
@@ -232,6 +233,7 @@ def test_derivative(op, result):
     [
         (Neg(Neg(x))),
         (Inv(Inv(x))),
+        (MatInv(MatInv(x))),
     ],
 )
 def test_clean_double_applications(op):
