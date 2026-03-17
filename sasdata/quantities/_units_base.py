@@ -420,7 +420,7 @@ class UnknownUnit(NamedUnit):
     def __rmul__(self: Self, other):
         return self * other
 
-    def __truediv__(self: Self, other: "Unit"):
+    def __truediv__(self: Self, other: "Unit") -> "UnknownUnit":
         match other:
             case UnknownUnit():
                 num = dict(self._numerator)
@@ -445,10 +445,10 @@ class UnknownUnit(NamedUnit):
             case _:
                 return NotImplemented
 
-    def __rtruediv__(self: Self, other: "Unit") -> "Unit":
+    def __rtruediv__(self: Self, other: "Unit") -> "UnknownUnit":
         return (self/other) ** -1
 
-    def __pow__(self, power: int | float) -> "Unit":
+    def __pow__(self, power: int | float) -> "UnknownUnit":
         match power:
             case int() | float():
                 num = {key: value * power for key, value in self._numerator.items()}
