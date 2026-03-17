@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 
 from sasdata.quantities import units
-from sasdata.quantities.quantity import NamedQuantity, tensordot, trace, transpose
+from sasdata.quantities.quantity import NamedQuantity, matinv, tensordot, trace, transpose
 
 order_list = [[0, 1, 2, 3], [0, 2, 1], [1, 0], [0, 1], [2, 0, 1], [3, 1, 2, 0]]
 
@@ -55,6 +55,21 @@ def test_trace_axes(matrix, axis1, axis2, expected_trace):
     assert (
         trace(NamedQuantity("testmat", matrix, units=units.none), axis1=axis1, axis2=axis2).value == expected_trace
     ).all()
+
+
+@pytest.mark.parametrize(
+    "matrix, expected_inverse",
+    [
+        (np.array([[1]]), np.array([[1]])),
+        (np.array([[-2.0, 1.0], [1.5, -0.5]]), np.array([[1, 2], [3, 4]])),
+    ],
+)
+def test_inverse(matrix, expected_inverse):
+    """Check that the matinv operation correctly inverse for raw data and quantities."""
+    print(matinv(matrix))
+    print(expected_inverse)
+    assert (matinv(matrix) == expected_inverse).all()
+    assert (matinv(NamedQuantity("testmat", matrix, units=units.none)).value == expected_inverse).all()
 
 
 rng_seed = 1979
