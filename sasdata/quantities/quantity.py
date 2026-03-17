@@ -5,7 +5,7 @@ from typing import Any, Self, TypeVar, Union
 
 import h5py
 import numpy as np
-from numpy._typing import ArrayLike
+from numpy.typing import ArrayLike
 
 from sasdata.quantities import units
 from sasdata.quantities.numerical_encoding import numerical_decode, numerical_encode
