@@ -19,7 +19,7 @@ class DatasetType:
 one_dim = DatasetType(
             name="1D I vs Q",
             required=["Q", "I"],
-            optional=["dI", "dQ", "Shadowfactor", "Qmean", "dQl", "dQw"],
+            optional=["dI", "dQ", "shadow"],
             expected_orders=[
                 ["Q", "I", "dI"],
                 ["Q", "dQ", "I", "dI"]])
@@ -27,7 +27,7 @@ one_dim = DatasetType(
 two_dim = DatasetType(
             name="2D I vs Q",
             required=["Qx", "Qy", "I"],
-            optional=["dQx", "dQy", "dQz", "dI", "Qz", "ShadowFactor", "mask"],
+            optional=["dQx", "dQy", "dQz", "dI", "Qz", "shadow"],
             expected_orders=[
                 ["Qx", "Qy", "I"],
                 ["Qx", "Qy", "I", "dI"],
@@ -44,8 +44,8 @@ three_dim = DatasetType(
 
 sesans = DatasetType(
     name="SESANS",
-    required=["SpinEchoLength", "Depolarisation", "Wavelength"],
-    optional=["Transmission", "Polarisation"],
+    required=["z", "G"],
+    optional=["stuff", "other stuff", "more stuff"],
     expected_orders=[["z", "G"]])
 
 dataset_types = {dataset.name for dataset in [one_dim, two_dim, sesans]}
@@ -68,11 +68,8 @@ unit_kinds = {
     "dQx": units.inverse_length,
     "dQy": units.inverse_length,
     "dQz": units.inverse_length,
-    "SpinEchoLength": units.length,
-    "Depolarisation": units.inverse_volume,
-    "Wavelength": units.length,
-    "Transmission": units.dimensionless,
-    "Polarisation": units.dimensionless,
+    "z": units.length,
+    "G": units.area,
     "shadow": units.dimensionless,
     "temperature": units.temperature,
     "magnetic field": units.magnetic_flux_density

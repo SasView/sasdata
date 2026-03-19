@@ -16,4 +16,3 @@ html5lib
 
 # Other stuff
 matplotlib
-pre-commit

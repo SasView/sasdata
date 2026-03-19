@@ -1,9 +1,53 @@
 sasentry01
-  dQ
-  Q
-  I
 Metadata:
 
+  MH4_5deg_16T_SLOW, Run: 33837
+  =============================
+
+Definition: MH4_5deg_16T_SLOW
+Process:
+    Name: None
+    Date: None
+    Description: None
+    Term: None
+    Notes: None
+Sample:
+   ID:           None
+   Transmission: None
+   Thickness:    None
+   Temperature:  None
+   Position:     None
+   Orientation:  None
+Aperture:
+  Name: None
+  Aperture size: None
+  Aperture distance: None
+Collimation:
+   Length: None
+Detector:
+   Name:         None
+   Distance:     None
+   Offset:       None
+   Orientation:  None
+   Beam center:  None
+   Pixel size:   None
+   Slit length:  None
+Source:
+    Radiation:         Spallation Neutron Source
+    Shape:             None
+    Wavelength:        None
+    Min. Wavelength:   None
+    Max. Wavelength:   None
+    Wavelength Spread: None
+    Beam Size:         None
+Transmission Spectrum:
+    Name:             None
+    Timestamp:        None
+    Wavelengths:      None
+    Transmission:     None
+
+<<<<<<< HEAD
+<<<<<<< HEAD
   MH4_5deg_16T_SLOW, Run: 33837
   =============================
 
@@ -45,12 +89,8 @@ Source:
     Max. Wavelength:   None
     Wavelength Spread: None
     Beam Size:         None
-sasentry02
-  Qy
-  Qx
-  I
-Metadata:
 
+||||||| parent of cb5f3ffb (Add tests for dataset)
   MH4_5deg_16T_SLOW, Run: 33837
   =============================
 
@@ -70,7 +110,7 @@ Collimation:
    Length: None
 Detector:
    Name:         front-detector
-   Distance:     2845.26 mm
+   Distance:     2845.260009765625 mm
    Offset:       None
    Orientation:  None
    Beam center:  None
@@ -78,7 +118,7 @@ Detector:
    Slit length:  None
 Detector:
    Name:         rear-detector
-   Distance:     4385.28 mm
+   Distance:     4385.27978515625 mm
    Offset:       None
    Orientation:  None
    Beam center:  None
@@ -92,3 +132,57 @@ Source:
     Max. Wavelength:   None
     Wavelength Spread: None
     Beam Size:         None
+Transmission Spectrum:
+    Name:             None
+    Timestamp:        None
+    Wavelengths:      None
+    Transmission:     None
+
+||||||| original
+  MH4_5deg_16T_SLOW, Run: 33837
+  =============================
+
+Definition: MH4_5deg_16T_SLOW
+Process:
+    Name: Mantid generated CanSAS1D XML
+    Date: 11-May-2016 12:15:34
+    Description: None
+    Term: None
+Sample:
+   ID:           
+   Transmission: None
+   Thickness:    None
+   Temperature:  None
+   Position:     None
+   Orientation:  None
+Collimation:
+   Length: None
+Detector:
+   Name:         front-detector
+   Distance:     2845.260009765625 mm
+   Offset:       None
+   Orientation:  None
+   Beam center:  None
+   Pixel size:   None
+   Slit length:  None
+Detector:
+   Name:         rear-detector
+   Distance:     4385.27978515625 mm
+   Offset:       None
+   Orientation:  None
+   Beam center:  None
+   Pixel size:   None
+   Slit length:  None
+Source:
+    Radiation:         Spallation Neutron Source
+    Shape:             None
+    Wavelength:        None
+    Min. Wavelength:   None
+    Max. Wavelength:   None
+    Wavelength Spread: None
+    Beam Size:         None
+Transmission Spectrum:
+    Name:             None
+    Timestamp:        None
+    Wavelengths:      None
+    Transmission:     None

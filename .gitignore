@@ -24,6 +24,7 @@
 **/build
 /dist
 .mplconfig
+**/db.sqlite3
 
 # INSTALL.md recommends a venv that should not be committed
 venv
