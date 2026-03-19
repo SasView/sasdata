@@ -76,6 +76,48 @@ def determinant(a: Union["Quantity[ArrayLike]", ArrayLike]):
         return np.linalg.det(a)
 
 
+def norm_1(a: Union["Quantity[ArrayLike]", ArrayLike], axes: int | tuple[int] | None = None):
+    """Caculate the 1-norm of an array or an array based quantity."""
+    if isinstance(a, Quantity):
+        if axes is None:
+            return DerivedQuantity(
+                value=np.linalg.norm(a.value, ord=1, axes=axes),
+                units=a.units,
+                history=QuantityHistory.apply_operation(Norm_1, a.history),
+            )
+
+        else:
+            return DerivedQuantity(
+                value=np.linalg.norm(a.value, ord=1, axes=axes),
+                units=a.units,
+                history=QuantityHistory.apply_operation(Norm_1, a.history, axes=axes),
+            )
+
+    else:
+        return np.linalg.norm(a.value, ord=1, axes=axes)
+
+
+def norm_2(a: Union["Quantity[ArrayLike]", ArrayLike], axes: int | tuple[int] | None = None):
+    """Caculate the 2-norm of an array or an array based quantity."""
+    if isinstance(a, Quantity):
+        if axes is None:
+            return DerivedQuantity(
+                value=np.linalg.norm(a.value, axes=axes),
+                units=a.units,
+                history=QuantityHistory.apply_operation(Norm_2, a.history),
+            )
+
+        else:
+            return DerivedQuantity(
+                value=np.linalg.norm(a.value, axes=axes),
+                units=a.units,
+                history=QuantityHistory.apply_operation(Norm_2, a.history, axes=axes),
+            )
+
+    else:
+        return np.linalg.norm(a.value, axes=axes)
+
+
 def dot(a: Union["Quantity[ArrayLike]", ArrayLike], b: Union["Quantity[ArrayLike]", ArrayLike]):
     """Dot product of two arrays or two array based quantities"""
     a_is_quantity = isinstance(a, Quantity)
@@ -328,6 +370,34 @@ class MultiplicativeIdentity(ConstantBase):
             if other.value == 1:
                 return True
 
+        return False
+
+
+class MatrixIdentity(ConstantBase):
+    serialisation_name = "identity"
+
+    def __init__(self, size):
+        self.size = size
+
+    def evaluate(self, variables: dict[int, T]) -> T:
+        return np.eye(self.size)
+
+    def _derivative(self, hash_value: int):
+        return Constant(np.zeros((self.size, self.size)))
+
+    @staticmethod
+    def _deserialise(parameters: dict) -> "Operation":
+        return MatrixIdentity(self.size)
+
+    def _serialise_parameters(self) -> dict[str, Any]:
+        return {"size": numerical_encode(self.size)}
+
+    def summary(self, indent_amount: int = 0, indent="  "):
+        return f"{indent_amount * indent}{self.size} [Matrix Id.]"
+
+    def __eq__(self, other):
+        if isinstance(other, MatrixIdentity):
+            return self.size == other.size
         return False
 
 
@@ -1071,7 +1141,7 @@ class Transpose(Operation):
                 f"{indent_amount * indent}Transpose(\n"
                 + self.a.summary(indent_amount + 1, indent)
                 + "\n"
-                + f"{(indent_amount + 1) * indent}{self.axes}\n"
+                + f"{(indent_amount + 1) * indent}{list(self.axes)}\n"
                 + f"{indent_amount * indent})"
             )
 
@@ -1248,6 +1318,116 @@ class TensorDot(Operation):
         )
 
 
+class Norm_1(Operation):
+    """1-norm of a matrix from numpy"""
+
+    serialisation_name = "norm_1"
+
+    def __init__(self, a: Operation, axes: int | tuple[int] | None = None):
+        self.a = a
+        self.axes = axes
+
+    def evaluate(self, variables: dict[int, T]) -> T:
+        return np.linalg.norm(self.a.evaluate(variables), ord=1, axis=self.axes)
+
+    def _derivative(self, hash_value: int) -> Operation:
+        return np.sign(self.a)
+
+    def _clean(self):
+        clean_a = self.a._clean()
+        return Norm_1(clean_a, self.axes)
+
+    def _serialise_parameters(self) -> dict[str, Any]:
+        if self.axes is None:
+            return {"a": self.a._serialise_json()}
+        else:
+            return {"a": self.a._serialise_json(), "axes": list(self.axes)}
+
+    @staticmethod
+    def _deserialise(parameters: dict) -> "Operation":
+        if "axes" in parameters:
+            return Norm_1(a=Operation.deserialise_json(parameters["a"]), axes=tuple(parameters["axes"]))
+        else:
+            return Norm_1(a=Operation.deserialise_json(parameters["a"]))
+
+    def summary(self, indent_amount: int = 0, indent="  "):
+        if self.axes is None:
+            return (
+                f"{indent_amount * indent}Norm_1(\n"
+                + self.a.summary(indent_amount + 1, indent)
+                + "\n"
+                + f"{indent_amount * indent})"
+            )
+        else:
+            return (
+                f"{indent_amount * indent}Norm_1(\n"
+                + self.a.summary(indent_amount + 1, indent)
+                + "\n"
+                + f"{(indent_amount + 1) * indent}{list(self.axes)}\n"
+                + f"{indent_amount * indent})"
+            )
+
+    def __eq__(self, other):
+        if isinstance(other, Norm_1):
+            return other.a == self.a
+        return False
+
+
+class Norm_2(Operation):
+    """2-norm of a matrix from numpy"""
+
+    serialisation_name = "norm_2"
+
+    def __init__(self, a: Operation, axes: int | tuple[int] | None = None):
+        self.a = a
+        self.axes = axes
+
+    def evaluate(self, variables: dict[int, T]) -> T:
+        return np.linalg.norm(self.a.evaluate(variables), axis=self.axes)
+
+    def _derivative(self, hash_value: int) -> Operation:
+        return Transpose(Div(self.a, Norm_2(self.a, self.axes)))
+
+    def _clean(self):
+        clean_a = self.a._clean()
+        return Norm_2(clean_a, self.axes)
+
+    def _serialise_parameters(self) -> dict[str, Any]:
+        if self.axes is None:
+            return {"a": self.a._serialise_json()}
+        else:
+            return {"a": self.a._serialise_json(), "axes": list(self.axes)}
+
+    @staticmethod
+    def _deserialise(parameters: dict) -> "Operation":
+        if "axes" in parameters:
+            return Norm_2(a=Operation.deserialise_json(parameters["a"]), axes=tuple(parameters["axes"]))
+        else:
+            return Norm_2(a=Operation.deserialise_json(parameters["a"]))
+
+    def summary(self, indent_amount: int = 0, indent="  "):
+        if self.axes is None:
+            return (
+                f"{indent_amount * indent}Norm_2(\n"
+                + self.a.summary(indent_amount + 1, indent)
+                + "\n"
+                + f"{indent_amount * indent})"
+            )
+        else:
+            return (
+                f"{indent_amount * indent}Norm_2(\n"
+                + self.a.summary(indent_amount + 1, indent)
+                + "\n"
+                + f"{(indent_amount + 1) * indent}{list(self.axes)}\n"
+                + f"{indent_amount * indent})"
+            )
+
+    def __eq__(self, other):
+        if isinstance(other, Norm_2):
+            return other.a == self.a
+        return False
+
+
 _serialisable_classes = [
     AdditiveIdentity,
     MultiplicativeIdentity,
@@ -1276,6 +1456,8 @@ _serialisable_classes = [
     MatMul,
     MatInv,
     TensorDot,
+    Norm_1,
+    Norm_2,
 ]
 
 _serialisation_lookup = {class_.serialisation_name: class_ for class_ in _serialisable_classes}
