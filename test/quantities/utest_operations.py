@@ -20,9 +20,12 @@ from sasdata.quantities.quantity import (
     Log,
     MatInv,
     MatMul,
+    MatrixIdentity,
     Mul,
     MultiplicativeIdentity,
     Neg,
+    Norm_1,
+    Norm_2,
     Operation,
     Pow,
     Sin,
@@ -64,6 +67,16 @@ def log_pow_operation(request):
     return request.param(x, 2)
 
 
+@pytest.fixture(params=[Transpose, Norm_1, Norm_2])
+def axis_operation(request):
+    return request.param(x, (0,))
+
+
+@pytest.fixture(params=[Transpose, Norm_1, Norm_2])
+def axis_none_operation(request):
+    return request.param(x, None)
+
+
 def test_serialise_deserialise():
     serialised = operation_with_everything.serialise()
     deserialised = Operation.deserialise(serialised)
@@ -96,6 +109,22 @@ def test_log_pow_serialise_deserialise(log_pow_operation):
     assert serialised == reserialised
 
 
+def test_axis_serialise_deserialise(axis_operation):
+    serialised = axis_operation.serialise()
+    deserialised = Operation.deserialise(serialised)
+    reserialised = deserialised.serialise()
+
+    assert serialised == reserialised
+
+
+def test_axis_none_serialise_deserialise(axis_none_operation):
+    serialised = axis_none_operation.serialise()
+    deserialised = Operation.deserialise(serialised)
+    reserialised = deserialised.serialise()
+
+    assert serialised == reserialised
+
+
 def test_trace_serialise_deserialise():
     serialised = Trace(x).serialise()
     deserialised = Operation.deserialise(serialised)
@@ -113,6 +142,11 @@ def test_summary(op, summary):
     assert f.summary() == summary
 
 
+def test_matrix_id_summary():
+    f = MatrixIdentity(1)
+    assert f.summary() == "1 [Matrix Id.]"
+
+
 def test_variable_summary():
     assert x.summary() == "x"
 
@@ -127,6 +161,14 @@ def test_binary_summary(binary_operation):
 
 def test_log_pow_summary(log_pow_operation):
     assert log_pow_operation.summary() == f"{log_pow_operation.__class__.__name__}(\n  x\n  2\n)"
+
+
+def test_axis_summary(axis_operation):
+    assert axis_operation.summary() == f"{axis_operation.__class__.__name__}(\n  x\n  [0]\n)"
+
+
+def test_axis_none_summary(axis_none_operation):
+    assert axis_none_operation.summary() == f"{axis_none_operation.__class__.__name__}(\n  x\n)"
 
 
 def test_trace_summary():
@@ -212,10 +254,31 @@ def test_matmul_evaluation(op, a, b, result):
 
 @pytest.mark.parametrize(
     "op, a, result",
-    [(Transpose, np.array([[1, 2]]), np.array([[1], [2]])), (Transpose, [[1, 2], [3, 4]], [[1, 3], [2, 4]])],
+    [
+        (Transpose, np.array([[1, 2]]), np.array([[1], [2]])),
+        (Transpose, [[1, 2], [3, 4]], [[1, 3], [2, 4]]),
+        (Norm_1, [[1, 2], [3, 4]], np.float64(6.0)),
+        (Norm_2, [[1, 2], [3, 4]], np.float64(np.sqrt(30.0))),
+        (Norm_2, [[1.0, 2.5], [3.0, 4.0]], np.float64(np.sqrt(32.25))),
+    ],
 )
-def test_transpose_evaluation(op, a, result):
+def test_axis_none_evaluation(op, a, result):
     f = op(Constant(a))
+    print(f.evaluate({}))
+    print(result)
+    assert (f.evaluate({}) == result).all()
+
+
+@pytest.mark.parametrize(
+    "op, a, axes, result",
+    [
+        (Transpose, [[1, 2], [3, 4]], (1, 0), [[1, 3], [2, 4]]),
+        (Norm_1, np.array([[1, 2], [3, 4]]), 1, np.array([3.0, 7.0])),
+        (Norm_2, np.array([[1, 2], [3, 4]]), 1, np.array([np.sqrt(5.0), 5.0])),
+    ],
+)
+def test_axis_evaluation(op, a, axes, result):
+    f = op(Constant(a), axes=axes)
     assert (f.evaluate({}) == result).all()
 
 
