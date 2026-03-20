@@ -1,11 +1,9 @@
-from typing import Union, List
 
 from dataclasses import dataclass
 
 import numpy as np
 
 from sasdata.data import SasData
-from sasdata.data_backing import Dataset, Group
 from sasdata.quantities.quantity import Quantity
 from sasdata.transforms.rebinning import calculate_interpolation_matrix_1d
 
@@ -42,7 +40,7 @@ def get_metadatum_from_path(data: SasData, metadata_path: list[str]):
 @dataclass
 class Trend:
     data: list[SasData]
-    trend_axes: dict[str, Union[list[str], list]]  # Path or manual values
+    trend_axes: dict[str, list[str] | list]  # Path or manual values
 
     def __post_init__(self):
 

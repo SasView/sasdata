@@ -23,6 +23,7 @@ from sasdata.quantities.quantity import Quantity
 from sasdata.quantities.unit_parser import parse_unit
 from sasdata.quantities.units import NamedUnit
 
+
 def from_json_quantity(obj: dict) -> Quantity | None:
     if obj is None:
         return None
