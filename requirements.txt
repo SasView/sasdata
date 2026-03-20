@@ -5,7 +5,6 @@ lxml
 # Calculation
 numpy
 scipy
-sympy
 
 # Unit testing
 pytest
