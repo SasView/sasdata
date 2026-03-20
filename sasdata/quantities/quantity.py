@@ -5,7 +5,6 @@ from typing import Any, Self, TypeVar, Union
 
 import h5py
 import numpy as np
-import sympy as sp
 from numpy._typing import ArrayLike
 
 from sasdata.quantities import units
@@ -62,18 +61,6 @@ def matinv(a: Union["Quantity[ArrayLike]", ArrayLike]):
         )
     else:
         return np.linalg.inv(a)
-
-
-def determinant(a: Union["Quantity[ArrayLike]", ArrayLike]):
-    """Find the determinant of an array or an array based quantity."""
-    if isinstance(a, Quantity):
-        return DerivedQuantity(
-            value=np.linalg.det(a.value),
-            units=a.units,  # TODO: hmmm, need to think about this
-            history=QuantityHistory.apply_operation(Determinant, a.history),
-        )
-    else:
-        return np.linalg.det(a)
 
 
 def norm_1(a: Union["Quantity[ArrayLike]", ArrayLike], axes: int | tuple[int] | None = None):
@@ -1201,22 +1188,6 @@ class Trace(Operation):
         return False
 
 
-class Determinant(UnaryOperation):
-    """Array Determinant - backed by numpy's det method"""
-
-    serialisation_name = "determinant"
-
-    def evaluate(self, variables: dict[int, T]) -> T:
-        return np.linalg.det(self.a.evaluate(variables))
-
-    def _derivative(self, hash_value: int) -> Operation:
-        return Trace(sp.adjugate(self.a) * self.a._derivative(hash_value))
-
-    def _clean(self):
-        clean_a = self.a._clean()
-        return Determinant(clean_a)  # Do nothing for now - can consider identity matrix and common columns
-
-
 class Dot(BinaryOperation):
     """Dot product - backed by numpy's dot method"""
 
@@ -1279,10 +1250,6 @@ class MatInv(UnaryOperation):
         if isinstance(clean_a, MatInv):
             # Removes double inversions
             return clean_a.a
-
-        elif isinstance(clean_a, Determinant):
-            # Inverse of determinant is determinant of inverse
-            return Determinant(MatInv(clean_a.a))
 
         else:
             return MatInv(clean_a)
@@ -1451,7 +1418,6 @@ _serialisable_classes = [
     Log,
     Transpose,
     Trace,
-    Determinant,
     Dot,
     MatMul,
     MatInv,
