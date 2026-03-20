@@ -42,7 +42,7 @@ def test_trend_build_interpolate(directory_name: str):
     data = ascii_reader.load_data(params)
     trend = Trend(
         data=data,
-        trend_axis=['magnetic', 'applied_magnetic_field']
+        trend_axes={'applied_magnetic_field': ['magnetic', 'applied_magnetic_field']}
     )
     # Initially, the q axes in this date don't exactly match
     to_interpolate_on = 'Q'
@@ -64,6 +64,6 @@ def test_trend_q_axis_match():
     data = ascii_reader.load_data(params)
     trend = Trend(
         data=data,
-        trend_axis=['magnetic', 'counting_index']
+        trend_axes={'counting_index': ['magnetic', 'counting_index']}
     )
     assert trend.all_axis_match('Q')
