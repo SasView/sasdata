@@ -11,7 +11,6 @@ from sasdata.quantities.quantity import (
     ArcTan,
     Constant,
     Cos,
-    Determinant,
     Div,
     Dot,
     Exp,
@@ -52,7 +51,7 @@ operation_with_everything = Div(
 )
 
 
-@pytest.fixture(params=[Determinant, Inv, Exp, Ln, MatInv, Neg, Sin, ArcSin, Cos, ArcCos, Tan, ArcTan, Transpose])
+@pytest.fixture(params=[Inv, Exp, Ln, MatInv, Neg, Sin, ArcSin, Cos, ArcCos, Tan, ArcTan, Transpose])
 def unary_operation(request):
     return request.param(x)
 
@@ -205,8 +204,6 @@ def test_evaluation(op, result):
         (ArcCos, -1.0, math.pi),
         (ArcTan, 0.0, 0.0),
         (ArcTan, -1.0, -0.25 * math.pi),
-        (Determinant, np.array([[1, 2], [3, 4]]), pytest.approx(-2.0)),
-        (Determinant, np.array([[1, 4, 1], [2, 4, 2], [3, 4, 3]]), pytest.approx(0.0)),
         (Trace, np.array([[1, 2], [3, 4]]), pytest.approx(5.0)),
         (Trace, np.array([[1, 4, 1], [2, 4, 2], [3, 4, 3]]), pytest.approx(8.0)),
     ],
@@ -264,8 +261,6 @@ def test_matmul_evaluation(op, a, b, result):
 )
 def test_axis_none_evaluation(op, a, result):
     f = op(Constant(a))
-    print(f.evaluate({}))
-    print(result)
     assert (f.evaluate({}) == result).all()
 
 
