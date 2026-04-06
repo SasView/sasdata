@@ -157,3 +157,4 @@ class SlabROI(CartesianROI):
         self.qx_width = qx_max - qx_min
         self.qy_width = qy_max - qy_min
         self.angle = math.tan(qy_max / qx_max)
+        self.slope = self.qy_width / self.qx_width
