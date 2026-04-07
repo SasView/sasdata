@@ -27,11 +27,20 @@ one_dim = DatasetType(
 two_dim = DatasetType(
             name="2D I vs Q",
             required=["Qx", "Qy", "I"],
-            optional=["dQx", "dQy", "dI", "Qz", "ShadowFactor", "mask"],
+            optional=["dQx", "dQy", "dQz", "dI", "Qz", "ShadowFactor", "mask"],
             expected_orders=[
                 ["Qx", "Qy", "I"],
                 ["Qx", "Qy", "I", "dI"],
                 ["Qx", "Qy", "dQx", "dQy", "I", "dI"]])
+
+three_dim = DatasetType(
+            name="3D I vs Q",
+            required=["Qx", "Qy", "Qz", "I"],
+            optional=["dQx", "dQy", "dQz", "dI", "ShadowFactor", "mask"],
+            expected_orders=[
+                ["Qx", "Qy", "Qz", "I"],
+                ["Qx", "Qy", "Qz", "I", "dI"],
+                ["Qx", "Qy", "Qz", "dQx", "dQy", "dQz", "I", "dI"]])
 
 sesans = DatasetType(
     name="SESANS",
