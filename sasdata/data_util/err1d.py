@@ -1,6 +1,6 @@
 # This program is public domain
 """
-Error propogation algorithms for simple arithmetic
+Error propagation algorithms for simple arithmetic
 
 Warning: like the underlying numpy library, the inplace operations
 may return values of the wrong type if some of the arguments are

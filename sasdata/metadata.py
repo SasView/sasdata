@@ -458,14 +458,19 @@ class MetaNode:
             )
         else:
             attributes = ""
-        if self.contents:
-            if type(self.contents) is str:
+        match self.contents:
+            case str():
                 children = f"\n{header}  {self.contents}"
-            else:
+            case list() | tuple():
                 children = "".join([n.to_string(header + "  ") for n in self.contents])
-        else:
-            children = ""
-
+            case Quantity():
+                children = f"\n{header}  {self.contents}"
+            case ndarray():
+                children = f"\n{header}  {self.contents}"
+            case None:
+                children = ""
+            case _:
+                children = f"\n{header}  {self.contents}"
         return f"\n{header}{self.name}:{attributes}{children}"
 
     def filter(self, name: str) -> list[ndarray | Quantity | str]:
