@@ -399,7 +399,9 @@ with StringIO() as fid:
     fid.write("}\n\n")
 
 
+    # Load the units module
     units = importlib.import_module(".units", "sasdata.quantities")
+    # Execute the code that we've created within that module
     exec(fid.getvalue(), units.__dict__)
 
 
@@ -421,5 +423,7 @@ with StringIO() as fid:
 
     fid.write("]\n")
 
+    # Load the units module
     si = importlib.import_module(".si", "sasdata.quantities")
+    # Execute the code that we've created within that module
     exec(fid.getvalue(), si.__dict__)
