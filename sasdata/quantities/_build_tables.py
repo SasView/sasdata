@@ -167,7 +167,7 @@ with open("units.py", 'w', encoding=encoding) as fid:
         fid.write(f"{formatted_plural} = NamedUnit({unit_def.scale}, Dimensions({unit_def.length}, {unit_def.time}, {unit_def.mass}, {unit_def.current}, {unit_def.temperature}, {unit_def.moles_hint}, {unit_def.angle_hint}),"
                       f"name='{formatted_plural}',"
                       f"ascii_symbol='{unit_def.symbol}',"
-                      f"{'' if unit_def.latex_symbol is None else f"""latex_symbol=r'{unit_def.latex_symbol}',""" }"
+                      f"{'' if unit_def.latex_symbol is None else f"latex_symbol=r'{unit_def.latex_symbol}'," }"
                       f"symbol='{unit_def.symbol if unit_def.special_symbol is None else unit_def.special_symbol}')\n")
 
         symbol_lookup[unit_def.symbol] = formatted_plural
@@ -207,7 +207,7 @@ with open("units.py", 'w', encoding=encoding) as fid:
                       f"Dimensions({unit_def.length}, {unit_def.time}, {unit_def.mass}, {unit_def.current}, {unit_def.temperature}, {unit_def.moles_hint}, {unit_def.angle_hint}),"
                       f"name='{combined_name_plural}',"
                       f"ascii_symbol='{combined_symbol}',"
-                      f"{'' if latex_symbol is None else f"""latex_symbol=r'{latex_symbol}',""" }"
+                      f"{'' if latex_symbol is None else f"latex_symbol=r'{latex_symbol}'," }"
                       f"symbol='{combined_special_symbol}')\n")
 
             symbol_lookup[combined_symbol] = combined_name_plural
