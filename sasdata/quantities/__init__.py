@@ -2,15 +2,15 @@
 Builds a data file containing details of units
 """
 
-from collections import defaultdict, namedtuple
-
-import numpy as np
-from io import StringIO
-from ._units_base import Dimensions
+import importlib
 import os.path
 import types
-import importlib
+from collections import defaultdict, namedtuple
+from io import StringIO
 
+import numpy as np
+
+from ._units_base import Dimensions
 
 Magnitude = namedtuple("Magnitude", ["symbol", "special_symbol", "latex_symbol", "name", "scale"])
 
