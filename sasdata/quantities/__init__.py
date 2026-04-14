@@ -169,7 +169,7 @@ with StringIO() as fid:
     fid.write("\n\n#\n# Included from _units_base.py\n#\n\n")
 
     path = os.path.join(os.path.dirname(__file__), "_units_base.py")
-    with open(path) as base:
+    with open(path,encoding="utf8") as base:
         for line in base:
             fid.write(line)
 
