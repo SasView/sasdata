@@ -4,10 +4,10 @@
       "name" : "constructor_max_arguments",
       "value" : "7"
     }, {
-      "name" : "file_lines_of_code_for_alert",
+      "name" : "file_lines_of_code_for_critical_alert",
       "value" : "5000"
     }, {
-      "name" : "file_lines_of_code_for_critical_alert",
+      "name" : "file_lines_of_code_for_alert",
       "value" : "2500"
     }, {
       "name" : "file_lines_of_code_for_warning",
