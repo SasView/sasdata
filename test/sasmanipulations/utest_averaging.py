@@ -119,8 +119,6 @@ class DataInfoTests(unittest.TestCase):
         """
             Test ring averaging
         """
-        print(self.data)
-        print(self.data.detector[0].beam_center)
         r = Ring(r_min=.005, r_max=.01,
                  center_x=self.data.detector[0].beam_center.x,
                  center_y=self.data.detector[0].beam_center.y,
