@@ -4,7 +4,6 @@ Builds a data file containing details of units
 
 import importlib
 import os.path
-import types
 from collections import defaultdict, namedtuple
 from io import StringIO
 
