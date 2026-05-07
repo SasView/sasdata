@@ -70,7 +70,7 @@ class Boxsum(CartesianROI):
         """
         super().__init__(qx_range=qx_range, qy_range=qy_range)
 
-    def __call__(self, data2d: Data2D) -> tuple[float, ...]:
+    def __call__(self, data2d: Data2D) -> tuple[float, float, float]:
         """
         Coordinate data processing operations and return the results.
 
