@@ -4,24 +4,28 @@ Shared test helpers for averaging tests.
 import numpy as np
 from scipy import integrate
 
-from sasdata.dataloader import data_info
+from sasdata.data import SasData
+from sasdata.dataset_types import two_dim
+from sasdata.metadata import Instrument, Metadata, Source
 from sasdata.quantities.constants import TwoPi
+from sasdata.quantities.quantity import Quantity
+from sasdata.quantities.units import angstroms, per_angstrom, per_centimeter
 
 
 def make_dd_from_func(func, matrix_size=201):
     """
-    Create a MatrixToData2D from a function of (x, y). Returns the MatrixToData2D
-    instance and matrix_size for convenience.
+    Create a MatrixToSasData from a function of (x, y).
+    Returns the MatrixToSasData instance and matrix_size for convenience.
     func should accept (x, y) meshgrid arrays and return a 2D array.
     """
     x, y = np.meshgrid(np.linspace(-1, 1, matrix_size),
                        np.linspace(-1, 1, matrix_size))
     mat = func(x, y)
-    return MatrixToData2D(data2d=mat), matrix_size
+    return MatrixToSasData(data2d=mat), matrix_size
 
 def make_uniform_dd(shape=(100, 100), value=1.0):
     mat = np.full(shape, value, dtype=float)
-    return MatrixToData2D(data2d=mat)
+    return MatrixToSasData(data2d=mat)
 
 def integrate_1d_output(output, method="simpson"):
     """
@@ -53,13 +57,13 @@ def expected_slaby_area(qx_min, qx_max, qy_min, qy_max):
     return x_part_avg * y_part_integ
 
 def make_uniform_dd(shape=(100, 100), value=1.0):
-    """Convenience for tests that need a constant matrix Data2D."""
+    """Convenience for tests that need a constant matrix SasData."""
     mat = np.full(shape, value, dtype=float)
-    return MatrixToData2D(data2d=mat)
+    return MatrixToSasData(data2d=mat)
 
 def run_and_integrate(averager, dd, integrator="simpson"):
     """
-    Run an averager (callable) with a Data2D container returned by MatrixToData2D
+    Run an averager (callable) with a SasData container returned by MatrixToSasData
     and return the integrated result (scalar area / sum) consistently.
     """
     out = averager(dd.data)
@@ -90,9 +94,9 @@ def expected_boxavg_and_err(matrix, slice_rows=None, slice_cols=None):
     return avg, err
 
 
-class MatrixToData2D:
+class MatrixToSasData:
     """
-    Create Data2D objects from supplied 2D arrays of data.
+    Create 2D SasData objects from supplied 2D arrays of data.
     Error data can also be included.
 
     Adapted from sasdata.data_util.manipulations.reader_2D_converter
@@ -105,18 +109,43 @@ class MatrixToData2D:
 
         # qmax can be any number, 1 just makes things simple.
         self.qmax = 1
-        # Creating a Data2D object to use for testing the averagers.
-        self.data = data_info.Data2D(data=data_flat, err_data=err_flat,
-                                        qx_data=qx_data, qy_data=qy_data,
-                                        q_data=q_data, mask=mask)
+
+        # Create a SasData object to use for testing the averagers.
+        data_contents = {
+            "Qx": Quantity(qx_data, per_angstrom),
+            "Qy": Quantity(qy_data, per_angstrom),
+            "I": Quantity(data_flat, per_centimeter),
+            "dI": Quantity(err_flat, per_centimeter)
+        }
+
+        wavelength = Quantity(1., angstroms)
+        source = Source(radiation=None,
+                        beam_shape=None,
+                        beam_size=None,
+                        wavelength=wavelength,
+                        wavelength_max=None,
+                        wavelength_min=None,
+                        wavelength_spread=None)
+        instrument = Instrument(collimations=[],
+                                source=source,
+                                detector=[])
+        metadata=Metadata(title=None,
+                        run=[],
+                        definition=None,
+                        process=[],
+                        sample=None,
+                        instrument=instrument,
+                        raw=None)
+
+        self.data = SasData("Matrix Data", data_contents, two_dim, metadata)
 
     def _validate_and_convert_inputs(self, data2d, err_data):
         """Validate inputs and coerce to numpy arrays. Returns (matrix, err_data_or_None)."""
         if data2d is None:
-            raise ValueError("Data must be supplied to convert to Data2D")
+            raise ValueError("Data must be supplied to convert to SasData")
         matrix = np.asarray(data2d)
         if matrix.ndim != 2:
-            raise ValueError("Supplied array must have 2 dimensions to convert to Data2D")
+            raise ValueError("Supplied array must have 2 dimensions to convert to SasData")
 
         if err_data is not None:
             err_arr = np.asarray(err_data)
@@ -133,16 +162,6 @@ class MatrixToData2D:
         qx_bins = np.linspace(start=-1 * 1, stop=1, num=cols, endpoint=True)
         qy_bins = np.linspace(start=-1 * 1, stop=1, num=rows, endpoint=True)
         return qx_bins, qy_bins
-        # qmax can be any number, 1 just makes things simple.
-        self.qmax = 1
-        qx_bins = np.linspace(start=-1 * self.qmax,
-                              stop=self.qmax,
-                              num=matrix.shape[1],
-                              endpoint=True)
-        qy_bins = np.linspace(start=-1 * self.qmax,
-                              stop=self.qmax,
-                              num=matrix.shape[0],
-                              endpoint=True)
 
     def _build_flat_arrays(self, matrix, err_arr, qx_bins, qy_bins):
         """Flatten matrix and build qx, qy, q arrays plus mask and error handling."""

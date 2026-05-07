@@ -1,11 +1,11 @@
 """
 Data manipulations for 2D data sets.
-Using the meta data information, various types of averaging are performed in Q-space
+Using the meta data information, various types of averaging are performed in Q-space.
 
 To test this module use:
 ```
 cd test
-PYTHONPATH=../src/ python2  -m sasmanipulations.test.utest_averaging DataInfoTests.test_sectorphi_quarter
+PYTHONPATH=../src/ python2 -m sasmanipulations.test.utest_averaging DataInfoTests.test_sectorphi_quarter
 ```
 """
 #####################################################################
@@ -42,6 +42,7 @@ from sasdata.data_util.averaging import (
     SlabY,
     WedgePhi,
     WedgeQ,
+    get_dq_data,
 )
 from sasdata.dataloader.data_info import Data1D, Data2D
 from sasdata.dataloader.data_info import reader2D_converter as _di_reader2D_converter
@@ -70,10 +71,10 @@ def deduce_qz(qx: float, qy: float, wavelength: float) -> float:
 
 def position_and_wavelength_to_q(dx: float, dy: float, detector_distance: float, wavelength: float) -> float:
     """
-    :param dx: x-distance from beam center [mm]
-    :param dy: y-distance from beam center [mm]
-    :param detector_distance: sample to detector distance [mm]
-    :param wavelength: neutron wavelength [nm]
+    :param dx: x-distance from beam center
+    :param dy: y-distance from beam center
+    :param detector_distance: sample to detector distance
+    :param wavelength: neutron wavelength
     :return: q-value at the given position
     """
     # Distance from beam center in the plane of detector
@@ -233,55 +234,13 @@ def get_pixel_fraction(q_max: float, q_00: float, q_01: float, q_10: float, q_11
     return frac_max
 
 
-def get_dq_data(data2d: Data2D) -> np.array:
-    '''
-    Get the dq for resolution averaging
-    The pinholes and det. pix contribution present
-    in both direction of the 2D which must be subtracted when
-    converting to 1D: dq_overlap should be calculated ideally at
-    q = 0. Note This method works on only pinhole geometry.
-    Extrapolate dqx(r) and dqy(phi) at q = 0, and take an average.
-    '''
-    z_max = max(data2d.q_data)
-    z_min = min(data2d.q_data)
-    dqx_at_z_max = data2d.dqx_data[np.argmax(data2d.q_data)]
-    dqx_at_z_min = data2d.dqx_data[np.argmin(data2d.q_data)]
-    dqy_at_z_max = data2d.dqy_data[np.argmax(data2d.q_data)]
-    dqy_at_z_min = data2d.dqy_data[np.argmin(data2d.q_data)]
-    # Find qdx at q = 0
-    dq_overlap_x = (dqx_at_z_min * z_max - dqx_at_z_max * z_min) / (z_max - z_min)
-    # when extrapolation goes wrong
-    if dq_overlap_x > min(data2d.dqx_data):
-        dq_overlap_x = min(data2d.dqx_data)
-    dq_overlap_x *= dq_overlap_x
-    # Find qdx at q = 0
-    dq_overlap_y = (dqy_at_z_min * z_max - dqy_at_z_max * z_min) / (z_max - z_min)
-    # when extrapolation goes wrong
-    if dq_overlap_y > min(data2d.dqy_data):
-        dq_overlap_y = min(data2d.dqy_data)
-    # get dq at q=0.
-    dq_overlap_y *= dq_overlap_y
-
-    dq_overlap = np.sqrt((dq_overlap_x + dq_overlap_y) / 2.0)
-    # Final protection of dq
-    if dq_overlap < 0:
-        dq_overlap = dqy_at_z_min
-    dqx_data = data2d.dqx_data[np.isfinite(data2d.data)]
-    dqy_data = data2d.dqy_data[np.isfinite(
-        data2d.data)] - dq_overlap
-    # def; dqx_data = dq_r dqy_data = dq_phi
-    # Convert dq 2D to 1D here
-    dq_data = np.sqrt(dqx_data**2 + dqy_data**2)
-    return dq_data
-
 ################################################################################
 
 
 def reader2D_converter(data2d: Data2D | None = None) -> Data2D:
     """
-    convert old 2d format opened by IhorReader or danse_reader
-    to new Data2D format
-    This is mainly used by the Readers
+    Convert old 2d format opened by IhorReader or danse_reader to new Data2D format.
+    This is mainly used by the Readers.
 
     :param data2d: 2d array of Data2D object
     :return: 1d arrays of Data2D object
@@ -358,8 +317,10 @@ class SlabX(SlabX):
         width = max(abs(x_max - x_min), 1e-12)
         nbins = int(math.ceil(width / abs(bin_width))) if bin_width != 0 else 1
         self.nbins=nbins
-        super().__init__(qx_range=(x_min, x_max), qy_range=(y_min, y_max),
-                              nbins=nbins, fold=fold)
+        super().__init__(qx_range=(x_min, x_max),
+                         qy_range=(y_min, y_max),
+                         nbins=nbins,
+                         fold=fold)
 
 
 class SlabY(SlabY):
@@ -382,8 +343,10 @@ class SlabY(SlabY):
         height = max(abs(y_max - y_min), 1e-12)
         nbins = int(math.ceil(height / abs(bin_width))) if bin_width != 0 else 1
         self.nbins=nbins
-        super().__init__(qx_range=(x_min, x_max), qy_range=(y_min, y_max),
-                              nbins=nbins, fold=fold)
+        super().__init__(qx_range=(x_min, x_max),
+                         qy_range=(y_min, y_max),
+                         nbins=nbins,
+                         fold=fold)
 
 
 ################################################################################
@@ -391,13 +354,11 @@ class SlabY(SlabY):
 
 class Boxsum(Boxsum):
     def __init__(self, x_min=0.0, x_max=0.0, y_min=0.0, y_max=0.0):
-
         super().__init__(qx_range=(x_min, x_max), qy_range=(y_min, y_max))
 
 
 class Boxavg(Boxavg):
     def __init__(self, x_min=0.0, x_max=0.0, y_min=0.0, y_max=0.0):
-
         super().__init__(qx_range=(x_min, x_max), qy_range=(y_min, y_max))
 
 ################################################################################
@@ -422,23 +383,22 @@ class CircularAverage:
         """
         Perform circular averaging on the data
 
-        :param data2D: Data2D object
+        :param data2D: SasData object
         :return: Data1D object
         """
         # Get data W/ finite values
-        data = data2D.data[np.isfinite(data2D.data)]
-        q_data = data2D.q_data[np.isfinite(data2D.data)]
-        err_data = None
-        if data2D.err_data is not None:
-            err_data = data2D.err_data[np.isfinite(data2D.data)]
-        mask_data = data2D.mask[np.isfinite(data2D.data)]
+        finite_mask = np.isfinite(data2D._data_contents["I"].value)
+        data = data2D._data_contents["I"].value[finite_mask]
+        q_data = np.sqrt(data2D._data_contents["Qx"].value**2 + data2D._data_contents["Qy"].value**2)[finite_mask]
+        err_data = np.sqrt(data2D._data_contents["I"].variance.value)[finite_mask]
+        mask_data = (data2D.mask if data2D.mask is not None else np.ones_like(data2D._data_contents["I"].value, dtype=bool))[finite_mask]
 
         dq_data = None
-        if data2D.dqx_data is not None and data2D.dqy_data is not None:
+        if data2D._data_contents["Qx"].has_variance and data2D._data_contents["Qy"].has_variance:
             dq_data = get_dq_data(data2D)
 
         if len(q_data) == 0:
-            msg = "Circular averaging: invalid q_data: %g" % data2D.q_data
+            msg = "Circular averaging: invalid q_data: %g" % q_data
             raise RuntimeError(msg)
 
         # Build array of Q intervals
@@ -523,10 +483,7 @@ class CircularAverage:
 
 
 class Ring(Ring):
-    """
-    Wrapper for new Ring.
-    """
-
+    """Wrapper for new Ring."""
 
     @property
     def nbins_phi(self):
@@ -537,12 +494,9 @@ class Ring(Ring):
         self.nbins = value
 
     def __init__(self, r_min=0.0, r_max=0.0, center_x=0.0, center_y=0.0, nbins=36):
-
-        super().__init__(
-            r_range=(r_min, r_max),
-            center=(center_x, center_y),
-            nbins=nbins
-            )
+        super().__init__(r_range=(r_min, r_max),
+                         center=(center_x, center_y),
+                         nbins=nbins)
 
 class _Sector:
     """
@@ -556,12 +510,10 @@ class _Sector:
     starting from the negative x-axis.
     """
 
-    def __init__(self, r_min, r_max, phi_min=0, phi_max=2 * math.pi, nbins=20,
-                 base=None):
-        '''
-        :param base: must be a valid base for an algorithm, i.e.,
-        a positive number
-        '''
+    def __init__(self, r_min, r_max, phi_min=0, phi_max=2*math.pi, nbins=20, base=None):
+        """
+        :param base: must be a valid base for an algorithm, i.e., a positive number
+        """
         self.r_min = r_min
         self.r_max = r_max
         self.phi_min = phi_min
@@ -576,26 +528,29 @@ class _Sector:
         """
         Perform sector averaging.
 
-        :param data2D: Data2D object
-        :param run:  define the varying parameter ('phi' , or 'sector')
+        :param data2D: SasData object
+        :param run: define the varying parameter ('phi' or 'sector')
 
         :return: Data1D object
         """
-        if data2D.__class__.__name__ not in ["Data2D", "plottable_2D"]:
-            raise RuntimeError("Ring averaging only take plottable_2D objects")
+        if not ("Qx" in data2D._data_contents and
+                "Qy" in data2D._data_contents and
+                "I" in data2D._data_contents):
+            raise RuntimeError("For ring averaging the SasData object must contain 'Qx', 'Qy', and 'I' data.")
 
         # Get all the data & info
-        data = data2D.data[np.isfinite(data2D.data)]
-        q_data = data2D.q_data[np.isfinite(data2D.data)]
-        err_data=None
-        if data2D.err_data is not None:
-            err_data = data2D.err_data[np.isfinite(data2D.data)]
-        qx_data = data2D.qx_data[np.isfinite(data2D.data)]
-        qy_data = data2D.qy_data[np.isfinite(data2D.data)]
-        mask_data = data2D.mask[np.isfinite(data2D.data)]
+        finite_mask = np.isfinite(data2D._data_contents["I"].value)
+        data = data2D._data_contents["I"].value[finite_mask]
+        err_data = np.sqrt(data2D._data_contents["I"].variance.value)[finite_mask]
+        qx_data = data2D._data_contents["Qx"].value[finite_mask]
+        qy_data = data2D._data_contents["Qy"].value[finite_mask]
+        q_data = np.sqrt(data2D._data_contents["Qx"].value ** 2 +
+                         data2D._data_contents["Qy"].value ** 2
+                         )[finite_mask]
+        mask_data = (data2D.mask if data2D.mask is not None else np.ones_like(data2D._data_contents["I"].value, dtype=bool))[finite_mask]
 
         dq_data = None
-        if data2D.dqx_data is not None and data2D.dqy_data is not None:
+        if data2D._data_contents["Qx"].has_variance and data2D._data_contents["Qy"].has_variance:
             dq_data = get_dq_data(data2D)
 
         # set space for 1d outputs
@@ -775,7 +730,7 @@ class SectorPhi(_Sector):
         """
         Perform sector average and return I(phi).
 
-        :param data2D: Data2D object
+        :param data2D: SasData object
         :return: Data1D object
         """
         return self._agv(data2D, 'phi')
@@ -798,7 +753,7 @@ class SectorQ(_Sector):
         """
         Perform sector average and return I(Q).
 
-        :param data2D: Data2D object
+        :param data2D: SasData object
 
         :return: Data1D object
         """
@@ -806,30 +761,20 @@ class SectorQ(_Sector):
 
 
 class WedgePhi(WedgePhi):
-    """
-    Wrapper for new WedgePhi (behaviour matches legacy WedgePhi expectations).
-    """
+    """Wrapper for new WedgePhi (behaviour matches legacy WedgePhi expectations)."""
     def __init__(self, r_min, r_max, phi_min=0, phi_max=TwoPi, center_x=0.0, center_y=0.0, nbins=10):
-
-        super().__init__(
-            r_range=(r_min, r_max),
-            phi_range=(phi_min, phi_max),
-            center=(center_x, center_y),
-            nbins=nbins
-            )
+        super().__init__(r_range=(r_min, r_max),
+                         phi_range=(phi_min, phi_max),
+                         center=(center_x, center_y),
+                         nbins=nbins)
 
 class WedgeQ(WedgeQ):
-    """
-    Wrapper for new WedgeQ (behaviour matches legacy WedgeQ expectations).
-    """
+    """Wrapper for new WedgeQ (behaviour matches legacy WedgeQ expectations)."""
     def __init__(self, r_min, r_max, phi_min=0, phi_max=TwoPi, center_x=0.0, center_y=0.0, nbins=10):
-
-        super().__init__(
-            r_range=(r_min, r_max),
-            phi_range=(phi_min, phi_max),
-            center=(center_x, center_y),
-            nbins=nbins
-            )
+        super().__init__(r_range=(r_min, r_max),
+                         phi_range=(phi_min, phi_max),
+                         center=(center_x, center_y),
+                         nbins=nbins)
 
 ################################################################################
 
@@ -837,12 +782,9 @@ class WedgeQ(WedgeQ):
 class Ringcut(Ringcut):
     def __init__(self, r_min=0.0, r_max=0.0, center_x=0.0, center_y=0.0):
         # center_x, center_y ignored for compatibility
-
-        super().__init__(
-            r_range=(r_min, r_max),
-            phi_range=(0.0, TwoPi),
-            center=(center_x, center_y)
-            )
+        super().__init__(r_range=(r_min, r_max),
+                         phi_range=(0.0, TwoPi),
+                         center=(center_x, center_y))
 
 ################################################################################
 

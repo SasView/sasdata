@@ -1,20 +1,19 @@
-"""
-This module contains various data processors used by Sasview's slicers.
-"""
+"""This module contains various data processors used by Sasview's slicers."""
 
 import math
 
 import numpy as np
 import numpy.typing as npt
 
+from sasdata.data import SasData
 from sasdata.data_util.binning import DirectionalAverage
 from sasdata.data_util.interval import IntervalType
 from sasdata.data_util.roi import CartesianROI, PolarROI
-from sasdata.dataloader.data_info import Data1D, Data2D
+from sasdata.dataloader.data_info import Data1D
 from sasdata.quantities.constants import Pi, TwoPi
 
 
-def get_dq_data(data2d: Data2D) -> npt.NDArray[np.floating]:
+def get_dq_data(data2d: SasData) -> npt.NDArray[np.floating]:
     """
     Get the dq for resolution averaging
     The pinholes and det. pix contribution present
@@ -23,23 +22,31 @@ def get_dq_data(data2d: Data2D) -> npt.NDArray[np.floating]:
     q = 0. Note This method works on only pinhole geometry.
     Extrapolate dqx(r) and dqy(phi) at q = 0, and take an average.
     """
-    z_max = max(data2d.q_data)
-    z_min = min(data2d.q_data)
-    dqx_at_z_max = data2d.dqx_data[np.argmax(data2d.q_data)]
-    dqx_at_z_min = data2d.dqx_data[np.argmin(data2d.q_data)]
-    dqy_at_z_max = data2d.dqy_data[np.argmax(data2d.q_data)]
-    dqy_at_z_min = data2d.dqy_data[np.argmin(data2d.q_data)]
+
+    q_data = np.sqrt(data2d._data_contents["Qx"].value**2 + data2d._data_contents["Qy"].value**2)
+
+    z_max = max(q_data)
+    z_min = min(q_data)
+
+    dqx_data = np.sqrt(data2d._data_contents["Qx"].variance.value)
+    dqy_data = np.sqrt(data2d._data_contents["Qy"].variance.value)
+
+    dqx_at_z_max = dqx_data[np.argmax(q_data)]
+    dqx_at_z_min = dqx_data[np.argmin(q_data)]
+    dqy_at_z_max = dqy_data[np.argmax(q_data)]
+    dqy_at_z_min = dqy_data[np.argmin(q_data)]
+
     # Find qdx at q = 0
     dq_overlap_x = (dqx_at_z_min * z_max - dqx_at_z_max * z_min) / (z_max - z_min)
     # when extrapolation goes wrong
-    if dq_overlap_x > min(data2d.dqx_data):
-        dq_overlap_x = min(data2d.dqx_data)
+    if dq_overlap_x > min(dqx_data):
+        dq_overlap_x = min(dqx_data)
     dq_overlap_x *= dq_overlap_x
     # Find qdx at q = 0
     dq_overlap_y = (dqy_at_z_min * z_max - dqy_at_z_max * z_min) / (z_max - z_min)
     # when extrapolation goes wrong
-    if dq_overlap_y > min(data2d.dqy_data):
-        dq_overlap_y = min(data2d.dqy_data)
+    if dq_overlap_y > min(dqy_data):
+        dq_overlap_y = min(dqy_data)
     # get dq at q=0.
     dq_overlap_y *= dq_overlap_y
 
@@ -47,8 +54,8 @@ def get_dq_data(data2d: Data2D) -> npt.NDArray[np.floating]:
     # Final protection of dq
     if dq_overlap < 0:
         dq_overlap = dqy_at_z_min
-    dqx_data = data2d.dqx_data[np.isfinite(data2d.data)]
-    dqy_data = data2d.dqy_data[np.isfinite(data2d.data)] - dq_overlap
+    dqx_data = dqx_data[np.isfinite(data2d._data_contents["I"].value)]
+    dqy_data = dqy_data[np.isfinite(data2d._data_contents["I"].value)] - dq_overlap
     # def; dqx_data = dq_r dqy_data = dq_phi
     # Convert dq 2D to 1D here
     dq_data = np.sqrt(dqx_data**2 + dqy_data**2)
@@ -56,9 +63,7 @@ def get_dq_data(data2d: Data2D) -> npt.NDArray[np.floating]:
 
 
 class Boxsum(CartesianROI):
-    """
-    Compute the sum of the intensity within a rectangular Region Of Interest.
-    """
+    """Compute the sum of the intensity within a rectangular Region Of Interest."""
 
     def __init__(self, qx_range: tuple[float, float] = (0.0, 0.0), qy_range: tuple[float, float] = (0.0, 0.0)) -> None:
         """
@@ -70,11 +75,11 @@ class Boxsum(CartesianROI):
         """
         super().__init__(qx_range=qx_range, qy_range=qy_range)
 
-    def __call__(self, data2d: Data2D) -> tuple[float, float, float]:
+    def __call__(self, data2d: SasData = None) -> tuple[float, float, float]:
         """
         Coordinate data processing operations and return the results.
 
-        :param data2d: The Data2D object for which the sum is calculated.
+        :param data2d: The SasData object for which the sum is calculated.
         """
         self.validate_and_assign_data(data2d)
         total_sum, error, count = self._sum()
@@ -97,7 +102,7 @@ class Boxsum(CartesianROI):
         data = weights * self.data
         # Not certain that the weights should be squared here, I'm just copying
         # how it was done in the old manipulations.py
-        err_squared = weights * weights * self.err_data * self.err_data
+        err_squared = (weights * self.err_data) ** 2
 
         total_sum = np.sum(data)
         total_errors_squared = np.sum(err_squared)
@@ -107,25 +112,22 @@ class Boxsum(CartesianROI):
 
 
 class Boxavg(Boxsum):
-    """
-    Compute the average intensity within a rectangular Region Of Interest.
-    """
+    """Compute the average intensity within a rectangular Region Of Interest."""
 
     def __init__(self, qx_range: tuple[float, float] = (0.0, 0.0), qy_range: tuple[float, float] = (0.0, 0.0)) -> None:
         """
         Set up the Region of Interest and its boundaries.
 
-        The units of these parameters are A^-1
         :param qx_range: Bounds of the ROI along the Q_x direction.
         :param qy_range: Bounds of the ROI along the Q_y direction.
         """
         super().__init__(qx_range=qx_range, qy_range=qy_range)
 
-    def __call__(self, data2d: Data2D) -> tuple[float, float]:
+    def __call__(self, data2d: SasData) -> tuple[float, float]:
         """
         Coordinate data processing operations and return the results.
 
-        :param data2d: The Data2D object for which the average is calculated.
+        :param data2d: The SasData object for which the average is calculated.
         """
         self.validate_and_assign_data(data2d)
         total_sum, error, count = super()._sum()
@@ -138,7 +140,7 @@ class SlabX(CartesianROI):
     Average I(Q_x, Q_y) along the y direction (within a ROI), giving I(Q_x).
 
     This class is initialised by specifying the boundaries of the ROI and is
-    called by supplying a Data2D object. It returns a Data1D object.
+    called by supplying a SasData object. It returns a Data1D object.
     The averaging process can also be thought of as projecting 2D -> 1D.
 
     There also exists the option to "fold" the ROI, where Q data on opposite
@@ -157,7 +159,6 @@ class SlabX(CartesianROI):
         """
         Set up the ROI boundaries, the binning of the output 1D data, and fold.
 
-        The units of these parameters are A^-1
         :param qx_range: Bounds of the ROI along the Q_x direction.
         :param qy_range: Bounds of the ROI along the Q_y direction.
         :param nbins: The number of bins data is sorted into along Q_x.
@@ -169,11 +170,11 @@ class SlabX(CartesianROI):
         self.fold: bool = fold
         self.base: float | None = base
 
-    def __call__(self, data2d: Data2D) -> Data1D:
+    def __call__(self, data2d: SasData = None) -> Data1D:
         """
         Compute the 1D average of 2D data, projecting along the Q_x axis.
 
-        :param data2d: The Data2D object for which the average is computed.
+        :param data2d: The SasData object for which the average is computed.
         :return: Data1D object for plotting.
         """
         self.validate_and_assign_data(data2d)
@@ -197,6 +198,7 @@ class SlabX(CartesianROI):
             nbins=self.nbins,
             base=self.base,
         )
+
         qx_data, intensity, error = directional_average(data=self.data, err_data=self.err_data)
 
         return Data1D(x=qx_data, y=intensity, dy=error)
@@ -207,7 +209,7 @@ class SlabY(CartesianROI):
     Average I(Q_x, Q_y) along the x direction (within a ROI), giving I(Q_y).
 
     This class is initialised by specifying the boundaries of the ROI and is
-    called by supplying a Data2D object. It returns a Data1D object.
+    called by supplying a SasData object. It returns a Data1D object.
     The averaging process can also be thought of as projecting 2D -> 1D.
 
     There also exists the option to "fold" the ROI, where Q data on opposite
@@ -226,7 +228,6 @@ class SlabY(CartesianROI):
         """
         Set up the ROI boundaries, the binning of the output 1D data, and fold.
 
-        The units of these parameters are A^-1
         :param qx_range: Bounds of the ROI along the Q_x direction.
         :param qy_range: Bounds of the ROI along the Q_y direction.
         :param qy_max: Upper bound of the ROI along the Q_y direction.
@@ -239,11 +240,11 @@ class SlabY(CartesianROI):
         self.fold: bool = fold
         self.base: float | None = base
 
-    def __call__(self, data2d: Data2D) -> Data1D:
+    def __call__(self, data2d: SasData = None) -> Data1D:
         """
         Compute the 1D average of 2D data, projecting along the Q_y axis.
 
-        :param data2d: The Data2D object for which the average is computed.
+        :param data2d: The SasData object for which the average is computed.
         :return: Data1D object for plotting.
         """
         self.validate_and_assign_data(data2d)
@@ -279,7 +280,7 @@ class CircularAverage(PolarROI):
     This class is initialised by specifying lower and upper limits on the
     magnitude of Q values to consider during the averaging, though currently
     SasView always calls this class using the full range of data. When called,
-    this class is supplied with a Data2D object. It returns a Data1D object
+    this class is supplied with a SasData object. It returns a Data1D object
     where intensity is given as a function of Q only.
     """
 
@@ -293,7 +294,6 @@ class CircularAverage(PolarROI):
         """
         Set up the lower and upper radial limits as well as the number of bins.
 
-        The units are A^-1 for the radial parameters.
         :param r_min: Lower limit for |Q| values to use during averaging.
         :param r_max: Upper limit for |Q| values to use during averaging.
         :param nbins: The number of bins data is sorted into along |Q| the axis
@@ -302,27 +302,27 @@ class CircularAverage(PolarROI):
         self.nbins: int = nbins
         self.base: float | None = base
 
-    def __call__(self, data2D: Data2D, ismask: bool = False) -> Data1D:
+    def __call__(self, data2D: SasData, ismask: bool = False) -> Data1D:
         """
         Perform circular averaging on the data. Uses DirectionalAverage for
         bin construction and weights, and computes dx (d_q) using get_dq_data
         averaged with those weights so behavior matches the legacy implementation.
 
-        :param data2D: Data2D object
+        :param data2D: SasData object
         :param ismask: If True, respect data2D.mask (skip masked points). If False, ignore mask.
         :return: Data1D object with x (bin centers), y (intensity), dy and dx (if available)
         """
         # Work on unmasked finite arrays first (matches legacy filtering)
-        finite_mask = np.isfinite(data2D.data)
+        finite_mask = np.isfinite(data2D._data_contents["I"].value)
         if not np.any(finite_mask):
             raise RuntimeError(f"Circular averaging: invalid q_data: {data2D.q_data}")
 
-        data_all = data2D.data[finite_mask]
-        q_all = data2D.q_data[finite_mask]
-        qx_all = data2D.qx_data[finite_mask]
-        qy_all = data2D.qy_data[finite_mask]
-        err_all = data2D.err_data[finite_mask] if data2D.err_data is not None else None
-        mask_all = data2D.mask[finite_mask]
+        data_all = data2D._data_contents["I"].value[finite_mask]
+        qx_all = data2D._data_contents["Qx"].value[finite_mask]
+        qy_all = data2D._data_contents["Qy"].value[finite_mask]
+        q_all = np.sqrt(data2D._data_contents["Qx"].value**2 + data2D._data_contents["Qy"].value**2)[finite_mask]
+        err_all = np.sqrt(data2D._data_contents["I"].variance.value)[finite_mask]
+        mask_all = (data2D.mask if data2D.mask is not None else np.ones_like(data2D._data_contents["I"].value, dtype=bool))[finite_mask]
 
         # Optional mask handling: legacy used an ismask flag to optionally skip masked points
         if ismask:
@@ -334,24 +334,22 @@ class CircularAverage(PolarROI):
         major_axis = q_all[sel]
         phi_axis = np.arctan2(qy_all[sel], qx_all[sel])
         data_vals = data_all[sel]
-        err_vals = err_all[sel] if err_all is not None else None
+        err_vals = err_all[sel]
 
         # Prepare dq_data if available, aligned to the finite mask and selection
         dq_vals = None
-        if getattr(data2D, "dqx_data", None) is not None and getattr(data2D, "dqy_data", None) is not None:
+        if data2D._data_contents["Qx"].has_variance and data2D._data_contents["Qy"].has_variance:
             dq_full = get_dq_data(data2D)  # already uses np.isfinite(data2D.data)
             dq_vals = dq_full[sel]
 
         # Set up DirectionalAverage with full-circle phi range
         major_lims = (self.r_min, self.r_max)
         minor_lims = (0.0, TwoPi)
-        directional_average = DirectionalAverage(
-            major_axis=major_axis,
-            minor_axis=phi_axis,
-            lims=(major_lims, minor_lims),
-            nbins=self.nbins,
-            base=self.base,
-        )
+        directional_average = DirectionalAverage(major_axis=major_axis,
+                                                 minor_axis=phi_axis,
+                                                 lims=(major_lims, minor_lims),
+                                                 nbins=self.nbins,
+                                                 base=self.base)
 
         # Compute weights, then produce averaged intensity/error via DirectionalAverage
         weights = directional_average.compute_weights()
@@ -384,7 +382,7 @@ class Ring(PolarROI):
 
     This class is initialised by specifying lower and upper limits on the
     magnitude of Q values to consider during the averaging. When called,
-    this class is supplied with a Data2D object. It returns a Data1D object.
+    this class is supplied with a SasData object. It returns a Data1D object.
     This Data1D object gives intensity as a function of the angle from the
     positive x-axis, φ, only.
     """
@@ -399,7 +397,6 @@ class Ring(PolarROI):
         """
         Set up the lower and upper radial limits as well as the number of bins.
 
-        The units are A^-1 for the radial parameters.
         :param r_min: Lower limit for |Q| values to use during averaging.
         :param r_max: Upper limit for |Q| values to use during averaging.
         :param nbins: The number of bins data is sorted into along Phi the axis
@@ -411,27 +408,33 @@ class Ring(PolarROI):
         self.nbins: int = nbins
         self.base: float | None = base
 
-    def __call__(self, data2D: Data2D) -> Data1D:
+    def __call__(self, data2D: SasData) -> Data1D:
         """
         Apply the ring to the data set.
         Returns the angular distribution for a given q range
 
-        :param data2D: Data2D object
+        :param data2D: SasData object
 
         :return: Data1D object
         """
-        if data2D.__class__.__name__ not in ["Data2D", "plottable_2D"]:
-            raise RuntimeError("Ring averaging only take plottable_2D objects")
+        if not isinstance(data2D, SasData):
+            msg = "Data supplied for ring averaging must be of type SasData."
+            raise RuntimeError(msg)
+        if not ("Qx" in data2D._data_contents and
+                "Qy" in data2D._data_contents and
+                "I" in data2D._data_contents):
+            msg = "SasData object for ring averaging must contain 'Qx', 'Qy', and 'I' data."
+            raise RuntimeError(msg)
 
         # Get data
-        data = data2D.data[np.isfinite(data2D.data)]
-        q_data = data2D.q_data[np.isfinite(data2D.data)]
-        err_data = None
-        if data2D.err_data is not None:
-            err_data = data2D.err_data[np.isfinite(data2D.data)]
-        qx_data = data2D.qx_data[np.isfinite(data2D.data)]
-        qy_data = data2D.qy_data[np.isfinite(data2D.data)]
-        mask_data = data2D.mask[np.isfinite(data2D.data)]
+        valid_data = np.isfinite(data2D._data_contents["I"].value)
+
+        data = data2D._data_contents["I"].value[valid_data]
+        err_data = np.sqrt(data2D._data_contents["I"].variance.value)[valid_data]
+        qx_data = data2D._data_contents["Qx"].value[valid_data]
+        qy_data = data2D._data_contents["Qy"].value[valid_data]
+        q_data = np.sqrt(data2D._data_contents["Qx"].value ** 2 + data2D._data_contents["Qy"].value ** 2)[valid_data]
+        mask_data = (data2D.mask if data2D.mask is not None else np.ones_like(data2D._data_contents["I"].value, dtype=bool))[valid_data]
 
         # Set space for 1d outputs
         phi_bins = np.zeros(self.nbins)
@@ -488,65 +491,6 @@ class Ring(PolarROI):
 
         return Data1D(x=phi_values[idx], y=phi_bins[idx], dy=phi_err[idx])
 
-    '''
-    def __call__(self, data2d: Data2D = None) -> Data1D:
-        """
-        Compute the 1D average of 2D data, projecting along the Phi axis.
-
-        :param data2d: The Data2D object for which the average is computed.
-        :return: Data1D object for plotting.
-        """
-        self.validate_and_assign_data(data2d)
-
-        # half-bin shift so the first bin is centered at zero
-        phi_shift = np.pi / self.nbins
-        shifted_phi = (self.phi_data +Pi+ phi_shift) % (TwoPi)
-
-        self.phi_data=self.phi_data+Pi
-        self.phi_min = 0.0
-        self.phi_max = TwoPi
-
-        minor_lims = (self.r_min, self.r_max)
-        major_lims = (self.phi_min, self.phi_max)
-
-
-        # major_lims is None because a full-circle angular range is used
-        directional_average = DirectionalAverage(major_axis=shifted_phi,
-                                                 minor_axis=self.q_data,
-                                                 lims=(major_lims,minor_lims),
-                                                 nbins=self.nbins, base=self.base)
-        # Reuse DirectionalAverage's weights, then compute the same sums/divisions
-        weights = directional_average.compute_weights()
-
-        # Projected x values (averaged shifted phi per bin) -- not used as final x,
-        # but computed here to mirror DirectionalAverage internal behaviour.
-        x_axis_values = np.sum(weights * shifted_phi, axis=1)
-
-        intensity = np.sum(weights * self.data, axis=1)
-        errs_squared = np.sum((weights * self.err_data) ** 2, axis=1)
-
-        bin_counts = np.sum(weights, axis=1)
-        if not np.any(bin_counts > 0):
-            raise ValueError("Average Error: No bins inside ROI to average...")
-
-        errors = np.sqrt(errs_squared)
-
-        # Only compute divisions where bin_counts > 0 (others will become NaN/inf)
-        with np.errstate(divide='ignore', invalid='ignore'):
-            x_axis_values = x_axis_values / bin_counts
-            intensity = intensity / bin_counts
-            errors = errors / bin_counts
-
-        # Legacy reported x values are the unshifted bin starts (i.e. 2*pi*i/nbins)
-        phi_values = np.linspace(0.0, TwoPi, self.nbins, endpoint=False)
-
-        finite = np.isfinite(intensity)
-        if not finite.any():
-            raise ValueError("Average Error: No points inside ROI to average...")
-
-        return Data1D(x=phi_values[finite], y=intensity[finite], dy=errors[finite])
-    '''
-
 
 class SectorQ(PolarROI):
     """
@@ -566,7 +510,7 @@ class SectorQ(PolarROI):
     the data from the two regions are graphed separeately, with the secondary
     ROI data labelled using negative Q values.
 
-    When called, this class is supplied with a Data2D object. It returns a
+    When called, this class is supplied with a SasData object. It returns a
     Data1D object where intensity is given as a function of Q only.
     """
 
@@ -582,9 +526,8 @@ class SectorQ(PolarROI):
         """
         Set up the ROI boundaries, the binning of the output 1D data, and fold.
 
-        The units are A^-1 for radial parameters, and radians for anglar ones.
         :param r_range: Tuple (r_min, r_max) defining limits for |Q| values to use during averaging.
-        :param phi_range: Tuple (phi_min, phi_max) defining limits for φ in radians (in the primary ROI).
+        :param phi_range: Tuple (phi_min, phi_max) defining limits for φ in the primary ROI.
         :Defaults to full circle (0, 2*pi).
         :param nbins: The number of bins data is sorted into along the |Q| axis
         :param fold: Whether the primary and secondary ROIs should be folded
@@ -596,11 +539,11 @@ class SectorQ(PolarROI):
         self.fold: bool = fold
         self.base: float | None = base
 
-    def __call__(self, data2d: Data2D) -> Data1D:
+    def __call__(self, data2d: SasData = None) -> Data1D:
         """
         Compute the 1D average of 2D data, projecting along the Q_y axis.
 
-        :param data2d: The Data2D object for which the average is computed.
+        :param data2d: The SasData object for which the average is computed.
         :return: Data1D object for plotting.
         """
         self.validate_and_assign_data(data2d)
@@ -643,8 +586,10 @@ class SectorQ(PolarROI):
             base=self.base,
         )
 
-        primary_q, primary_I, primary_err = primary_region(data=self.data, err_data=self.err_data)
-        secondary_q, secondary_I, secondary_err = secondary_region(data=self.data, err_data=self.err_data)
+        primary_q, primary_I, primary_err = primary_region(data=self.data,
+                                                           err_data=self.err_data)
+        secondary_q, secondary_I, secondary_err = secondary_region(data=self.data,
+                                                                   err_data=self.err_data)
 
         if self.fold:
             # Combining the two regions requires re-binning; the q value
@@ -697,7 +642,7 @@ class WedgeQ(PolarROI):
 
     This class is initialised by specifying lower and upper limits on both the
     magnitude of Q and the angle φ.
-    When called, this class is supplied with a Data2D object. It returns a
+    When called, this class is supplied with a SasData object. It returns a
     Data1D object where intensity is given as a function of Q only.
     """
 
@@ -712,9 +657,8 @@ class WedgeQ(PolarROI):
         """
         Set up the ROI boundaries, and the binning of the output 1D data.
 
-        The units are A^-1 for radial parameters, and radians for anglar ones.
         :param r_range: Tuple (r_min, r_max) defining limits for |Q| values to use during averaging.
-        :param phi_range: Tuple (phi_min, phi_max) defining limits for φ in radians (in the primary ROI).
+        :param phi_range: Tuple (phi_min, phi_max) defining limits for φ in the primary ROI.
         :Defaults to full circle (0, 2*pi).
         :param nbins: The number of bins data is sorted into along the |Q| axis
         """
@@ -722,11 +666,11 @@ class WedgeQ(PolarROI):
         self.nbins: int = nbins
         self.base: float | None = base
 
-    def __call__(self, data2d: Data2D) -> Data1D:
+    def __call__(self, data2d: SasData = None) -> Data1D:
         """
         Compute the 1D average of 2D data, projecting along the Q_y axis.
 
-        :param data2d: The Data2D object for which the average is computed.
+        :param data2d: The SasData object for which the average is computed.
         :return: Data1D object for plotting.
         """
         self.validate_and_assign_data(data2d)
@@ -764,6 +708,7 @@ class WedgeQ(PolarROI):
             nbins=self.nbins,
             base=self.base,
         )
+
         q_data, intensity, error = directional_average(data=self.data, err_data=self.err_data)
 
         return Data1D(x=q_data, y=intensity, dy=error)
@@ -778,9 +723,8 @@ class WedgePhi(PolarROI):
 
     This class is initialised by specifying lower and upper limits on both the
     magnitude of Q and the angle φ, measured anticlockwise from the positive
-    x-axis.
-    When called, this class is supplied with a Data2D object. It returns a
-    Data1D object where intensity is given as a function of Q only.
+    x-axis. When called, this class is supplied with a SasData object. It returns
+    a Data1D object where intensity is given as a function of Q only.
     """
 
     def __init__(
@@ -794,7 +738,6 @@ class WedgePhi(PolarROI):
         """
         Set up the ROI boundaries, and the binning of the output 1D data.
 
-        The units are A^-1 for radial parameters, and radians for anglar ones.
         :param r_range: Tuple (r_min, r_max) defining limits for |Q| values to use during averaging.
         :param phi_range: Tuple (phi_min, phi_max) defining angular bounds in radians.
                           Defaults to full circle (0, 2*pi).
@@ -805,11 +748,11 @@ class WedgePhi(PolarROI):
         self.nbins: int = nbins
         self.base: float | None = base
 
-    def __call__(self, data2d: Data2D) -> Data1D:
+    def __call__(self, data2d: SasData = None) -> Data1D:
         """
         Compute the 1D average of 2D data, projecting along the Q_y axis.
 
-        :param data2d: The Data2D object for which the average is computed.
+        :param data2d: The SasData object for which the average is computed.
         :return: Data1D object for plotting.
         """
         self.validate_and_assign_data(data2d)
@@ -829,8 +772,8 @@ class WedgePhi(PolarROI):
         # Remember to transform back afterward as we're plotting against phi.
         phi_offset = self.phi_min
         self.phi_min = 0.0
-        self.phi_max = (self.phi_max - phi_offset) % (TwoPi)
-        self.phi_data = (self.phi_data - phi_offset) % (TwoPi)
+        self.phi_max = (self.phi_max - phi_offset) % TwoPi
+        self.phi_data = (self.phi_data - phi_offset) % TwoPi
 
         # Averaging takes place between angular and radial limits
         # When phi_max and phi_min have the same angle, ROI is a full circle.
@@ -858,7 +801,7 @@ class WedgePhi(PolarROI):
             full_phi = np.linspace(self.phi_min, self.phi_max, self.nbins, endpoint=False)
 
         # Shift back to original phi range
-        full_phi = (full_phi + phi_offset) % (TwoPi)
+        full_phi = (full_phi + phi_offset) % TwoPi
 
         # Determine which bins were populated using the weights (preserves full bin index space)
         weights = directional_average.compute_weights()
@@ -915,23 +858,20 @@ class SectorPhi(WedgePhi):
         nbins: int = 100,
     ) -> None:
         # Forward to WedgePhi using the tuple-based it expects.
-
         super().__init__(r_range=(r_min, r_max), phi_range=(phi_min, phi_max), center=center, nbins=nbins)
-
 
 ################################################################################
 
 
 class Ringcut(PolarROI):
     """
-    Defines a ring on a 2D data set.
-    The ring is defined by r_min, r_max, and
+    Defines a ring on a 2D data set. The ring is defined by r_min, r_max, and
     the position of the center of the ring.
 
-    The data returned is the region inside the ring
+    The data returned is the region inside the ring.
 
     Phi_min and phi_max should be defined between 0 and 2*pi
-    in anti-clockwise starting from the x- axis on the left-hand side
+    in anti-clockwise starting from the x-axis on the left-hand side
     """
 
     def __init__(
@@ -942,19 +882,19 @@ class Ringcut(PolarROI):
     ) -> None:
         super().__init__(r_range, phi_range, center)
 
-    def __call__(self, data2D: Data2D) -> npt.NDArray[np.bool_]:
+    def __call__(self, data2D: SasData) -> npt.NDArray[np.bool_]:
         """
         Apply the ring to the data set.
-        Returns the angular distribution for a given q range
+        Returns the angular distribution for a given q range.
 
-        :param data2D: Data2D object
+        :param data2D: SasData object
 
         :return: index array in the range
         """
-        super().validate_and_assign_data(data2D)
+        self.validate_and_assign_data(data2D)
 
         # Calculate q_data using unmasked qx_data and qy_data
-        q_data = np.sqrt(data2D.qx_data * data2D.qx_data + data2D.qy_data * data2D.qy_data)
+        q_data = np.sqrt(self.qx_data**2 + self.qy_data**2)
 
         # check whether each data point is inside ROI
         out = (self.r_min <= q_data) & (self.r_max >= q_data)
@@ -962,25 +902,23 @@ class Ringcut(PolarROI):
 
 
 class Boxcut(CartesianROI):
-    """
-    Find a rectangular 2D region of interest.
-    """
+    """Find a rectangular 2D region of interest."""
 
     def __init__(self, qx_range: tuple[float, float] = (0.0, 0.0), qy_range: tuple[float, float] = (0.0, 0.0)) -> None:
         super().__init__(qx_range=qx_range, qy_range=qy_range)
 
-    def __call__(self, data2D: Data2D) -> npt.NDArray[np.bool_]:
+    def __call__(self, data2D: SasData) -> npt.NDArray[np.bool_]:
         """
-        Find a rectangular 2D region of interest where  data points inside the ROI are True, and False otherwise
+        Find a rectangular 2D region of interest where data points inside the ROI are True, and False otherwise.
 
-        :param data2D: Data2D object
+        :param data2D: SasData object
         :return: mask, 1d array (len = len(data))
         """
-        super().validate_and_assign_data(data2D)
+        self.validate_and_assign_data(data2D)
 
         # check whether each data point is inside ROI
-        outx = (self.qx_min <= data2D.qx_data) & (self.qx_max > data2D.qx_data)
-        outy = (self.qy_min <= data2D.qy_data) & (self.qy_max > data2D.qy_data)
+        outx = (self.qx_min <= self.qx_data) & (self.qx_max > self.qx_data)
+        outy = (self.qy_min <= self.qy_data) & (self.qy_max > self.qy_data)
 
         return outx & outy
 
@@ -999,24 +937,22 @@ class Sectorcut(PolarROI):
     def __init__(self, phi_range: tuple[float, float] = (0.0, Pi), center: tuple[float, float] = (0.0, 0.0)) -> None:
         super().__init__(r_range=(0, np.inf), phi_range=phi_range, center=center)
 
-    def __call__(self, data2D: Data2D) -> npt.NDArray[np.bool_]:
+    def __call__(self, data2D: SasData) -> npt.NDArray[np.bool_]:
         """
-        Find a rectangular 2D region of interest where  data points inside the ROI are True, and False otherwise
+        Find a rectangular 2D region of interest where data points inside the ROI are True, and False otherwise
 
-        :param data2D: Data2D object
+        :param data2D: SasData object
         :return: mask, 1d array (len = len(data))
         """
-        super().validate_and_assign_data(data2D)
+        self.validate_and_assign_data(data2D)
 
         # Ensure unmasked data is used for the phi_data calculation to ensure data sizes match
         self.phi_data = np.arctan2(data2D.qy_data, data2D.qx_data)
-        # Calculate q_data using unmasked qx_data and qy_data to ensure data sizes match
-        q_data = np.sqrt(data2D.qx_data * data2D.qx_data + data2D.qy_data * data2D.qy_data)
 
         phi_offset = self.phi_min
         self.phi_min = 0.0
-        self.phi_max = (self.phi_max - phi_offset) % (TwoPi)
-        self.phi_data = (self.phi_data - phi_offset) % (TwoPi)
+        self.phi_max = (self.phi_max - phi_offset) % TwoPi
+        self.phi_data = (self.phi_data - phi_offset) % TwoPi
         phi_shifted = self.phi_data - Pi
 
         # Determine angular bounds for both upper and lower half of image

@@ -148,3 +148,38 @@ class SasDataEncoder(MetadataEncoder):
                 }
             case _:
                 return super().default(obj)
+
+
+def sasdata_reader2D_converter(data2d: SasData | None = None) -> SasData:
+    """
+    convert old 2d format opened by IhorReader or danse_reader
+    to new 2D SasData format
+    This is mainly used by the Readers
+
+    :param data2d: SasData object with 2D arrays
+    :return: SasData object with 1D arrays
+
+    """
+    if data2d._data_contents["I"] is None or data2d.x_bins is None or data2d.y_bins is None:
+        raise ValueError("Can't convert this data: data=None...")
+    new_x = np.tile(data2d.x_bins, (len(data2d.y_bins), 1))
+    new_y = np.tile(data2d.y_bins, (len(data2d.x_bins), 1))
+    new_y = new_y.swapaxes(0, 1)
+
+    new_data = data2d._data_contents["I"].value.flatten()
+    qx_data = new_x.flatten()
+    qy_data = new_y.flatten()
+    err_data = np.sqrt(data2d._data_contents["I"].variance.value)
+    if not data2d._data_contents["I"].has_variance or np.any(err_data <= 0):
+        new_err_data = np.sqrt(np.abs(new_data))
+    else:
+        new_err_data = err_data.flatten()
+    mask = np.ones(len(new_data), dtype=bool)
+
+    data2d._data_contents["I"].value = new_data
+    data2d._data_contents["I"].variance.value = new_err_data ** 2
+    data2d._data_contents["Qx"].value = qx_data
+    data2d._data_contents["Qy"].value = qy_data
+    data2d.mask = mask
+
+    return data2d

@@ -8,7 +8,7 @@ from scipy import integrate
 
 from sasdata.data_util.averaging import CircularAverage, Ring, SectorQ, WedgePhi, WedgeQ
 from sasdata.quantities.constants import Pi
-from test.sasmanipulations.helper import CircularTestingMatrix, MatrixToData2D
+from test.sasmanipulations.helper import CircularTestingMatrix, MatrixToSasData
 
 # TODO - also check the errors are being calculated correctly
 
@@ -56,7 +56,7 @@ class CircularAverageTests(unittest.TestCase):
         Check CircularAverage ensures the data supplied has `q_data` populated
         """
         # test_data = np.ones([100, 100])
-        # averager_data = DataMatrixToData2D(test_data)
+        # averager_data = DataMatrixToSasData(test_data)
         # # Overwrite q_data so it's empty
         # averager_data.data.q_data = np.array([])
         # circ_object = CircularAverage()
@@ -76,7 +76,7 @@ class CircularAverageTests(unittest.TestCase):
         Test CircularAverage raises ValueError when the ROI contains no data
         """
         test_data = np.ones([100, 100])
-        averager_data = MatrixToData2D(test_data)
+        averager_data = MatrixToSasData(test_data)
 
         # Region of interest well outside region with data
         circ_object = CircularAverage(r_range=(2 * averager_data.qmax,3 * averager_data.qmax))
@@ -88,7 +88,7 @@ class CircularAverageTests(unittest.TestCase):
         """
         test_data = CircularTestingMatrix(frequency=2, matrix_size=201,
                                           major_axis='Q')
-        averager_data = MatrixToData2D(test_data.matrix)
+        averager_data = MatrixToSasData(test_data.matrix)
 
         # Test the ability to average over a subsection of the data
         r_min = averager_data.qmax * 0.25
@@ -146,7 +146,7 @@ class RingTests(unittest.TestCase):
         Test Ring raises ValueError when the ROI contains no data
         """
         test_data = np.ones([100, 100])
-        averager_data = MatrixToData2D(test_data)
+        averager_data = MatrixToSasData(test_data)
 
         # Region of interest well outside region with data
         ring_object = Ring(r_range=(2 * averager_data.qmax, 3 * averager_data.qmax))
@@ -158,7 +158,7 @@ class RingTests(unittest.TestCase):
         """
         test_data = CircularTestingMatrix(frequency=1, matrix_size=201,
                                           major_axis='Phi')
-        averager_data = MatrixToData2D(test_data.matrix)
+        averager_data = MatrixToSasData(test_data.matrix)
 
         # Test the ability to average over a subsection of the data
         r_min = 0.25 * averager_data.qmax
@@ -219,7 +219,7 @@ class SectorQTests(unittest.TestCase):
         """
         test_data = CircularTestingMatrix(frequency=1, matrix_size=201,
                                           major_axis='Q')
-        averager_data = MatrixToData2D(test_data.matrix)
+        averager_data = MatrixToSasData(test_data.matrix)
 
         r_min = 0
         r_max = 0.9 * averager_data.qmax
@@ -252,7 +252,7 @@ class SectorQTests(unittest.TestCase):
         """
         test_data = CircularTestingMatrix(frequency=1, matrix_size=201,
                                           major_axis='Q')
-        averager_data = MatrixToData2D(test_data.matrix)
+        averager_data = MatrixToSasData(test_data.matrix)
 
         r_min = 0
         r_max = 0.9 * averager_data.qmax
@@ -313,7 +313,7 @@ class WedgeQTests(unittest.TestCase):
         """
         test_data = CircularTestingMatrix(frequency=3, matrix_size=201,
                                           major_axis='Q')
-        averager_data = MatrixToData2D(test_data.matrix)
+        averager_data = MatrixToSasData(test_data.matrix)
 
         r_min = 0.1 * averager_data.qmax
         r_max = 0.9 * averager_data.qmax
@@ -376,7 +376,7 @@ class WedgePhiTests(unittest.TestCase):
         """
         test_data = CircularTestingMatrix(frequency=1, matrix_size=201,
                                           major_axis='Phi')
-        averager_data = MatrixToData2D(test_data.matrix)
+        averager_data = MatrixToSasData(test_data.matrix)
 
         r_min = 0.1 * averager_data.qmax
         r_max = 0.9 * averager_data.qmax
