@@ -5,6 +5,7 @@ This module contains various data processors used by Sasview's slicers.
 import math
 
 import numpy as np
+import numpy.typing as npt
 
 from sasdata.data_util.binning import DirectionalAverage
 from sasdata.data_util.interval import IntervalType
@@ -13,7 +14,7 @@ from sasdata.dataloader.data_info import Data1D, Data2D
 from sasdata.quantities.constants import Pi, TwoPi
 
 
-def get_dq_data(data2d: Data2D) -> np.array:
+def get_dq_data(data2d: Data2D) -> npt.NDArray[np.floating]:
     """
     Get the dq for resolution averaging
     The pinholes and det. pix contribution present
@@ -69,7 +70,7 @@ class Boxsum(CartesianROI):
         """
         super().__init__(qx_range=qx_range, qy_range=qy_range)
 
-    def __call__(self, data2d: Data2D = None) -> float:
+    def __call__(self, data2d: Data2D) -> tuple[float, ...]:
         """
         Coordinate data processing operations and return the results.
 
@@ -80,7 +81,7 @@ class Boxsum(CartesianROI):
 
         return total_sum, error, count
 
-    def _sum(self) -> float:
+    def _sum(self) -> tuple[float, float, float]:
         """
         Determine which data are inside the ROI and compute their sum.
         Also calculate the error on this calculation and the total number of
@@ -120,7 +121,7 @@ class Boxavg(Boxsum):
         """
         super().__init__(qx_range=qx_range, qy_range=qy_range)
 
-    def __call__(self, data2d: Data2D) -> float:
+    def __call__(self, data2d: Data2D) -> tuple[float, float]:
         """
         Coordinate data processing operations and return the results.
 
@@ -151,8 +152,8 @@ class SlabX(CartesianROI):
         qy_range: tuple[float, float] = (0.0, 0.0),
         nbins: int = 100,
         fold: bool = False,
-        base: float = None,
-    ):
+        base: float | None = None,
+    ) -> None:
         """
         Set up the ROI boundaries, the binning of the output 1D data, and fold.
 
@@ -164,11 +165,11 @@ class SlabX(CartesianROI):
                      folded together during averaging.
         """
         super().__init__(qx_range=qx_range, qy_range=qy_range)
-        self.nbins = nbins
-        self.fold = fold
-        self.base = base
+        self.nbins: int = nbins
+        self.fold: bool = fold
+        self.base: float | None = base
 
-    def __call__(self, data2d: Data2D = None) -> Data1D:
+    def __call__(self, data2d: Data2D) -> Data1D:
         """
         Compute the 1D average of 2D data, projecting along the Q_x axis.
 
@@ -220,8 +221,8 @@ class SlabY(CartesianROI):
         qy_range: tuple[float, float] = (0.0, 0.0),
         nbins: int = 100,
         fold: bool = False,
-        base: float = None,
-    ):
+        base: float | None = None,
+    ) -> None:
         """
         Set up the ROI boundaries, the binning of the output 1D data, and fold.
 
@@ -234,11 +235,11 @@ class SlabY(CartesianROI):
                      folded together during averaging.
         """
         super().__init__(qx_range=qx_range, qy_range=qy_range)
-        self.nbins = nbins
-        self.fold = fold
-        self.base = base
+        self.nbins: int = nbins
+        self.fold: bool = fold
+        self.base: float | None = base
 
-    def __call__(self, data2d: Data2D = None) -> Data1D:
+    def __call__(self, data2d: Data2D) -> Data1D:
         """
         Compute the 1D average of 2D data, projecting along the Q_y axis.
 
@@ -287,7 +288,7 @@ class CircularAverage(PolarROI):
         r_range: tuple[float, float],
         center: tuple[float, float] = (0.0, 0.0),
         nbins: int = 100,
-        base: float = None,
+        base: float | None = None,
     ) -> None:
         """
         Set up the lower and upper radial limits as well as the number of bins.
@@ -298,10 +299,10 @@ class CircularAverage(PolarROI):
         :param nbins: The number of bins data is sorted into along |Q| the axis
         """
         super().__init__(r_range=r_range, center=center)
-        self.nbins = nbins
-        self.base = base
+        self.nbins: int = nbins
+        self.base: float | None = base
 
-    def __call__(self, data2D, ismask=False):
+    def __call__(self, data2D: Data2D, ismask: bool = False) -> Data1D:
         """
         Perform circular averaging on the data. Uses DirectionalAverage for
         bin construction and weights, and computes dx (d_q) using get_dq_data
@@ -393,7 +394,7 @@ class Ring(PolarROI):
         r_range: tuple[float, float],
         center: tuple[float, float] = (0.0, 0.0),
         nbins: int = 100,
-        base: float = None,
+        base: float | None = None,
     ) -> None:
         """
         Set up the lower and upper radial limits as well as the number of bins.
@@ -407,10 +408,10 @@ class Ring(PolarROI):
         # backward-compatible alias expected by older tests / callers
         # self.nbins_phi = nbins
         # new attribute
-        self.nbins = nbins
-        self.base = base
+        self.nbins: int = nbins
+        self.base: float | None = base
 
-    def __call__(self, data2D):
+    def __call__(self, data2D: Data2D) -> Data1D:
         """
         Apply the ring to the data set.
         Returns the angular distribution for a given q range
@@ -576,7 +577,7 @@ class SectorQ(PolarROI):
         center: tuple[float, float] = (0.0, 0.0),
         nbins: int = 100,
         fold: bool = True,
-        base: float = None,
+        base: float | None = None,
     ) -> None:
         """
         Set up the ROI boundaries, the binning of the output 1D data, and fold.
@@ -591,11 +592,11 @@ class SectorQ(PolarROI):
         """
         super().__init__(r_range=r_range, phi_range=phi_range, center=center)
 
-        self.nbins = nbins
-        self.fold = fold
-        self.base = base
+        self.nbins: int = nbins
+        self.fold: bool = fold
+        self.base: float | None = base
 
-    def __call__(self, data2d: Data2D = None) -> Data1D:
+    def __call__(self, data2d: Data2D) -> Data1D:
         """
         Compute the 1D average of 2D data, projecting along the Q_y axis.
 
@@ -706,7 +707,7 @@ class WedgeQ(PolarROI):
         phi_range: tuple[float, float] = (0.0, TwoPi),
         center: tuple[float, float] = (0.0, 0.0),
         nbins: int = 100,
-        base: float = None,
+        base: float | None = None,
     ) -> None:
         """
         Set up the ROI boundaries, and the binning of the output 1D data.
@@ -718,10 +719,10 @@ class WedgeQ(PolarROI):
         :param nbins: The number of bins data is sorted into along the |Q| axis
         """
         super().__init__(r_range=r_range, phi_range=phi_range, center=center)
-        self.nbins = nbins
-        self.base = base
+        self.nbins: int = nbins
+        self.base: float | None = base
 
-    def __call__(self, data2d: Data2D = None) -> Data1D:
+    def __call__(self, data2d: Data2D) -> Data1D:
         """
         Compute the 1D average of 2D data, projecting along the Q_y axis.
 
@@ -788,7 +789,7 @@ class WedgePhi(PolarROI):
         phi_range: tuple[float, float] = (0.0, TwoPi),
         center: tuple[float, float] = (0.0, 0.0),
         nbins: int = 100,
-        base: float = None,
+        base: float | None = None,
     ) -> None:
         """
         Set up the ROI boundaries, and the binning of the output 1D data.
@@ -802,10 +803,10 @@ class WedgePhi(PolarROI):
 
         super().__init__(r_range=r_range, phi_range=phi_range, center=center)
         print(nbins)
-        self.nbins = nbins
-        self.base = base
+        self.nbins: int = nbins
+        self.base: float | None = base
 
-    def __call__(self, data2d: Data2D = None) -> Data1D:
+    def __call__(self, data2d: Data2D) -> Data1D:
         """
         Compute the 1D average of 2D data, projecting along the Q_y axis.
 
@@ -939,10 +940,10 @@ class Ringcut(PolarROI):
         r_range: tuple[float, float] = (0.0, 0.0),
         phi_range: tuple[float, float] = (0.0, TwoPi),
         center: tuple[float, float] = (0.0, 0.0),
-    ):
+    ) -> None:
         super().__init__(r_range, phi_range, center)
 
-    def __call__(self, data2D: Data2D) -> np.ndarray[bool]:
+    def __call__(self, data2D: Data2D) -> npt.NDArray[np.bool_]:
         """
         Apply the ring to the data set.
         Returns the angular distribution for a given q range
@@ -966,10 +967,10 @@ class Boxcut(CartesianROI):
     Find a rectangular 2D region of interest.
     """
 
-    def __init__(self, qx_range: tuple[float, float] = (0.0, 0.0), qy_range: tuple[float, float] = (0.0, 0.0)):
+    def __init__(self, qx_range: tuple[float, float] = (0.0, 0.0), qy_range: tuple[float, float] = (0.0, 0.0)) -> None:
         super().__init__(qx_range=qx_range, qy_range=qy_range)
 
-    def __call__(self, data2D: Data2D) -> np.ndarray[bool]:
+    def __call__(self, data2D: Data2D) -> npt.NDArray[np.bool_]:
         """
         Find a rectangular 2D region of interest where  data points inside the ROI are True, and False otherwise
 
@@ -996,10 +997,10 @@ class Sectorcut(PolarROI):
     and (phi_max-phi_min) should not be larger than pi
     """
 
-    def __init__(self, phi_range: tuple[float, float] = (0.0, Pi), center: tuple[float, float] = (0.0, 0.0)):
+    def __init__(self, phi_range: tuple[float, float] = (0.0, Pi), center: tuple[float, float] = (0.0, 0.0)) -> None:
         super().__init__(r_range=(0, np.inf), phi_range=phi_range, center=center)
 
-    def __call__(self, data2D: Data2D) -> np.ndarray[bool]:
+    def __call__(self, data2D: Data2D) -> npt.NDArray[np.bool_]:
         """
         Find a rectangular 2D region of interest where  data points inside the ROI are True, and False otherwise
 
