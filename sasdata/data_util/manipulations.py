@@ -23,6 +23,8 @@ from warnings import warn
 
 import numpy as np
 
+from sasdata.data import SasData
+
 ################################################################################
 # Backwards-compatible wrappers that delegate to the new implementations
 # in averaging.py.
@@ -44,9 +46,11 @@ from sasdata.data_util.averaging import (
     WedgeQ,
     get_dq_data,
 )
-from sasdata.dataloader.data_info import Data1D, Data2D
+from sasdata.dataloader.data_info import Data2D
 from sasdata.dataloader.data_info import reader2D_converter as _di_reader2D_converter
+from sasdata.dataset_types import one_dim
 from sasdata.quantities.constants import Pi, TwoPi
+from sasdata.quantities.quantity import Quantity
 
 warn("sasdata.data_util.manipulations is deprecated. Unless otherwise noted, update your import to "
      "sasdata.data_util.averaging.", DeprecationWarning, stacklevel=2)
@@ -384,7 +388,7 @@ class CircularAverage:
         Perform circular averaging on the data
 
         :param data2D: SasData object
-        :return: Data1D object
+        :return: SasData object
         """
         # Get data W/ finite values
         finite_mask = np.isfinite(data2D._data_contents["I"].value)
@@ -468,15 +472,19 @@ class CircularAverage:
         idx = (np.isfinite(y)) & (np.isfinite(x))
 
         if err_x is not None:
-            d_x = err_x[idx] / y_counts[idx]
+            dQ = err_x[idx] / y_counts[idx]
         else:
-            d_x = None
+            dQ = None
 
         if not idx.any():
             msg = "Average Error: No points inside ROI to average..."
             raise ValueError(msg)
 
-        return Data1D(x=x[idx], y=y[idx], dy=err_y[idx], dx=d_x)
+        data_contents = {
+            "Q": Quantity(x[idx], data2D._data_contents["Qx"].units, dQ),
+            "I": Quantity(y[idx], data2D._data_contents["I"].units, err_y[idx]),
+        }
+        return SasData("Circular Average", data_contents, one_dim, data2D.metadata)
 
 ################################################################################
 
@@ -531,7 +539,7 @@ class _Sector:
         :param data2D: SasData object
         :param run: define the varying parameter ('phi' or 'sector')
 
-        :return: Data1D object
+        :return: SasData object
         """
         if not ("Qx" in data2D._data_contents and
                 "Qy" in data2D._data_contents and
@@ -708,13 +716,19 @@ class _Sector:
 
         idx = (np.isfinite(y) & np.isfinite(y_err))
         if x_err is not None:
-            d_x = x_err[idx] / y_counts[idx]
+            dQ = x_err[idx] / y_counts[idx]
         else:
-            d_x = None
+            dQ = None
         if not idx.any():
             msg = "Average Error: No points inside sector of ROI to average..."
             raise ValueError(msg)
-        return Data1D(x=x[idx], y=y[idx], dy=y_err[idx], dx=d_x)
+
+        data_contents = {
+            "Q": Quantity(x[idx], data2D._data_contents["Qx"].units, dQ),
+            "I": Quantity(y[idx], data2D._data_contents["I"].units, y_err[idx]),
+        }
+        return SasData("agv", data_contents, one_dim, data2D.metadata)
+
 
 
 class SectorPhi(_Sector):
@@ -731,7 +745,7 @@ class SectorPhi(_Sector):
         Perform sector average and return I(phi).
 
         :param data2D: SasData object
-        :return: Data1D object
+        :return: SasData object
         """
         return self._agv(data2D, 'phi')
 
@@ -755,7 +769,7 @@ class SectorQ(_Sector):
 
         :param data2D: SasData object
 
-        :return: Data1D object
+        :return: SasData object
         """
         return self._agv(data2D, 'sector')
 

@@ -30,13 +30,15 @@ def make_uniform_dd(shape=(100, 100), value=1.0):
 def integrate_1d_output(output, method="simpson"):
     """
     Integrate output from an averager consistently.
-    - If output is a Data1D-like object with .x and .y -> integrate y(x)
+    - If output is a SasData-like object with "Q" and "I" -> integrate I(Q)
     - If output is a tuple (result, error[, npoints]) -> return numeric result
     """
-    if hasattr(output, "x") and hasattr(output, "y"):
+    if (hasattr(output, "_data_contents") and
+        "Q" in output._data_contents and
+        "I" in output._data_contents):
         if method == "trapezoid":
-            return integrate.trapezoid(output.y, output.x)
-        return integrate.simpson(output.y, output.x)
+            return integrate.trapezoid(output._data_contents["I"].value, output._data_contents["Q"].value)
+        return integrate.simpson(output._data_contents["I"].value, output._data_contents["Q"].value)
     if isinstance(output, tuple) and len(output) >= 1:
         return output[0]
     raise TypeError("Unsupported averager output type: %r" % type(output))

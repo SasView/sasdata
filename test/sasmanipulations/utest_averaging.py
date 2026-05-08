@@ -15,12 +15,12 @@ from sasdata.data_util.manipulations import (
     SlabY,
     position_and_wavelength_to_q,
 )
-from sasdata.dataloader.loader import Loader
 from sasdata.dataset_types import two_dim
 from sasdata.metadata import Detector, Instrument, Metadata, Source, Vec3
 from sasdata.quantities.constants import Pi, TwoPi
 from sasdata.quantities.quantity import Quantity
 from sasdata.quantities.units import angstroms, millimeters, none, per_angstrom, per_centimeter
+from sasdata.temp_ascii_reader import load_data_default_params as ascii_load_data
 from sasdata.temp_hdf5_reader import load_data as hdf_load_data
 
 
@@ -29,9 +29,7 @@ def find(filename):
 
 
 class Averaging(unittest.TestCase):
-    """
-        Test averaging manipulations on a flat distribution
-    """
+    """Test averaging manipulations on a flat distribution."""
 
     def setUp(self):
         """
@@ -95,9 +93,7 @@ class Averaging(unittest.TestCase):
         self.data = sasdata_reader2D_converter(self.data)
 
     def test_ring_flat_distribution(self):
-        """
-            Test ring averaging
-        """
+        """Test ring averaging."""
         r = Ring(r_min=2*self.qmin,
                  r_max=5*self.qmin,
                  center_x=self.data.metadata.instrument.detector[0].beam_center.x,
@@ -106,22 +102,19 @@ class Averaging(unittest.TestCase):
 
         o = r(self.data)
         for i in range(20):
-            self.assertEqual(o.y[i], 1.0)
+            self.assertEqual(o._data_contents["I"].value[i], 1.0)
 
     def test_sectorphi_full(self):
-        """
-            Test sector averaging
-        """
+        """Test sector averaging."""
         r = SectorPhi(r_min=self.qmin, r_max=3 * self.qmin,
                       phi_min=0, phi_max=TwoPi)
         r.nbins_phi = 20
         o = r(self.data)
         for i in range(7):
-            self.assertEqual(o.y[i], 1.0)
+            self.assertEqual(o._data_contents["I"].value[i], 1.0)
 
     def test_sectorphi_partial(self):
-        """
-        """
+        """Test sector averaging."""
         phi_max = Pi * 1.5
         r = SectorPhi(r_min=self.qmin, r_max=3 * self.qmin,
                       phi_min=0, phi_max=phi_max)
@@ -130,7 +123,7 @@ class Averaging(unittest.TestCase):
         o = r(self.data)
         self.assertEqual(r.phi_max, phi_max)
         for i in range(17):
-            self.assertEqual(o.y[i], 1.0)
+            self.assertEqual(o._data_contents["I"].value[i], 1.0)
 
 
 class DataInfoTests(unittest.TestCase):
@@ -141,9 +134,7 @@ class DataInfoTests(unittest.TestCase):
         self.data = data_dict['sasentry01']
 
     def test_ring(self):
-        """
-            Test ring averaging
-        """
+        """Test ring averaging."""
         if beam_center := self.data.metadata.instrument.detector[0].beam_center:
             center_x = beam_center.x
             center_y = beam_center.y
@@ -159,14 +150,14 @@ class DataInfoTests(unittest.TestCase):
 
         o = r(self.data)
         filepath = find('ring_testdata.txt')
-        answer_list = Loader().load(filepath)
+        answer_list = ascii_load_data(filepath)
         answer = answer_list[0]
 
         self.assertEqual(len(answer_list), 1)
         for i in range(r.nbins_phi - 1):
-            self.assertAlmostEqual(o.x[i + 1], answer.x[i], 4)
-            self.assertAlmostEqual(o.y[i + 1], answer.y[i], 4)
-            self.assertAlmostEqual(o.dy[i + 1], answer.dy[i], 4)
+            self.assertAlmostEqual(o._data_contents["Q"].value[i], answer._data_contents["Q"].value[i], 4)
+            self.assertAlmostEqual(o._data_contents["I"].value[i], answer._data_contents["I"].value[i], 4)
+            self.assertAlmostEqual(o._data_contents["I"].variance.value[i], answer._data_contents["I"].variance.value[i], 4)
 
     def test_circularavg(self):
         """
@@ -180,11 +171,11 @@ class DataInfoTests(unittest.TestCase):
         o = r(self.data)
 
         filepath = find('avg_testdata.txt')
-        answer = Loader().load(filepath)[0]
+        answer = ascii_load_data(filepath)[0]
         for i in range(r.nbins_phi):
-            self.assertAlmostEqual(o.x[i], answer.x[i], delta=1e-4)
-            self.assertAlmostEqual(o.y[i], answer.y[i], delta=1e-4)
-            self.assertAlmostEqual(o.dy[i], answer.dy[i],delta=1e-4)
+            self.assertAlmostEqual(o._data_contents["Q"].value[i], answer._data_contents["Q"].value[i], delta=1e-4)
+            self.assertAlmostEqual(o._data_contents["I"].value[i], answer._data_contents["I"].value[i], delta=1e-4)
+            self.assertAlmostEqual(o._data_contents["I"].variance.value[i], answer._data_contents["I"].variance.value[i], delta=1e-4)
 
     def test_box(self):
         """
@@ -215,11 +206,11 @@ class DataInfoTests(unittest.TestCase):
         o = r(self.data)
 
         filepath = find('slabx_testdata.txt')
-        answer = Loader().load(filepath)[0]
-        for i in range(len(o.x)):
-            self.assertAlmostEqual(o.x[i], answer.x[i], 4)
-            self.assertAlmostEqual(o.y[i], answer.y[i], 4)
-            self.assertAlmostEqual(o.dy[i], answer.dy[i], 4)
+        answer = ascii_load_data(filepath)[0]
+        for i in range(len(o._data_contents["Q"].value)):
+            self.assertAlmostEqual(o._data_contents["Q"].value[i], answer._data_contents["Q"].value[i], 4)
+            self.assertAlmostEqual(o._data_contents["I"].value[i], answer._data_contents["I"].value[i], 4)
+            self.assertAlmostEqual(o._data_contents["I"].variance.value[i], answer._data_contents["I"].variance.value[i], 4)
 
     def test_slabY(self):
         """
@@ -233,11 +224,11 @@ class DataInfoTests(unittest.TestCase):
         o = r(self.data)
 
         filepath = find('slaby_testdata.txt')
-        answer = Loader().load(filepath)[0]
-        for i in range(len(o.x)):
-            self.assertAlmostEqual(o.x[i], answer.x[i], 4)
-            self.assertAlmostEqual(o.y[i], answer.y[i], 4)
-            self.assertAlmostEqual(o.dy[i], answer.dy[i], 4)
+        answer = ascii_load_data(filepath)[0]
+        for i in range(len(o._data_contents["Q"].value)):
+            self.assertAlmostEqual(o._data_contents["Q"].value[i], answer._data_contents["Q"].value[i], 4)
+            self.assertAlmostEqual(o._data_contents["I"].value[i], answer._data_contents["I"].value[i], 4)
+            self.assertAlmostEqual(o._data_contents["I"].variance.value[i], answer._data_contents["I"].variance.value[i], 4)
 
     def test_sectorphi_full(self):
         """
@@ -259,11 +250,11 @@ class DataInfoTests(unittest.TestCase):
         o = r(self.data)
 
         filepath = find('ring_testdata.txt')
-        answer = Loader().load(filepath)[0]
-        for i in range(len(o.x)):
-            self.assertAlmostEqual(o.x[i], answer.x[i], 4)
-            self.assertAlmostEqual(o.y[i], answer.y[i], 4)
-            self.assertAlmostEqual(o.dy[i], answer.dy[i], 4)
+        answer = ascii_load_data(filepath)[0]
+        for i in range(len(o._data_contents["Q"].value)-1):
+            self.assertAlmostEqual(o._data_contents["Q"].value[i], answer._data_contents["Q"].value[i+1], 4)
+            self.assertAlmostEqual(o._data_contents["I"].value[i], answer._data_contents["I"].value[i+1], 4)
+            self.assertAlmostEqual(o._data_contents["I"].variance.value[i], answer._data_contents["I"].variance.value[i+1], 4)
 
     def test_sectorphi_quarter(self):
         """
@@ -276,11 +267,11 @@ class DataInfoTests(unittest.TestCase):
         o = r(self.data)
 
         filepath = find('sectorphi_testdata.txt')
-        answer = Loader().load(filepath)[0]
-        for i in range(len(o.x)):
-            self.assertAlmostEqual(o.x[i], answer.x[i], 4)
-            self.assertAlmostEqual(o.y[i], answer.y[i], 4)
-            self.assertAlmostEqual(o.dy[i], answer.dy[i], 4)
+        answer = ascii_load_data(filepath)[0]
+        for i in range(len(o._data_contents["Q"].value)):
+            self.assertAlmostEqual(o._data_contents["Q"].value[i], answer._data_contents["Q"].value[i], 4)
+            self.assertAlmostEqual(o._data_contents["I"].value[i], answer._data_contents["I"].value[i], 4)
+            self.assertAlmostEqual(o._data_contents["I"].variance.value[i], answer._data_contents["I"].variance.value[i], 4)
 
     def test_sectorq_full(self):
         """
@@ -293,11 +284,11 @@ class DataInfoTests(unittest.TestCase):
         o = r(self.data)
 
         filepath = find('sectorq_testdata.txt')
-        answer = Loader().load(filepath)[0]
-        for i in range(len(o.x)):
-            self.assertAlmostEqual(o.x[i], answer.x[i], 4)
-            self.assertAlmostEqual(o.y[i], answer.y[i], 4)
-            self.assertAlmostEqual(o.dy[i], answer.dy[i], 4)
+        answer = ascii_load_data(filepath)[0]
+        for i in range(len(o._data_contents["Q"].value)):
+            self.assertAlmostEqual(o._data_contents["Q"].value[i], answer._data_contents["Q"].value[i], 4)
+            self.assertAlmostEqual(o._data_contents["I"].value[i], answer._data_contents["I"].value[i], 4)
+            self.assertAlmostEqual(o._data_contents["I"].variance.value[i], answer._data_contents["I"].variance.value[i], 4)
 
     def test_sectorq_log(self):
         """
@@ -310,8 +301,8 @@ class DataInfoTests(unittest.TestCase):
         o = r(self.data)
 
         expected_binning = np.logspace(np.log10(0.005), np.log10(0.01), 20, base=10)
-        for i in range(len(o.x)):
-            self.assertAlmostEqual(o.x[i], expected_binning[i], 3)
+        for i in range(len(o._data_contents["Q"].value)):
+            self.assertAlmostEqual(o._data_contents["Q"].value[i], expected_binning[i], 3)
 
         # TODO: Test for Y values (o.y)
         # print len(self.data.x_bins)

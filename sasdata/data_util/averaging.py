@@ -9,8 +9,9 @@ from sasdata.data import SasData
 from sasdata.data_util.binning import DirectionalAverage
 from sasdata.data_util.interval import IntervalType
 from sasdata.data_util.roi import CartesianROI, PolarROI
-from sasdata.dataloader.data_info import Data1D
+from sasdata.dataset_types import one_dim
 from sasdata.quantities.constants import Pi, TwoPi
+from sasdata.quantities.quantity import Quantity
 
 
 def get_dq_data(data2d: SasData) -> npt.NDArray[np.floating]:
@@ -140,7 +141,7 @@ class SlabX(CartesianROI):
     Average I(Q_x, Q_y) along the y direction (within a ROI), giving I(Q_x).
 
     This class is initialised by specifying the boundaries of the ROI and is
-    called by supplying a SasData object. It returns a Data1D object.
+    called by supplying a SasData object. It returns a SasData object.
     The averaging process can also be thought of as projecting 2D -> 1D.
 
     There also exists the option to "fold" the ROI, where Q data on opposite
@@ -170,12 +171,12 @@ class SlabX(CartesianROI):
         self.fold: bool = fold
         self.base: float | None = base
 
-    def __call__(self, data2d: SasData = None) -> Data1D:
+    def __call__(self, data2d: SasData = None) -> SasData:
         """
         Compute the 1D average of 2D data, projecting along the Q_x axis.
 
         :param data2d: The SasData object for which the average is computed.
-        :return: Data1D object for plotting.
+        :return: SasData object for plotting.
         """
         self.validate_and_assign_data(data2d)
 
@@ -201,7 +202,11 @@ class SlabX(CartesianROI):
 
         qx_data, intensity, error = directional_average(data=self.data, err_data=self.err_data)
 
-        return Data1D(x=qx_data, y=intensity, dy=error)
+        data_contents = {
+            "Q": Quantity(qx_data, data2d._data_contents["Qx"].units, None),
+            "I": Quantity(intensity, data2d._data_contents["I"].units, error),
+        }
+        return SasData(f"{data2d.name}: Slab X Average", data_contents, one_dim, data2d.metadata)
 
 
 class SlabY(CartesianROI):
@@ -209,7 +214,7 @@ class SlabY(CartesianROI):
     Average I(Q_x, Q_y) along the x direction (within a ROI), giving I(Q_y).
 
     This class is initialised by specifying the boundaries of the ROI and is
-    called by supplying a SasData object. It returns a Data1D object.
+    called by supplying a SasData object. It returns a SasData object.
     The averaging process can also be thought of as projecting 2D -> 1D.
 
     There also exists the option to "fold" the ROI, where Q data on opposite
@@ -240,12 +245,12 @@ class SlabY(CartesianROI):
         self.fold: bool = fold
         self.base: float | None = base
 
-    def __call__(self, data2d: SasData = None) -> Data1D:
+    def __call__(self, data2d: SasData = None) -> SasData:
         """
         Compute the 1D average of 2D data, projecting along the Q_y axis.
 
         :param data2d: The SasData object for which the average is computed.
-        :return: Data1D object for plotting.
+        :return: SasData object for plotting.
         """
         self.validate_and_assign_data(data2d)
 
@@ -270,7 +275,11 @@ class SlabY(CartesianROI):
         )
         qy_data, intensity, error = directional_average(data=self.data, err_data=self.err_data)
 
-        return Data1D(x=qy_data, y=intensity, dy=error)
+        data_contents = {
+            "Q": Quantity(qy_data, data2d._data_contents["Qy"].units, None),
+            "I": Quantity(intensity, data2d._data_contents["I"].units, error),
+        }
+        return SasData(f"{data2d.name}: Slab Y Average", data_contents, one_dim, data2d.metadata)
 
 
 class CircularAverage(PolarROI):
@@ -280,7 +289,7 @@ class CircularAverage(PolarROI):
     This class is initialised by specifying lower and upper limits on the
     magnitude of Q values to consider during the averaging, though currently
     SasView always calls this class using the full range of data. When called,
-    this class is supplied with a SasData object. It returns a Data1D object
+    this class is supplied with a SasData object. It returns a SasData object
     where intensity is given as a function of Q only.
     """
 
@@ -302,7 +311,7 @@ class CircularAverage(PolarROI):
         self.nbins: int = nbins
         self.base: float | None = base
 
-    def __call__(self, data2D: SasData, ismask: bool = False) -> Data1D:
+    def __call__(self, data2D: SasData, ismask: bool = False) -> SasData:
         """
         Perform circular averaging on the data. Uses DirectionalAverage for
         bin construction and weights, and computes dx (d_q) using get_dq_data
@@ -310,7 +319,7 @@ class CircularAverage(PolarROI):
 
         :param data2D: SasData object
         :param ismask: If True, respect data2D.mask (skip masked points). If False, ignore mask.
-        :return: Data1D object with x (bin centers), y (intensity), dy and dx (if available)
+        :return: SasData object with x (bin centers), y (intensity), dy and dx (if available)
         """
         # Work on unmasked finite arrays first (matches legacy filtering)
         finite_mask = np.isfinite(data2D._data_contents["I"].value)
@@ -369,11 +378,16 @@ class CircularAverage(PolarROI):
             counts = np.sum(weights, axis=1)
             with np.errstate(divide="ignore", invalid="ignore"):
                 dx_full = dq_weighted / counts
-            dx = dx_full[populated]
+            dQ = dx_full[populated]
         else:
-            dx = None
+            dQ = None
 
-        return Data1D(x=x, y=intensity, dy=error, dx=dx)
+        data_contents = {
+            "Q": Quantity(x, data2D._data_contents["Qx"].units, dQ),
+            "I": Quantity(intensity, data2D._data_contents["I"].units, error),
+        }
+        return SasData(f"{data2D.name}: Circular Average", data_contents, one_dim, data2D.metadata)
+
 
 
 class Ring(PolarROI):
@@ -382,9 +396,8 @@ class Ring(PolarROI):
 
     This class is initialised by specifying lower and upper limits on the
     magnitude of Q values to consider during the averaging. When called,
-    this class is supplied with a SasData object. It returns a Data1D object.
-    This Data1D object gives intensity as a function of the angle from the
-    positive x-axis, φ, only.
+    this class is supplied with a SasData object. It returns a SasData object
+    which gives intensity as a function of the angle from the positive x-axis, φ, only.
     """
 
     def __init__(
@@ -408,14 +421,14 @@ class Ring(PolarROI):
         self.nbins: int = nbins
         self.base: float | None = base
 
-    def __call__(self, data2D: SasData) -> Data1D:
+    def __call__(self, data2D: SasData) -> SasData:
         """
         Apply the ring to the data set.
         Returns the angular distribution for a given q range
 
         :param data2D: SasData object
 
-        :return: Data1D object
+        :return: SasData object
         """
         if not isinstance(data2D, SasData):
             msg = "Data supplied for ring averaging must be of type SasData."
@@ -489,7 +502,11 @@ class Ring(PolarROI):
             msg = "Average Error: No points inside ROI to average..."
             raise ValueError(msg)
 
-        return Data1D(x=phi_values[idx], y=phi_bins[idx], dy=phi_err[idx])
+        data_contents = {
+            "Q": Quantity(phi_values[idx], data2D._data_contents["Qx"].units, None),
+            "I": Quantity(phi_bins[idx], data2D._data_contents["I"].units, phi_err[idx]),
+        }
+        return SasData(f"{data2D.name}: Ring Average", data_contents, one_dim, data2D.metadata)
 
 
 class SectorQ(PolarROI):
@@ -511,7 +528,7 @@ class SectorQ(PolarROI):
     ROI data labelled using negative Q values.
 
     When called, this class is supplied with a SasData object. It returns a
-    Data1D object where intensity is given as a function of Q only.
+    SasData object where intensity is given as a function of Q only.
     """
 
     def __init__(
@@ -539,12 +556,12 @@ class SectorQ(PolarROI):
         self.fold: bool = fold
         self.base: float | None = base
 
-    def __call__(self, data2d: SasData = None) -> Data1D:
+    def __call__(self, data2d: SasData = None) -> SasData:
         """
         Compute the 1D average of 2D data, projecting along the Q_y axis.
 
         :param data2d: The SasData object for which the average is computed.
-        :return: Data1D object for plotting.
+        :return: SasData object for plotting.
         """
         self.validate_and_assign_data(data2d)
 
@@ -621,15 +638,22 @@ class SectorQ(PolarROI):
 
             finite = np.isfinite(average_intensity)
 
-            data1d = Data1D(x=combined_q[finite], y=average_intensity[finite], dy=combined_err[finite])
+            data_contents = {
+                "Q": Quantity(combined_q[finite], data2d._data_contents["Qx"].units, None),
+                "I": Quantity(average_intensity[finite], data2d._data_contents["I"].units, combined_err[finite]),
+            }
         else:
             # The secondary ROI is labelled with negative Q values.
             combined_q = np.append(np.flip(-1 * secondary_q), primary_q)
             combined_intensity = np.append(np.flip(secondary_I), primary_I)
             combined_error = np.append(np.flip(secondary_err), primary_err)
-            data1d = Data1D(x=combined_q, y=combined_intensity, dy=combined_error)
 
-        return data1d
+            data_contents = {
+                "Q": Quantity(combined_q, data2d._data_contents["Qx"].units, None),
+                "I": Quantity(combined_intensity, data2d._data_contents["I"].units, combined_error),
+            }
+
+        return SasData(f"{data2d.name}:SectorQ Average", data_contents, one_dim, data2d.metadata)
 
 
 class WedgeQ(PolarROI):
@@ -643,7 +667,7 @@ class WedgeQ(PolarROI):
     This class is initialised by specifying lower and upper limits on both the
     magnitude of Q and the angle φ.
     When called, this class is supplied with a SasData object. It returns a
-    Data1D object where intensity is given as a function of Q only.
+    sasData object where intensity is given as a function of Q only.
     """
 
     def __init__(
@@ -666,12 +690,12 @@ class WedgeQ(PolarROI):
         self.nbins: int = nbins
         self.base: float | None = base
 
-    def __call__(self, data2d: SasData = None) -> Data1D:
+    def __call__(self, data2d: SasData = None) -> SasData:
         """
         Compute the 1D average of 2D data, projecting along the Q_y axis.
 
         :param data2d: The SasData object for which the average is computed.
-        :return: Data1D object for plotting.
+        :return: SasData object for plotting.
         """
         self.validate_and_assign_data(data2d)
 
@@ -711,7 +735,11 @@ class WedgeQ(PolarROI):
 
         q_data, intensity, error = directional_average(data=self.data, err_data=self.err_data)
 
-        return Data1D(x=q_data, y=intensity, dy=error)
+        data_contents = {
+            "Q": Quantity(q_data, data2d._data_contents["Qx"].units, None),
+            "I": Quantity(intensity, data2d._data_contents["I"].units, error),
+        }
+        return SasData(f"{data2d.name}: Wedge Q Average", data_contents, one_dim, data2d.metadata)
 
 
 class WedgePhi(PolarROI):
@@ -724,7 +752,7 @@ class WedgePhi(PolarROI):
     This class is initialised by specifying lower and upper limits on both the
     magnitude of Q and the angle φ, measured anticlockwise from the positive
     x-axis. When called, this class is supplied with a SasData object. It returns
-    a Data1D object where intensity is given as a function of Q only.
+    a SasData object where intensity is given as a function of Q only.
     """
 
     def __init__(
@@ -748,12 +776,12 @@ class WedgePhi(PolarROI):
         self.nbins: int = nbins
         self.base: float | None = base
 
-    def __call__(self, data2d: SasData = None) -> Data1D:
+    def __call__(self, data2d: SasData = None) -> SasData:
         """
         Compute the 1D average of 2D data, projecting along the Q_y axis.
 
         :param data2d: The SasData object for which the average is computed.
-        :return: Data1D object for plotting.
+        :return: SasData object for plotting.
         """
         self.validate_and_assign_data(data2d)
 
@@ -815,21 +843,11 @@ class WedgePhi(PolarROI):
         phi_centers = full_phi[populated] + directional_average.bin_widths[populated] / 2.0
 
         # intensity and error returned by DirectionalAverage are already filtered to the populated/finite bins
-        return Data1D(x=phi_centers, y=intensity, dy=error)
-
-        """
-        # Convert angular data back to the original phi range
-        phi_data += phi_offset
-        # In the old manipulations.py, we also had this shift to plot the data
-        # at the centre of the bins. I'm not sure why it's only angular binning
-        # which gets this treatment.
-        # TODO: Update this once non-linear binning options are implemented
-        weights = directional_average.compute_weights()
-        populated = np.sum(weights, axis=1) > 0
-        phi_data += directional_average.bin_widths[populated] / 2
-
-        return Data1D(x=phi_data, y=intensity, dy=error)
-        """
+        data_contents = {
+            "Q": Quantity(phi_centers, data2d._data_contents["Qx"].units, None),
+            "I": Quantity(intensity, data2d._data_contents["I"].units, error),
+        }
+        return SasData(f"{data2d.name}: Wedge Phi Average", data_contents, one_dim, data2d.metadata)
 
 
 class SectorPhi(WedgePhi):

@@ -99,7 +99,7 @@ class CircularAverageTests(unittest.TestCase):
         data1d = circ_object(averager_data.data)
 
         expected_area = test_data.area_under_region(r_min=r_min, r_max=r_max)
-        actual_area = integrate.trapezoid(data1d.y, data1d.x)
+        actual_area = integrate.trapezoid(data1d._data_contents["I"].value, data1d._data_contents["Q"].value)
 
         # This used to be able to pass with a precision of 3 d.p. with the old
         # manipulations.py - I'm not sure why it doesn't anymore.
@@ -169,7 +169,7 @@ class RingTests(unittest.TestCase):
         data1d = ring_object(averager_data.data)
 
         expected_area = test_data.area_under_region(r_min=r_min, r_max=r_max)
-        actual_area = integrate.simpson(data1d.y, data1d.x)
+        actual_area = integrate.simpson(data1d._data_contents["I"].value, data1d._data_contents["Q"].value)
 
         self.assertAlmostEqual(actual_area, expected_area, 1)
 
@@ -241,7 +241,7 @@ class SectorQTests(unittest.TestCase):
         expected_area += test_data.area_under_region(r_min=r_min, r_max=r_max,
                                                      phi_min=phi_min+Pi,
                                                      phi_max=phi_max+Pi)
-        actual_area = integrate.simpson(data1d.y, data1d.x)
+        actual_area = integrate.simpson(data1d._data_contents["I"].value, data1d._data_contents["Q"].value)
 
         self.assertAlmostEqual(actual_area, expected_area, 1)
 
@@ -275,7 +275,7 @@ class SectorQTests(unittest.TestCase):
                                                      phi_min=phi_min+Pi,
                                                      phi_max=phi_max+Pi)
         expected_area /= 2
-        actual_area = integrate.simpson(data1d.y, data1d.x)
+        actual_area = integrate.simpson(data1d._data_contents["I"].value, data1d._data_contents["Q"].value)
 
         self.assertAlmostEqual(actual_area, expected_area, 1)
 
@@ -327,7 +327,7 @@ class WedgeQTests(unittest.TestCase):
         expected_area = test_data.area_under_region(r_min=r_min, r_max=r_max,
                                                     phi_min=phi_min,
                                                     phi_max=phi_max)
-        actual_area = integrate.simpson(data1d.y, data1d.x)
+        actual_area = integrate.simpson(data1d._data_contents["I"].value, data1d._data_contents["Q"].value)
 
         self.assertAlmostEqual(actual_area, expected_area, 1)
 
@@ -390,7 +390,7 @@ class WedgePhiTests(unittest.TestCase):
         expected_area = test_data.area_under_region(r_min=r_min, r_max=r_max,
                                                     phi_min=phi_min,
                                                     phi_max=phi_max)
-        actual_area = integrate.simpson(data1d.y, data1d.x)
+        actual_area = integrate.simpson(data1d._data_contents["I"].value, data1d._data_contents["Q"].value)
 
         self.assertAlmostEqual(actual_area, expected_area, 1)
 
