@@ -9,9 +9,10 @@ from sasdata.data import SasData
 from sasdata.data_util.binning import DirectionalAverage
 from sasdata.data_util.interval import IntervalType
 from sasdata.data_util.roi import CartesianROI, PolarROI
-from sasdata.dataset_types import one_dim
+from sasdata.dataset_types import angle_dim, one_dim
 from sasdata.quantities.constants import Pi, TwoPi
 from sasdata.quantities.quantity import Quantity
+from sasdata.quantities.units import radians
 
 
 def get_dq_data(data2d: SasData) -> npt.NDArray[np.floating]:
@@ -503,10 +504,10 @@ class Ring(PolarROI):
             raise ValueError(msg)
 
         data_contents = {
-            "Q": Quantity(phi_values[idx], data2D._data_contents["Qx"].units, None),
+            "Phi": Quantity(phi_values[idx], radians, None),
             "I": Quantity(phi_bins[idx], data2D._data_contents["I"].units, phi_err[idx]),
         }
-        return SasData(f"{data2D.name}: Ring Average", data_contents, one_dim, data2D.metadata)
+        return SasData(f"{data2D.name}: Ring Average", data_contents, angle_dim, data2D.metadata)
 
 
 class SectorQ(PolarROI):
@@ -665,9 +666,9 @@ class WedgeQ(PolarROI):
     the positive x-axis.
 
     This class is initialised by specifying lower and upper limits on both the
-    magnitude of Q and the angle φ.
-    When called, this class is supplied with a SasData object. It returns a
-    sasData object where intensity is given as a function of Q only.
+    magnitude of Q and the angle φ. When called, this class is supplied with a
+    SasData object. It returns a sasData object where intensity is given as a
+    function of Q only.
     """
 
     def __init__(
@@ -752,7 +753,7 @@ class WedgePhi(PolarROI):
     This class is initialised by specifying lower and upper limits on both the
     magnitude of Q and the angle φ, measured anticlockwise from the positive
     x-axis. When called, this class is supplied with a SasData object. It returns
-    a SasData object where intensity is given as a function of Q only.
+    a SasData object where intensity is given as a function of φ only.
     """
 
     def __init__(
@@ -818,7 +819,7 @@ class WedgePhi(PolarROI):
             nbins=self.nbins,
             base=self.base,
         )
-        phi_data, intensity, error = directional_average(data=self.data, err_data=self.err_data)
+        _, intensity, error = directional_average(data=self.data, err_data=self.err_data)
 
         # Compute phi bin starts to match legacy behaviour (Ring / old SectorPhi)
         # phi_min has been normalized to 0 earlier; phi_offset stores original start.
@@ -844,10 +845,10 @@ class WedgePhi(PolarROI):
 
         # intensity and error returned by DirectionalAverage are already filtered to the populated/finite bins
         data_contents = {
-            "Q": Quantity(phi_centers, data2d._data_contents["Qx"].units, None),
+            "Phi": Quantity(phi_centers, radians, None),
             "I": Quantity(intensity, data2d._data_contents["I"].units, error),
         }
-        return SasData(f"{data2d.name}: Wedge Phi Average", data_contents, one_dim, data2d.metadata)
+        return SasData(f"{data2d.name}: Wedge Phi Average", data_contents, angle_dim, data2d.metadata)
 
 
 class SectorPhi(WedgePhi):

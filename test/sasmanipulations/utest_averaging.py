@@ -155,7 +155,8 @@ class DataInfoTests(unittest.TestCase):
 
         self.assertEqual(len(answer_list), 1)
         for i in range(r.nbins_phi - 1):
-            self.assertAlmostEqual(o._data_contents["Q"].value[i], answer._data_contents["Q"].value[i], 4)
+            # Current ascii reader implementation assumes file data is "one_dim"
+            self.assertAlmostEqual(o._data_contents["Phi"].value[i], answer._data_contents["Q"].value[i], 4)
             self.assertAlmostEqual(o._data_contents["I"].value[i], answer._data_contents["I"].value[i], 4)
             self.assertAlmostEqual(o._data_contents["I"].variance.value[i], answer._data_contents["I"].variance.value[i], 4)
 

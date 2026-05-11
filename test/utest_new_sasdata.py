@@ -2,11 +2,12 @@ import numpy as np
 
 from sasdata.data import SasData
 from sasdata.data_backing import Group
-from sasdata.dataset_types import one_dim, three_dim, two_dim
+from sasdata.dataset_types import angle_dim, one_dim, three_dim, two_dim
 from sasdata.metadata import Instrument, Metadata, Source
 from sasdata.postprocess import deduce_qz
+from sasdata.quantities.constants import Pi
 from sasdata.quantities.quantity import Quantity
-from sasdata.quantities.units import angstroms, per_angstrom, per_centimeter
+from sasdata.quantities.units import angstroms, per_angstrom, per_centimeter, radians
 
 
 def test_1d():
@@ -105,3 +106,20 @@ def test_3d():
     deduce_qz(data)
 
     assert (data._data_contents['Qz'].value != (0*data._data_contents['Qx'].value)).all()
+
+def test_angle():
+    phi = [0.4 * Pi, 0.8 * Pi, 1.2 * Pi, 1.6 * Pi, 2 * Pi]
+    i = [5, 4, 3, 2, 1]
+
+    phi_quantity = Quantity(np.array(phi), radians)
+    i_quantity = Quantity(np.array(i), per_centimeter)
+
+    data_contents = {
+        'Phi': phi_quantity,
+        'I': i_quantity
+    }
+
+    data = SasData('TestData', data_contents, angle_dim, Group('root', {}), True)
+
+    assert all(data.abscissae.value == np.array(phi))
+    assert all(data.ordinate.value == np.array(i))

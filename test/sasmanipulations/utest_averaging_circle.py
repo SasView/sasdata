@@ -169,7 +169,7 @@ class RingTests(unittest.TestCase):
         data1d = ring_object(averager_data.data)
 
         expected_area = test_data.area_under_region(r_min=r_min, r_max=r_max)
-        actual_area = integrate.simpson(data1d._data_contents["I"].value, data1d._data_contents["Q"].value)
+        actual_area = integrate.simpson(data1d._data_contents["I"].value, data1d._data_contents["Phi"].value)
 
         self.assertAlmostEqual(actual_area, expected_area, 1)
 
@@ -223,9 +223,9 @@ class SectorQTests(unittest.TestCase):
 
         r_min = 0
         r_max = 0.9 * averager_data.qmax
-        phi_min = Pi/6
-        phi_max = 5*Pi/6
-        nbins = int(test_data.matrix_size * np.sqrt(2)/4)  # usually reliable
+        phi_min = Pi / 6.0
+        phi_max = 5.0 * Pi / 6.0
+        nbins = int(0.25 * test_data.matrix_size * np.sqrt(2))  # usually reliable
 
         wedge_object = SectorQ(r_range=(r_min, r_max), phi_range=(phi_min,phi_max), nbins=nbins)
         # Explicitly set fold to False - results span full +/- range
@@ -256,9 +256,9 @@ class SectorQTests(unittest.TestCase):
 
         r_min = 0
         r_max = 0.9 * averager_data.qmax
-        phi_min = Pi/6
-        phi_max = 5*Pi/6
-        nbins = int(test_data.matrix_size * np.sqrt(2)/4)  # usually reliable
+        phi_min = Pi / 6.0
+        phi_max = 5.0 * Pi / 6.0
+        nbins = int(0.25 * test_data.matrix_size * np.sqrt(2))  # usually reliable
 
         wedge_object = SectorQ(r_range=(r_min, r_max), phi_range=(phi_min,phi_max), nbins=nbins)
         # Explicitly set fold to True - points either side of 0,0 are averaged
@@ -317,16 +317,15 @@ class WedgeQTests(unittest.TestCase):
 
         r_min = 0.1 * averager_data.qmax
         r_max = 0.9 * averager_data.qmax
-        phi_min = Pi/6
-        phi_max = 5*Pi/6
+        phi_min = Pi / 6.0
+        phi_max = 5.0 * Pi / 6.0
         nbins = int(test_data.matrix_size * np.sqrt(2)/4)  # usually reliable
 
         wedge_object = WedgeQ(r_range=(r_min, r_max), phi_range=(phi_min,phi_max), nbins=nbins)
         data1d = wedge_object(averager_data.data)
 
         expected_area = test_data.area_under_region(r_min=r_min, r_max=r_max,
-                                                    phi_min=phi_min,
-                                                    phi_max=phi_max)
+                                                    phi_min=phi_min, phi_max=phi_max)
         actual_area = integrate.simpson(data1d._data_contents["I"].value, data1d._data_contents["Q"].value)
 
         self.assertAlmostEqual(actual_area, expected_area, 1)
@@ -351,8 +350,6 @@ class WedgePhiTests(unittest.TestCase):
         nbins = 100
         # base = 10
 
-        # wedge_object = WedgePhi(r_min=r_min, r_max=r_max, phi_min=phi_min,
-        #                           phi_max=phi_max, nbins=nbins, base=base)
         wedge_object = WedgePhi(r_range=(r_min, r_max), phi_range=(phi_min,phi_max), nbins=nbins)
 
         self.assertEqual(wedge_object.r_min, r_min)
@@ -380,17 +377,17 @@ class WedgePhiTests(unittest.TestCase):
 
         r_min = 0.1 * averager_data.qmax
         r_max = 0.9 * averager_data.qmax
-        phi_min = Pi/6
-        phi_max = 5*Pi/6
-        nbins = int(test_data.matrix_size * np.sqrt(2)/4)  # usually reliable
+        phi_min = Pi / 6.0
+        phi_max = 5.0 * Pi / 6.0
+        nbins = int(0.25 *test_data.matrix_size * np.sqrt(2))  # usually reliable
 
         wedge_object = WedgePhi(r_range=(r_min, r_max), phi_range=(phi_min,phi_max), nbins=nbins)
         data1d = wedge_object(averager_data.data)
 
         expected_area = test_data.area_under_region(r_min=r_min, r_max=r_max,
-                                                    phi_min=phi_min,
-                                                    phi_max=phi_max)
-        actual_area = integrate.simpson(data1d._data_contents["I"].value, data1d._data_contents["Q"].value)
+                                                    phi_min=phi_min, phi_max=phi_max)
+
+        actual_area = integrate.simpson(data1d._data_contents["I"].value, data1d._data_contents["Phi"].value)
 
         self.assertAlmostEqual(actual_area, expected_area, 1)
 

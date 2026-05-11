@@ -544,7 +544,7 @@ class _Sector:
         if not ("Qx" in data2D._data_contents and
                 "Qy" in data2D._data_contents and
                 "I" in data2D._data_contents):
-            raise RuntimeError("For ring averaging the SasData object must contain 'Qx', 'Qy', and 'I' data.")
+            raise RuntimeError("For averaging the SasData object must contain 'Qx', 'Qy', and 'I' data.")
 
         # Get all the data & info
         finite_mask = np.isfinite(data2D._data_contents["I"].value)

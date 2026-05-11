@@ -39,7 +39,9 @@ class SasData:
     @property
     def ordinate(self) -> Quantity:
         match self.dataset_type:
-            case dataset_types.one_dim | dataset_types.two_dim:
+            case (dataset_types.one_dim |
+                  dataset_types.two_dim |
+                  dataset_types.angle_dim):
                 return self._data_contents["I"]
             case dataset_types.sesans:
                 return self._data_contents["Depolarisation"]
@@ -70,6 +72,8 @@ class SasData:
                 # probably want to avoid creating a new Quantity but at the moment I
                 # can't see a way around it.
                 return Quantity(data_contents, reference_data_content.units, name=self._data_contents["Qx"].name, id_header=self._data_contents["Qx"]._id_header)
+            case dataset_types.angle_dim:
+                return self._data_contents["Phi"]
             case dataset_types.sesans:
                 return self._data_contents["SpinEchoLength"]
             case _:
