@@ -56,8 +56,8 @@ def get_dq_data(data2d: SasData) -> npt.NDArray[np.floating]:
     # Final protection of dq
     if dq_overlap < 0:
         dq_overlap = dqy_at_z_min
-    dqx_data = dqx_data[np.isfinite(data2d._data_contents["I"].value)]
-    dqy_data = dqy_data[np.isfinite(data2d._data_contents["I"].value)] - dq_overlap
+    dqx_data = dqx_data[np.isfinite(data2d.ordinate.value)]
+    dqy_data = dqy_data[np.isfinite(data2d.ordinate.value)] - dq_overlap
     # def; dqx_data = dq_r dqy_data = dq_phi
     # Convert dq 2D to 1D here
     dq_data = np.sqrt(dqx_data**2 + dqy_data**2)
@@ -205,7 +205,7 @@ class SlabX(CartesianROI):
 
         data_contents = {
             "Q": Quantity(qx_data, data2d._data_contents["Qx"].units, None),
-            "I": Quantity(intensity, data2d._data_contents["I"].units, error),
+            "I": Quantity(intensity, data2d.ordinate.units, error),
         }
         return SasData(f"{data2d.name}: Slab X Average", data_contents, one_dim, data2d.metadata)
 
@@ -278,7 +278,7 @@ class SlabY(CartesianROI):
 
         data_contents = {
             "Q": Quantity(qy_data, data2d._data_contents["Qy"].units, None),
-            "I": Quantity(intensity, data2d._data_contents["I"].units, error),
+            "I": Quantity(intensity, data2d.ordinate.units, error),
         }
         return SasData(f"{data2d.name}: Slab Y Average", data_contents, one_dim, data2d.metadata)
 
@@ -323,16 +323,16 @@ class CircularAverage(PolarROI):
         :return: SasData object with x (bin centers), y (intensity), dy and dx (if available)
         """
         # Work on unmasked finite arrays first (matches legacy filtering)
-        finite_mask = np.isfinite(data2D._data_contents["I"].value)
+        finite_mask = np.isfinite(data2D.ordinate.value)
         if not np.any(finite_mask):
             raise RuntimeError(f"Circular averaging: invalid q_data: {data2D.q_data}")
 
-        data_all = data2D._data_contents["I"].value[finite_mask]
+        data_all = data2D.ordinate.value[finite_mask]
         qx_all = data2D._data_contents["Qx"].value[finite_mask]
         qy_all = data2D._data_contents["Qy"].value[finite_mask]
         q_all = np.sqrt(data2D._data_contents["Qx"].value**2 + data2D._data_contents["Qy"].value**2)[finite_mask]
-        err_all = np.sqrt(data2D._data_contents["I"].variance.value)[finite_mask]
-        mask_all = (data2D.mask if data2D.mask is not None else np.ones_like(data2D._data_contents["I"].value, dtype=bool))[finite_mask]
+        err_all = np.sqrt(data2D.ordinate.variance.value)[finite_mask]
+        mask_all = (data2D.mask if data2D.mask is not None else np.ones_like(data2D.ordinate.value, dtype=bool))[finite_mask]
 
         # Optional mask handling: legacy used an ismask flag to optionally skip masked points
         if ismask:
@@ -385,7 +385,7 @@ class CircularAverage(PolarROI):
 
         data_contents = {
             "Q": Quantity(x, data2D._data_contents["Qx"].units, dQ),
-            "I": Quantity(intensity, data2D._data_contents["I"].units, error),
+            "I": Quantity(intensity, data2D.ordinate.units, error),
         }
         return SasData(f"{data2D.name}: Circular Average", data_contents, one_dim, data2D.metadata)
 
@@ -435,20 +435,19 @@ class Ring(PolarROI):
             msg = "Data supplied for ring averaging must be of type SasData."
             raise RuntimeError(msg)
         if not ("Qx" in data2D._data_contents and
-                "Qy" in data2D._data_contents and
-                "I" in data2D._data_contents):
-            msg = "SasData object for ring averaging must contain 'Qx', 'Qy', and 'I' data."
+                "Qy" in data2D._data_contents):
+            msg = "SasData object for ring averaging must contain 'Qx' and 'Qy' data."
             raise RuntimeError(msg)
 
         # Get data
-        valid_data = np.isfinite(data2D._data_contents["I"].value)
+        valid_data = np.isfinite(data2D.ordinate.value)
 
-        data = data2D._data_contents["I"].value[valid_data]
-        err_data = np.sqrt(data2D._data_contents["I"].variance.value)[valid_data]
+        data = data2D.ordinate.value[valid_data]
+        err_data = np.sqrt(data2D.ordinate.variance.value)[valid_data]
         qx_data = data2D._data_contents["Qx"].value[valid_data]
         qy_data = data2D._data_contents["Qy"].value[valid_data]
         q_data = np.sqrt(data2D._data_contents["Qx"].value ** 2 + data2D._data_contents["Qy"].value ** 2)[valid_data]
-        mask_data = (data2D.mask if data2D.mask is not None else np.ones_like(data2D._data_contents["I"].value, dtype=bool))[valid_data]
+        mask_data = (data2D.mask if data2D.mask is not None else np.ones_like(data2D.ordinate.value, dtype=bool))[valid_data]
 
         # Set space for 1d outputs
         phi_bins = np.zeros(self.nbins)
@@ -505,7 +504,7 @@ class Ring(PolarROI):
 
         data_contents = {
             "Phi": Quantity(phi_values[idx], radians, None),
-            "I": Quantity(phi_bins[idx], data2D._data_contents["I"].units, phi_err[idx]),
+            "I": Quantity(phi_bins[idx], data2D.ordinate.units, phi_err[idx]),
         }
         return SasData(f"{data2D.name}: Ring Average", data_contents, angle_dim, data2D.metadata)
 
@@ -641,7 +640,7 @@ class SectorQ(PolarROI):
 
             data_contents = {
                 "Q": Quantity(combined_q[finite], data2d._data_contents["Qx"].units, None),
-                "I": Quantity(average_intensity[finite], data2d._data_contents["I"].units, combined_err[finite]),
+                "I": Quantity(average_intensity[finite], data2d.ordinate.units, combined_err[finite]),
             }
         else:
             # The secondary ROI is labelled with negative Q values.
@@ -651,7 +650,7 @@ class SectorQ(PolarROI):
 
             data_contents = {
                 "Q": Quantity(combined_q, data2d._data_contents["Qx"].units, None),
-                "I": Quantity(combined_intensity, data2d._data_contents["I"].units, combined_error),
+                "I": Quantity(combined_intensity, data2d.ordinate.units, combined_error),
             }
 
         return SasData(f"{data2d.name}:SectorQ Average", data_contents, one_dim, data2d.metadata)
@@ -738,7 +737,7 @@ class WedgeQ(PolarROI):
 
         data_contents = {
             "Q": Quantity(q_data, data2d._data_contents["Qx"].units, None),
-            "I": Quantity(intensity, data2d._data_contents["I"].units, error),
+            "I": Quantity(intensity, data2d.ordinate.units, error),
         }
         return SasData(f"{data2d.name}: Wedge Q Average", data_contents, one_dim, data2d.metadata)
 
@@ -846,7 +845,7 @@ class WedgePhi(PolarROI):
         # intensity and error returned by DirectionalAverage are already filtered to the populated/finite bins
         data_contents = {
             "Phi": Quantity(phi_centers, radians, None),
-            "I": Quantity(intensity, data2d._data_contents["I"].units, error),
+            "I": Quantity(intensity, data2d.ordinate.units, error),
         }
         return SasData(f"{data2d.name}: Wedge Phi Average", data_contents, angle_dim, data2d.metadata)
 

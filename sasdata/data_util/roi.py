@@ -39,9 +39,8 @@ class GenericROI:
             msg = "Data supplied must be of type SasData."
             raise TypeError(msg)
         if not ("Qx" in data2d._data_contents and
-                "Qy" in data2d._data_contents and
-                "I" in data2d._data_contents):
-            msg = "SasData object must contain 'Qx', 'Qy', and 'I' data."
+                "Qy" in data2d._data_contents):
+            msg = "SasData object must contain 'Qx' and 'Qy' data."
             raise TypeError(msg)
         if len(data2d.metadata.instrument.detector) > 1:
             msg = (f"Invalid number of detectors: {len(data2d.metadata.instrument.detector)}."
@@ -50,14 +49,14 @@ class GenericROI:
 
         # Only use data which is finite and not masked off
         if data2d.mask is not None:
-            valid_data = np.isfinite(data2d._data_contents["I"].value) & data2d.mask
+            valid_data = np.isfinite(data2d.ordinate.value) & data2d.mask
         else:
-            valid_data = np.isfinite(data2d._data_contents["I"].value)
+            valid_data = np.isfinite(data2d.ordinate.value)
 
         # Assign properties of the SasData object to variables for reference
         # during data processing.
-        self.data = data2d._data_contents["I"].value[valid_data]
-        self.err_data = np.sqrt(data2d._data_contents["I"].variance.value)[valid_data]
+        self.data = data2d.ordinate.value[valid_data]
+        self.err_data = np.sqrt(data2d.ordinate.variance.value)[valid_data]
 
         self.qx_data = data2d._data_contents["Qx"].value[valid_data] - self.center_x
         self.qy_data = data2d._data_contents["Qy"].value[valid_data] - self.center_y

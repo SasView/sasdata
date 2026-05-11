@@ -391,11 +391,11 @@ class CircularAverage:
         :return: SasData object
         """
         # Get data W/ finite values
-        finite_mask = np.isfinite(data2D._data_contents["I"].value)
-        data = data2D._data_contents["I"].value[finite_mask]
+        finite_mask = np.isfinite(data2D.ordinate.value)
+        data = data2D.ordinate.value[finite_mask]
         q_data = np.sqrt(data2D._data_contents["Qx"].value**2 + data2D._data_contents["Qy"].value**2)[finite_mask]
-        err_data = np.sqrt(data2D._data_contents["I"].variance.value)[finite_mask]
-        mask_data = (data2D.mask if data2D.mask is not None else np.ones_like(data2D._data_contents["I"].value, dtype=bool))[finite_mask]
+        err_data = np.sqrt(data2D.ordinate.variance.value)[finite_mask]
+        mask_data = (data2D.mask if data2D.mask is not None else np.ones_like(data2D.ordinate.value, dtype=bool))[finite_mask]
 
         dq_data = None
         if data2D._data_contents["Qx"].has_variance and data2D._data_contents["Qy"].has_variance:
@@ -482,7 +482,7 @@ class CircularAverage:
 
         data_contents = {
             "Q": Quantity(x[idx], data2D._data_contents["Qx"].units, dQ),
-            "I": Quantity(y[idx], data2D._data_contents["I"].units, err_y[idx]),
+            "I": Quantity(y[idx], data2D.ordinate.units, err_y[idx]),
         }
         return SasData("Circular Average", data_contents, one_dim, data2D.metadata)
 
@@ -542,20 +542,19 @@ class _Sector:
         :return: SasData object
         """
         if not ("Qx" in data2D._data_contents and
-                "Qy" in data2D._data_contents and
-                "I" in data2D._data_contents):
-            raise RuntimeError("For averaging the SasData object must contain 'Qx', 'Qy', and 'I' data.")
+                "Qy" in data2D._data_contents):
+            raise RuntimeError("For averaging the SasData object must contain 'Qx' and 'Qy' data.")
 
         # Get all the data & info
-        finite_mask = np.isfinite(data2D._data_contents["I"].value)
-        data = data2D._data_contents["I"].value[finite_mask]
-        err_data = np.sqrt(data2D._data_contents["I"].variance.value)[finite_mask]
+        finite_mask = np.isfinite(data2D.ordinate.value)
+        data = data2D.ordinate.value[finite_mask]
+        err_data = np.sqrt(data2D.ordinate.variance.value)[finite_mask]
         qx_data = data2D._data_contents["Qx"].value[finite_mask]
         qy_data = data2D._data_contents["Qy"].value[finite_mask]
         q_data = np.sqrt(data2D._data_contents["Qx"].value ** 2 +
                          data2D._data_contents["Qy"].value ** 2
                          )[finite_mask]
-        mask_data = (data2D.mask if data2D.mask is not None else np.ones_like(data2D._data_contents["I"].value, dtype=bool))[finite_mask]
+        mask_data = (data2D.mask if data2D.mask is not None else np.ones_like(data2D.ordinate.value, dtype=bool))[finite_mask]
 
         dq_data = None
         if data2D._data_contents["Qx"].has_variance and data2D._data_contents["Qy"].has_variance:
@@ -725,7 +724,7 @@ class _Sector:
 
         data_contents = {
             "Q": Quantity(x[idx], data2D._data_contents["Qx"].units, dQ),
-            "I": Quantity(y[idx], data2D._data_contents["I"].units, y_err[idx]),
+            "I": Quantity(y[idx], data2D.ordinate.units, y_err[idx]),
         }
         return SasData("agv", data_contents, one_dim, data2D.metadata)
 
