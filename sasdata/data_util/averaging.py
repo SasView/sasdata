@@ -575,15 +575,14 @@ class SectorQ(PolarROI):
         self.validate_and_assign_data(data2d)
 
         # Detect legacy phi convention (atan2 + pi -> values in [0, 2pi))
-        phi_vals = self.phi_data
         try:
-            min_phi = np.nanmin(phi_vals)
+            min_phi = np.nanmin(self.phi_data)
         except Exception:
             min_phi = None
 
         if min_phi is not None and min_phi >= 0.0:
             # Convert legacy shifted values back to standard atan2 range [-pi, pi]
-            self.phi_data = phi_vals - np.pi
+            self.phi_data -= np.pi
 
         # Transform all angles to the range [0,2π) where phi_min is at zero,
         # eliminating errors when the ROI straddles the 2π -> 0 discontinuity.
@@ -692,15 +691,14 @@ class WedgeQ(PolarROI):
         self.validate_and_assign_data(data2d)
 
         # Detect legacy phi convention (atan2 + pi -> values in [0, 2pi))
-        phi_vals = self.phi_data
         try:
-            min_phi = np.nanmin(phi_vals)
+            min_phi = np.nanmin(self.phi_data)
         except Exception:
             min_phi = None
 
         if min_phi is not None and min_phi >= 0.0:
             # Convert legacy shifted values back to standard atan2 range [-pi, pi]
-            phi_vals = phi_vals + np.pi
+            self.phi_data -= np.pi
 
         # Transform all angles to the range [0,2π) where phi_min is at zero,
         # eliminating errors when the ROI straddles the 2π -> 0 discontinuity.
@@ -767,15 +765,14 @@ class WedgePhi(PolarROI):
         self.validate_and_assign_data(data2d)
 
         # Detect legacy phi convention (atan2 + pi -> values in [0, 2pi))
-        phi_vals = self.phi_data
         try:
-            min_phi = np.nanmin(phi_vals)
+            min_phi = np.nanmin(self.phi_data)
         except Exception:
             min_phi = None
 
         if min_phi is not None and min_phi >= 0.0:
             # Convert legacy shifted values back to standard atan2 range [-pi, pi]
-            self.phi_data = phi_vals -  np.pi
+            self.phi_data -=  np.pi
 
         # Transform all angles to the range [0,2π) where phi_min is at zero,
         # eliminating errors when the ROI straddles the 2π -> 0 discontinuity.
