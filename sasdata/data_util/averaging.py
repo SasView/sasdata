@@ -443,17 +443,17 @@ class Ring(PolarROI):
         # to center first bin at zero
         phi_shift = Pi / self.nbins
 
-        for npt in range(len(data)):
-            if not mask_data[npt]:
+        for point_idx in range(len(data)):
+            if not mask_data[point_idx]:
                 # ignore points that are masked
                 continue
             frac = 0
-            # q-value at the point (npt)
-            q_value = q_data[npt]
-            data_n = data[npt]
+            # q-value at the point (point_idx)
+            q_value = q_data[point_idx]
+            data_n = data[point_idx]
 
-            # phi-value at the point (npt)
-            phi_value = math.atan2(qy_data[npt], qx_data[npt]) + Pi
+            # phi-value at the point (point_idx)
+            phi_value = math.atan2(qy_data[point_idx], qx_data[point_idx]) + Pi
 
             if self.r_min <= q_value and q_value <= self.r_max:
                 frac = 1
@@ -465,14 +465,14 @@ class Ring(PolarROI):
             # Take care of the edge case at phi = 2pi.
             if i_phi >= self.nbins:
                 i_phi = 0
-            phi_bins[i_phi] += frac * data[npt]
+            phi_bins[i_phi] += frac * data[point_idx]
 
-            if err_data is None or err_data[npt] == 0.0:
+            if err_data is None or err_data[point_idx] == 0.0:
                 if data_n < 0:
                     data_n = -data_n
                 phi_err[i_phi] += frac * frac * math.fabs(data_n)
             else:
-                phi_err[i_phi] += frac * frac * err_data[npt] * err_data[npt]
+                phi_err[i_phi] += frac * frac * err_data[point_idx] * err_data[point_idx]
             phi_counts[i_phi] += frac
 
         for i in range(self.nbins):
@@ -802,7 +802,6 @@ class WedgePhi(PolarROI):
         """
 
         super().__init__(r_range=r_range, phi_range=phi_range, center=center)
-        print(nbins)
         self.nbins: int = nbins
         self.base: float | None = base
 
