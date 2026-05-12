@@ -96,8 +96,8 @@ class Averaging(unittest.TestCase):
         """Test ring averaging."""
         r = Ring(r_min=2*self.qmin,
                  r_max=5*self.qmin,
-                 center_x=self.data.metadata.instrument.detector[0].beam_center.x,
-                 center_y=self.data.metadata.instrument.detector[0].beam_center.y)
+                 center_x=self.data.metadata.instrument.detector[0].beam_center.x.value,
+                 center_y=self.data.metadata.instrument.detector[0].beam_center.y.value)
         r.nbins_phi = 20
 
         o = r(self.data)
@@ -136,11 +136,11 @@ class DataInfoTests(unittest.TestCase):
     def test_ring(self):
         """Test ring averaging."""
         if beam_center := self.data.metadata.instrument.detector[0].beam_center:
-            center_x = beam_center.x
-            center_y = beam_center.y
+            center_x = beam_center.x.value
+            center_y = beam_center.y.value
         else:
-            center_x = None
-            center_y = None
+            center_x = 0.0
+            center_y = 0.0
 
         r = Ring(r_min=.005, r_max=.01,
                  center_x=center_x,
