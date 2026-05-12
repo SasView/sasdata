@@ -457,28 +457,3 @@ with StringIO() as fid:
     units = importlib.import_module(".units", "sasdata.quantities")
     # Execute the code that we've created within that module
     exec(fid.getvalue(), units.__dict__)
-
-
-with StringIO() as fid:
-    si_unit_names = [values.plural for values in base_si_units + derived_si_units if values.plural != "grams"] + [
-        "kilograms"
-    ]
-    si_unit_names.sort()
-
-    fid.write("from sasdata.quantities.units import (\n")
-
-    for name in si_unit_names:
-        fid.write(f"    {name},\n")
-
-    fid.write(")\n")
-    fid.write("\nall_si = [\n")
-
-    for name in si_unit_names:
-        fid.write(f"    {name},\n")
-
-    fid.write("]\n")
-
-    # Load the units module
-    si = importlib.import_module(".si", "sasdata.quantities")
-    # Execute the code that we've created within that module
-    exec(fid.getvalue(), si.__dict__)
