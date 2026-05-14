@@ -2,10 +2,10 @@
 This module contains various data processors used by Sasview's slicers.
 """
 
-
 import math
 
 import numpy as np
+import numpy.typing as npt
 
 from sasdata.data_util.binning import DirectionalAverage
 from sasdata.data_util.interval import IntervalType
@@ -14,15 +14,15 @@ from sasdata.dataloader.data_info import Data1D, Data2D
 from sasdata.quantities.constants import Pi, TwoPi
 
 
-def get_dq_data(data2d: Data2D) -> np.array:
-    '''
+def get_dq_data(data2d: Data2D) -> npt.NDArray[np.floating]:
+    """
     Get the dq for resolution averaging
     The pinholes and det. pix contribution present
     in both direction of the 2D which must be subtracted when
     converting to 1D: dq_overlap should be calculated ideally at
     q = 0. Note This method works on only pinhole geometry.
     Extrapolate dqx(r) and dqy(phi) at q = 0, and take an average.
-    '''
+    """
     z_max = max(data2d.q_data)
     z_min = min(data2d.q_data)
     dqx_at_z_max = data2d.dqx_data[np.argmax(data2d.q_data)]
@@ -48,8 +48,7 @@ def get_dq_data(data2d: Data2D) -> np.array:
     if dq_overlap < 0:
         dq_overlap = dqy_at_z_min
     dqx_data = data2d.dqx_data[np.isfinite(data2d.data)]
-    dqy_data = data2d.dqy_data[np.isfinite(
-        data2d.data)] - dq_overlap
+    dqy_data = data2d.dqy_data[np.isfinite(data2d.data)] - dq_overlap
     # def; dqx_data = dq_r dqy_data = dq_phi
     # Convert dq 2D to 1D here
     dq_data = np.sqrt(dqx_data**2 + dqy_data**2)
@@ -69,10 +68,9 @@ class Boxsum(CartesianROI):
         :param qx_range: Bounds of the ROI along the Q_x direction.
         :param qy_range: Bounds of the ROI along the Q_y direction.
         """
-        super().__init__(qx_range=qx_range,
-                         qy_range=qy_range)
+        super().__init__(qx_range=qx_range, qy_range=qy_range)
 
-    def __call__(self, data2d: Data2D = None) -> float:
+    def __call__(self, data2d: Data2D) -> tuple[float, float, float]:
         """
         Coordinate data processing operations and return the results.
 
@@ -83,7 +81,7 @@ class Boxsum(CartesianROI):
 
         return total_sum, error, count
 
-    def _sum(self) -> float:
+    def _sum(self) -> tuple[float, float, float]:
         """
         Determine which data are inside the ROI and compute their sum.
         Also calculate the error on this calculation and the total number of
@@ -92,12 +90,8 @@ class Boxsum(CartesianROI):
 
         # Currently the weights are binary, but could be fractional in future
         interval = IntervalType.CLOSED
-        x_weights = interval.weights_for_interval(array=self.qx_data,
-                                         l_bound=self.qx_min,
-                                         u_bound=self.qx_max)
-        y_weights = interval.weights_for_interval(array=self.qy_data,
-                                         l_bound=self.qy_min,
-                                         u_bound=self.qy_max)
+        x_weights = interval.weights_for_interval(array=self.qx_data, l_bound=self.qx_min, u_bound=self.qx_max)
+        y_weights = interval.weights_for_interval(array=self.qy_data, l_bound=self.qy_min, u_bound=self.qy_max)
         weights = x_weights * y_weights
 
         data = weights * self.data
@@ -110,6 +104,7 @@ class Boxsum(CartesianROI):
         total_count = np.sum(weights)
 
         return total_sum, np.sqrt(total_errors_squared), total_count
+
 
 class Boxavg(Boxsum):
     """
@@ -124,10 +119,9 @@ class Boxavg(Boxsum):
         :param qx_range: Bounds of the ROI along the Q_x direction.
         :param qy_range: Bounds of the ROI along the Q_y direction.
         """
-        super().__init__(qx_range=qx_range,
-                         qy_range=qy_range)
+        super().__init__(qx_range=qx_range, qy_range=qy_range)
 
-    def __call__(self, data2d: Data2D) -> float:
+    def __call__(self, data2d: Data2D) -> tuple[float, float]:
         """
         Coordinate data processing operations and return the results.
 
@@ -137,6 +131,7 @@ class Boxavg(Boxsum):
         total_sum, error, count = super()._sum()
 
         return (total_sum / count), (error / count)
+
 
 class SlabX(CartesianROI):
     """
@@ -151,7 +146,14 @@ class SlabX(CartesianROI):
     resulting in a 1D plot with only positive Q values shown.
     """
 
-    def __init__(self, qx_range: tuple[float, float] = (0.0, 0.0), qy_range: tuple[float, float] = (0.0, 0.0), nbins: int = 100, fold: bool = False, base: float = None):
+    def __init__(
+        self,
+        qx_range: tuple[float, float] = (0.0, 0.0),
+        qy_range: tuple[float, float] = (0.0, 0.0),
+        nbins: int = 100,
+        fold: bool = False,
+        base: float | None = None,
+    ) -> None:
         """
         Set up the ROI boundaries, the binning of the output 1D data, and fold.
 
@@ -162,13 +164,12 @@ class SlabX(CartesianROI):
         :param fold: Whether the two halves of the ROI along Q_x should be
                      folded together during averaging.
         """
-        super().__init__(qx_range=qx_range,
-                         qy_range=qy_range)
-        self.nbins = nbins
-        self.fold = fold
-        self.base = base
+        super().__init__(qx_range=qx_range, qy_range=qy_range)
+        self.nbins: int = nbins
+        self.fold: bool = fold
+        self.base: float | None = base
 
-    def __call__(self, data2d: Data2D = None) -> Data1D:
+    def __call__(self, data2d: Data2D) -> Data1D:
         """
         Compute the 1D average of 2D data, projecting along the Q_x axis.
 
@@ -189,14 +190,17 @@ class SlabX(CartesianROI):
             major_lims = (self.qx_min, self.qx_max)
         minor_lims = (self.qy_min, self.qy_max)
 
-        directional_average = DirectionalAverage(major_axis=self.qx_data,
-                                                 minor_axis=self.qy_data,
-                                                 lims=(major_lims,minor_lims),
-                                                 nbins=self.nbins, base=self.base)
-        qx_data, intensity, error = \
-            directional_average(data=self.data, err_data=self.err_data)
+        directional_average = DirectionalAverage(
+            major_axis=self.qx_data,
+            minor_axis=self.qy_data,
+            lims=(major_lims, minor_lims),
+            nbins=self.nbins,
+            base=self.base,
+        )
+        qx_data, intensity, error = directional_average(data=self.data, err_data=self.err_data)
 
         return Data1D(x=qx_data, y=intensity, dy=error)
+
 
 class SlabY(CartesianROI):
     """
@@ -211,7 +215,14 @@ class SlabY(CartesianROI):
     resulting in a 1D plot with only positive Q values shown.
     """
 
-    def __init__(self, qx_range: tuple[float, float] = (0.0, 0.0), qy_range: tuple[float, float] = (0.0, 0.0), nbins: int = 100, fold: bool = False, base: float = None):
+    def __init__(
+        self,
+        qx_range: tuple[float, float] = (0.0, 0.0),
+        qy_range: tuple[float, float] = (0.0, 0.0),
+        nbins: int = 100,
+        fold: bool = False,
+        base: float | None = None,
+    ) -> None:
         """
         Set up the ROI boundaries, the binning of the output 1D data, and fold.
 
@@ -223,13 +234,12 @@ class SlabY(CartesianROI):
         :param fold: Whether the two halves of the ROI along Q_y should be
                      folded together during averaging.
         """
-        super().__init__(qx_range=qx_range,
-                         qy_range=qy_range)
-        self.nbins = nbins
-        self.fold = fold
-        self.base =base
+        super().__init__(qx_range=qx_range, qy_range=qy_range)
+        self.nbins: int = nbins
+        self.fold: bool = fold
+        self.base: float | None = base
 
-    def __call__(self, data2d: Data2D = None) -> Data1D:
+    def __call__(self, data2d: Data2D) -> Data1D:
         """
         Compute the 1D average of 2D data, projecting along the Q_y axis.
 
@@ -250,14 +260,17 @@ class SlabY(CartesianROI):
             major_lims = (self.qy_min, self.qy_max)
         minor_lims = (self.qx_min, self.qx_max)
 
-        directional_average = DirectionalAverage(major_axis=self.qy_data,
-                                                 minor_axis=self.qx_data,
-                                                 lims=(major_lims,minor_lims),
-                                                 nbins=self.nbins, base =self.base)
-        qy_data, intensity, error = \
-            directional_average(data=self.data, err_data=self.err_data)
+        directional_average = DirectionalAverage(
+            major_axis=self.qy_data,
+            minor_axis=self.qx_data,
+            lims=(major_lims, minor_lims),
+            nbins=self.nbins,
+            base=self.base,
+        )
+        qy_data, intensity, error = directional_average(data=self.data, err_data=self.err_data)
 
         return Data1D(x=qy_data, y=intensity, dy=error)
+
 
 class CircularAverage(PolarROI):
     """
@@ -270,7 +283,13 @@ class CircularAverage(PolarROI):
     where intensity is given as a function of Q only.
     """
 
-    def __init__(self, r_range: tuple[float, float], center: tuple[float, float] = (0.0, 0.0), nbins: int = 100, base: float = None) -> None:
+    def __init__(
+        self,
+        r_range: tuple[float, float],
+        center: tuple[float, float] = (0.0, 0.0),
+        nbins: int = 100,
+        base: float | None = None,
+    ) -> None:
         """
         Set up the lower and upper radial limits as well as the number of bins.
 
@@ -279,13 +298,11 @@ class CircularAverage(PolarROI):
         :param r_max: Upper limit for |Q| values to use during averaging.
         :param nbins: The number of bins data is sorted into along |Q| the axis
         """
-        super().__init__(r_range=r_range, center = center)
-        self.nbins = nbins
-        self.base =  base
+        super().__init__(r_range=r_range, center=center)
+        self.nbins: int = nbins
+        self.base: float | None = base
 
-
-
-    def __call__(self, data2D, ismask=False):
+    def __call__(self, data2D: Data2D, ismask: bool = False) -> Data1D:
         """
         Perform circular averaging on the data. Uses DirectionalAverage for
         bin construction and weights, and computes dx (d_q) using get_dq_data
@@ -360,6 +377,7 @@ class CircularAverage(PolarROI):
 
         return Data1D(x=x, y=intensity, dy=error, dx=dx)
 
+
 class Ring(PolarROI):
     """
     Calculate I(φ) by radially averaging 2D data between 2 radial limits.
@@ -371,7 +389,13 @@ class Ring(PolarROI):
     positive x-axis, φ, only.
     """
 
-    def __init__(self, r_range: tuple[float, float], center: tuple[float, float] = (0.0, 0.0),  nbins: int = 100, base: float = None) -> None:
+    def __init__(
+        self,
+        r_range: tuple[float, float],
+        center: tuple[float, float] = (0.0, 0.0),
+        nbins: int = 100,
+        base: float | None = None,
+    ) -> None:
         """
         Set up the lower and upper radial limits as well as the number of bins.
 
@@ -382,12 +406,12 @@ class Ring(PolarROI):
         """
         super().__init__(r_range=r_range, center=center)
         # backward-compatible alias expected by older tests / callers
-        #self.nbins_phi = nbins
+        # self.nbins_phi = nbins
         # new attribute
-        self.nbins = nbins
-        self.base = base
+        self.nbins: int = nbins
+        self.base: float | None = base
 
-    def __call__(self, data2D):
+    def __call__(self, data2D: Data2D) -> Data1D:
         """
         Apply the ring to the data set.
         Returns the angular distribution for a given q range
@@ -419,37 +443,36 @@ class Ring(PolarROI):
         # to center first bin at zero
         phi_shift = Pi / self.nbins
 
-        for npt in range(len(data)):
-            if not mask_data[npt]:
+        for point_idx in range(len(data)):
+            if not mask_data[point_idx]:
                 # ignore points that are masked
                 continue
             frac = 0
-            # q-value at the point (npt)
-            q_value = q_data[npt]
-            data_n = data[npt]
+            # q-value at the point (point_idx)
+            q_value = q_data[point_idx]
+            data_n = data[point_idx]
 
-            # phi-value at the point (npt)
-            phi_value = math.atan2(qy_data[npt], qx_data[npt]) + Pi
+            # phi-value at the point (point_idx)
+            phi_value = math.atan2(qy_data[point_idx], qx_data[point_idx]) + Pi
 
             if self.r_min <= q_value and q_value <= self.r_max:
                 frac = 1
             if frac == 0:
                 continue
             # binning
-            i_phi = int(math.floor((self.nbins) *
-                                   (phi_value + phi_shift) / (2 * Pi)))
+            i_phi = int(math.floor((self.nbins) * (phi_value + phi_shift) / (2 * Pi)))
 
             # Take care of the edge case at phi = 2pi.
             if i_phi >= self.nbins:
                 i_phi = 0
-            phi_bins[i_phi] += frac * data[npt]
+            phi_bins[i_phi] += frac * data[point_idx]
 
-            if err_data is None or err_data[npt] == 0.0:
+            if err_data is None or err_data[point_idx] == 0.0:
                 if data_n < 0:
                     data_n = -data_n
                 phi_err[i_phi] += frac * frac * math.fabs(data_n)
             else:
-                phi_err[i_phi] += frac * frac * err_data[npt] * err_data[npt]
+                phi_err[i_phi] += frac * frac * err_data[point_idx] * err_data[point_idx]
             phi_counts[i_phi] += frac
 
         for i in range(self.nbins):
@@ -457,14 +480,13 @@ class Ring(PolarROI):
             phi_err[i] = math.sqrt(phi_err[i]) / phi_counts[i]
             phi_values[i] = 2.0 * math.pi / self.nbins * (1.0 * i)
 
-        idx = (np.isfinite(phi_bins))
+        idx = np.isfinite(phi_bins)
 
         if not idx.any():
             msg = "Average Error: No points inside ROI to average..."
             raise ValueError(msg)
 
         return Data1D(x=phi_values[idx], y=phi_bins[idx], dy=phi_err[idx])
-
 
     '''
     def __call__(self, data2d: Data2D = None) -> Data1D:
@@ -525,6 +547,7 @@ class Ring(PolarROI):
         return Data1D(x=phi_values[finite], y=intensity[finite], dy=errors[finite])
     '''
 
+
 class SectorQ(PolarROI):
     """
     Project I(Q, φ) data onto I(Q) within a region defined by Cartesian limits.
@@ -547,7 +570,15 @@ class SectorQ(PolarROI):
     Data1D object where intensity is given as a function of Q only.
     """
 
-    def __init__(self, r_range: tuple[float, float], phi_range: tuple[float, float] = (0.0, TwoPi), center: tuple[float, float] = (0.0, 0.0), nbins: int = 100, fold: bool = True, base: float = None) -> None:
+    def __init__(
+        self,
+        r_range: tuple[float, float],
+        phi_range: tuple[float, float] = (0.0, TwoPi),
+        center: tuple[float, float] = (0.0, 0.0),
+        nbins: int = 100,
+        fold: bool = True,
+        base: float | None = None,
+    ) -> None:
         """
         Set up the ROI boundaries, the binning of the output 1D data, and fold.
 
@@ -559,13 +590,13 @@ class SectorQ(PolarROI):
         :param fold: Whether the primary and secondary ROIs should be folded
                      together during averaging.
         """
-        super().__init__(r_range=r_range, phi_range=phi_range, center = center)
+        super().__init__(r_range=r_range, phi_range=phi_range, center=center)
 
-        self.nbins = nbins
-        self.fold = fold
-        self.base = base
+        self.nbins: int = nbins
+        self.fold: bool = fold
+        self.base: float | None = base
 
-    def __call__(self, data2d: Data2D = None) -> Data1D:
+    def __call__(self, data2d: Data2D) -> Data1D:
         """
         Compute the 1D average of 2D data, projecting along the Q_y axis.
 
@@ -589,27 +620,31 @@ class SectorQ(PolarROI):
         # We won't need to convert back later because we're plotting against Q.
         phi_offset = self.phi_min
         self.phi_min = 0.0
-        self.phi_max = (self.phi_max - phi_offset ) % (TwoPi)
-        self.phi_data = (self.phi_data - phi_offset ) % (TwoPi)
+        self.phi_max = (self.phi_max - phi_offset) % (TwoPi)
+        self.phi_data = (self.phi_data - phi_offset) % (TwoPi)
 
         major_lims = (self.r_min, self.r_max)
         minor_lims = (self.phi_min, self.phi_max)
         # Secondary region of interest covers angles on opposite side of origin
         minor_lims_alt = (self.phi_min + Pi, self.phi_max + Pi)
 
-        primary_region = DirectionalAverage(major_axis=self.q_data,
-                                            minor_axis=self.phi_data,
-                                            lims=(major_lims,minor_lims),
-                                            nbins=self.nbins, base=self.base)
-        secondary_region = DirectionalAverage(major_axis=self.q_data,
-                                              minor_axis=self.phi_data,
-                                              lims=(major_lims,minor_lims_alt),
-                                              nbins=self.nbins, base=self.base)
+        primary_region = DirectionalAverage(
+            major_axis=self.q_data,
+            minor_axis=self.phi_data,
+            lims=(major_lims, minor_lims),
+            nbins=self.nbins,
+            base=self.base,
+        )
+        secondary_region = DirectionalAverage(
+            major_axis=self.q_data,
+            minor_axis=self.phi_data,
+            lims=(major_lims, minor_lims_alt),
+            nbins=self.nbins,
+            base=self.base,
+        )
 
-        primary_q, primary_I, primary_err = \
-            primary_region(data=self.data, err_data=self.err_data)
-        secondary_q, secondary_I, secondary_err = \
-            secondary_region(data=self.data, err_data=self.err_data)
+        primary_q, primary_I, primary_err = primary_region(data=self.data, err_data=self.err_data)
+        secondary_q, secondary_I, secondary_err = secondary_region(data=self.data, err_data=self.err_data)
 
         if self.fold:
             # Combining the two regions requires re-binning; the q value
@@ -641,17 +676,16 @@ class SectorQ(PolarROI):
 
             finite = np.isfinite(average_intensity)
 
-            data1d = Data1D(x=combined_q[finite], y=average_intensity[finite],
-                            dy=combined_err[finite])
+            data1d = Data1D(x=combined_q[finite], y=average_intensity[finite], dy=combined_err[finite])
         else:
             # The secondary ROI is labelled with negative Q values.
             combined_q = np.append(np.flip(-1 * secondary_q), primary_q)
             combined_intensity = np.append(np.flip(secondary_I), primary_I)
             combined_error = np.append(np.flip(secondary_err), primary_err)
-            data1d = Data1D(x=combined_q, y=combined_intensity,
-                            dy=combined_error)
+            data1d = Data1D(x=combined_q, y=combined_intensity, dy=combined_error)
 
         return data1d
+
 
 class WedgeQ(PolarROI):
     """
@@ -667,7 +701,14 @@ class WedgeQ(PolarROI):
     Data1D object where intensity is given as a function of Q only.
     """
 
-    def __init__(self, r_range: tuple[float, float], phi_range: tuple[float, float] = (0.0, TwoPi), center: tuple[float, float] = (0.0, 0.0), nbins: int = 100, base: float = None) -> None:
+    def __init__(
+        self,
+        r_range: tuple[float, float],
+        phi_range: tuple[float, float] = (0.0, TwoPi),
+        center: tuple[float, float] = (0.0, 0.0),
+        nbins: int = 100,
+        base: float | None = None,
+    ) -> None:
         """
         Set up the ROI boundaries, and the binning of the output 1D data.
 
@@ -677,11 +718,11 @@ class WedgeQ(PolarROI):
         :Defaults to full circle (0, 2*pi).
         :param nbins: The number of bins data is sorted into along the |Q| axis
         """
-        super().__init__(r_range=r_range, phi_range=phi_range, center = center)
-        self.nbins = nbins
-        self.base = base
+        super().__init__(r_range=r_range, phi_range=phi_range, center=center)
+        self.nbins: int = nbins
+        self.base: float | None = base
 
-    def __call__(self, data2d: Data2D = None) -> Data1D:
+    def __call__(self, data2d: Data2D) -> Data1D:
         """
         Compute the 1D average of 2D data, projecting along the Q_y axis.
 
@@ -716,14 +757,17 @@ class WedgeQ(PolarROI):
         else:
             minor_lims = (self.phi_min, self.phi_max)
 
-        directional_average = DirectionalAverage(major_axis=self.q_data,
-                                                 minor_axis=self.phi_data,
-                                                 lims=(major_lims,minor_lims),
-                                                 nbins=self.nbins, base=self.base)
-        q_data, intensity, error = \
-            directional_average(data=self.data, err_data=self.err_data)
+        directional_average = DirectionalAverage(
+            major_axis=self.q_data,
+            minor_axis=self.phi_data,
+            lims=(major_lims, minor_lims),
+            nbins=self.nbins,
+            base=self.base,
+        )
+        q_data, intensity, error = directional_average(data=self.data, err_data=self.err_data)
 
         return Data1D(x=q_data, y=intensity, dy=error)
+
 
 class WedgePhi(PolarROI):
     """
@@ -739,7 +783,14 @@ class WedgePhi(PolarROI):
     Data1D object where intensity is given as a function of Q only.
     """
 
-    def __init__(self, r_range: tuple[float, float], phi_range: tuple[float, float] = (0.0, TwoPi), center: tuple[float, float] = (0.0, 0.0), nbins: int = 100, base: float = None) -> None:
+    def __init__(
+        self,
+        r_range: tuple[float, float],
+        phi_range: tuple[float, float] = (0.0, TwoPi),
+        center: tuple[float, float] = (0.0, 0.0),
+        nbins: int = 100,
+        base: float | None = None,
+    ) -> None:
         """
         Set up the ROI boundaries, and the binning of the output 1D data.
 
@@ -750,12 +801,11 @@ class WedgePhi(PolarROI):
         :param nbins: The number of bins data is sorted into along the φ axis.
         """
 
-        super().__init__(r_range=r_range, phi_range=phi_range, center = center)
-        print(nbins)
-        self.nbins = nbins
-        self.base = base
+        super().__init__(r_range=r_range, phi_range=phi_range, center=center)
+        self.nbins: int = nbins
+        self.base: float | None = base
 
-    def __call__(self, data2d: Data2D = None) -> Data1D:
+    def __call__(self, data2d: Data2D) -> Data1D:
         """
         Compute the 1D average of 2D data, projecting along the Q_y axis.
 
@@ -790,13 +840,14 @@ class WedgePhi(PolarROI):
             major_lims = (self.phi_min, self.phi_max)
         minor_lims = (self.r_min, self.r_max)
 
-        directional_average = DirectionalAverage(major_axis=self.phi_data,
-                                                 minor_axis=self.q_data,
-                                                 lims=(major_lims,minor_lims),
-                                                 nbins=self.nbins, base = self.base)
-        phi_data, intensity, error = \
-            directional_average(data=self.data, err_data=self.err_data)
-
+        directional_average = DirectionalAverage(
+            major_axis=self.phi_data,
+            minor_axis=self.q_data,
+            lims=(major_lims, minor_lims),
+            nbins=self.nbins,
+            base=self.base,
+        )
+        phi_data, intensity, error = directional_average(data=self.data, err_data=self.err_data)
 
         # Compute phi bin starts to match legacy behaviour (Ring / old SectorPhi)
         # phi_min has been normalized to 0 earlier; phi_offset stores original start.
@@ -809,7 +860,7 @@ class WedgePhi(PolarROI):
         # Shift back to original phi range
         full_phi = (full_phi + phi_offset) % (TwoPi)
 
-       # Determine which bins were populated using the weights (preserves full bin index space)
+        # Determine which bins were populated using the weights (preserves full bin index space)
         weights = directional_average.compute_weights()
         populated = np.sum(weights, axis=1) > 0
 
@@ -823,8 +874,7 @@ class WedgePhi(PolarROI):
         # intensity and error returned by DirectionalAverage are already filtered to the populated/finite bins
         return Data1D(x=phi_centers, y=intensity, dy=error)
 
-
-        '''
+        """
         # Convert angular data back to the original phi range
         phi_data += phi_offset
         # In the old manipulations.py, we also had this shift to plot the data
@@ -836,7 +886,8 @@ class WedgePhi(PolarROI):
         phi_data += directional_average.bin_widths[populated] / 2
 
         return Data1D(x=phi_data, y=intensity, dy=error)
-        '''
+        """
+
 
 class SectorPhi(WedgePhi):
     """
@@ -854,18 +905,22 @@ class SectorPhi(WedgePhi):
     # Backwards-compatible constructor that accepts legacy keyword names
     # (r_min, r_max, phi_min, phi_max) and forwards them to the modern
     # initializer used by the parent classes.
-    def __init__(self, r_min: float, r_max: float,
-                phi_min: float = 0.0, phi_max: float = TwoPi,
-                center: tuple[float, float] = (0.0, 0.0),
-                nbins: int = 100) -> None:
-
-    # Forward to WedgePhi using the tuple-based it expects.
+    def __init__(
+        self,
+        r_min: float,
+        r_max: float,
+        phi_min: float = 0.0,
+        phi_max: float = TwoPi,
+        center: tuple[float, float] = (0.0, 0.0),
+        nbins: int = 100,
+    ) -> None:
+        # Forward to WedgePhi using the tuple-based it expects.
 
         super().__init__(r_range=(r_min, r_max), phi_range=(phi_min, phi_max), center=center, nbins=nbins)
 
 
-
 ################################################################################
+
 
 class Ringcut(PolarROI):
     """
@@ -879,11 +934,15 @@ class Ringcut(PolarROI):
     in anti-clockwise starting from the x- axis on the left-hand side
     """
 
-    def __init__(self, r_range: tuple[float, float] = (0.0, 0.0), phi_range: tuple[float, float] = (0.0, TwoPi), center: tuple[float, float] = (0.0, 0.0)):
-
+    def __init__(
+        self,
+        r_range: tuple[float, float] = (0.0, 0.0),
+        phi_range: tuple[float, float] = (0.0, TwoPi),
+        center: tuple[float, float] = (0.0, 0.0),
+    ) -> None:
         super().__init__(r_range, phi_range, center)
 
-    def __call__(self, data2D: Data2D) -> np.ndarray[bool]:
+    def __call__(self, data2D: Data2D) -> npt.NDArray[np.bool_]:
         """
         Apply the ring to the data set.
         Returns the angular distribution for a given q range
@@ -901,20 +960,21 @@ class Ringcut(PolarROI):
         out = (self.r_min <= q_data) & (self.r_max >= q_data)
         return out
 
+
 class Boxcut(CartesianROI):
     """
     Find a rectangular 2D region of interest.
     """
 
-    def __init__(self, qx_range: tuple[float, float] = (0.0, 0.0), qy_range: tuple[float, float] = (0.0, 0.0)):
+    def __init__(self, qx_range: tuple[float, float] = (0.0, 0.0), qy_range: tuple[float, float] = (0.0, 0.0)) -> None:
         super().__init__(qx_range=qx_range, qy_range=qy_range)
 
-    def __call__(self, data2D: Data2D) -> np.ndarray[bool]:
+    def __call__(self, data2D: Data2D) -> npt.NDArray[np.bool_]:
         """
-       Find a rectangular 2D region of interest where  data points inside the ROI are True, and False otherwise
+        Find a rectangular 2D region of interest where  data points inside the ROI are True, and False otherwise
 
-       :param data2D: Data2D object
-       :return: mask, 1d array (len = len(data))
+        :param data2D: Data2D object
+        :return: mask, 1d array (len = len(data))
         """
         super().validate_and_assign_data(data2D)
 
@@ -923,6 +983,7 @@ class Boxcut(CartesianROI):
         outy = (self.qy_min <= data2D.qy_data) & (self.qy_max > data2D.qy_data)
 
         return outx & outy
+
 
 class Sectorcut(PolarROI):
     """
@@ -935,10 +996,10 @@ class Sectorcut(PolarROI):
     and (phi_max-phi_min) should not be larger than pi
     """
 
-    def __init__(self, phi_range: tuple[float, float] = (0.0, Pi), center: tuple[float, float] = (0.0, 0.0)):
+    def __init__(self, phi_range: tuple[float, float] = (0.0, Pi), center: tuple[float, float] = (0.0, 0.0)) -> None:
         super().__init__(r_range=(0, np.inf), phi_range=phi_range, center=center)
 
-    def __call__(self, data2D: Data2D) -> np.ndarray[bool]:
+    def __call__(self, data2D: Data2D) -> npt.NDArray[np.bool_]:
         """
         Find a rectangular 2D region of interest where  data points inside the ROI are True, and False otherwise
 
