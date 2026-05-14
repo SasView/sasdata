@@ -1,12 +1,3 @@
-
-
-
-
-
-
-
-
-
 import re
 from fractions import Fraction
 from typing import Self
@@ -523,4 +514,3 @@ class UnitGroup:
     def __init__(self, name: str, units: list[NamedUnit]):
         self.name = name
         self.units = sorted(units, key=lambda unit: unit.scale)
-
