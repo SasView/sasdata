@@ -4,10 +4,10 @@
       "name" : "constructor_max_arguments",
       "value" : "7"
     }, {
-      "name" : "file_lines_of_code_for_alert",
+      "name" : "file_lines_of_code_for_critical_alert",
       "value" : "5000"
     }, {
-      "name" : "file_lines_of_code_for_critical_alert",
+      "name" : "file_lines_of_code_for_alert",
       "value" : "2500"
     }, {
       "name" : "file_lines_of_code_for_warning",
@@ -51,10 +51,10 @@
     "matching_content_path_doc" : "**/*",
     "rules" : [ {
       "name" : "Brain Method",
-      "weight" : 0.0
+      "weight" : 0.5
     }, {
       "name" : "Bumpy Road Ahead",
-      "weight" : 0.0
+      "weight" : 0.5
     }, {
       "name" : "Code Duplication",
       "weight" : 0.0
@@ -99,7 +99,7 @@
       "weight" : 0.0
     }, {
       "name" : "Low Cohesion",
-      "weight" : 0.0
+      "weight" : 0.5
     }, {
       "name" : "Missing Arguments Abstractions",
       "weight" : 0.0
