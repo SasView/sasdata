@@ -9,7 +9,7 @@ from h5py._hl.group import Group as HDF5Group
 from sasdata.data import SasData
 from sasdata.data_backing import Dataset as SASDataDataset
 from sasdata.data_backing import Group as SASDataGroup
-from sasdata.dataset_types import one_dim, two_dim
+from sasdata.dataset_types import one_dim, three_dim, two_dim
 from sasdata.metadata import (
     Aperture,
     BeamSize,
@@ -33,15 +33,13 @@ from sasdata.quantities.unit_parser import parse
 test_file = "./example_data/2d_data/BAM_2D.h5"
 # test_file = "./example_data/2d_data/14250_2D_NoDetInfo_NXcanSAS_v3.h5"
 # test_file = "./example_data/2d_data/33837rear_2D_1.75_16.5_NXcanSAS_v3.h5"
+test_file = "./test/sasdataloader/data/nxcansas_1Dand2D_multisasdata.h5"
 
 logger = logging.getLogger(__name__)
 
 
 def recurse_hdf5(hdf5_entry):
     if isinstance(hdf5_entry, HDF5Dataset):
-        #
-        # print(hdf5_entry.dtype)
-        # print(type(hdf5_entry.dtype))
 
         attributes = {name: hdf5_entry.attrs[name] for name in hdf5_entry.attrs}
 
@@ -62,7 +60,7 @@ def recurse_hdf5(hdf5_entry):
     elif isinstance(hdf5_entry, HDF5Group):
         return SASDataGroup(
             name=hdf5_entry.name,
-            children={key: recurse_hdf5(hdf5_entry[key]) for key in hdf5_entry},
+            children={key: recurse_hdf5(hdf5_entry[key]) for key in hdf5_entry.keys()},
         )
 
     else:
@@ -74,7 +72,7 @@ def recurse_hdf5(hdf5_entry):
 GET_UNITS_FROM_ELSEWHERE = units.meters
 
 
-def connected_data(node: SASDataGroup, name_prefix="") -> dict[str, Quantity]:
+def connected_data(node: SASDataGroup, name_prefix="", metadata=None) -> dict[str, Quantity]:
     """In the context of NeXus files, load a group of data entries that are organised together
     match up the units and errors with their values"""
     # Gather together data with its error terms
@@ -91,9 +89,7 @@ def connected_data(node: SASDataGroup, name_prefix="") -> dict[str, Quantity]:
         else:
             units = GET_UNITS_FROM_ELSEWHERE
 
-        quantity = NamedQuantity(
-            name=name_prefix + child.name, value=child.data, units=units
-        )
+        quantity = NamedQuantity(name=child.name, value=child.data, units=units, id_header=metadata.id_header)
 
         # Turns out people can't be trusted to use the same keys here
         if "uncertainty" in child.attributes or "uncertainties" in child.attributes:
@@ -121,18 +117,89 @@ def connected_data(node: SASDataGroup, name_prefix="") -> dict[str, Quantity]:
 
 ### Begin metadata parsing code
 
+def get_canSAS_class(node : HDF5Group) -> str | None:
+    # Check if attribute exists
+    if "canSAS_class" in node.attrs:
+        cls = node.attrs["canSAS_class"]
+        return cls
+    elif "NX_class" in node.attrs:
+        cls = node.attrs["NX_class"]
+        cls = NX2SAS_class(cls)
+        # note that sastransmission groups have a
+        # NX_class of NXdata but a canSAS_class of SAStransmission_spectrum
+        # which is ambiguous because then how can one tell if it is a SASdata
+        # or a SAStransmission_spectrum object from the NX_class?
+        if node.name.lower().startswith("sastransmission"):
+            cls = 'SAStransmission_spectrum'
+        return cls
+
+    return None
+
+def NX2SAS_class(cls : str) -> str | None:
+    # converts NX class names to canSAS class names
+    mapping = {
+        "NXentry": "SASentry",
+        "NXdata": "SASdata",
+        "NXdetector": "SASdetector",
+        "NXinstrument": "SASinstrument",
+        "NXnote": "SASnote",
+        "NXprocess": "SASprocess",
+        "NXcollection": "SASprocessnote",
+        "NXsample": "SASsample",
+        "NXsource": "SASsource",
+        "NXaperture": "SASaperture",
+        "NXcollimator": "SAScollimation",
+
+        "SASentry": "SASentry",
+        "SASdata": "SASdata",
+        "SASdetector": "SASdetector",
+        "SASinstrument": "SASinstrument",
+        "SASnote": "SASnote",
+        "SASprocess": "SASprocess",
+        "SASprocessnote": "SASprocessnote",
+        "SAStransmission_spectrum": "SAStransmission_spectrum",
+        "SASsample": "SASsample",
+        "SASsource": "SASsource",
+        "SASaperture": "SASaperture",
+        "SAScollimation": "SAScollimation",
+    }
+    if isinstance(cls, bytes):
+        cls = cls.decode()
+    return mapping.get(cls, None)
+
+def find_canSAS_key(node: HDF5Group, canSAS_class: str):
+    matches = []
+
+    for key, item in node.items():
+        if item.attrs.get("canSAS_class") == canSAS_class:
+            matches.append(key)
+
+    return matches
+
 def parse_quantity(node : HDF5Group) -> Quantity[float]:
-    """Pull a single quantity with length units out of an HDF5 node"""
-    magnitude = node.astype(float)[0]
+    """Pull a single quantity with units out of an HDF5 node"""
+    magnitude = parse_float(node)
     unit = node.attrs["units"]
     return Quantity(magnitude, parse(unit))
 
 def parse_string(node : HDF5Group) -> str:
     """Access string data from a node"""
-    return node.asstr()[0]
+    if node.shape == (): # scalar dataset
+        return node.asstr()[()]
+    else: # vector dataset
+        return node.asstr()[0]
 
-def opt_parse[T](node: HDF5Group, key: str, subparser: Callable[[HDF5Group], T]) -> T | None:
+def parse_float(node: HDF5Group) -> float:
+    """Return the first element (or scalar) of a numeric dataset as float."""
+    if node.shape == ():
+        return float(node[()].astype(str))
+    else:
+        return float(node[0].astype(str))
+
+def opt_parse[T](node: HDF5Group, key: str, subparser: Callable[[HDF5Group], T], ignore_case=False) -> T | None:
     """Parse a subnode if it is present"""
+    if ignore_case: # ignore the case of the key
+        key = next((k for k in node.keys() if k.lower() == key.lower()), None)
     if key in node:
         return subparser(node[key])
     return None
@@ -144,7 +211,7 @@ def attr_parse(node: HDF5Group, key: str) -> str | None:
     return None
 
 
-def parse_apterture(node : HDF5Group) -> Aperture:
+def parse_aperture(node : HDF5Group) -> Aperture:
     distance = opt_parse(node, "distance", parse_quantity)
     name = attr_parse(node, "name")
     size = opt_parse(node, "size", parse_vec3)
@@ -166,9 +233,13 @@ def parse_source(node : HDF5Group) -> Source:
     beam_shape = opt_parse(node, "beam_shape", parse_string)
     beam_size = opt_parse(node, "beam_size", parse_beam_size)
     wavelength = opt_parse(node, "wavelength", parse_quantity)
+    if wavelength is None:
+        wavelength = opt_parse(node, "incident_wavelength", parse_quantity)
     wavelength_min = opt_parse(node, "wavelength_min", parse_quantity)
     wavelength_max = opt_parse(node, "wavelength_max", parse_quantity)
     wavelength_spread = opt_parse(node, "wavelength_spread", parse_quantity)
+    if wavelength_spread is None:
+        wavelength_spread = opt_parse(node, "incident_wavelength_spread", parse_quantity)
     return Source(
         radiation=radiation,
         beam_shape=beam_shape,
@@ -214,22 +285,37 @@ def parse_detector(node : HDF5Group) -> Detector:
 
 def parse_collimation(node : HDF5Group) -> Collimation:
     length = opt_parse(node, "length", parse_quantity)
-    return Collimation(length=length, apertures=[parse_apterture(node[ap])
-                                                 for ap in node if "aperture" in ap])
+
+    keys = find_canSAS_key(node, "SASaperture")
+    keys = list(keys) if keys is not None else []  # list([1,2,3]) returns [1,2,3] and list("string") returns ["string"]
+    apertures = [parse_aperture(node[p]) for p in keys]  # Empty list of keys will give an empty collimations list
+
+    return Collimation(length=length, apertures=apertures)
 
 
 def parse_instrument(node : HDF5Group) -> Instrument:
+    keys = find_canSAS_key(node, "SAScollimation")
+    keys = list(keys) if keys is not None else []  # list([1,2,3]) returns [1,2,3] and list("string") returns ["string"]
+    collimations = [parse_collimation(node[p]) for p in keys]  # Empty list of keys will give an empty collimations list
+
+    keys = find_canSAS_key(node, "SASdetector")
+    keys = list(keys) if keys is not None else []  # list([1,2,3]) returns [1,2,3] and list("string") returns ["string"]
+    detector = [parse_detector(node[p]) for p in keys]  # Empty list of keys will give an empty collimations list
+
+    keys = find_canSAS_key(node, "SASsource")
+    source = parse_source(node[keys[0]]) if keys is not None else None
+
     return Instrument(
-        collimations= [parse_collimation(node[x]) for x in node if "collimation" in x],
-        detector=[parse_detector(node[d]) for d in node if "detector" in d],
-        source=parse_source(node["sassource"]),
+        collimations=collimations,
+        detector=detector,
+        source=source,
     )
 
 def parse_sample(node : HDF5Group) -> Sample:
     name = attr_parse(node, "name")
     sample_id = opt_parse(node, "ID", parse_string)
     thickness = opt_parse(node, "thickness", parse_quantity)
-    transmission = opt_parse(node, "transmission", lambda n: float(n[0].astype(str)))
+    transmission = opt_parse(node, "transmission", parse_float)
     temperature = opt_parse(node, "temperature", parse_quantity)
     position = opt_parse(node, "position", parse_vec3)
     orientation = opt_parse(node, "orientation", parse_rot3)
@@ -274,62 +360,82 @@ def load_raw(node: HDF5Group | HDF5Dataset) -> MetaNode:
             attrib = {a: node.attrs[a] for a in node.attrs}
             if (str(dt).startswith("|S")):
                 if "units" in attrib:
-                    contents = Quantity(float(node.asstr()[0]), parse(attrib["units"]))
+                    contents = parse_string(node)
                 else:
-                    contents = node.asstr()[0]
+                    contents = parse_string(node)
             else:
                 if "units" in attrib and attrib["units"]:
-                    contents = Quantity(node[:], parse(attrib["units"]))
+                    data = node[()] if node.shape == () else node[:]
+                    contents = Quantity(data, parse(attrib["units"]), id_header=node.name)
                 else:
-                    contents = node[:]
+                    contents = node[()] if node.shape == () else node[:]
             return MetaNode(name=name, attrs=attrib, contents=contents)
         case _:
             raise RuntimeError(f"Cannot load raw data of type {type(node)}")
 
 def parse_metadata(node : HDF5Group) -> Metadata:
-    instrument = opt_parse(node, "sasinstrument", parse_instrument)
-    sample = opt_parse(node, "sassample", parse_sample)
-    process = [parse_process(node[p]) for p in node if "sasprocess" in p]
+    # parse the metadata groups
+    keys = find_canSAS_key(node, "SASinstrument")
+    keys = list(keys) if keys else []  # list([1,2,3]) returns [1,2,3] and list("string") returns ["string"]
+    instrument = parse_instrument(node[keys[0]]) if keys else None
+
+    keys = find_canSAS_key(node, "SASsample")
+    keys = list(keys) if keys else []  # list([1,2,3]) returns [1,2,3] and list("string") returns ["string"]
+    sample = parse_sample(node[keys[0]]) if keys else None
+
+    keys = find_canSAS_key(node, "SASprocess")
+    keys = list(keys) if keys else []  # list([1,2,3]) returns [1,2,3] and list("string") returns ["string"]
+    process = [parse_process(node[p]) for p in keys]  # Empty list of keys will give an empty collimations list
+
+    # parse the datasets
     title = opt_parse(node, "title", parse_string)
     run = [parse_string(node[r]) for r in node if "run" in r]
     definition = opt_parse(node, "definition", parse_string)
-    raw =  load_raw(node)
+
+    # load the entire node recursively into a raw object
+    raw = load_raw(node)
+
     return Metadata(process=process,
                     instrument=instrument,
                     sample=sample,
                     title=title,
                     run=run,
-                    raw=raw,
-                    definition=definition)
-
-### End Metadata parsing code
+                    definition=definition,
+                    raw=raw)
 
 
 def load_data(filename: str) -> dict[str, SasData]:
     with h5py.File(filename, "r") as f:
         loaded_data: dict[str, SasData] = {}
 
-        for root_key in f:
+        for root_key in f.keys():
             entry = f[root_key]
 
+            # if this is actually a SASentry
+            if not get_canSAS_class(entry) == 'SASentry':
+                continue
             data_contents : dict[str, Quantity] = {}
 
-            entry_keys = entry
+            entry_keys = entry.keys()
 
-            if not [k for k in entry if k.startswith("sasdata") or k.startswith("data")]:
+            if not [k for k in entry_keys if get_canSAS_class(entry[k])=='SASdata']:
                 logger.warning("No sasdata or data key")
                 logger.warning(f"Known keys: {[k for k in entry_keys]}")
 
-            for key in entry_keys:
-                component = entry[key]
-                lower_key = key.lower()
-                if lower_key.startswith("sasdata") or lower_key.startswith("data"):
-                    datum = recurse_hdf5(component)
-                    data_contents = connected_data(datum, str(filename))
-
             metadata = parse_metadata(f[root_key])
 
-            dataset_type = two_dim if "Qy" in data_contents else one_dim
+            for key in entry_keys:
+                component = entry[key]
+                if get_canSAS_class(entry[key])=='SASdata':
+                    datum = recurse_hdf5(component)
+                    data_contents = connected_data(datum, str(filename), metadata)
+
+            if "Qz" in data_contents:
+                dataset_type = three_dim
+            elif "Qy" in data_contents:
+                dataset_type = two_dim
+            else:
+                dataset_type = one_dim
 
             entry_key = entry.attrs["sasview_key"] if "sasview_key" in entry.attrs else root_key
 

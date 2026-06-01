@@ -768,7 +768,7 @@ class Data1D(plottable_1D, DataInfo):
         :return: True is slit smearing info is present, False otherwise
         """
         def _check(v):
-            return (isinstance(v.__class__ == list | np.ndarray)
+            return (isinstance(v.__class__, list | np.ndarray)
                     and len(v) > 0 and min(v) > 0)
         return _check(self.dxl) or _check(self.dxw)
 

@@ -51,6 +51,23 @@ warn("sasdata.data_util.manipulations is deprecated. Unless otherwise noted, upd
      "sasdata.data_util.averaging.", DeprecationWarning, stacklevel=2)
 
 
+def deduce_qz(qx: float, qy: float, wavelength: float) -> float:
+    """
+    If you know qx, qy, and the wavelength, you can derive qz
+
+    :param qx: qx [inverse length]
+    :param dy: qy [inverse length]
+    :param wavelength: neutron wavelength [length]
+
+    :return: qz
+    """
+
+    k0 = 2*np.pi/wavelength
+    twotheta = np.arcsin((qx**2 + qy**2) / k0)
+    qz = (1 - np.cos(twotheta)) * k0
+    return qz
+
+
 def position_and_wavelength_to_q(dx: float, dy: float, detector_distance: float, wavelength: float) -> float:
     """
     :param dx: x-distance from beam center [mm]
