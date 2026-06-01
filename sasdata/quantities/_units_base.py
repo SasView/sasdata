@@ -1,12 +1,3 @@
-
-
-
-
-
-
-
-
-
 import re
 from fractions import Fraction
 from typing import Self
