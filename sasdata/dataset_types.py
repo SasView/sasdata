@@ -42,13 +42,21 @@ three_dim = DatasetType(
                 ["Qx", "Qy", "Qz", "I", "dI"],
                 ["Qx", "Qy", "Qz", "dQx", "dQy", "dQz", "I", "dI"]])
 
+angle_dim = DatasetType(
+            name="I vs Phi",
+            required=["Phi", "I"],
+            optional=["dI", "dPhi", "Shadowfactor"],
+            expected_orders=[
+                ["Phi", "I", "dI"],
+                ["Phi", "dPhi", "I", "dI"]])
+
 sesans = DatasetType(
     name="SESANS",
     required=["SpinEchoLength", "Depolarisation", "Wavelength"],
     optional=["Transmission", "Polarisation"],
     expected_orders=[["z", "G"]])
 
-dataset_types = {dataset.name for dataset in [one_dim, two_dim, sesans]}
+dataset_types = {dataset.name for dataset in [one_dim, two_dim, angle_dim, sesans]}
 
 
 #

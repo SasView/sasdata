@@ -6,9 +6,9 @@ import unittest
 import numpy as np
 
 from sasdata.data_util.averaging import SlabX, SlabY
-from sasdata.dataloader import data_info
+from sasdata.metadata import Detector
 from test.sasmanipulations.helper import (
-    MatrixToData2D,
+    MatrixToSasData,
     expected_slabx_area,
     expected_slaby_area,
     integrate_1d_output,
@@ -47,11 +47,19 @@ class SlabXTests(unittest.TestCase):
         """
         Test that SlabX raises an error when there are multiple detectors
         """
-        averager_data = MatrixToData2D(np.ones([100, 100]))
-        detector1 = data_info.Detector()
-        detector2 = data_info.Detector()
-        averager_data.data.detector.append(detector1)
-        averager_data.data.detector.append(detector2)
+        averager_data = MatrixToSasData(np.ones([100, 100]))
+
+        detector = Detector(
+            name = None,
+            distance = None,
+            offset = None,
+            orientation = None,
+            beam_center = None,
+            pixel_size = None,
+            slit_length = None)
+
+        averager_data.data.metadata.instrument.detector.append(detector)
+        averager_data.data.metadata.instrument.detector.append(detector)
 
         slab_object = SlabX()
         self.assertRaises(ValueError, slab_object, averager_data.data)
@@ -61,7 +69,7 @@ class SlabXTests(unittest.TestCase):
         Test SlabX raises ValueError when the ROI contains no data
         """
         test_data = np.ones([100, 100])
-        averager_data = MatrixToData2D(data2d=test_data)
+        averager_data = MatrixToSasData(data2d=test_data)
 
         # Region of interest well outside region with data
         qx_min = 2 * averager_data.qmax
@@ -155,11 +163,20 @@ class SlabYTests(unittest.TestCase):
         """
         Test that SlabY raises an error when there are multiple detectors
         """
-        averager_data = MatrixToData2D(np.ones([100, 100]))
-        detector1 = data_info.Detector()
-        detector2 = data_info.Detector()
-        averager_data.data.detector.append(detector1)
-        averager_data.data.detector.append(detector2)
+        averager_data = MatrixToSasData(np.ones([100, 100]))
+
+        detector = Detector(
+            name = None,
+            distance = None,
+            offset = None,
+            orientation = None,
+            beam_center = None,
+            pixel_size = None,
+            slit_length = None)
+
+        averager_data.data.metadata.instrument.detector.append(detector)
+        averager_data.data.metadata.instrument.detector.append(detector)
+
         slab_object = SlabY()
         self.assertRaises(ValueError, slab_object, averager_data.data)
 
@@ -168,7 +185,7 @@ class SlabYTests(unittest.TestCase):
         Test SlabY raises ValueError when the ROI contains no data
         """
         test_data = np.ones([100, 100])
-        averager_data = MatrixToData2D(data2d=test_data)
+        averager_data = MatrixToSasData(data2d=test_data)
 
         # Region of interest well outside region with data
         qx_min = 2 * averager_data.qmax

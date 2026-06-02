@@ -39,7 +39,9 @@ class SasData:
     @property
     def ordinate(self) -> Quantity:
         match self.dataset_type:
-            case dataset_types.one_dim | dataset_types.two_dim:
+            case (dataset_types.one_dim |
+                  dataset_types.two_dim |
+                  dataset_types.angle_dim):
                 return self._data_contents["I"]
             case dataset_types.sesans:
                 return self._data_contents["Depolarisation"]
@@ -70,6 +72,8 @@ class SasData:
                 # probably want to avoid creating a new Quantity but at the moment I
                 # can't see a way around it.
                 return Quantity(data_contents, reference_data_content.units, name=self._data_contents["Qx"].name, id_header=self._data_contents["Qx"]._id_header)
+            case dataset_types.angle_dim:
+                return self._data_contents["Phi"]
             case dataset_types.sesans:
                 return self._data_contents["SpinEchoLength"]
             case _:
@@ -148,3 +152,38 @@ class SasDataEncoder(MetadataEncoder):
                 }
             case _:
                 return super().default(obj)
+
+
+def sasdata_reader2D_converter(data2d: SasData | None = None) -> SasData:
+    """
+    convert old 2d format opened by IhorReader or danse_reader
+    to new 2D SasData format
+    This is mainly used by the Readers
+
+    :param data2d: SasData object with 2D arrays
+    :return: SasData object with 1D arrays
+
+    """
+    if data2d._data_contents["I"] is None or data2d.x_bins is None or data2d.y_bins is None:
+        raise ValueError("Can't convert this data: data=None...")
+    new_x = np.tile(data2d.x_bins, (len(data2d.y_bins), 1))
+    new_y = np.tile(data2d.y_bins, (len(data2d.x_bins), 1))
+    new_y = new_y.swapaxes(0, 1)
+
+    new_data = data2d._data_contents["I"].value.flatten()
+    qx_data = new_x.flatten()
+    qy_data = new_y.flatten()
+    err_data = np.sqrt(data2d._data_contents["I"].variance.value)
+    if not data2d._data_contents["I"].has_variance or np.any(err_data <= 0):
+        new_err_data = np.sqrt(np.abs(new_data))
+    else:
+        new_err_data = err_data.flatten()
+    mask = np.ones(len(new_data), dtype=bool)
+
+    data2d._data_contents["I"].value = new_data
+    data2d._data_contents["I"].variance.value = new_err_data ** 2
+    data2d._data_contents["Qx"].value = qx_data
+    data2d._data_contents["Qy"].value = qy_data
+    data2d.mask = mask
+
+    return data2d

@@ -6,9 +6,9 @@ import unittest
 import numpy as np
 
 from sasdata.data_util.averaging import Boxavg, Boxsum
-from sasdata.dataloader import data_info
+from sasdata.metadata import Detector
 from test.sasmanipulations.helper import (
-    MatrixToData2D,
+    MatrixToSasData,
     expected_boxavg_and_err,
     expected_boxsum_and_err,
     make_uniform_dd,
@@ -43,10 +43,18 @@ class BoxsumTests(unittest.TestCase):
         Test Boxsum raises an error when there are multiple detectors.
         """
         dd = make_uniform_dd((100, 100), value=1.0)
-        detector1 = data_info.Detector()
-        detector2 = data_info.Detector()
-        dd.data.detector.append(detector1)
-        dd.data.detector.append(detector2)
+
+        detector = Detector(
+            name = None,
+            distance = None,
+            offset = None,
+            orientation = None,
+            beam_center = None,
+            pixel_size = None,
+            slit_length = None)
+
+        dd.data.metadata.instrument.detector.append(detector)
+        dd.data.metadata.instrument.detector.append(detector)
 
         box_object = Boxsum()
         self.assertRaises(ValueError, box_object, dd.data)
@@ -58,7 +66,7 @@ class BoxsumTests(unittest.TestCase):
         # Creating a 100x100 matrix for a distribution which is flat in y
         # and linear in x.
         test_data = np.tile(np.arange(100), (100, 1))
-        dd = MatrixToData2D(data2d=test_data)
+        dd = MatrixToSasData(data2d=test_data)
 
         box_object = Boxsum(qx_range=(-1 * dd.qmax, dd.qmax), qy_range=(-1 * dd.qmax, dd.qmax))
         result, error, npoints = box_object(dd.data)
@@ -74,7 +82,7 @@ class BoxsumTests(unittest.TestCase):
         # Creating a 100x100 matrix for a distribution which is flat in y
         # and linear in x.
         test_data = np.tile(np.arange(100), (100, 1))
-        dd = MatrixToData2D(data2d=test_data)
+        dd = MatrixToSasData(data2d=test_data)
 
         # region corresponds to central 50x50 in original test
         box_object = Boxsum(qx_range=(-0.5 * dd.qmax, 0.5 * dd.qmax), qy_range=(-0.5 * dd.qmax, 0.5 * dd.qmax))
@@ -91,7 +99,7 @@ class BoxsumTests(unittest.TestCase):
         """
         test_data = np.ones([100, 100])
         test_data[25:75, 25:75] = 0
-        dd = MatrixToData2D(data2d=test_data)
+        dd = MatrixToSasData(data2d=test_data)
 
         box_object = Boxsum(qx_range=(-0.5 * dd.qmax, 0.5 * dd.qmax), qy_range=(-0.5 * dd.qmax, 0.5 * dd.qmax))
         result, error, npoints = box_object(dd.data)
@@ -127,10 +135,18 @@ class BoxavgTests(unittest.TestCase):
         Test Boxavg raises an error when there are multiple detectors.
         """
         dd = make_uniform_dd((100, 100), value=1.0)
-        detector1 = data_info.Detector()
-        detector2 = data_info.Detector()
-        dd.data.detector.append(detector1)
-        dd.data.detector.append(detector2)
+
+        detector = Detector(
+            name = None,
+            distance = None,
+            offset = None,
+            orientation = None,
+            beam_center = None,
+            pixel_size = None,
+            slit_length = None)
+
+        dd.data.metadata.instrument.detector.append(detector)
+        dd.data.metadata.instrument.detector.append(detector)
 
         box_object = Boxavg()
         self.assertRaises(ValueError, box_object, dd.data)
@@ -142,7 +158,7 @@ class BoxavgTests(unittest.TestCase):
         # Creating a 100x100 matrix for a distribution which is flat in y
         # and linear in x.
         test_data = np.tile(np.arange(100), (100, 1))
-        dd = MatrixToData2D(data2d=test_data)
+        dd = MatrixToSasData(data2d=test_data)
 
         box_object = Boxavg(qx_range=(-1 * dd.qmax, dd.qmax), qy_range=(-1 * dd.qmax, dd.qmax))
         result, error = box_object(dd.data)
@@ -158,7 +174,7 @@ class BoxavgTests(unittest.TestCase):
         # Creating a 100x100 matrix for a distribution which is flat in y
         # and linear in x.
         test_data = np.tile(np.arange(100), (100, 1))
-        dd = MatrixToData2D(data2d=test_data)
+        dd = MatrixToSasData(data2d=test_data)
 
         box_object = Boxavg(qx_range=(-0.5 * dd.qmax, 0.5 * dd.qmax), qy_range=(-0.5 * dd.qmax, 0.5 * dd.qmax))
         result, error = box_object(dd.data)
@@ -175,7 +191,7 @@ class BoxavgTests(unittest.TestCase):
         test_data = np.ones([100, 100])
         # Make a hole in the middle with zeros
         test_data[25:75, 25:75] = np.zeros([50, 50])
-        dd = MatrixToData2D(data2d=test_data)
+        dd = MatrixToSasData(data2d=test_data)
 
         box_object = Boxavg(qx_range=(-0.5 * dd.qmax, 0.5 * dd.qmax), qy_range=(-0.5 * dd.qmax, 0.5 * dd.qmax))
         result, error = box_object(dd.data)
