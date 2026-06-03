@@ -1,32 +1,32 @@
-import os
 import json
+import os
 
+from data.forms import DataFileForm
+from data.models import DataFile, DataSet, PublishedState, Session
+from data.serializers import (
+    AccessManagementSerializer,
+    DataFileSerializer,
+    DataSetSerializer,
+    PublishedStateSerializer,
+    PublishedStateUpdateSerializer,
+    SessionSerializer,
+)
 from django.contrib.auth.models import User
-from django.shortcuts import get_object_or_404
 from django.http import (
+    FileResponse,
+    Http404,
+    HttpResponse,
     HttpResponseBadRequest,
     HttpResponseForbidden,
-    HttpResponse,
-    Http404,
-    FileResponse,
 )
-from rest_framework.response import Response
+from django.shortcuts import get_object_or_404
+from fair_database import permissions
+from fair_database.permissions import DataPermission
 from rest_framework import status
+from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from sasdata.dataloader.loader import Loader
-from data.serializers import (
-    DataFileSerializer,
-    DataSetSerializer,
-    AccessManagementSerializer,
-    SessionSerializer,
-    PublishedStateSerializer,
-    PublishedStateUpdateSerializer,
-)
-from data.models import DataFile, DataSet, PublishedState, Session
-from data.forms import DataFileForm
-from fair_database import permissions
-from fair_database.permissions import DataPermission
 
 
 class DataFileView(APIView):
@@ -114,9 +114,7 @@ class SingleDataFileView(APIView):
             if not permissions.check_permissions(request, data):
                 if not request.user.is_authenticated:
                     return HttpResponse("Must be authenticated to view", status=401)
-                return HttpResponseForbidden(
-                    "Data is either not public or wrong auth token"
-                )
+                return HttpResponseForbidden("Data is either not public or wrong auth token")
             data_list = loader.load(data.file.path)
             contents = [str(data) for data in data_list]
             return_data = {data.file_name: contents}
@@ -176,9 +174,7 @@ class DataFileUsersView(APIView):
         db = get_object_or_404(DataFile, id=data_id)
         if not permissions.is_owner(request, db):
             if not request.user.is_authenticated:
-                return HttpResponse(
-                    "Must be authenticated to manage access", status=401
-                )
+                return HttpResponse("Must be authenticated to manage access", status=401)
             return HttpResponseForbidden("Must be the data owner to manage access")
         response_data = {
             "file": db.pk,
@@ -193,9 +189,7 @@ class DataFileUsersView(APIView):
         db = get_object_or_404(DataFile, id=data_id)
         if not permissions.is_owner(request, db):
             if not request.user.is_authenticated:
-                return HttpResponse(
-                    "Must be authenticated to manage access", status=401
-                )
+                return HttpResponse("Must be authenticated to manage access", status=401)
             return HttpResponseForbidden("Must be the data owner to manage access")
         serializer = AccessManagementSerializer(data=request.data)
         serializer.is_valid()
@@ -239,13 +233,9 @@ class DataSetView(APIView):
     def post(self, request, version=None):
         # TODO: revisit request data format
         if isinstance(request.data, str):
-            serializer = DataSetSerializer(
-                data=json.loads(request.data), context={"request": request}
-            )
+            serializer = DataSetSerializer(data=json.loads(request.data), context={"request": request})
         else:
-            serializer = DataSetSerializer(
-                data=request.data, context={"request": request}
-            )
+            serializer = DataSetSerializer(data=request.data, context={"request": request})
         if serializer.is_valid(raise_exception=True):
             serializer.save()
         db = serializer.instance
@@ -279,9 +269,7 @@ class SingleDataSetView(APIView):
         if not permissions.check_permissions(request, db):
             if not request.user.is_authenticated:
                 return HttpResponse("Must be authenticated to view dataset", status=401)
-            return HttpResponseForbidden(
-                "You do not have permission to view this dataset."
-            )
+            return HttpResponseForbidden("You do not have permission to view this dataset.")
         serializer = DataSetSerializer(db, context={"request": request})
         response_data = serializer.data
         if db.current_user:
@@ -293,13 +281,9 @@ class SingleDataSetView(APIView):
         db = get_object_or_404(DataSet, id=data_id)
         if not permissions.check_permissions(request, db):
             if not request.user.is_authenticated:
-                return HttpResponse(
-                    "Must be authenticated to modify dataset", status=401
-                )
+                return HttpResponse("Must be authenticated to modify dataset", status=401)
             return HttpResponseForbidden("Cannot modify a dataset you do not own")
-        serializer = DataSetSerializer(
-            db, request.data, context={"request": request}, partial=True
-        )
+        serializer = DataSetSerializer(db, request.data, context={"request": request}, partial=True)
         if serializer.is_valid(raise_exception=True):
             serializer.save()
         data = {"data_id": db.id, "name": db.name, "is_public": db.is_public}
@@ -310,9 +294,7 @@ class SingleDataSetView(APIView):
         db = get_object_or_404(DataSet, id=data_id)
         if not permissions.check_permissions(request, db):
             if not request.user.is_authenticated:
-                return HttpResponse(
-                    "Must be authenticated to delete a dataset", status=401
-                )
+                return HttpResponse("Must be authenticated to delete a dataset", status=401)
             return HttpResponseForbidden("Not authorized to delete")
         db.delete()
         return Response({"success": True})
@@ -348,9 +330,7 @@ class DataSetUsersView(APIView):
         db = get_object_or_404(DataSet, id=data_id)
         if not permissions.is_owner(request, db):
             if not request.user.is_authenticated:
-                return HttpResponse(
-                    "Must be authenticated to manage access", status=401
-                )
+                return HttpResponse("Must be authenticated to manage access", status=401)
             return HttpResponseForbidden("Must be the dataset owner to manage access")
         serializer = AccessManagementSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -391,13 +371,9 @@ class SessionView(APIView):
     # TODO: revisit response data
     def post(self, request, version=None):
         if isinstance(request.data, str):
-            serializer = SessionSerializer(
-                data=json.loads(request.data), context={"request": request}
-            )
+            serializer = SessionSerializer(data=json.loads(request.data), context={"request": request})
         else:
-            serializer = SessionSerializer(
-                data=request.data, context={"request": request}
-            )
+            serializer = SessionSerializer(data=request.data, context={"request": request})
         if serializer.is_valid(raise_exception=True):
             serializer.save()
         db = serializer.instance
@@ -428,9 +404,7 @@ class SingleSessionView(APIView):
         if not permissions.check_permissions(request, db):
             if not request.user.is_authenticated:
                 return HttpResponse("Must be authenticated to view session", status=401)
-            return HttpResponseForbidden(
-                "You do not have permission to view this session."
-            )
+            return HttpResponseForbidden("You do not have permission to view this session.")
         serializer = SessionSerializer(db)
         response_data = serializer.data
         if db.current_user:
@@ -442,13 +416,9 @@ class SingleSessionView(APIView):
         db = get_object_or_404(Session, id=data_id)
         if not permissions.check_permissions(request, db):
             if not request.user.is_authenticated:
-                return HttpResponse(
-                    "Must be authenticated to modify session", status=401
-                )
+                return HttpResponse("Must be authenticated to modify session", status=401)
             return HttpResponseForbidden("Cannot modify a session you do not own")
-        serializer = SessionSerializer(
-            db, request.data, context={"request": request}, partial=True
-        )
+        serializer = SessionSerializer(db, request.data, context={"request": request}, partial=True)
         if serializer.is_valid(raise_exception=True):
             serializer.save()
         data = {"session_id": db.id, "title": db.title, "is_public": db.is_public}
@@ -459,9 +429,7 @@ class SingleSessionView(APIView):
         db = get_object_or_404(Session, id=data_id)
         if not permissions.check_permissions(request, db):
             if not request.user.is_authenticated:
-                return HttpResponse(
-                    "Must be authenticated to delete a session", status=401
-                )
+                return HttpResponse("Must be authenticated to delete a session", status=401)
             return HttpResponseForbidden("Not authorized to delete")
         db.delete()
         return Response({"success": True})
@@ -495,9 +463,7 @@ class SessionUsersView(APIView):
         db = get_object_or_404(Session, id=data_id)
         if not permissions.is_owner(request, db):
             if not request.user.is_authenticated:
-                return HttpResponse(
-                    "Must be authenticated to manage access", status=401
-                )
+                return HttpResponse("Must be authenticated to manage access", status=401)
             return HttpResponseForbidden("Must be the dataset owner to manage access")
         serializer = AccessManagementSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -546,13 +512,9 @@ class PublishedStateView(APIView):
     # Create a published state for an existing session
     def post(self, request, version=None):
         if isinstance(request.data, str):
-            serializer = PublishedStateSerializer(
-                data=json.loads(request.data), context={"request": request}
-            )
+            serializer = PublishedStateSerializer(data=json.loads(request.data), context={"request": request})
         else:
-            serializer = PublishedStateSerializer(
-                data=request.data, context={"request": request}
-            )
+            serializer = PublishedStateSerializer(data=request.data, context={"request": request})
         if serializer.is_valid(raise_exception=True):
             if not permissions.is_owner(request, serializer.validated_data["session"]):
                 if not request.user.is_authenticated:
@@ -560,9 +522,7 @@ class PublishedStateView(APIView):
                         "Must be authenticated to create a published state for a session",
                         status=401,
                     )
-                return HttpResponseForbidden(
-                    "Must be the session owner to create a published state for a session"
-                )
+                return HttpResponseForbidden("Must be the session owner to create a published state for a session")
             serializer.save()
         db = serializer.instance
         response = {
@@ -593,12 +553,8 @@ class SinglePublishedStateView(APIView):
         db = get_object_or_404(PublishedState, id=ps_id)
         if not permissions.check_permissions(request, db.session):
             if not request.user.is_authenticated:
-                return HttpResponse(
-                    "Must be authenticated to view published state", status=401
-                )
-            return HttpResponseForbidden(
-                "You do not have permission to view this published state."
-            )
+                return HttpResponse("Must be authenticated to view published state", status=401)
+            return HttpResponseForbidden("You do not have permission to view this published state.")
         serializer = PublishedStateSerializer(db)
         response_data = serializer.data
         response_data["title"] = db.session.title
@@ -614,15 +570,9 @@ class SinglePublishedStateView(APIView):
         db = get_object_or_404(PublishedState, id=ps_id)
         if not permissions.check_permissions(request, db.session):
             if not request.user.is_authenticated:
-                return HttpResponse(
-                    "Must be authenticated to modify published state", status=401
-                )
-            return HttpResponseForbidden(
-                "Cannot modify a published state you do not own"
-            )
-        serializer = PublishedStateUpdateSerializer(
-            db, request.data, context={"request": request}, partial=True
-        )
+                return HttpResponse("Must be authenticated to modify published state", status=401)
+            return HttpResponseForbidden("Cannot modify a published state you do not own")
+        serializer = PublishedStateUpdateSerializer(db, request.data, context={"request": request}, partial=True)
         if serializer.is_valid(raise_exception=True):
             serializer.save()
         data = {
@@ -639,9 +589,7 @@ class SinglePublishedStateView(APIView):
         db = get_object_or_404(PublishedState, id=ps_id)
         if not permissions.check_permissions(request, db.session):
             if not request.user.is_authenticated:
-                return HttpResponse(
-                    "Must be authenticated to delete a published state", status=401
-                )
+                return HttpResponse("Must be authenticated to delete a published state", status=401)
             return HttpResponseForbidden("Not authorized to delete")
         db.delete()
         return Response({"success": True})

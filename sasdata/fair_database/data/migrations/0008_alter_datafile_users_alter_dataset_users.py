@@ -14,15 +14,11 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="datafile",
             name="users",
-            field=models.ManyToManyField(
-                blank=True, related_name="+", to=settings.AUTH_USER_MODEL
-            ),
+            field=models.ManyToManyField(blank=True, related_name="+", to=settings.AUTH_USER_MODEL),
         ),
         migrations.AlterField(
             model_name="dataset",
             name="users",
-            field=models.ManyToManyField(
-                blank=True, related_name="+", to=settings.AUTH_USER_MODEL
-            ),
+            field=models.ManyToManyField(blank=True, related_name="+", to=settings.AUTH_USER_MODEL),
         ),
     ]

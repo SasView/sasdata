@@ -1,9 +1,7 @@
-from django.core.exceptions import ObjectDoesNotExist
-from rest_framework import serializers
-
 from data import models
+from django.core.exceptions import ObjectDoesNotExist
 from fair_database import permissions
-
+from rest_framework import serializers
 
 # TODO: more custom validation, particularly for specific nested dictionary structures
 # TODO: custom update methods for nested structures
@@ -39,9 +37,7 @@ class AccessManagementSerializer(serializers.Serializer):
 class MetaDataSerializer(serializers.ModelSerializer):
     """Serialization, deserialization, and validation for the MetaData model."""
 
-    dataset = serializers.PrimaryKeyRelatedField(
-        queryset=models.DataSet, required=False, allow_null=True
-    )
+    dataset = serializers.PrimaryKeyRelatedField(queryset=models.DataSet, required=False, allow_null=True)
 
     class Meta:
         model = models.MetaData
@@ -58,12 +54,8 @@ class MetaDataSerializer(serializers.ModelSerializer):
 class OperationTreeSerializer(serializers.ModelSerializer):
     """Serialization, deserialization, and validation for the OperationTree model."""
 
-    quantity = serializers.PrimaryKeyRelatedField(
-        queryset=models.Quantity, required=False, allow_null=True
-    )
-    child_operation = serializers.PrimaryKeyRelatedField(
-        queryset=models.OperationTree, required=False, allow_null=True
-    )
+    quantity = serializers.PrimaryKeyRelatedField(queryset=models.Quantity, required=False, allow_null=True)
+    child_operation = serializers.PrimaryKeyRelatedField(queryset=models.OperationTree, required=False, allow_null=True)
     label = serializers.CharField(max_length=10, required=False)
 
     class Meta:
@@ -102,9 +94,7 @@ class OperationTreeSerializer(serializers.ModelSerializer):
 
         for parameter in expected_parameters[data["operation"]]:
             if parameter not in data["parameters"]:
-                raise serializers.ValidationError(
-                    data["operation"] + " requires parameter " + parameter
-                )
+                raise serializers.ValidationError(data["operation"] + " requires parameter " + parameter)
 
         return data
 
@@ -112,9 +102,7 @@ class OperationTreeSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = {"operation": instance.operation, "parameters": instance.parameters}
         for parent_operation in instance.parent_operations.all():
-            data["parameters"][parent_operation.label] = self.to_representation(
-                parent_operation
-            )
+            data["parameters"][parent_operation.label] = self.to_representation(parent_operation)
         return data
 
     # Create an OperationTree instance
@@ -130,21 +118,15 @@ class OperationTreeSerializer(serializers.ModelSerializer):
         operation_tree = models.OperationTree.objects.create(**validated_data)
         if parent_operation1:
             parent_operation1["child_operation"] = operation_tree
-            OperationTreeSerializer.create(
-                OperationTreeSerializer(), validated_data=parent_operation1
-            )
+            OperationTreeSerializer.create(OperationTreeSerializer(), validated_data=parent_operation1)
         if parent_operation2:
             parent_operation2["child_operation"] = operation_tree
-            OperationTreeSerializer.create(
-                OperationTreeSerializer(), validated_data=parent_operation2
-            )
+            OperationTreeSerializer.create(OperationTreeSerializer(), validated_data=parent_operation2)
         return operation_tree
 
 
 class ReferenceQuantitySerializer(serializers.ModelSerializer):
-    derived_quantity = serializers.PrimaryKeyRelatedField(
-        queryset=models.Quantity, required=False
-    )
+    derived_quantity = serializers.PrimaryKeyRelatedField(queryset=models.Quantity, required=False)
 
     class Meta:
         model = models.ReferenceQuantity
@@ -170,9 +152,7 @@ class QuantitySerializer(serializers.ModelSerializer):
     operation_tree = OperationTreeSerializer(read_only=False, required=False)
     references = ReferenceQuantitySerializer(many=True, read_only=False, required=False)
     label = serializers.CharField(max_length=20)
-    dataset = serializers.PrimaryKeyRelatedField(
-        queryset=models.DataSet, required=False, allow_null=True
-    )
+    dataset = serializers.PrimaryKeyRelatedField(queryset=models.DataSet, required=False, allow_null=True)
     history = serializers.JSONField(required=False, allow_null=True)
 
     class Meta:
@@ -202,10 +182,7 @@ class QuantitySerializer(serializers.ModelSerializer):
             data_copy = data.copy()
             if "operation_tree" in data["history"]:
                 operations = data["history"]["operation_tree"]
-                if (
-                    "operation" in operations
-                    and not operations["operation"] == "variable"
-                ):
+                if "operation" in operations and not operations["operation"] == "variable":
                     data_copy["operation_tree"] = operations
                     return_data = super().to_internal_value(data_copy)
                     return_data["history"] = data["history"]
@@ -239,15 +216,11 @@ class QuantitySerializer(serializers.ModelSerializer):
         quantity = models.Quantity.objects.create(**validated_data)
         if operations_tree:
             operations_tree["quantity"] = quantity
-            OperationTreeSerializer.create(
-                OperationTreeSerializer(), validated_data=operations_tree
-            )
+            OperationTreeSerializer.create(OperationTreeSerializer(), validated_data=operations_tree)
         if references:
             for ref in references:
                 ref["derived_quantity"] = quantity
-                ReferenceQuantitySerializer.create(
-                    ReferenceQuantitySerializer(), validated_data=ref
-                )
+                ReferenceQuantitySerializer.create(ReferenceQuantitySerializer(), validated_data=ref)
         return quantity
 
 
@@ -259,9 +232,7 @@ class DataSetSerializer(serializers.ModelSerializer):
         required=False, many=True, allow_null=True, queryset=models.DataFile.objects
     )
     data_contents = QuantitySerializer(many=True, read_only=False)
-    session = serializers.PrimaryKeyRelatedField(
-        queryset=models.Session, required=False, allow_null=True
-    )
+    session = serializers.PrimaryKeyRelatedField(queryset=models.Session, required=False, allow_null=True)
     # TODO: handle files better
 
     class Meta:
@@ -287,10 +258,7 @@ class DataSetSerializer(serializers.ModelSerializer):
             files = [
                 file.id
                 for file in instance.files.all()
-                if (
-                    file.is_public
-                    or permissions.has_access(self.context["request"], file)
-                )
+                if (file.is_public or permissions.has_access(self.context["request"], file))
             ]
             data["files"] = files
         return data
@@ -298,21 +266,13 @@ class DataSetSerializer(serializers.ModelSerializer):
     # Check that files exist and user has access to them
     def validate_files(self, value):
         for file in value:
-            if not file.is_public or permissions.has_access(
-                self.context["request"], file
-            ):
-                raise serializers.ValidationError(
-                    "You do not have access to file " + str(file.id)
-                )
+            if not file.is_public or permissions.has_access(self.context["request"], file):
+                raise serializers.ValidationError("You do not have access to file " + str(file.id))
             return value
 
     # Check that private data has an owner
     def validate(self, data):
-        if (
-            not self.context["request"].user.is_authenticated
-            and "is_public" in data
-            and not data["is_public"]
-        ):
+        if not self.context["request"].user.is_authenticated and "is_public" in data and not data["is_public"]:
             raise serializers.ValidationError("private data must have an owner")
         if "current_user" in data and data["current_user"] == "":
             if "is_public" in data:
@@ -360,9 +320,7 @@ class DataSetSerializer(serializers.ModelSerializer):
 class PublishedStateSerializer(serializers.ModelSerializer):
     """Serialization, deserialization, and validation for the PublishedState model."""
 
-    session = serializers.PrimaryKeyRelatedField(
-        queryset=models.Session.objects, required=False, allow_null=True
-    )
+    session = serializers.PrimaryKeyRelatedField(queryset=models.Session.objects, required=False, allow_null=True)
 
     class Meta:
         model = models.PublishedState
@@ -372,9 +330,7 @@ class PublishedStateSerializer(serializers.ModelSerializer):
         try:
             published = value.published_state
             if published is not None:
-                raise serializers.ValidationError(
-                    "Only one published state per session"
-                )
+                raise serializers.ValidationError("Only one published state per session")
         except models.Session.published_state.RelatedObjectDoesNotExist:
             return value
 
@@ -385,11 +341,7 @@ class PublishedStateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         # TODO: generate DOI
-        validated_data["doi"] = (
-            "http://127.0.0.1:8000/v1/data/session/"
-            + str(validated_data["session"].id)
-            + "/"
-        )
+        validated_data["doi"] = "http://127.0.0.1:8000/v1/data/session/" + str(validated_data["session"].id) + "/"
         return models.PublishedState.objects.create(**validated_data)
 
 
@@ -418,23 +370,15 @@ class SessionSerializer(serializers.ModelSerializer):
         ]
 
     def validate(self, data):
-        if (
-            not self.context["request"].user.is_authenticated
-            and "is_public" in data
-            and not data["is_public"]
-        ):
+        if not self.context["request"].user.is_authenticated and "is_public" in data and not data["is_public"]:
             raise serializers.ValidationError("private sessions must have an owner")
         if "current_user" in data and data["current_user"] == "":
             if "is_public" in data:
                 if not "is_public":
-                    raise serializers.ValidationError(
-                        "private sessions must have an owner"
-                    )
+                    raise serializers.ValidationError("private sessions must have an owner")
             else:
                 if not self.instance.is_public:
-                    raise serializers.ValidationError(
-                        "private sessions must have an owner"
-                    )
+                    raise serializers.ValidationError("private sessions must have an owner")
         return data
 
     def to_internal_value(self, data):
@@ -456,14 +400,10 @@ class SessionSerializer(serializers.ModelSerializer):
         session = models.Session.objects.create(**validated_data)
         if published_state:
             published_state["session"] = session
-            PublishedStateSerializer.create(
-                PublishedStateSerializer(), validated_data=published_state
-            )
+            PublishedStateSerializer.create(PublishedStateSerializer(), validated_data=published_state)
         for dataset in datasets:
             dataset["session"] = session
-            DataSetSerializer.create(
-                DataSetSerializer(context=self.context), validated_data=dataset
-            )
+            DataSetSerializer.create(DataSetSerializer(context=self.context), validated_data=dataset)
         return session
 
     def update(self, instance, validated_data):
@@ -481,9 +421,7 @@ class SessionSerializer(serializers.ModelSerializer):
                 )
             except ObjectDoesNotExist:
                 pb_raw["session"] = instance
-                PublishedStateSerializer.create(
-                    PublishedStateSerializer(), validated_data=pb_raw
-                )
+                PublishedStateSerializer.create(PublishedStateSerializer(), validated_data=pb_raw)
         return super().update(instance, validated_data)
 
 

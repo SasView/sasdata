@@ -1,18 +1,15 @@
 import os
 import shutil
 
+from data.models import DataFile
 from django.conf import settings
 from django.contrib.auth.models import User
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from data.models import DataFile
-
 
 def find(filename):
-    return os.path.join(
-        os.path.dirname(__file__), "../../example_data/1d_data", filename
-    )
+    return os.path.join(os.path.dirname(__file__), "../../example_data/1d_data", filename)
 
 
 def auth_header(response):
@@ -24,30 +21,18 @@ class DataListPermissionsTests(APITestCase):
 
     @classmethod
     def setUpTestData(cls):
-        cls.user = User.objects.create_user(
-            username="testUser", password="secret", id=1, email="email@domain.com"
-        )
-        cls.user2 = User.objects.create_user(
-            username="testUser2", password="secret", id=2, email="email2@domain.com"
-        )
-        cls.unowned_test_data = DataFile.objects.create(
-            id=1, file_name="cyl_400_40.txt", is_public=True
-        )
-        cls.unowned_test_data.file.save(
-            "cyl_400_40.txt", open(find("cyl_400_40.txt"), "rb")
-        )
+        cls.user = User.objects.create_user(username="testUser", password="secret", id=1, email="email@domain.com")
+        cls.user2 = User.objects.create_user(username="testUser2", password="secret", id=2, email="email2@domain.com")
+        cls.unowned_test_data = DataFile.objects.create(id=1, file_name="cyl_400_40.txt", is_public=True)
+        cls.unowned_test_data.file.save("cyl_400_40.txt", open(find("cyl_400_40.txt"), "rb"))
         cls.private_test_data = DataFile.objects.create(
             id=2, current_user=cls.user, file_name="cyl_400_20.txt", is_public=False
         )
-        cls.private_test_data.file.save(
-            "cyl_400_20.txt", open(find("cyl_400_20.txt"), "rb")
-        )
+        cls.private_test_data.file.save("cyl_400_20.txt", open(find("cyl_400_20.txt"), "rb"))
         cls.public_test_data = DataFile.objects.create(
             id=3, current_user=cls.user, file_name="cyl_testdata.txt", is_public=True
         )
-        cls.public_test_data.file.save(
-            "cyl_testdata.txt", open(find("cyl_testdata.txt"), "rb")
-        )
+        cls.public_test_data.file.save("cyl_testdata.txt", open(find("cyl_testdata.txt"), "rb"))
         cls.login_data_1 = {
             "username": "testUser",
             "password": "secret",
@@ -63,9 +48,7 @@ class DataListPermissionsTests(APITestCase):
     def test_list_authenticated(self):
         token = self.client.post("/auth/login/", data=self.login_data_1)
         response = self.client.get("/v1/data/file/", headers=auth_header(token))
-        response2 = self.client.get(
-            "/v1/data/file/", data={"username": "testUser"}, headers=auth_header(token)
-        )
+        response2 = self.client.get("/v1/data/file/", data={"username": "testUser"}, headers=auth_header(token))
         self.assertEqual(
             response.data,
             {
@@ -85,12 +68,8 @@ class DataListPermissionsTests(APITestCase):
     def test_list_authenticated_2(self):
         token = self.client.post("/auth/login/", data=self.login_data_2)
         response = self.client.get("/v1/data/file/", headers=auth_header(token))
-        response2 = self.client.get(
-            "/v1/data/file/", data={"username": "testUser"}, headers=auth_header(token)
-        )
-        response3 = self.client.get(
-            "/v1/data/file/", data={"username": "testUser2"}, headers=auth_header(token)
-        )
+        response2 = self.client.get("/v1/data/file/", data={"username": "testUser"}, headers=auth_header(token))
+        response3 = self.client.get("/v1/data/file/", data={"username": "testUser2"}, headers=auth_header(token))
         self.assertEqual(
             response.data,
             {"public_data_ids": {1: "cyl_400_40.txt", 3: "cyl_testdata.txt"}},
@@ -142,9 +121,7 @@ class DataListPermissionsTests(APITestCase):
         token = self.client.post("/auth/login/", data=self.login_data_1)
         file = open(find("cyl_testdata1.txt"), "rb")
         data = {"file": file, "is_public": False}
-        response = self.client.post(
-            "/v1/data/file/", data=data, headers=auth_header(token)
-        )
+        response = self.client.post("/v1/data/file/", data=data, headers=auth_header(token))
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(
             response.data,
@@ -183,12 +160,8 @@ class DataListPermissionsTests(APITestCase):
     def test_upload_put_authenticated(self):
         token = self.client.post("/auth/login/", data=self.login_data_1)
         data = {"is_public": False}
-        response = self.client.put(
-            "/v1/data/file/2/", data=data, headers=auth_header(token)
-        )
-        response2 = self.client.put(
-            "/v1/data/file/3/", data=data, headers=auth_header(token)
-        )
+        response = self.client.put("/v1/data/file/2/", data=data, headers=auth_header(token))
+        response2 = self.client.put("/v1/data/file/3/", data=data, headers=auth_header(token))
         self.assertEqual(
             response.data,
             {
@@ -216,15 +189,9 @@ class DataListPermissionsTests(APITestCase):
         token = self.client.post("/auth/login/", data=self.login_data_2)
         file = open(find("cyl_400_40.txt"))
         data = {"file": file, "is_public": False}
-        response = self.client.put(
-            "/v1/data/file/1/", data=data, headers=auth_header(token)
-        )
-        response2 = self.client.put(
-            "/v1/data/file/2/", data=data, headers=auth_header(token)
-        )
-        response3 = self.client.put(
-            "/v1/data/file/3/", data=data, headers=auth_header(token)
-        )
+        response = self.client.put("/v1/data/file/1/", data=data, headers=auth_header(token))
+        response2 = self.client.put("/v1/data/file/2/", data=data, headers=auth_header(token))
+        response3 = self.client.put("/v1/data/file/3/", data=data, headers=auth_header(token))
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(response2.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(response3.status_code, status.HTTP_403_FORBIDDEN)
@@ -243,15 +210,9 @@ class DataListPermissionsTests(APITestCase):
     # Authenticated user can download public and own data
     def test_download_authenticated(self):
         token = self.client.post("/auth/login/", data=self.login_data_1)
-        response = self.client.get(
-            "/v1/data/file/1/", data={"download": True}, headers=auth_header(token)
-        )
-        response2 = self.client.get(
-            "/v1/data/file/2/", data={"download": True}, headers=auth_header(token)
-        )
-        response3 = self.client.get(
-            "/v1/data/file/3/", data={"download": True}, headers=auth_header(token)
-        )
+        response = self.client.get("/v1/data/file/1/", data={"download": True}, headers=auth_header(token))
+        response2 = self.client.get("/v1/data/file/2/", data={"download": True}, headers=auth_header(token))
+        response3 = self.client.get("/v1/data/file/3/", data={"download": True}, headers=auth_header(token))
         b"".join(response.streaming_content)
         b"".join(response2.streaming_content)
         b"".join(response3.streaming_content)
@@ -262,12 +223,8 @@ class DataListPermissionsTests(APITestCase):
     # Authenticated user cannot download others' data
     def test_download_unauthorized(self):
         token = self.client.post("/auth/login/", data=self.login_data_2)
-        response = self.client.get(
-            "/v1/data/file/2/", data={"download": True}, headers=auth_header(token)
-        )
-        response2 = self.client.get(
-            "/v1/data/file/3/", data={"download": True}, headers=auth_header(token)
-        )
+        response = self.client.get("/v1/data/file/2/", data={"download": True}, headers=auth_header(token))
+        response2 = self.client.get("/v1/data/file/3/", data={"download": True}, headers=auth_header(token))
         b"".join(response2.streaming_content)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(response2.status_code, status.HTTP_200_OK)

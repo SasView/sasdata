@@ -51,8 +51,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="dataset",
             name="metadata",
-            field=models.OneToOneField(
-                on_delete=django.db.models.deletion.CASCADE, to="data.metadata"
-            ),
+            field=models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to="data.metadata"),
         ),
     ]

@@ -1,20 +1,17 @@
 import os
 import shutil
 
-from django.conf import settings
-from django.test import TestCase
-from django.db.models import Max
-from django.contrib.auth.models import User
-from rest_framework.test import APIClient, APITestCase
-from rest_framework import status
-
 from data.models import DataFile
+from django.conf import settings
+from django.contrib.auth.models import User
+from django.db.models import Max
+from django.test import TestCase
+from rest_framework import status
+from rest_framework.test import APIClient, APITestCase
 
 
 def find(filename):
-    return os.path.join(
-        os.path.dirname(__file__), "../../../example_data/1d_data", filename
-    )
+    return os.path.join(os.path.dirname(__file__), "../../../example_data/1d_data", filename)
 
 
 class TestLists(TestCase):
@@ -22,21 +19,13 @@ class TestLists(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        cls.public_test_data = DataFile.objects.create(
-            id=1, file_name="cyl_400_40.txt", is_public=True
-        )
-        cls.public_test_data.file.save(
-            "cyl_400_40.txt", open(find("cyl_400_40.txt"), "rb")
-        )
-        cls.user = User.objects.create_user(
-            username="testUser", password="secret", id=2
-        )
+        cls.public_test_data = DataFile.objects.create(id=1, file_name="cyl_400_40.txt", is_public=True)
+        cls.public_test_data.file.save("cyl_400_40.txt", open(find("cyl_400_40.txt"), "rb"))
+        cls.user = User.objects.create_user(username="testUser", password="secret", id=2)
         cls.private_test_data = DataFile.objects.create(
             id=3, current_user=cls.user, file_name="cyl_400_20.txt", is_public=False
         )
-        cls.private_test_data.file.save(
-            "cyl_400_20.txt", open(find("cyl_400_20.txt"), "rb")
-        )
+        cls.private_test_data.file.save("cyl_400_20.txt", open(find("cyl_400_20.txt"), "rb"))
         cls.client_authenticated = APIClient()
         cls.client_authenticated.force_authenticate(user=cls.user)
 
@@ -50,24 +39,18 @@ class TestLists(TestCase):
 
     # Test list a user's private data
     def test_does_list_user(self):
-        request = self.client_authenticated.get(
-            "/v1/data/file/", data={"username": "testUser"}, user=self.user
-        )
+        request = self.client_authenticated.get("/v1/data/file/", data={"username": "testUser"}, user=self.user)
         self.assertEqual(request.data, {"user_data_ids": {3: "cyl_400_20.txt"}})
 
     # Test list another user's public data
     def test_list_other_user(self):
         client_unauthenticated = APIClient()
-        request = client_unauthenticated.get(
-            "/v1/data/file/", data={"username": "testUser"}, user=self.user
-        )
+        request = client_unauthenticated.get("/v1/data/file/", data={"username": "testUser"}, user=self.user)
         self.assertEqual(request.data, {"user_data_ids": {}})
 
     # Test list a nonexistent user's data
     def test_list_nonexistent_user(self):
-        request = self.client_authenticated.get(
-            "/v1/data/file/", data={"username": "fakeUser"}
-        )
+        request = self.client_authenticated.get("/v1/data/file/", data={"username": "fakeUser"})
         self.assertEqual(request.status_code, status.HTTP_404_NOT_FOUND)
 
     # Test loading a public data file
@@ -98,12 +81,8 @@ class TestingDatabase(APITestCase):
 
     @classmethod
     def setUpTestData(cls):
-        cls.user = User.objects.create_user(
-            username="testUser", password="secret", id=1
-        )
-        cls.data = DataFile.objects.create(
-            id=1, current_user=cls.user, file_name="cyl_400_20.txt", is_public=False
-        )
+        cls.user = User.objects.create_user(username="testUser", password="secret", id=1)
+        cls.data = DataFile.objects.create(id=1, current_user=cls.user, file_name="cyl_400_20.txt", is_public=False)
         cls.data.file.save("cyl_400_20.txt", open(find("cyl_400_20.txt"), "rb"))
         cls.client_authenticated = APIClient()
         cls.client_authenticated.force_authenticate(user=cls.user)
@@ -190,9 +169,7 @@ class TestingDatabase(APITestCase):
         data_object = DataFile.objects.create(
             id=3, current_user=self.user, file_name="cyl_testdata2.txt", is_public=True
         )
-        data_object.file.save(
-            "cyl_testdata2.txt", open(find("cyl_testdata2.txt"), "rb")
-        )
+        data_object.file.save("cyl_testdata2.txt", open(find("cyl_testdata2.txt"), "rb"))
         file = open(find("conalbumin.txt"))
         data = {"file": file, "is_public": True}
         request = self.client_authenticated.put("/v1/data/file/3/", data=data)
@@ -224,9 +201,7 @@ class TestingDatabase(APITestCase):
 
     # Test file download
     def test_does_download(self):
-        request = self.client_authenticated.get(
-            "/v1/data/file/1/", data={"download": True}
-        )
+        request = self.client_authenticated.get("/v1/data/file/1/", data={"download": True})
         file_contents = b"".join(request.streaming_content)
         test_file = open(find("cyl_400_20.txt"), "rb")
         self.assertEqual(request.status_code, status.HTTP_200_OK)
@@ -234,23 +209,17 @@ class TestingDatabase(APITestCase):
 
     # Test file download fails when unauthorized
     def test_unauthorized_download(self):
-        request2 = self.client_unauthenticated.get(
-            "/v1/data/file/1/", data={"download": True}
-        )
+        request2 = self.client_unauthenticated.get("/v1/data/file/1/", data={"download": True})
         self.assertEqual(request2.status_code, status.HTTP_401_UNAUTHORIZED)
 
     # Test download nonexistent file
     def test_download_nonexistent(self):
-        request = self.client_authenticated.get(
-            "/v1/data/file/5/", data={"download": True}
-        )
+        request = self.client_authenticated.get("/v1/data/file/5/", data={"download": True})
         self.assertEqual(request.status_code, status.HTTP_404_NOT_FOUND)
 
     # Test deleting a file
     def test_delete(self):
-        DataFile.objects.create(
-            id=6, current_user=self.user, file_name="test.txt", is_public=False
-        )
+        DataFile.objects.create(id=6, current_user=self.user, file_name="test.txt", is_public=False)
         request = self.client_authenticated.delete("/v1/data/file/6/")
         self.assertEqual(request.status_code, status.HTTP_200_OK)
         self.assertFalse(DataFile.objects.filter(pk=6).exists())
@@ -277,15 +246,11 @@ class TestAccessManagement(TestCase):
         cls.private_test_data = DataFile.objects.create(
             id=1, current_user=cls.user1, file_name="cyl_400_40.txt", is_public=False
         )
-        cls.private_test_data.file.save(
-            "cyl_400_40.txt", open(find("cyl_400_40.txt"), "rb")
-        )
+        cls.private_test_data.file.save("cyl_400_40.txt", open(find("cyl_400_40.txt"), "rb"))
         cls.shared_test_data = DataFile.objects.create(
             id=2, current_user=cls.user1, file_name="cyl_400_20.txt", is_public=False
         )
-        cls.shared_test_data.file.save(
-            "cyl_400_20.txt", open(find("cyl_400_20.txt"), "rb")
-        )
+        cls.shared_test_data.file.save("cyl_400_20.txt", open(find("cyl_400_20.txt"), "rb"))
         cls.shared_test_data.users.add(cls.user2)
         cls.client_owner = APIClient()
         cls.client_owner.force_authenticate(cls.user1)

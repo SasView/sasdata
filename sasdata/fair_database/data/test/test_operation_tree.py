@@ -1,9 +1,8 @@
+from data.models import DataSet, MetaData, OperationTree, Quantity, ReferenceQuantity
 from django.contrib.auth.models import User
 from django.db.models import Max
-from rest_framework.test import APIClient, APITestCase
 from rest_framework import status
-
-from data.models import DataSet, MetaData, OperationTree, Quantity, ReferenceQuantity
+from rest_framework.test import APIClient, APITestCase
 
 
 class TestCreateOperationTree(APITestCase):
@@ -30,9 +29,7 @@ class TestCreateOperationTree(APITestCase):
             ],
             "is_public": True,
         }
-        cls.user = User.objects.create_user(
-            id=1, username="testUser", password="sasview!"
-        )
+        cls.user = User.objects.create_user(id=1, username="testUser", password="sasview!")
         cls.client = APIClient()
         cls.client.force_authenticate(cls.user)
 
@@ -82,9 +79,7 @@ class TestCreateOperationTree(APITestCase):
                     }
                 },
             },
-            "references": [
-                {"value": 5, "variance": 0, "units": "none", "hash": 111, "history": {}}
-            ],
+            "references": [{"value": 5, "variance": 0, "units": "none", "hash": 111, "history": {}}],
         }
         request = self.client.post("/v1/data/set/", data=self.dataset, format="json")
         max_id = DataSet.objects.aggregate(Max("id"))["id__max"]
@@ -93,9 +88,7 @@ class TestCreateOperationTree(APITestCase):
         reciprocal = new_quantity.operation_tree
         variable = reciprocal.parent_operations.all().get(label="a")
         self.assertEqual(request.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(
-            new_quantity.value, {"array_contents": [0, 0, 0, 0], "shape": [2, 2]}
-        )
+        self.assertEqual(new_quantity.value, {"array_contents": [0, 0, 0, 0], "shape": [2, 2]})
         self.assertEqual(reciprocal.operation, "reciprocal")
         self.assertEqual(variable.operation, "variable")
         self.assertEqual(len(reciprocal.parent_operations.all()), 1)
@@ -117,9 +110,7 @@ class TestCreateOperationTree(APITestCase):
                     "b": {"operation": "constant", "parameters": {"value": 5}},
                 },
             },
-            "references": [
-                {"value": 5, "variance": 0, "units": "none", "hash": 111, "history": {}}
-            ],
+            "references": [{"value": 5, "variance": 0, "units": "none", "hash": 111, "history": {}}],
         }
         request = self.client.post("/v1/data/set/", data=self.dataset, format="json")
         max_id = DataSet.objects.aggregate(Max("id"))["id__max"]
@@ -152,9 +143,7 @@ class TestCreateOperationTree(APITestCase):
                     "power": 2,
                 },
             },
-            "references": [
-                {"value": 5, "variance": 0, "units": "none", "hash": 111, "history": {}}
-            ],
+            "references": [{"value": 5, "variance": 0, "units": "none", "hash": 111, "history": {}}],
         }
         request = self.client.post("/v1/data/set/", data=self.dataset, format="json")
         max_id = DataSet.objects.aggregate(Max("id"))["id__max"]
@@ -180,9 +169,7 @@ class TestCreateOperationTree(APITestCase):
                     "axes": [1, 0],
                 },
             },
-            "references": [
-                {"value": 5, "variance": 0, "units": "none", "hash": 111, "history": {}}
-            ],
+            "references": [{"value": 5, "variance": 0, "units": "none", "hash": 111, "history": {}}],
         }
         request = self.client.post("/v1/data/set/", data=self.dataset, format="json")
         max_id = DataSet.objects.aggregate(Max("id"))["id__max"]
@@ -219,9 +206,7 @@ class TestCreateOperationTree(APITestCase):
                     },
                 },
             },
-            "references": [
-                {"value": 5, "variance": 0, "units": "none", "hash": 111, "history": {}}
-            ],
+            "references": [{"value": 5, "variance": 0, "units": "none", "hash": 111, "history": {}}],
         }
         request = self.client.post("/v1/data/set/", data=self.dataset, format="json")
         max_id = DataSet.objects.aggregate(Max("id"))["id__max"]
@@ -258,9 +243,7 @@ class TestCreateOperationTree(APITestCase):
                     "b_index": 1,
                 },
             },
-            "references": [
-                {"value": 5, "variance": 0, "units": "none", "hash": 111, "history": {}}
-            ],
+            "references": [{"value": 5, "variance": 0, "units": "none", "hash": 111, "history": {}}],
         }
         request = self.client.post("/v1/data/set/", data=self.dataset, format="json")
         max_id = DataSet.objects.aggregate(Max("id"))["id__max"]
@@ -277,9 +260,7 @@ class TestCreateOperationTree(APITestCase):
     def test_operation_tree_created_no_history(self):
         if "history" in self.dataset["data_contents"][0]:
             self.dataset["data_contents"][0].pop("history")
-            request = self.client.post(
-                "/v1/data/set/", data=self.dataset, format="json"
-            )
+            request = self.client.post("/v1/data/set/", data=self.dataset, format="json")
             max_id = DataSet.objects.aggregate(Max("id"))["id__max"]
             new_dataset = DataSet.objects.get(id=max_id)
             new_quantity = new_dataset.data_contents.get(hash=0)
@@ -320,9 +301,7 @@ class TestCreateInvalidOperationTree(APITestCase):
             ],
             "is_public": True,
         }
-        cls.user = User.objects.create_user(
-            id=1, username="testUser", password="sasview!"
-        )
+        cls.user = User.objects.create_user(id=1, username="testUser", password="sasview!")
         cls.client = APIClient()
         cls.client.force_authenticate(cls.user)
 
@@ -396,9 +375,7 @@ class TestCreateInvalidOperationTree(APITestCase):
         self.dataset["data_contents"][0]["history"] = {
             "operation_tree": {
                 "operation": "neg",
-                "parameters": {
-                    "a": {"operation": "variable", "parameters": {"name": "x"}}
-                },
+                "parameters": {"a": {"operation": "variable", "parameters": {"name": "x"}}},
             },
             "references": [],
         }
@@ -495,9 +472,7 @@ class TestCreateInvalidOperationTree(APITestCase):
 class TestGetOperationTree(APITestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.user = User.objects.create_user(
-            id=1, username="testUser", password="sasview!"
-        )
+        cls.user = User.objects.create_user(id=1, username="testUser", password="sasview!")
         cls.dataset = DataSet.objects.create(
             id=1,
             current_user=cls.user,
@@ -516,9 +491,7 @@ class TestGetOperationTree(APITestCase):
         cls.variable = OperationTree.objects.create(
             id=1, operation="variable", parameters={"hash_value": 111, "name": "x"}
         )
-        cls.constant = OperationTree.objects.create(
-            id=2, operation="constant", parameters={"value": 1}
-        )
+        cls.constant = OperationTree.objects.create(id=2, operation="constant", parameters={"value": 1})
         cls.ref_quantity = ReferenceQuantity.objects.create(
             id=1,
             value=5,
@@ -672,12 +645,8 @@ class TestGetOperationTree(APITestCase):
 
     # Test accessing a quantity with multiple operations
     def test_get_operation_tree_nested(self):
-        neg = OperationTree.objects.create(
-            id=4, operation="neg", quantity=self.quantity
-        )
-        multiply = OperationTree.objects.create(
-            id=3, operation="mul", child_operation=neg, label="a"
-        )
+        neg = OperationTree.objects.create(id=4, operation="neg", quantity=self.quantity)
+        multiply = OperationTree.objects.create(id=3, operation="mul", child_operation=neg, label="a")
         self.constant.label = "a"
         self.constant.child_operation = multiply
         self.constant.save()

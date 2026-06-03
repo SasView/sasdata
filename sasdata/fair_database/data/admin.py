@@ -1,5 +1,5 @@
-from django.contrib import admin
 from data import models
+from django.contrib import admin
 
 admin.site.register(models.DataFile)
 admin.site.register(models.Session)

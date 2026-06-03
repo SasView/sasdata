@@ -12,8 +12,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="datafile",
             name="is_public",
-            field=models.BooleanField(
-                default=False, help_text="opt in to make your data public"
-            ),
+            field=models.BooleanField(default=False, help_text="opt in to make your data public"),
         ),
     ]
