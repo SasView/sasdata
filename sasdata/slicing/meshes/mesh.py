@@ -1,12 +1,12 @@
-from typing import Sequence
-
-import numpy as np
+from collections.abc import Sequence
 
 import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib import cm
 from matplotlib.collections import LineCollection
 
 from sasdata.slicing.meshes.util import closed_loop_edges
+
 
 class Mesh:
     def __init__(self,

@@ -1,10 +1,8 @@
-
-
-import numpy as np
-from scipy.sparse import coo_matrix, csr_matrix, csc_matrix, coo_array, csr_array, csc_array
-
 import base64
 import struct
+
+import numpy as np
+from scipy.sparse import coo_array, coo_matrix, csc_array, csc_matrix, csr_array, csr_matrix
 
 
 def numerical_encode(obj: int | float | np.ndarray | coo_matrix | coo_array | csr_matrix | csr_array | csc_matrix | csc_array):
@@ -15,12 +13,12 @@ def numerical_encode(obj: int | float | np.ndarray | coo_matrix | coo_array | cs
 
     elif isinstance(obj, float):
         return {"type": "float",
-                "value": base64.b64encode(bytearray(struct.pack('d', obj)))}
+                "value": base64.b64encode(bytearray(struct.pack('d', obj))).decode("utf-8")}
 
     elif isinstance(obj, np.ndarray):
         return {
             "type": "numpy",
-            "value": base64.b64encode(obj.tobytes()),
+            "value": base64.b64encode(obj.tobytes()).decode("utf-8"),
             "dtype": obj.dtype.str,
             "shape": list(obj.shape)
         }

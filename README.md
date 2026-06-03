@@ -4,6 +4,14 @@ A package for importing and exporting reduced small angle scattering data.
 
 The data loaders provided are usable as a standalone package, or in conjunction with the sasview analysis package.
 
+# Citing and Acknowledging SasData
+
+If you found this software useful to your work please cite and/or acknowledge its use in your publications.
+The latest instructions for citing and acknowledging are available on our website.
+
+[Citing SasData](http://www.sasview.org/cite/#citing-sasdata)
+[Acknowledging SasData](http://www.sasview.org/cite/#acknowledging-sasview)
+
 ## Install
 The easiest way to use sasdata is by using [SasView](http://www.sasview.org).
 

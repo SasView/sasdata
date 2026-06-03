@@ -1,4 +1,7 @@
 sasentry01
+  Qy
+  Qx
+  I
 Metadata:
 
   MH4_5deg_16T_SLOW, Run: 33837
@@ -6,25 +9,29 @@ Metadata:
 
 Definition: MH4_5deg_16T_SLOW
 Process:
-    Name: None
-    Date: None
+    Name: Mantid generated CanSAS1D XML
+    Date: 11-May-2016 12:15:34
     Description: None
-    Term: None
-    Notes: None
 Sample:
-   ID:           None
+   ID:           
    Transmission: None
    Thickness:    None
    Temperature:  None
    Position:     None
    Orientation:  None
-Aperture:
-  Name: None
-  Aperture size: None
-  Aperture distance: None
+Collimation:
+   Length: None
 Detector:
-   Name:         None
-   Distance:     None
+   Name:         front-detector
+   Distance:     2845.26 mm
+   Offset:       None
+   Orientation:  None
+   Beam center:  None
+   Pixel size:   None
+   Slit length:  None
+Detector:
+   Name:         rear-detector
+   Distance:     4385.28 mm
    Offset:       None
    Orientation:  None
    Beam center:  None
@@ -38,21 +45,3 @@ Source:
     Max. Wavelength:   None
     Wavelength Spread: None
     Beam Size:         None
-<<<<<<< HEAD
-Transmission Spectrum:
-    Name:             None
-    Timestamp:        None
-    Wavelengths:      None
-    Transmission:     None
-
-
-||||||| parent of c9f83a89 (Metadata is a dataclass)
-Transmission Spectrum:
-    Name:             None
-    Timestamp:        None
-    Wavelengths:      None
-    Transmission:     None
-
-=======
-
->>>>>>> c9f83a89 (Metadata is a dataclass)

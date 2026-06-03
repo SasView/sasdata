@@ -1,9 +1,10 @@
-from typing import TypeVar, Sequence
+from typing import TypeVar
 
-from sasdata.quantities.quantity import Quantity
 import sasdata.quantities.units as units
-from sasdata.quantities.units import Dimensions, Unit
-from sasdata.quantities.unit_parser import parse_unit, parse_unit_from_group
+from sasdata.data_backing import Dataset, Group
+from sasdata.quantities.quantity import Quantity
+from sasdata.quantities.unit_parser import parse_unit
+from sasdata.quantities.units import Unit
 
 from sasdata.data_backing import Group, Dataset
 

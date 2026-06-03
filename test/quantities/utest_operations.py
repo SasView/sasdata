@@ -17,15 +17,20 @@ from sasdata.quantities.quantity import (
     Inv,
     Ln,
     Log,
+    MatInv,
     MatMul,
+    MatrixIdentity,
     Mul,
     MultiplicativeIdentity,
     Neg,
+    Norm_1,
+    Norm_2,
     Operation,
     Pow,
     Sin,
     Sub,
     Tan,
+    Trace,
     Transpose,
     Variable,
 )
@@ -46,7 +51,7 @@ operation_with_everything = Div(
 )
 
 
-@pytest.fixture(params=[Inv, Exp, Ln, Neg, Sin, ArcSin, Cos, ArcCos, Tan, ArcTan, Transpose])
+@pytest.fixture(params=[Inv, Exp, Ln, MatInv, Neg, Sin, ArcSin, Cos, ArcCos, Tan, ArcTan, Transpose])
 def unary_operation(request):
     return request.param(x)
 
@@ -59,6 +64,16 @@ def binary_operation(request):
 @pytest.fixture(params=[Log, Pow])
 def log_pow_operation(request):
     return request.param(x, 2)
+
+
+@pytest.fixture(params=[Transpose, Norm_1, Norm_2])
+def axis_operation(request):
+    return request.param(x, (0,))
+
+
+@pytest.fixture(params=[Transpose, Norm_1, Norm_2])
+def axis_none_operation(request):
+    return request.param(x, None)
 
 
 def test_serialise_deserialise():
@@ -93,6 +108,30 @@ def test_log_pow_serialise_deserialise(log_pow_operation):
     assert serialised == reserialised
 
 
+def test_axis_serialise_deserialise(axis_operation):
+    serialised = axis_operation.serialise()
+    deserialised = Operation.deserialise(serialised)
+    reserialised = deserialised.serialise()
+
+    assert serialised == reserialised
+
+
+def test_axis_none_serialise_deserialise(axis_none_operation):
+    serialised = axis_none_operation.serialise()
+    deserialised = Operation.deserialise(serialised)
+    reserialised = deserialised.serialise()
+
+    assert serialised == reserialised
+
+
+def test_trace_serialise_deserialise():
+    serialised = Trace(x).serialise()
+    deserialised = Operation.deserialise(serialised)
+    reserialised = deserialised.serialise()
+
+    assert serialised == reserialised
+
+
 @pytest.mark.parametrize(
     "op, summary",
     [(AdditiveIdentity, "0 [Add.Id.]"), (MultiplicativeIdentity, "1 [Mul.Id.]"), (Operation, "Operation(\n)")],
@@ -100,6 +139,11 @@ def test_log_pow_serialise_deserialise(log_pow_operation):
 def test_summary(op, summary):
     f = op()
     assert f.summary() == summary
+
+
+def test_matrix_id_summary():
+    f = MatrixIdentity(1)
+    assert f.summary() == "1 [Matrix Id.]"
 
 
 def test_variable_summary():
@@ -116,6 +160,19 @@ def test_binary_summary(binary_operation):
 
 def test_log_pow_summary(log_pow_operation):
     assert log_pow_operation.summary() == f"{log_pow_operation.__class__.__name__}(\n  x\n  2\n)"
+
+
+def test_axis_summary(axis_operation):
+    assert axis_operation.summary() == f"{axis_operation.__class__.__name__}(\n  x\n  [0]\n)"
+
+
+def test_axis_none_summary(axis_none_operation):
+    assert axis_none_operation.summary() == f"{axis_none_operation.__class__.__name__}(\n  x\n)"
+
+
+def test_trace_summary():
+    op = Trace(x)
+    assert op.summary() == f"{op.__class__.__name__}(\n  x\n  0\n  0\n  1\n)"
 
 
 @pytest.mark.parametrize("op, result", [(AdditiveIdentity, 0), (MultiplicativeIdentity, 1), (Operation, None)])
@@ -147,6 +204,8 @@ def test_evaluation(op, result):
         (ArcCos, -1.0, math.pi),
         (ArcTan, 0.0, 0.0),
         (ArcTan, -1.0, -0.25 * math.pi),
+        (Trace, np.array([[1, 2], [3, 4]]), pytest.approx(5.0)),
+        (Trace, np.array([[1, 4, 1], [2, 4, 2], [3, 4, 3]]), pytest.approx(8.0)),
     ],
 )
 def test_unary_evaluation(op, a, result):
@@ -192,10 +251,29 @@ def test_matmul_evaluation(op, a, b, result):
 
 @pytest.mark.parametrize(
     "op, a, result",
-    [(Transpose, np.array([[1, 2]]), np.array([[1], [2]])), (Transpose, [[1, 2], [3, 4]], [[1, 3], [2, 4]])],
+    [
+        (Transpose, np.array([[1, 2]]), np.array([[1], [2]])),
+        (Transpose, [[1, 2], [3, 4]], [[1, 3], [2, 4]]),
+        (Norm_1, [[1, 2], [3, 4]], np.float64(6.0)),
+        (Norm_2, [[1, 2], [3, 4]], np.float64(np.sqrt(30.0))),
+        (Norm_2, [[1.0, 2.5], [3.0, 4.0]], np.float64(np.sqrt(32.25))),
+    ],
 )
-def test_transpose_evaluation(op, a, result):
+def test_axis_none_evaluation(op, a, result):
     f = op(Constant(a))
+    assert (f.evaluate({}) == result).all()
+
+
+@pytest.mark.parametrize(
+    "op, a, axes, result",
+    [
+        (Transpose, [[1, 2], [3, 4]], (1, 0), [[1, 3], [2, 4]]),
+        (Norm_1, np.array([[1, 2], [3, 4]]), 1, np.array([3.0, 7.0])),
+        (Norm_2, np.array([[1, 2], [3, 4]]), 1, np.array([np.sqrt(5.0), 5.0])),
+    ],
+)
+def test_axis_evaluation(op, a, axes, result):
+    f = op(Constant(a), axes=axes)
     assert (f.evaluate({}) == result).all()
 
 
@@ -213,6 +291,7 @@ def test_derivative(op, result):
     [
         (Neg(Neg(x))),
         (Inv(Inv(x))),
+        (MatInv(MatInv(x))),
     ],
 )
 def test_clean_double_applications(op):

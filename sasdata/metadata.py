@@ -621,6 +621,14 @@ class Instrument:
 
 @dataclass(kw_only=True)
 class Metadata:
+    title: Optional[str]
+    run: list[str]
+    definition: str | None
+    process: list[Process]
+    sample: Sample | None
+    instrument: Instrument | None
+    raw: MetaNode | None
+
     def __init__(self, target: AccessorTarget, instrument: Instrument):
         self._target = target
 
@@ -636,12 +644,7 @@ class Metadata:
         self.title: str = decode_string(self._title.value)
         self.run: str = decode_string(self._run.value)
         self.definition: str = decode_string(self._definition.value)
-    title: Optional[str]
-    run: list[str]
-    definition: Optional[str]
-    process: list[str]
-    sample: Optional[Sample]
-    instrument: Optional[Instrument]
+
 
     def summary(self):
         return (
@@ -678,9 +681,255 @@ class Metadata:
             "title": self.title,
             "run": self.run,
             "definition": self.definition
-        }        if self.sample is not None:
+        }
+        if self.sample is not None:
             serialized["sample"] = self.sample.serialise_json()
         if self.instrument is not None:
             serialized["instrument"] = self.instrument.serialise_json()
 
         return serialized
+
+    @property
+    def id_header(self):
+        """Generate a header for used in the unique_id for datasets"""
+        title = ""
+        if self.title is not None:
+            title = self.title
+        return f"{title}:{",".join(self.run)}"
+
+    def as_h5(self, f: h5py.Group):
+        """Export data onto an HDF5 group"""
+        for idx, run in enumerate(self.run):
+            f.create_dataset(f"run{idx:02d}", data=[run])
+        if self.title is not None:
+            f.create_dataset("title", data=[self.title])
+        if self.definition is not None:
+            f.create_dataset("definition", data=[self.definition])
+        if self.process:
+            for idx, process in enumerate(self.process):
+                name = f"sasprocess{idx:02d}"
+                process.as_h5(f.create_group(name))
+        if self.sample:
+            self.sample.as_h5(f.create_group("sassample"))
+        if self.instrument:
+            self.instrument.as_h5(f.create_group("sasinstrument"))
+        # self.raw.as_h5(meta) if self.raw else None
+
+
+class MetadataEncoder(json.JSONEncoder):
+    def default(self, obj):
+        match obj:
+            case None:
+                return None
+            case bytes():
+                return obj.decode("utf-8")
+            case NamedUnit():
+                return obj.name
+            case Quantity():
+                return {"value": obj.value, "units": obj.units.ascii_symbol}
+            case ndarray():
+                return {
+                    "type": "ndarray",
+                    "encoding": "base64",
+                    "contents": base64.b64encode(obj.tobytes()).decode("utf-8"),
+                    "dtype": obj.dtype.str,
+                    "shape": obj.shape,
+                }
+            case Vec3():
+                return {
+                    "x": obj.x,
+                    "y": obj.y,
+                    "z": obj.z,
+                }
+            case Rot3():
+                return {
+                    "roll": obj.roll,
+                    "pitch": obj.pitch,
+                    "yaw": obj.yaw,
+                }
+            case Sample():
+                return {
+                    "name": obj.name,
+                    "sample_id": obj.sample_id,
+                    "thickness": obj.thickness,
+                    "transmission": obj.transmission,
+                    "temperature": obj.temperature,
+                    "position": obj.position,
+                    "orientation": obj.orientation,
+                    "details": obj.details,
+                }
+            case Process():
+                return {
+                    "name": obj.name,
+                    "date": obj.date,
+                    "description": obj.description,
+                    "terms": {k: obj.terms[k] for k in obj.terms},
+                    "notes": obj.notes,
+                }
+            case Aperture():
+                return {
+                    "distance": obj.distance,
+                    "size": obj.size,
+                    "size_name": obj.size_name,
+                    "name": obj.name,
+                    "type": obj.type_,
+                }
+            case Collimation():
+                return {
+                    "length": obj.length,
+                    "apertures": [a for a in obj.apertures],
+                }
+            case BeamSize():
+                return {"name": obj.name, "size": obj.size}
+            case Source():
+                return {
+                    "radiation": obj.radiation,
+                    "beam_shape": obj.beam_shape,
+                    "beam_size": obj.beam_size,
+                    "wavelength": obj.wavelength,
+                    "wavelength_min": obj.wavelength_min,
+                    "wavelength_max": obj.wavelength_max,
+                    "wavelength_spread": obj.wavelength_spread,
+                }
+            case Detector():
+                return {
+                    "name": obj.name,
+                    "distance": obj.distance,
+                    "offset": obj.offset,
+                    "orientation": obj.orientation,
+                    "beam_center": obj.beam_center,
+                    "pixel_size": obj.pixel_size,
+                    "slit_length": obj.slit_length,
+                }
+            case Instrument():
+                return {
+                    "collimations": [c for c in obj.collimations],
+                    "source": obj.source,
+                    "detector": [d for d in obj.detector],
+                }
+            case MetaNode():
+                return {"name": obj.name, "attrs": obj.attrs, "contents": obj.contents}
+            case Metadata():
+                return {
+                    "title": obj.title,
+                    "run": obj.run,
+                    "definition": obj.definition,
+                    "process": [p for p in obj.process],
+                    "sample": obj.sample,
+                    "instrument": obj.instrument,
+                    "raw": obj.raw,
+                }
+            case _:
+                return super().default(obj)
+
+
+def access_meta(obj: dataclass, key: str) -> Any | None:
+    """Use a string accessor to locate a key from within the data
+    object.
+
+    The basic grammar of these accessors explicitly match the python
+    syntax for accessing the data.  For example, to access the `name`
+    field within the object `person`, you would call
+    `access_meta(person, ".name")`.  Similarly, lists and dicts are
+    access with square brackets.
+
+    > assert access_meta(person, '.name') == person.name
+    > assert access_meta(person, '.phone.home') == person.phone.home
+    > assert access_meta(person, '.addresses[0].postal_code') == person.address[0].postal_code
+    > assert access_meta(person, '.children["Taylor"]') == person.children["Taylor"]
+
+    Obviously, when the accessor is know ahead of time, `access_meta`
+    provides no benefit over directly retrieving the data. However,
+    when a data structure is loaded at runtime (e.g. the metadata of a
+    neutron scattering file), then it isn't possible to know in
+    advance the location of the specific value that the user desires.
+    `access_meta` allows the user to provide the location at runtime.
+
+    This function returns `None` when the key is not a valid address
+    for any data within the structure.  Since the leaf could be any
+    type that is not a list, dict, or dataclass, the return type of
+    the function is `Any | None`.
+
+    The list of locations within a structure is given by the
+    `meta_tags` function.
+
+    """
+    result = obj
+    while key != "":
+        match key:
+            case accessor if accessor.startswith("."):
+                for fld in fields(result):
+                    field_string = f".{fld.name}"
+                    if accessor.startswith(field_string):
+                        key = accessor[len(field_string) :]
+                        result = getattr(result, fld.name)
+                        break
+            case index if (type(result) is list) and (matches := re.match(r"\[(\d+?)\](.*)", index)):
+                result = result[int(matches[1])]
+                key = matches[2]
+            case name if (type(result) is dict) and (matches := re.match(r'\["(.+)"\](.*)', name)):
+                result = result[matches[1]]
+                key = matches[2]
+            case _:
+                return None
+    return result
+
+
+def meta_tags(obj: dataclass) -> list[str]:
+    """Find all leaf accessors from a data object.
+
+    The function treats the passed in object as a tree.  Lists, dicts,
+    and dataclasses are all treated as branches on the tree and any
+    other type is treated as a leaf.  The function then returns a list
+    of strings, where each string is a "path" from the root of the
+    tree to one leaf.  The structure of the path is designed to mimic
+    the python code to access that specific leaf value.
+
+    These accessors allow us to treat accessing entries within a
+    structure as first class values.  This list can then be presented
+    to the user to allow them to select specific information within
+    the larger structure.  This is particularly important when plotting
+    against a specific date value within the structure.
+
+    Example:
+
+    >@dataclass
+     class Thermometer:
+       temperature: float
+       units: str
+       params: list
+    > item = Example()
+    > item.temperature = 273
+    > item.units = "K"
+    > item.old_values = [{'date': '2025-08-12', 'temperature': 300'}]
+    > assert meta_tags(item) = ['.temperature', '.units', '.old_values[0]["date"]', '.old_values[0]["temperature"]']
+
+    The actual value of the leaf object specified by a path can be
+    retrieved with the `access_meta` function.
+
+    """
+    result = []
+    items = [("", obj)]
+    while items:
+        path, item = items.pop()
+        match item:
+            case list(xs):
+                for idx, x in enumerate(xs):
+                    items.append((f"{path}[{idx}]", x))
+            case dict(xs):
+                for k, v in xs.items():
+                    items.append((f'{path}["{k}"]', v))
+            case n if is_dataclass(n):
+                for fld in fields(item):
+                    items.append((f"{path}.{fld.name}", getattr(item, fld.name)))
+            case _:
+                result.append(path)
+    return result
+
+
+@dataclass(kw_only=True)
+class TagCollection:
+    """The collected tags and their variability."""
+
+    singular: set[str] = field(default_factory=set)
+    variable: set[str] = field(default_factory=set)
