@@ -1,61 +1,71 @@
+"""
+Contains classes describing the metadata for a scattering run
 
-from dataclasses import dataclass
+The metadata is structures around the CANSas format version 1.1, found at
+https://www.cansas.org/formats/canSAS1d/1.1/doc/specification.html
 
-from numpy.typing import ArrayLike
+Metadata from other file formats should be massaged to fit into the data classes presented here.
+Any useful metadata which cannot be included in these classes represent a bug in the CANSas format.
 
-import sasdata.quantities.units as units
-from sasdata.quantities.absolute_temperature import AbsoluteTemperatureAccessor
-from sasdata.quantities.accessors import (
-    AccessorTarget,
-    AngleAccessor,
-    FloatAccessor,
-    LengthAccessor,
-    QuantityAccessor,
-    StringAccessor,
-)
+"""
+
+import base64
+import json
+import re
+from dataclasses import dataclass, field, fields, is_dataclass
+from typing import Any
+
+import h5py
+import numpy as np
+from numpy import ndarray
+
 from sasdata.quantities.quantity import Quantity
+from sasdata.quantities.unit_parser import parse_unit
+from sasdata.quantities.units import NamedUnit
+
+
+def from_json_quantity(obj: dict) -> Quantity | None:
+    if obj is None:
+        return None
+
+    return Quantity(obj["value"], parse_unit(obj["units"]))
 
 
 @dataclass(kw_only=True)
 class Vec3:
     """A three-vector of measured quantities"""
-    x : Quantity[float] | None
-    y : Quantity[float] | None
-    z : Quantity[float] | None
+
+    x: Quantity[float] | None
+    y: Quantity[float] | None
+    z: Quantity[float] | None
 
     @staticmethod
-    def deserialise_json(json_data: dict):
-        x = None
-        y = None
-        z = None
-        if "x" in json_data:
-            x = Quantity.deserialise_json(json_data["x"])
-        if "y" in json_data:
-            y = Quantity.deserialise_json(json_data["y"])
-        if "z" in json_data:
-            z = Quantity.deserialise_json(json_data["z"])
-        return Vec3(x=x, y=y, z=z)
+    def from_json(obj: dict) -> Quantity | None:
+        if obj is None:
+            return None
+        return Vec3(
+            x=from_json_quantity(obj["x"]),
+            y=from_json_quantity(obj["y"]),
+            z=from_json_quantity(obj["z"]),
+        )
 
-    def serialise_json(self):
-        data = {
-            "x": None,
-            "y": None,
-            "z": None
-        }
-        if self.x is not None:
-            data["x"] = self.x.serialise_json()
-        if self.y is not None:
-            data["y"] = self.y.serialise_json()
-        if self.z is not None:
-            data["z"] = self.z.serialise_json()
-        return data
+    def as_h5(self, f: h5py.Group):
+        """Export data onto an HDF5 group"""
+        if self.x:
+            self.x.as_h5(f, "x")
+        if self.y:
+            self.y.as_h5(f, "y")
+        if self.z:
+            self.z.as_h5(f, "z")
+
 
 @dataclass(kw_only=True)
 class Rot3:
     """A measured rotation in 3-space"""
-    roll : Quantity[float] | None
-    pitch : Quantity[float] | None
-    yaw : Quantity[float] | None
+
+    roll: Quantity[float] | None
+    pitch: Quantity[float] | None
+    yaw: Quantity[float] | None
 
     @staticmethod
     def deserialise_json(json_data: dict):
@@ -84,269 +94,182 @@ class Rot3:
             data["yaw"] = self.yaw.serialise_json()
         return data
 
+    @staticmethod
+    def from_json(obj: dict) -> Quantity | None:
+        if obj is None:
+            return None
+        return Rot3(
+            roll=from_json_quantity(obj["roll"]),
+            pitch=from_json_quantity(obj["pitch"]),
+            yaw=from_json_quantity(obj["yaw"]),
+        )
+
+    def as_h5(self, f: h5py.Group):
+        """Export data onto an HDF5 group"""
+        if self.roll:
+            self.roll.as_h5(f, "roll")
+        if self.pitch:
+            self.pitch.as_h5(f, "pitch")
+        if self.yaw:
+            self.yaw.as_h5(f, "yaw")
+
+
 @dataclass(kw_only=True)
 class Detector:
     """
     Detector information
     """
 
-    def __init__(self, target_object: AccessorTarget):
-
-        # Name of the instrument [string]
-        self.name = StringAccessor(target_object, "name")
-
-        # Sample to detector distance [float] [mm]
-        self.distance = LengthAccessor[float](target_object,
-                                              "distance",
-                                              "distance.units",
-                                              default_unit=units.millimeters)
-
-        # Offset of this detector position in X, Y,
-        # (and Z if necessary) [Vector] [mm]
-        self.offset = LengthAccessor[ArrayLike](target_object,
-                                                "offset",
-                                                "offset.units",
-                                                default_unit=units.millimeters)
-
-        self.orientation = AngleAccessor[ArrayLike](target_object,
-                                                    "orientation",
-                                                    "orientation.units",
-                                                    default_unit=units.degrees)
-
-        self.beam_center = LengthAccessor[ArrayLike](target_object,
-                                                     "beam_center",
-                                                     "beam_center.units",
-                                                     default_unit=units.millimeters)
-
-        # Pixel size in X, Y, (and Z if necessary) [Vector] [mm]
-        self.pixel_size = LengthAccessor[ArrayLike](target_object,
-                                                    "pixel_size",
-                                                    "pixel_size.units",
-                                                    default_unit=units.millimeters)
-
-        # Slit length of the instrument for this detector.[float] [mm]
-        self.slit_length = LengthAccessor[float](target_object,
-                                                 "slit_length",
-                                                 "slit_length.units",
-                                                 default_unit=units.millimeters)
+    name: str | None
+    distance: Quantity[float] | None
+    offset: Vec3 | None
+    orientation: Rot3 | None
+    beam_center: Vec3 | None
+    pixel_size: Vec3 | None
+    slit_length: Quantity[float] | None
 
     def summary(self):
-        return (f"Detector:\n"
-                f"   Name:         {self.name}\n"
-                f"   Distance:     {self.distance}\n"
-                f"   Offset:       {self.offset}\n"
-                f"   Orientation:  {self.orientation}\n"
-                f"   Beam center:  {self.beam_center}\n"
-                f"   Pixel size:   {self.pixel_size}\n"
-                f"   Slit length:  {self.slit_length}\n")
+        return (
+            f"Detector:\n"
+            f"   Name:         {self.name}\n"
+            f"   Distance:     {self.distance}\n"
+            f"   Offset:       {self.offset}\n"
+            f"   Orientation:  {self.orientation}\n"
+            f"   Beam center:  {self.beam_center}\n"
+            f"   Pixel size:   {self.pixel_size}\n"
+            f"   Slit length:  {self.slit_length}\n"
+        )
 
     @staticmethod
-    def deserialise_json(json_data: dict):
-        name = None
-        distance = None
-        offset = None
-        orientation = None
-        beam_center = None
-        pixel_size = None
-        slit_length = None
-        if "name" in json_data:
-            name = json_data["name"]
-        if "distance" in json_data:
-            distance = Quantity.deserialise_json(json_data["distance"])
-        if "offset" in json_data:
-            offset = Vec3.deserialise_json(json_data["offset"])
-        if "orientation" in json_data:
-            orientation = Rot3.deserialise_json(json_data["orientation"])
-        if "beam_center" in json_data:
-            beam_center = Vec3.deserialise_json(json_data["beam_center"])
-        if "pixel_size" in json_data:
-            pixel_size = Vec3.deserialise_json(json_data["pixel_size"])
-        if "slit_length" in json_data:
-            slit_length = Quantity.deserialise_json(json_data["slit_length"])
+    def from_json(obj):
         return Detector(
-            name=name,
-            distance=distance,
-            offset=offset,
-            orientation=orientation,
-            beam_center=beam_center,
-            pixel_size=pixel_size,
-            slit_length=slit_length
+            name=obj["name"],
+            distance=from_json_quantity(obj["distance"]),
+            offset=Vec3.from_json(obj["offset"]),
+            orientation=Rot3.from_json(obj["orientation"]),
+            beam_center=Vec3.from_json(obj["beam_center"]),
+            pixel_size=Vec3.from_json(obj["pixel_size"]),
+            slit_length=from_json_quantity(obj["slit_length"]),
         )
 
+    def as_h5(self, group: h5py.Group):
+        """Export data onto an HDF5 group"""
+        if self.name is not None:
+            group.create_dataset("name", data=[self.name])
+        if self.distance:
+            self.distance.as_h5(group, "SDD")
+        if self.offset:
+            self.offset.as_h5(group.create_group("offset"))
+        if self.orientation:
+            self.orientation.as_h5(group.create_group("orientation"))
+        if self.beam_center:
+            self.beam_center.as_h5(group.create_group("beam_center"))
+        if self.pixel_size:
+            self.pixel_size.as_h5(group.create_group("pixel_size"))
+        if self.slit_length:
+            self.slit_length.as_h5(group, "slit_length")
 
-    def serialise_json(self):
-        data = {
-            "name": self.name,
-            "distance": None,
-            "offset": None,
-            "orientation": None,
-            "beam_center": None,
-            "pixel_size": None,
-            "slit_length": None
-        }
-        if self.distance is not None:
-            data["distance"] = self.distance.serialise_json()
-        if self.offset is not None:
-            data["offset"] = self.offset.serialise_json()
-        if self.orientation is not None:
-            data["orientation"] = self.orientation.serialise_json()
-        if self.beam_center is not None:
-            data["beam_center"] = self.beam_center.serialise_json()
-        if self.pixel_size is not None:
-            data["pixel_size"] = self.pixel_size.serialise_json()
-        if self.slit_length is not None:
-            data["slit_length"] = self.slit_length.serialise_json()
-        return data
-
-
+@dataclass(kw_only=True)
 class Aperture:
-
-    def __init__(self, target_object: AccessorTarget):
-
-        # Name
-        self.name = StringAccessor(target_object, "name")
-
-        # Type
-        self.type = StringAccessor(target_object, "type")
-
-        # Size name - TODO: What is the name of a size
-        self.size_name = StringAccessor(target_object, "size_name")
-
-        # Aperture size [Vector] # TODO: Wat!?!
-        self.size = QuantityAccessor[ArrayLike](target_object,
-                                "size",
-                                "size.units",
-                                default_unit=units.millimeters)
-
-        # Aperture distance [float]
-        self.distance = LengthAccessor[float](target_object,
-                                    "distance",
-                                    "distance.units",
-                                    default_unit=units.millimeters)
-
+    distance: Quantity[float] | None
+    size: Vec3 | None
+    size_name: str | None
+    name: str | None
+    type_: str | None
 
     def summary(self):
-        return (f"Aperture:\n"
-                f"  Name: {self.name}\n"
-                f"  Aperture size: {self.size}\n"
-                f"  Aperture distance: {self.distance}\n")
-
-    @staticmethod
-    def deserialise_json(json_data: dict):
-        distance = None
-        size = None
-        size_name = None
-        name = None
-        type_ = None
-        if "distance" in json_data:
-            distance = Quantity.deserialise_json(json_data["distance"])
-        if "size" in json_data:
-            size = Vec3.deserialise_json(json_data["size"])
-        if "size_name" in json_data:
-            size_name = json_data["size_name"]
-        if "name" in json_data:
-            name = json_data["name"]
-        if "type" in json_data:
-            type_ = json_data["type"]
-        return Aperture(
-            distance=distance, size=size, size_name=size_name, name=name, type_=type_
+        return (
+            f"   Aperture:\n"
+            f"     Name: {self.name}\n"
+            f"     Aperture size: {self.size}\n"
+            f"     Aperture distance: {self.distance}\n"
         )
 
-    def serialise_json(self):
-        data = {
-            "distance": None,
-            "size": None,
-            "size_name": self.size_name,
-            "name": self.name,
-            "type": self.type_
-        }
-        if self.distance is not None:
-            data["distance"] = self.distance.serialise_json()
-        if self.size is not None:
-            data["size"] = self.size.serialise_json()
+    @staticmethod
+    def from_json(obj):
+        return Aperture(
+            distance=from_json_quantity(obj["distance"]),
+            size=Vec3.from_json(obj["size"]),
+            size_name=obj["size_name"],
+            name=obj["name"],
+            type_=obj["type"],
+        )
 
+
+    def as_h5(self, group: h5py.Group):
+        """Export data onto an HDF5 group"""
+        if self.distance is not None:
+            self.distance.as_h5(group, "distance")
+        if self.name is not None:
+            group.attrs["name"] = self.name
+        if self.type_ is not None:
+            group.attrs["type"] = self.type_
+        if self.size:
+            size_group = group.create_group("size")
+            self.size.as_h5(size_group)
+            if self.size_name is not None:
+                size_group.attrs["name"] = self.size_name
+
+
+
+@dataclass(kw_only=True)
 class Collimation:
     """
     Class to hold collimation information
     """
 
-    def __init__(self, name, length):
-
-        # Name
-        self.name = name
-        # Length [float] [mm]
-        self.length = length
-        # TODO - parse units properly
+    length: Quantity[float] | None
+    apertures: list[Aperture]
 
     def summary(self):
-
-        #TODO collimation stuff
-        return (
-            f"Collimation:\n"
-            f"   Length: {self.length}\n")
+        return f"Collimation:\n   Length: {self.length}\n" + "".join([a.summary() for a in self.apertures])
 
     @staticmethod
-    def deserialise_json(json_data: dict):
-        length = None
-        apertures = []
-        if "length" in json_data:
-            length = Quantity.deserialise_json(json_data["length"])
-        if "apertures" in json_data:
-            apertures = [Aperture.deserialise_json(a) for a in json_data["apertures"]]
+    def from_json(obj):
+        return Collimation(
+            length=from_json_quantity(obj["length"]) if obj["length"] else None,
+            apertures=list(map(Aperture.from_json, obj["apertures"])),
+        )
 
-    def serialise_json(self):
-        data = {
-            "length": None,
-            "apertures": [a.serialise_json() for a in self.apertures]
-        }
-        if self.length is not None:
-            data["length"] = self.length.serialise_json()
-        return data
+    def as_h5(self, group: h5py.Group):
+        """Export data onto an HDF5 group"""
+        if self.length:
+            self.length.as_h5(group, "length")
+        for idx, a in enumerate(self.apertures):
+            a.as_h5(group.create_group(f"sasaperture{idx:02d}"))
 
-@dataclass
+
+@dataclass(kw_only=True)
 class BeamSize:
     name: str | None
     size: Vec3 | None
 
     @staticmethod
-    def deserialise_json(json_data: dict):
-        name = None
-        size = None
-        if "name" in json_data:
-            name = json_data["name"]
-        if "size" in json_data:
-            size = Vec3.deserialise_json(json_data["size"])
-        return BeamSize(name=name, size=size)
+    def from_json(obj):
+        return BeamSize(name=obj["name"], size=Vec3.from_json(obj["size"]))
 
-    def serialise_json(self):
-        data = {
-            "name": self.name,
-            "size": None
-        }
-        if self.size is not None:
-            data["size"] = self.size.serialise_json()
-        return data
+    def as_h5(self, group: h5py.Group):
+        """Export data onto an HDF5 group"""
+        if self.name:
+            group.attrs["name"] = self.name
+        if self.size:
+            self.size.as_h5(group)
 
 
-@dataclass
+@dataclass(kw_only=True)
 class Source:
-    radiation: str
-    beam_shape: str
-    beam_size: Optional[BeamSize]
-    wavelength : Quantity[float]
-    wavelength_min : Quantity[float]
-    wavelength_max : Quantity[float]
-    wavelength_spread : Quantity[float]
+    radiation: str | None
+    beam_shape: str | None
+    beam_size: BeamSize | None
+    wavelength: Quantity[float] | None
+    wavelength_min: Quantity[float] | None
+    wavelength_max: Quantity[float] | None
+    wavelength_spread: Quantity[float] | None
 
     def summary(self) -> str:
-        if self.radiation is None and self.type.value and self.probe_particle.value:
-            radiation = f"{self.type.value} {self.probe_particle.value}"
-        else:
-            radiation = f"{self.radiation}"
-
         return (
             f"Source:\n"
-            f"    Radiation:         {radiation}\n"
+            f"    Radiation:         {self.radiation}\n"
             f"    Shape:             {self.beam_shape}\n"
             f"    Wavelength:        {self.wavelength}\n"
             f"    Min. Wavelength:   {self.wavelength_min}\n"
@@ -356,275 +279,287 @@ class Source:
         )
 
     @staticmethod
-    def deserialise_json(json_data: dict):
-        radiation = None
-        beam_shape = None
-        beam_size = None
-        wavelength = None
-        wavelength_min = None
-        wavelength_max = None
-        wavelength_spread = None
-        if "radiation" in json_data:
-            radiation = json_data["radiation"]
-        if "beam_shape" in json_data:
-            beam_shape = json_data["beam_shape"]
-        if "beam_size" in json_data:
-            beam_size = BeamSize.deserialise_json(json_data["beam_size"])
-        if "wavelength" in json_data:
-            wavelength = Quantity.deserialise_json(json_data["wavelength"])
-        if "wavelength_min" in json_data:
-            wavelength_min = Quantity.deserialise_json(json_data["wavelength_min"])
-        if "wavelength_max" in json_data:
-            wavelength_max = Quantity.deserialise_json(json_data["wavelength_max"])
-        if "wavelength_spread" in json_data:
-            wavelength_spread = Quantity.deserialise_json(json_data["wavelength_spread"])
+    def from_json(obj):
         return Source(
-            radiation=radiation,
-            beam_shape=beam_shape,
-            beam_size=beam_size,
-            wavelength=wavelength,
-            wavelength_min=wavelength_min,
-            wavelength_max=wavelength_max,
-            wavelength_spread=wavelength_spread
+            radiation=obj["radiation"],
+            beam_shape=obj["beam_shape"],
+            beam_size=BeamSize.from_json(obj["beam_size"]) if obj["beam_size"] else None,
+            wavelength=obj["wavelength"],
+            wavelength_min=obj["wavelength_min"],
+            wavelength_max=obj["wavelength_max"],
+            wavelength_spread=obj["wavelength_spread"],
         )
 
-    def serialise_json(self):
-        data = {
-            "radiation": self.radiation,
-            "beam_shape": self.beam_shape,
-            "beam_size": None,
-            "wavelength": None,
-            "wavelength_min": None,
-            "wavelength_max": None,
-            "wavelength_spread": None
-        }
-        if self.beam_size is not None:
-            data["beam_size"] = self.beam_size.serialise_json()
-        if self.wavelength is not None:
-            data["wavelength"] = self.wavelength.serialise_json()
-        if self.wavelength_min is not None:
-            data["wavelength_min"] = self.wavelength_min.serialise_json()
-        if self.wavelength_max is not None:
-            data["wavelength_max"] = self.wavelength_max.serialise_json()
-        if self.wavelength_spread is not None:
-            data["wavelength_spread"] = self.wavelength_spread.serialise_json()
-        return data
+    def as_h5(self, group: h5py.Group):
+        """Export data onto an HDF5 group"""
+        if self.radiation:
+            group.create_dataset("radiation", data=[self.radiation])
+        if self.beam_shape:
+            group.create_dataset("beam_shape", data=[self.beam_shape])
+        if self.beam_size:
+            self.beam_size.as_h5(group.create_group("beam_size"))
+        if self.wavelength:
+            self.wavelength.as_h5(group, "wavelength")
+        if self.wavelength_min:
+            self.wavelength_min.as_h5(group, "wavelength_min")
+        if self.wavelength_max:
+            self.wavelength_max.as_h5(group, "wavelength_max")
+        if self.wavelength_spread:
+            self.wavelength_spread.as_h5(group, "wavelength_spread")
 
 
-"""
-Definitions of radiation types
-"""
-NEUTRON = 'neutron'
-XRAY = 'x-ray'
-MUON = 'muon'
-ELECTRON = 'electron'
 
 
+
+@dataclass(kw_only=True)
 class Sample:
     """
     Class to hold the sample description
     """
-    def __init__(self, target_object: AccessorTarget):
 
-        # Short name for sample
-        self.name = StringAccessor(target_object, "name")
-        # ID
-
-        self.sample_id = StringAccessor(target_object, "id")
-
-        # Thickness [float] [mm]
-        self.thickness = LengthAccessor(target_object,
-                                        "thickness",
-                                        "thickness.units",
-                                        default_unit=units.millimeters)
-
-        # Transmission [float] [fraction]
-        self.transmission = FloatAccessor(target_object,"transmission")
-
-        # Temperature [float] [No Default]
-        self.temperature = AbsoluteTemperatureAccessor(target_object,
-                                                       "temperature",
-                                                       "temperature.unit",
-                                                       default_unit=units.kelvin)
-        # Position [Vector] [mm]
-        self.position = LengthAccessor[ArrayLike](target_object,
-                                                  "position",
-                                                  "position.unit",
-                                                  default_unit=units.millimeters)
-
-        # Orientation [Vector] [degrees]
-        self.orientation = AngleAccessor[ArrayLike](target_object,
-                                                    "orientation",
-                                                    "orientation.unit",
-                                                    default_unit=units.degrees)
-
-        # Details
-        self.details = StringAccessor(target_object, "details")
-
-
-        # SESANS zacceptance
-        zacceptance = (0,"")
-        yacceptance = (0,"")
+    name: str | None
+    sample_id: str | None
+    thickness: Quantity[float] | None
+    transmission: float | None
+    temperature: Quantity[float] | None
+    position: Vec3 | None
+    orientation: Rot3 | None
+    details: list[str]
 
     def summary(self) -> str:
-        return (f"Sample:\n"
-                f"   ID:           {self.sample_id}\n"
-                f"   Transmission: {self.transmission}\n"
-                f"   Thickness:    {self.thickness}\n"
-                f"   Temperature:  {self.temperature}\n"
-                f"   Position:     {self.position}\n"
-                f"   Orientation:  {self.orientation}\n")
-
-    @staticmethod
-    def deserialise_json(json_data):
-        name = None
-        sample_id = None
-        thickness = None
-        transmission = None
-        temperature = None
-        position = None
-        orientation = None
-        details = []
-        if "name" in json_data:
-            name = json_data["name"]
-        if "sample_id" in json_data:
-            sample_id = json_data["sample_id"]
-        if "thickness" in json_data:
-            thickness = Quantity.deserialise_json(json_data["thickness"])
-        if "temperature" in json_data:
-            temperature = Quantity.deserialise_json(json_data["temperature"])
-        if "position" in json_data:
-            position = Vec3.deserialise_json(json_data["position"])
-        if "orientation" in json_data:
-            orientation = Rot3.deserialise_json(json_data["orientation"])
-        return Sample(
-            name=name,
-            sample_id=sample_id,
-            thickness=thickness,
-            transmission=transmission,
-            temperature=temperature,
-            position=position,
-            orientation=orientation,
-            details=details
+        return (
+            f"Sample:\n"
+            f"   ID:           {self.sample_id}\n"
+            f"   Transmission: {self.transmission}\n"
+            f"   Thickness:    {self.thickness}\n"
+            f"   Temperature:  {self.temperature}\n"
+            f"   Position:     {self.position}\n"
+            f"   Orientation:  {self.orientation}\n"
         )
 
+    @staticmethod
+    def from_json(obj):
+        return Sample(
+            name=obj["name"],
+            sample_id=obj["sample_id"],
+            thickness=obj["thickness"],
+            transmission=obj["transmission"],
+            temperature=obj["temperature"],
+            position=obj["position"],
+            orientation=obj["orientation"],
+            details=obj["details"],
+        )
 
-    def serialise_json(self):
-        data = {
-            "name": self.name,
-            "sample_id": self.sample_id,
-            "thickness": None,
-            "transmission": self.transmission,
-            "temperature": None,
-            "position": None,
-            "orientation": None,
-            "details": self.details
-        }
-        if self.thickness is not None:
-            data["thickness"] = self.thickness.serialise_json()
-        if self.temperature is not None:
-            data["temperature"] = self.temperature.serialise_json()
-        if self.position is not None:
-            data["position"] = self.position.serialise_json()
-        if self.orientation is not None:
-            data["orientation"] = self.orientation.serialise_json()
-        return data
+    def as_h5(self, f: h5py.Group):
+        """Export data onto an HDF5 group"""
+        if self.name is not None:
+            f.attrs["name"] = self.name
+        if self.sample_id is not None:
+            f.create_dataset("ID", data=[self.sample_id])
+        if self.thickness:
+            self.thickness.as_h5(f, "thickness")
+        if self.transmission is not None:
+            f.create_dataset("transmission", data=[self.transmission])
+        if self.temperature:
+            self.temperature.as_h5(f, "temperature")
+        if self.position:
+            self.position.as_h5(f.create_group("position"))
+        if self.orientation:
+            self.orientation.as_h5(f.create_group("orientation"))
+        if self.details:
+            f.create_dataset("details", data=self.details)
 
 
+@dataclass(kw_only=True)
 class Process:
     """
     Class that holds information about the processes
     performed on the data.
     """
-    def __init__(self, target_object: AccessorTarget):
-        self.name = StringAccessor(target_object, "name")
-        self.date = StringAccessor(target_object, "date")
-        self.description = StringAccessor(target_object, "description")
 
-        #TODO: It seems like these might be lists of strings, this should be checked
-
-        self.term = StringAccessor(target_object, "term")
-        self.notes = StringAccessor(target_object, "notes")
+    name: str | None
+    date: str | None
+    description: str | None
+    terms: dict[str, str | Quantity[float]]
+    notes: list[str]
 
     def single_line_desc(self):
         """
-            Return a single line string representing the process
+        Return a single line string representing the process
         """
-        return f"{self.name} {self.date} {self.description}"
+        return f"{self.name.value} {self.date.value} {self.description.value}"
 
     def summary(self):
-        return (f"Process:\n"
-                f"    Name: {self.name.value}\n"
-                f"    Date: {self.date.value}\n"
-                f"    Description: {self.description.value}\n"
-                f"    Term: {self.term.value}\n"
-                f"    Notes: {self.notes.value}\n"
-                )
+        if self.terms:
+            termInfo = "    Terms:\n" + "\n".join([f"        {k}: {v}" for k, v in self.terms.items()]) + "\n"
+        else:
+            termInfo = ""
+
+        if self.notes:
+            noteInfo = "    Notes:\n" + "\n".join([f"        {note}" for note in self.notes]) + "\n"
+        else:
+            noteInfo = ""
+
+        return (
+            f"Process:\n"
+            f"    Name: {self.name}\n"
+            f"    Date: {self.date}\n"
+            f"    Description: {self.description}\n"
+            f"{termInfo}"
+            f"{noteInfo}"
+        )
 
     @staticmethod
-    def deserialise_json(json_data: dict):
-        name = None
-        date = None
-        description = None
-        term = None
-        if "name" in json_data:
-            name = json_data["name"]
-        if "date" in json_data:
-            date = json_data["date"]
-        if "description" in json_data:
-            description = json_data["description"]
-        if "term" in json_data:
-            term = json_data["term"]
-        return Process(name=name, date=date, description=description, term=term)
+    def from_json(obj):
+        return Process(
+            name=obj["name"],
+            date=obj["date"],
+            description=obj["description"],
+            terms=obj["terms"],
+            notes=obj["notes"],
+        )
 
-    def serialise_json(self):
-        return {
-            "name": self.name,
-            "date": self.date,
-            "description": self.description,
-            "term": self.term,
-        }
+    def as_h5(self, group: h5py.Group):
+        """Export data onto an HDF5 group"""
+        if self.name is not None:
+            group.create_dataset("name", data=[self.name])
+        if self.date is not None:
+            group.create_dataset("date", data=[self.date])
+        if self.description is not None:
+            group.create_dataset("description", data=[self.description])
+        if self.terms:
+            for idx, (term, value) in enumerate(self.terms.items()):
+                node = group.create_group(f"term{idx:02d}")
+                node.attrs["name"] = term
+                if type(value) is Quantity:
+                    node.attrs["value"] = value.value
+                    node.attrs["unit"] = value.units.symbol
+                else:
+                    node.attrs["value"] = value
+        for idx, note in enumerate(self.notes):
+            group.create_dataset(f"note{idx:02d}", data=[note])
 
 
 @dataclass
 class Instrument:
-    collimations : list[Collimation]
-    source : Source
-    detector : list[Detector]
+    collimations: list[Collimation]
+    source: Source | None
+    detector: list[Detector]
 
     def summary(self):
         return (
-            self.aperture.summary() +
-            "\n".join([c.summary for c in self.collimations]) +
-            self.detector.summary() +
-            self.source.summary())
+            "\n".join([c.summary() for c in self.collimations])
+            + "".join([d.summary() for d in self.detector])
+            + (self.source.summary() if self.source is not None else "")
+        )
 
     @staticmethod
-    def deserialize_json(json_data: dict):
-        collimations = []
-        source = None
-        detector= []
-        if "collimations" in json_data:
-            collimations = [Collimation.deserialise_json(c) for c in json_data["collimations"]]
-        if "source" in json_data:
-            source = Source.deserialise_json(json_data["source"])
-        if "detector" in json_data:
-            detector = [Detector.deserialise_json(d) for d in json_data["detector"]]
-        return Instrument(collimations=collimations, source=source, detector=detector)
+    def from_json(obj):
+        return Instrument(
+            collimations=list(map(Collimation.from_json, obj["collimations"])),
+            source=Source.from_json(obj["source"]),
+            detector=list(map(Detector.from_json, obj["detector"])),
+        )
 
-    def serialise_json(self):
-        data = {
-            "collimations": [c.serialise_json() for c in self.collimations],
-            "source": None,
-            "detector": [d.serialise_json() for d in self.detector]
-        }
-        if self.source is not None:
-            data["source"] = self.source.serialise_json()
-        return data
+    def as_h5(self, group: h5py.Group):
+        """Export data onto an HDF5 group"""
+        if self.source:
+            self.source.as_h5(group.create_group("sassource"))
+        for idx, c in enumerate(self.collimations):
+            c.as_h5(group.create_group(f"sascollimation{idx:02d}"))
+        for idx, d in enumerate(self.detector):
+            d.as_h5(group.create_group(f"sasdetector{idx:02d}"))
+
 
 @dataclass(kw_only=True)
+class MetaNode:
+    name: str
+    attrs: dict[str, str]
+    contents: str | Quantity | ndarray | list["MetaNode"]
+
+    def to_string(self, header=""):
+        """Convert node to pretty printer string"""
+        if self.attrs:
+            attributes = f"\n{header}  Attributes:\n" + "\n".join(
+                [f"{header}    {k}: {v}" for k, v in self.attrs.items()]
+            )
+        else:
+            attributes = ""
+        if self.contents:
+            if type(self.contents) is str:
+                children = f"\n{header}  {self.contents}"
+            else:
+                children = "".join([n.to_string(header + "  ") for n in self.contents])
+        else:
+            children = ""
+
+        return f"\n{header}{self.name}:{attributes}{children}"
+
+    def filter(self, name: str) -> list[ndarray | Quantity | str]:
+        match self.contents:
+            case str() | ndarray() | Quantity():
+                if name == self.name:
+                    return [self.contents]
+            case list():
+                return [y for x in self.contents for y in x.filter(name)]
+            case _:
+                raise RuntimeError(f"Cannot filter contents of type {type(self.contents)}: {self.contents}")
+        return []
+
+    def __eq__(self, other) -> bool:
+        """Custom equality overload needed since numpy arrays don't
+        play nicely with equality"""
+        match self.contents:
+            case ndarray():
+                if not np.all(self.contents == other.contents):
+                    return False
+            case Quantity():
+                result = self.contents == other.contents
+                if type(result) is ndarray and not np.all(result):
+                    return False
+                if type(result) is bool and not result:
+                    return False
+            case _:
+                if self.contents != other.contents:
+                    return False
+        for k, v in self.attrs.items():
+            if k not in other.attrs:
+                return False
+            if type(v) is np.ndarray and np.any(v != other.attrs[k]):
+                return False
+            if type(v) is not np.ndarray and v != other.attrs[k]:
+                return False
+        return self.name == other.name
+
+    @staticmethod
+    def from_json(obj):
+        def from_content(con):
+            match con:
+                case list():
+                    return list(map(MetaNode.from_json, con))
+                case {
+                    "type": "ndarray",
+                    "dtype": dtype,
+                    "encoding": "base64",
+                    "contents": contents,
+                    "shape": shape,
+                }:
+                    return np.frombuffer(base64.b64decode(contents), dtype=dtype).reshape(shape)
+                case {"value": value, "units": units}:
+                    return from_json_quantity({"value": from_content(value), "units": from_content(units)})
+                case _:
+                    return con
+
+        return MetaNode(
+            name=obj["name"],
+            attrs={k: from_content(v) for k, v in obj["attrs"].items()},
+            contents=from_content(obj["contents"]),
+        )
+
+
+@dataclass(kw_only=True, eq=True)
 class Metadata:
-    title: Optional[str]
+    title: str | None
     run: list[str]
     definition: str | None
     process: list[Process]
@@ -632,48 +567,31 @@ class Metadata:
     instrument: Instrument | None
     raw: MetaNode | None
 
-    def __init__(self, target: AccessorTarget, instrument: Instrument):
-        self._target = target
-
-        self.instrument = instrument
-        self.process = Process(target.with_path_prefix("sasprocess|process"))
-        self.sample = Sample(target.with_path_prefix("sassample|sample"))
-        self.transmission_spectrum = TransmissionSpectrum(target.with_path_prefix("sastransmission_spectrum|transmission_spectrum"))
-
-        self._title = StringAccessor(target, "title")
-        self._run = StringAccessor(target, "run")
-        self._definition = StringAccessor(target, "definition")
-
-        self.title: str = decode_string(self._title.value)
-        self.run: str = decode_string(self._run.value)
-        self.definition: str = decode_string(self._definition.value)
-
-
     def summary(self):
+        run_string = str(self.run[0] if len(self.run) == 1 else self.run)
         return (
-            f"  {self.title}, Run: {self.run}\n" +
-            "  " + "="*len(self.title) +
-                           "=======" +
-            "="*len(self.run) + "\n\n" +
-            f"Definition: {self.title}\n" +
-            self.process.summary() +
-            self.sample.summary() +
-            (self.instrument.summary() if self.instrument else ""))
+            f"  {self.title}, Run: {run_string}\n"
+            + "  "
+            + "=" * len(str(self.title))
+            + "======="
+            + "=" * len(run_string)
+            + "\n\n"
+            + f"Definition: {self.title}\n"
+            + "".join([p.summary() for p in self.process])
+            + (self.sample.summary() if self.sample else "")
+            + (self.instrument.summary() if self.instrument else "")
+        )
 
     @staticmethod
-    def deserialize_json(json_data: dict):
-        title = json_data["title"]
-        run = json_data["run"]
-        definition = json_data["definition"]
-        process = [Process.deserialise_json(p) for p in json_data["process"]]
-        sample = None
-        instrument = None
-        if json_data["sample"] is not None:
-            sample = Sample.deserialise_json(json_data["sample"])
-        if json_data["instrument"] is not None:
-            instrument = Instrument.deserialize_json(json_data["instrument"])
+    def from_json(obj):
         return Metadata(
-            title=title, run=run, definition=definition, process=process, sample=sample, instrument=instrument
+            title=obj["title"] if obj["title"] else None,
+            run=obj["run"],
+            definition=obj["definition"] if obj["definition"] else None,
+            process=[Process.from_json(p) for p in obj["process"]],
+            sample=Sample.from_json(obj["sample"]) if obj["sample"] else None,
+            instrument=Instrument.from_json(obj["instrument"]) if obj["instrument"] else None,
+            raw=MetaNode.from_json(obj["raw"]),
         )
 
     def serialise_json(self):
@@ -936,3 +854,39 @@ class TagCollection:
 
     singular: set[str] = field(default_factory=set)
     variable: set[str] = field(default_factory=set)
+
+
+def collect_tags(objs: list[dataclass]) -> TagCollection:
+    """Identify uniform and varying data within a groups of data objects
+
+    The resulting TagCollection contains every accessor string that is
+    valid for every object in the `objs` list.  For example, if
+    `obj.name` is a string for every `obj` in `objs`, then the string
+    ".name" will be present in one of the two sets in the tags
+    collection.
+
+    To be more specific, if `obj.name` exists and has the same value
+    for every `obj` in `objs`, the string ".name" will be included in
+    the `singular` set.  If there are at least two distinct values for
+    `obj.name`, then ".name" will be in the `variable` set.
+
+    """
+    if not objs:
+        return ([], [])
+    first = objs.pop()
+    terms = set(meta_tags(first))
+    for obj in objs:
+        terms = terms.intersection(set(meta_tags(obj)))
+
+    objs.append(first)
+
+    result = TagCollection()
+
+    for term in terms:
+        values = set([access_meta(obj, term) for obj in objs])
+        if len(values) == 1:
+            result.singular.add(term)
+        else:
+            result.variable.add(term)
+
+    return result

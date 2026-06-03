@@ -1979,7 +1979,6 @@ class NamedQuantity[QuantityType](Quantity[QuantityType]):
         quantity = super().serialise_json()
         quantity["name"] = self.name
         return quantity
-
     @property
     def string_repr(self):
         return self.name
