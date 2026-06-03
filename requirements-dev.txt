@@ -1,0 +1,8 @@
+-r requirements-test.txt
+
+# Documentation (future)
+sphinx
+html5lib
+
+# Other stuff
+pre-commit

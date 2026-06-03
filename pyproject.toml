@@ -50,6 +50,7 @@ files = [ "requirements.txt" ]
 
 [tool.hatch.metadata.hooks.requirements_txt.optional-dependencies]
 test = [ "requirements-test.txt" ]
+dev = [ "requirements-dev.txt" ]
 
 
 [tool.hatch.version]
