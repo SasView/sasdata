@@ -1,17 +1,20 @@
-from tokenize import String
 
-import numpy as np
+from dataclasses import dataclass
+
 from numpy.typing import ArrayLike
 
 import sasdata.quantities.units as units
 from sasdata.quantities.absolute_temperature import AbsoluteTemperatureAccessor
-from sasdata.quantities.accessors import StringAccessor, LengthAccessor, AngleAccessor, QuantityAccessor, \
-    DimensionlessAccessor, FloatAccessor, TemperatureAccessor, AccessorTarget
-
-
-from dataclasses import dataclass
-
+from sasdata.quantities.accessors import (
+    AccessorTarget,
+    AngleAccessor,
+    FloatAccessor,
+    LengthAccessor,
+    QuantityAccessor,
+    StringAccessor,
+)
 from sasdata.quantities.quantity import Quantity
+
 
 @dataclass(kw_only=True)
 class Vec3:
