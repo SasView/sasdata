@@ -1,6 +1,6 @@
-from typing import TypeVar, Self
 from dataclasses import dataclass
 from enum import Enum
+from typing import Self, TypeVar
 
 from sasdata.quantities.quantity import NamedQuantity
 
