@@ -1,16 +1,3 @@
-from sasdata.ascii_reader_metadata import AsciiMetadataCategory, AsciiReaderMetadata, pairings, bidirectional_pairings
-from sasdata.data import SasData
-from sasdata.dataset_types import DatasetType, one_dim
-from sasdata.dataset_types import DatasetType
-from sasdata.guess import guess_column_count, guess_columns, guess_starting_position
-from sasdata.quantities.units import NamedUnit
-from sasdata.quantities.quantity import NamedQuantity, Quantity
-from sasdata.quantities.accessors import AccessorTarget, Group
-from sasdata.metadata import Metadata
-from sasdata.data_backing import Dataset, Group
-from enum import Enum
-from dataclasses import dataclass, field
-import numpy as np
 import re
 from dataclasses import dataclass, field, replace
 from enum import Enum
@@ -18,15 +5,9 @@ from os import path
 
 import numpy as np
 
-from sasdata.ascii_reader_metadata import (
-    AsciiMetadataCategory,
-    AsciiReaderMetadata,
-    bidirectional_pairings,
-    pairings,
-)
+from sasdata.ascii_reader_metadata import AsciiMetadataCategory, AsciiReaderMetadata, bidirectional_pairings, pairings
 from sasdata.data import SasData
-from sasdata.dataset_types import DatasetType, one_dim, unit_kinds
-from sasdata.default_units import get_default_unit
+from sasdata.dataset_types import DatasetType, one_dim
 from sasdata.guess import (
     guess_column_count,
     guess_columns,
