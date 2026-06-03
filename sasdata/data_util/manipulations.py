@@ -23,11 +23,49 @@ from warnings import warn
 
 import numpy as np
 
+################################################################################
+# Backwards-compatible wrappers that delegate to the new implementations
+# in averaging.py.
+# The original manipulations classes used different parameter names.
+# The wrappers below translate the old style
+# parameters to the new classes to preserve external behaviour.
+################################################################################
+from sasdata.data_util.averaging import (
+    Boxavg,
+    Boxcut,
+    Boxsum,
+    Ring,
+    Ringcut,
+    Sectorcut,
+    SectorQ,
+    SlabX,
+    SlabY,
+    WedgePhi,
+    WedgeQ,
+)
 from sasdata.dataloader.data_info import Data1D, Data2D
+from sasdata.dataloader.data_info import reader2D_converter as _di_reader2D_converter
 from sasdata.quantities.constants import Pi, TwoPi
 
 warn("sasdata.data_util.manipulations is deprecated. Unless otherwise noted, update your import to "
      "sasdata.data_util.averaging.", DeprecationWarning, stacklevel=2)
+
+
+def deduce_qz(qx: float, qy: float, wavelength: float) -> float:
+    """
+    If you know qx, qy, and the wavelength, you can derive qz
+
+    :param qx: qx [inverse length]
+    :param dy: qy [inverse length]
+    :param wavelength: neutron wavelength [length]
+
+    :return: qz
+    """
+
+    k0 = 2*np.pi/wavelength
+    twotheta = np.arcsin((qx**2 + qy**2) / k0)
+    qz = (1 - np.cos(twotheta)) * k0
+    return qz
 
 
 def position_and_wavelength_to_q(dx: float, dy: float, detector_distance: float, wavelength: float) -> float:
@@ -302,7 +340,6 @@ class SlabX(SlabX):
 
     Old signature:
         SlabX(x_min=0, x_max=0, y_min=0, y_max=0, bin_width=0.001, fold=False)
-
     New signature uses nbins; translate bin_width -> nbins using ceil(range/bin_width)
     """
     def __init__(self, x_min=0.0, x_max=0.0, y_min=0.0,
