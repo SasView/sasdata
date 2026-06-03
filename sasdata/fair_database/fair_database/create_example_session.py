@@ -50,9 +50,7 @@ session = {
                                     "parameters": {
                                         "a": {
                                             "operation": "constant",
-                                            "parameters": {
-                                                "value": {"type": "int", "value": 7}
-                                            },
+                                            "parameters": {"value": {"type": "int", "value": 7}},
                                         },
                                         "b": {
                                             "operation": "variable",

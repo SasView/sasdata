@@ -1,8 +1,7 @@
+from django.contrib.auth.models import User
 from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APIClient
-
-from django.contrib.auth.models import User
 
 
 # Create your tests here.
@@ -27,9 +26,7 @@ class AuthTests(TestCase):
             "email": "email2@domain.org",
             "password": "sasview!",
         }
-        cls.user = User.objects.create_user(
-            id=1, username="testUser2", password="sasview!", email="email2@domain.org"
-        )
+        cls.user = User.objects.create_user(id=1, username="testUser2", password="sasview!", email="email2@domain.org")
         cls.client_authenticated = APIClient()
         cls.client_authenticated.force_authenticate(user=cls.user)
 
@@ -137,9 +134,7 @@ class AuthTests(TestCase):
 
     # Test login is successful after registering then logging out
     def test_register_login(self):
-        register_response = self.client1.post(
-            "/auth/register/", data=self.register_data
-        )
+        register_response = self.client1.post("/auth/register/", data=self.register_data)
         logout_response = self.client1.post("/auth/logout/")
         login_response = self.client1.post("/auth/login/", data=self.login_data)
         self.assertEqual(register_response.status_code, status.HTTP_201_CREATED)

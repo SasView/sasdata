@@ -44,9 +44,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "is_public",
-                    models.BooleanField(
-                        default=False, help_text="opt in to make your data public"
-                    ),
+                    models.BooleanField(default=False, help_text="opt in to make your data public"),
                 ),
                 ("name", models.CharField(max_length=200)),
                 (
@@ -109,9 +107,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "dataset",
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE, to="data.dataset"
-                    ),
+                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="data.dataset"),
                 ),
                 (
                     "parent_operation",

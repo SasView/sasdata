@@ -42,9 +42,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "is_public",
-                    models.BooleanField(
-                        default=False, help_text="opt in to make your data public"
-                    ),
+                    models.BooleanField(default=False, help_text="opt in to make your data public"),
                 ),
                 (
                     "current_user",
@@ -68,9 +66,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "users",
-                    models.ManyToManyField(
-                        blank=True, related_name="+", to=settings.AUTH_USER_MODEL
-                    ),
+                    models.ManyToManyField(blank=True, related_name="+", to=settings.AUTH_USER_MODEL),
                 ),
             ],
             options={

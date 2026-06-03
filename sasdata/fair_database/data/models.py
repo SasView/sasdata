@@ -1,6 +1,6 @@
-from django.db import models
 from django.contrib.auth.models import User
 from django.core.files.storage import FileSystemStorage
+from django.db import models
 
 
 def empty_list():
@@ -15,16 +15,12 @@ class Data(models.Model):
     """Base model for data."""
 
     #  owner of the data
-    current_user = models.ForeignKey(
-        User, blank=True, null=True, on_delete=models.CASCADE, related_name="+"
-    )
+    current_user = models.ForeignKey(User, blank=True, null=True, on_delete=models.CASCADE, related_name="+")
 
     users = models.ManyToManyField(User, blank=True, related_name="+")
 
     # is the data public?
-    is_public = models.BooleanField(
-        default=False, help_text="opt in to make your data public"
-    )
+    is_public = models.BooleanField(default=False, help_text="opt in to make your data public")
 
     class Meta:
         abstract = True
@@ -34,9 +30,7 @@ class DataFile(Data):
     """Database model for file contents."""
 
     # file name
-    file_name = models.CharField(
-        max_length=200, default=None, blank=True, null=True, help_text="File name"
-    )
+    file_name = models.CharField(max_length=200, default=None, blank=True, null=True, help_text="File name")
 
     # imported data
     # user can either import a file path or actual file
@@ -88,9 +82,7 @@ class Quantity(models.Model):
 
     label = models.CharField(max_length=50)
 
-    dataset = models.ForeignKey(
-        DataSet, on_delete=models.CASCADE, related_name="data_contents"
-    )
+    dataset = models.ForeignKey(DataSet, on_delete=models.CASCADE, related_name="data_contents")
 
 
 class ReferenceQuantity(models.Model):
@@ -145,9 +137,7 @@ class MetaData(models.Model):
     sample = models.JSONField(blank=True, null=True)
 
     # associated dataset
-    dataset = models.OneToOneField(
-        DataSet, on_delete=models.CASCADE, related_name="metadata"
-    )
+    dataset = models.OneToOneField(DataSet, on_delete=models.CASCADE, related_name="metadata")
 
 
 class OperationTree(models.Model):
@@ -216,6 +206,4 @@ class PublishedState(models.Model):
     doi = models.URLField()
 
     # session
-    session = models.OneToOneField(
-        Session, on_delete=models.CASCADE, related_name="published_state"
-    )
+    session = models.OneToOneField(Session, on_delete=models.CASCADE, related_name="published_state")

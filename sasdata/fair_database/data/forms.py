@@ -1,5 +1,5 @@
-from django import forms
 from data.models import DataFile
+from django import forms
 
 
 # Create the form class.

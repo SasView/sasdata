@@ -1,5 +1,6 @@
+from dj_rest_auth.views import LogoutView, PasswordChangeView, UserDetailsView
 from django.urls import path
-from dj_rest_auth.views import LogoutView, UserDetailsView, PasswordChangeView
+
 from .views import KnoxLoginView, KnoxRegisterView
 
 """Urls for authentication. Orcid login not functional. See settings.py for ORCID activation."""

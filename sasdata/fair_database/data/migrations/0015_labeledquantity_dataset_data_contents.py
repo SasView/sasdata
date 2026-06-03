@@ -25,23 +25,17 @@ class Migration(migrations.Migration):
                 ("label", models.CharField(max_length=20)),
                 (
                     "dataset",
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE, to="data.dataset"
-                    ),
+                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="data.dataset"),
                 ),
                 (
                     "quantity",
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE, to="data.quantity"
-                    ),
+                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="data.quantity"),
                 ),
             ],
         ),
         migrations.AddField(
             model_name="dataset",
             name="data_contents",
-            field=models.ManyToManyField(
-                through="data.LabeledQuantity", to="data.quantity"
-            ),
+            field=models.ManyToManyField(through="data.LabeledQuantity", to="data.quantity"),
         ),
     ]
