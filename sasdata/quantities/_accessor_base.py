@@ -6,9 +6,7 @@ from sasdata.quantities.quantity import Quantity
 from sasdata.quantities.unit_parser import parse_unit
 from sasdata.quantities.units import Unit
 
-from sasdata.data_backing import Group, Dataset
 
-import logging
 # logger = logging.getLogger("Accessors")
 class LoggerDummy:
     def info(self, data):

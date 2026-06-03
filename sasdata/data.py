@@ -1,14 +1,12 @@
 import json
-from enum import Enum
-from typing import TypeVar, Any, Self
-from dataclasses import dataclass
+from typing import Any
 
 import numpy as np
 
-from sasdata.quantities.quantity import NamedQuantity, Quantity
-from sasdata.metadata import Metadata, Instrument
-from sasdata.quantities.accessors import AccessorTarget
 from sasdata.data_backing import Group, key_tree
+from sasdata.metadata import Instrument, Metadata
+from sasdata.quantities.accessors import AccessorTarget
+from sasdata.quantities.quantity import Quantity
 
 
 class SasData:
@@ -72,7 +70,7 @@ class SasData:
         for data in self._data_contents:
             s += f"{indent}{data}\n"
 
-        s += f"Metadata:\n"
+        s += "Metadata:\n"
         s += "\n"
         s += self.metadata.summary()
 
