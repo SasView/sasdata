@@ -9,7 +9,7 @@ Metadata:
 
 Definition: MAR07232_rest_out.dat
 Sample:
-   ID:
+   ID:           
    Transmission: 0.84357
    Thickness:    None
    Temperature:  None
@@ -18,7 +18,7 @@ Sample:
 Collimation:
    Length: None
 Detector:
-   Name:
+   Name:         
    Distance:     None
    Offset:       None
    Orientation:  None
