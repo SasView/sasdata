@@ -5,9 +5,15 @@ from os import path
 
 import numpy as np
 
-from sasdata.ascii_reader_metadata import AsciiMetadataCategory, AsciiReaderMetadata, bidirectional_pairings, pairings
+from sasdata.ascii_reader_metadata import (
+    AsciiMetadataCategory,
+    AsciiReaderMetadata,
+    bidirectional_pairings,
+    pairings,
+)
 from sasdata.data import SasData
-from sasdata.dataset_types import DatasetType, one_dim
+from sasdata.dataset_types import DatasetType, one_dim, unit_kinds
+from sasdata.default_units import get_default_unit
 from sasdata.guess import (
     guess_column_count,
     guess_columns,
@@ -57,9 +63,19 @@ class AsciiReaderParams:
                 self.metadata.filename_separator[basename] = "_"
                 self.metadata.filename_specific_metadata[basename] = {}
 
+    @property
+    def columns_included(self) -> list[tuple[str, NamedUnit]]:
+        return [
+            column
+            for column in self.columns
+            if column[0] != "<ignore>" and isinstance(column[1], NamedUnit)
+        ]
+
+
 # TODO: Should I make this work on a list of filenames as well?
-def guess_params_from_filename(filename: str, dataset_type: DatasetType) -> AsciiReaderParams:
-    # Lets assume that all the separators are to be enabled.
+def guess_params_from_filename(
+    filename: str, dataset_type: DatasetType
+) -> AsciiReaderParams:
     # Lets just assume we want all of the seaprators on. This seems to work for most files.
     separator_dict = initialise_separator_dict(True)
     with open(filename) as file:
@@ -67,8 +83,19 @@ def guess_params_from_filename(filename: str, dataset_type: DatasetType) -> Asci
         lines_split = [split_line(separator_dict, line) for line in lines]
         startpos = guess_starting_position(lines_split)
         colcount = guess_column_count(lines_split, startpos)
-        columns = guess_columns(colcount, dataset_type)
-        params = AsciiReaderParams([filename], columns, starting_line=startpos, separator_dict=separator_dict)
+        columns = [
+            (x, get_default_unit(x, unit_kinds[x]))
+            for x in guess_columns(colcount, dataset_type)
+            if x in unit_kinds
+        ]
+        params = AsciiReaderParams(
+            [filename],
+            columns,
+            starting_line=startpos,
+            separator_dict=separator_dict,
+            dataset_type=guess_dataset_type(filename),
+        )
+        return params
 
 
 def split_line(separator_dict: dict[str, bool], line: str) -> list[str]:

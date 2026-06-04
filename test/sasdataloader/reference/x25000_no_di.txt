@@ -1,29 +1,25 @@
 sasentry01
+  mask
+  Qy
+  Qx
+  I
 Metadata:
 
-  , Run: 
+  , Run:
   =======
 
-Definition: 
-Process:
-    Name: None
-    Date: None
-    Description: None
-    Term: None
-    Notes: None
+Definition:
 Sample:
-   ID:           None
+   ID:
    Transmission: None
    Thickness:    None
    Temperature:  None
    Position:     None
    Orientation:  None
-Aperture:
-  Name: None
-  Aperture size: None
-  Aperture distance: None
+Collimation:
+   Length: None
 Detector:
-   Name:         None
+   Name:
    Distance:     None
    Offset:       None
    Orientation:  None
