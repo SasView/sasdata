@@ -20,6 +20,7 @@ from django.http import (
     HttpResponseForbidden,
 )
 from django.shortcuts import get_object_or_404
+from drf_spectacular.utils import extend_schema
 from fair_database import permissions
 from fair_database.permissions import DataPermission
 from rest_framework import status
@@ -37,6 +38,9 @@ class DataFileView(APIView):
     """
 
     # List of datafiles
+    @extend_schema(
+        description="Retrieve a list of accessible data files by id and filename."
+    )
     def get(self, request, version=None):
         if "username" in request.GET:
             search_user = get_object_or_404(User, username=request.GET["username"])
@@ -54,6 +58,7 @@ class DataFileView(APIView):
         return Response(data_list)
 
     # Create a datafile
+    @extend_schema(description="Upload a data file.")
     def post(self, request, version=None):
         form = DataFileForm(request.data, request.FILES)
         if form.is_valid():
@@ -83,6 +88,7 @@ class DataFileView(APIView):
         return Response(return_data, status=status.HTTP_201_CREATED)
 
     # Create a datafile
+    @extend_schema(description="Upload a data file.")
     def put(self, request, version=None):
         return self.post(request, version)
 
@@ -95,6 +101,9 @@ class SingleDataFileView(APIView):
     """
 
     # Load the contents of a datafile or download the file to a device
+    @extend_schema(
+        description="Retrieve the contents of a data file or download a file."
+    )
     def get(self, request, data_id, version=None):
         data = get_object_or_404(DataFile, id=data_id)
         if "download" in request.GET and request.GET["download"]:
@@ -114,13 +123,16 @@ class SingleDataFileView(APIView):
             if not permissions.check_permissions(request, data):
                 if not request.user.is_authenticated:
                     return HttpResponse("Must be authenticated to view", status=401)
-                return HttpResponseForbidden("Data is either not public or wrong auth token")
+                return HttpResponseForbidden(
+                    "Data is either not public or wrong auth token"
+                )
             data_list = loader.load(data.file.path)
             contents = [str(data) for data in data_list]
             return_data = {data.file_name: contents}
             return Response(return_data)
 
     # Modify a datafile
+    @extend_schema(description="Make changes to a data file that you own.")
     def put(self, request, data_id, version=None):
         db = get_object_or_404(DataFile, id=data_id)
         if not permissions.check_permissions(request, db):
@@ -151,6 +163,7 @@ class SingleDataFileView(APIView):
         return Response(return_data)
 
     # Delete a datafile
+    @extend_schema(description="Delete a data file that you own.")
     def delete(self, request, data_id, version=None):
         db = get_object_or_404(DataFile, id=data_id)
         if not permissions.is_owner(request, db):
@@ -170,11 +183,17 @@ class DataFileUsersView(APIView):
     """
 
     # View users with access to a datafile
+    @extend_schema(
+        description="Retrieve a list of users that have been granted access to"
+        " a data file and the file's publicity status."
+    )
     def get(self, request, data_id, version=None):
         db = get_object_or_404(DataFile, id=data_id)
         if not permissions.is_owner(request, db):
             if not request.user.is_authenticated:
-                return HttpResponse("Must be authenticated to manage access", status=401)
+                return HttpResponse(
+                    "Must be authenticated to manage access", status=401
+                )
             return HttpResponseForbidden("Must be the data owner to manage access")
         response_data = {
             "file": db.pk,
@@ -185,11 +204,14 @@ class DataFileUsersView(APIView):
         return Response(response_data)
 
     # Grant or revoke access to a datafile
+    @extend_schema(description="Grant or revoke a user's access to a data file.")
     def put(self, request, data_id, version=None):
         db = get_object_or_404(DataFile, id=data_id)
         if not permissions.is_owner(request, db):
             if not request.user.is_authenticated:
-                return HttpResponse("Must be authenticated to manage access", status=401)
+                return HttpResponse(
+                    "Must be authenticated to manage access", status=401
+                )
             return HttpResponseForbidden("Must be the data owner to manage access")
         serializer = AccessManagementSerializer(data=request.data)
         serializer.is_valid()
@@ -217,6 +239,7 @@ class DataSetView(APIView):
     permission_classes = [DataPermission]
 
     # get a list of accessible datasets
+    @extend_schema(description="Retrieve a list of accessible datasets by id and name.")
     def get(self, request, version=None):
         data_list = {"dataset_ids": {}}
         data = DataSet.objects.all()
@@ -230,12 +253,17 @@ class DataSetView(APIView):
 
     # TODO: enable uploading files as part of dataset creation, not just associating dataset with existing files
     # create a dataset
+    @extend_schema(description="Upload a dataset.")
     def post(self, request, version=None):
         # TODO: revisit request data format
         if isinstance(request.data, str):
-            serializer = DataSetSerializer(data=json.loads(request.data), context={"request": request})
+            serializer = DataSetSerializer(
+                data=json.loads(request.data), context={"request": request}
+            )
         else:
-            serializer = DataSetSerializer(data=request.data, context={"request": request})
+            serializer = DataSetSerializer(
+                data=request.data, context={"request": request}
+            )
         if serializer.is_valid(raise_exception=True):
             serializer.save()
         db = serializer.instance
@@ -249,6 +277,7 @@ class DataSetView(APIView):
         return Response(data=response, status=status.HTTP_201_CREATED)
 
     # create a dataset
+    @extend_schema(description="Upload a dataset.")
     def put(self, request, version=None):
         return self.post(request, version)
 
@@ -264,12 +293,15 @@ class SingleDataSetView(APIView):
     permission_classes = [DataPermission]
 
     # get a specific dataset
+    @extend_schema(description="Retrieve a dataset.")
     def get(self, request, data_id, version=None):
         db = get_object_or_404(DataSet, id=data_id)
         if not permissions.check_permissions(request, db):
             if not request.user.is_authenticated:
                 return HttpResponse("Must be authenticated to view dataset", status=401)
-            return HttpResponseForbidden("You do not have permission to view this dataset.")
+            return HttpResponseForbidden(
+                "You do not have permission to view this dataset."
+            )
         serializer = DataSetSerializer(db, context={"request": request})
         response_data = serializer.data
         if db.current_user:
@@ -277,24 +309,42 @@ class SingleDataSetView(APIView):
         return Response(response_data)
 
     # edit a specific dataset
+    @extend_schema(description="Make changes to a dataset that you own.")
     def put(self, request, data_id, version=None):
         db = get_object_or_404(DataSet, id=data_id)
         if not permissions.check_permissions(request, db):
             if not request.user.is_authenticated:
-                return HttpResponse("Must be authenticated to modify dataset", status=401)
+                return HttpResponse(
+                    "Must be authenticated to modify dataset", status=401
+                )
             return HttpResponseForbidden("Cannot modify a dataset you do not own")
-        serializer = DataSetSerializer(db, request.data, context={"request": request}, partial=True)
+        serializer = DataSetSerializer(
+            db, request.data, context={"request": request}, partial=True
+        )
+        clear_files = "files" in request.data and not request.data["files"]
+        if clear_files:
+            data_copy = request.data.copy()
+            data_copy.pop("files")
+            serializer = DataSetSerializer(
+                db, data_copy, context={"request": request}, partial=True
+            )
         if serializer.is_valid(raise_exception=True):
             serializer.save()
+        if clear_files:
+            db.files.clear()
+            db.save()
         data = {"data_id": db.id, "name": db.name, "is_public": db.is_public}
         return Response(data)
 
     # delete a dataset
+    @extend_schema(description="Delete a dataset that you own.")
     def delete(self, request, data_id, version=None):
         db = get_object_or_404(DataSet, id=data_id)
         if not permissions.check_permissions(request, db):
             if not request.user.is_authenticated:
-                return HttpResponse("Must be authenticated to delete a dataset", status=401)
+                return HttpResponse(
+                    "Must be authenticated to delete a dataset", status=401
+                )
             return HttpResponseForbidden("Not authorized to delete")
         db.delete()
         return Response({"success": True})
@@ -311,6 +361,10 @@ class DataSetUsersView(APIView):
     permission_classes = [DataPermission]
 
     # get a list of users with access to dataset data_id
+    @extend_schema(
+        description="Retrieve a list of users that have been granted access to"
+        " a dataset and the dataset's publicity status."
+    )
     def get(self, request, data_id, version=None):
         db = get_object_or_404(DataSet, id=data_id)
         if not permissions.is_owner(request, db):
@@ -326,11 +380,14 @@ class DataSetUsersView(APIView):
         return Response(response_data)
 
     # grant or revoke a user's access to dataset data_id
+    @extend_schema(description="Grant or revoke a user's access to a dataset.")
     def put(self, request, data_id, version=None):
         db = get_object_or_404(DataSet, id=data_id)
         if not permissions.is_owner(request, db):
             if not request.user.is_authenticated:
-                return HttpResponse("Must be authenticated to manage access", status=401)
+                return HttpResponse(
+                    "Must be authenticated to manage access", status=401
+                )
             return HttpResponseForbidden("Must be the dataset owner to manage access")
         serializer = AccessManagementSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -356,6 +413,9 @@ class SessionView(APIView):
     """
 
     # View a list of accessible sessions
+    @extend_schema(
+        description="Retrieve a list of accessible sessions by name and title."
+    )
     def get(self, request, version=None):
         session_list = {"session_ids": {}}
         sessions = Session.objects.all()
@@ -369,11 +429,16 @@ class SessionView(APIView):
 
     # Create a session
     # TODO: revisit response data
+    @extend_schema(description="Upload a session.")
     def post(self, request, version=None):
         if isinstance(request.data, str):
-            serializer = SessionSerializer(data=json.loads(request.data), context={"request": request})
+            serializer = SessionSerializer(
+                data=json.loads(request.data), context={"request": request}
+            )
         else:
-            serializer = SessionSerializer(data=request.data, context={"request": request})
+            serializer = SessionSerializer(
+                data=request.data, context={"request": request}
+            )
         if serializer.is_valid(raise_exception=True):
             serializer.save()
         db = serializer.instance
@@ -387,6 +452,7 @@ class SessionView(APIView):
         return Response(data=response, status=status.HTTP_201_CREATED)
 
     # Create a session
+    @extend_schema(description="Upload a session.")
     def put(self, request, version=None):
         return self.post(request, version)
 
@@ -399,12 +465,15 @@ class SingleSessionView(APIView):
     """
 
     # get a specific session
+    @extend_schema(description="Retrieve a session.")
     def get(self, request, data_id, version=None):
         db = get_object_or_404(Session, id=data_id)
         if not permissions.check_permissions(request, db):
             if not request.user.is_authenticated:
                 return HttpResponse("Must be authenticated to view session", status=401)
-            return HttpResponseForbidden("You do not have permission to view this session.")
+            return HttpResponseForbidden(
+                "You do not have permission to view this session."
+            )
         serializer = SessionSerializer(db)
         response_data = serializer.data
         if db.current_user:
@@ -412,24 +481,32 @@ class SingleSessionView(APIView):
         return Response(response_data)
 
     # modify a session
+    @extend_schema(description="Make changes to a session that you own.")
     def put(self, request, data_id, version=None):
         db = get_object_or_404(Session, id=data_id)
         if not permissions.check_permissions(request, db):
             if not request.user.is_authenticated:
-                return HttpResponse("Must be authenticated to modify session", status=401)
+                return HttpResponse(
+                    "Must be authenticated to modify session", status=401
+                )
             return HttpResponseForbidden("Cannot modify a session you do not own")
-        serializer = SessionSerializer(db, request.data, context={"request": request}, partial=True)
+        serializer = SessionSerializer(
+            db, request.data, context={"request": request}, partial=True
+        )
         if serializer.is_valid(raise_exception=True):
             serializer.save()
         data = {"session_id": db.id, "title": db.title, "is_public": db.is_public}
         return Response(data)
 
     # delete a session
+    @extend_schema(description="Delete a session that you own.")
     def delete(self, request, data_id, version=None):
         db = get_object_or_404(Session, id=data_id)
         if not permissions.check_permissions(request, db):
             if not request.user.is_authenticated:
-                return HttpResponse("Must be authenticated to delete a session", status=401)
+                return HttpResponse(
+                    "Must be authenticated to delete a session", status=401
+                )
             return HttpResponseForbidden("Not authorized to delete")
         db.delete()
         return Response({"success": True})
@@ -444,6 +521,10 @@ class SessionUsersView(APIView):
     """
 
     # view the users that have access to a specific session
+    @extend_schema(
+        description="Retrieve a list of users that have been granted access to"
+        " a session and the session's publicity status."
+    )
     def get(self, request, data_id, version=None):
         db = get_object_or_404(Session, id=data_id)
         if not permissions.is_owner(request, db):
@@ -459,11 +540,14 @@ class SessionUsersView(APIView):
         return Response(response_data)
 
     # grant or revoke access to a session
+    @extend_schema(description="Grant or revoke a user's access to a data file.")
     def put(self, request, data_id, version=None):
         db = get_object_or_404(Session, id=data_id)
         if not permissions.is_owner(request, db):
             if not request.user.is_authenticated:
-                return HttpResponse("Must be authenticated to manage access", status=401)
+                return HttpResponse(
+                    "Must be authenticated to manage access", status=401
+                )
             return HttpResponseForbidden("Must be the dataset owner to manage access")
         serializer = AccessManagementSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -494,6 +578,9 @@ class PublishedStateView(APIView):
     """
 
     # View a list of accessible sessions' published states
+    @extend_schema(
+        description="Retrieve a list of published states of accessible sessions."
+    )
     def get(self, request, version=None):
         ps_list = {"published_state_ids": {}}
         published_states = PublishedState.objects.all()
@@ -510,11 +597,16 @@ class PublishedStateView(APIView):
         return Response(data=ps_list)
 
     # Create a published state for an existing session
+    @extend_schema(description="Create a published state for an existing session.")
     def post(self, request, version=None):
         if isinstance(request.data, str):
-            serializer = PublishedStateSerializer(data=json.loads(request.data), context={"request": request})
+            serializer = PublishedStateSerializer(
+                data=json.loads(request.data), context={"request": request}
+            )
         else:
-            serializer = PublishedStateSerializer(data=request.data, context={"request": request})
+            serializer = PublishedStateSerializer(
+                data=request.data, context={"request": request}
+            )
         if serializer.is_valid(raise_exception=True):
             if not permissions.is_owner(request, serializer.validated_data["session"]):
                 if not request.user.is_authenticated:
@@ -522,7 +614,9 @@ class PublishedStateView(APIView):
                         "Must be authenticated to create a published state for a session",
                         status=401,
                     )
-                return HttpResponseForbidden("Must be the session owner to create a published state for a session")
+                return HttpResponseForbidden(
+                    "Must be the session owner to create a published state for a session"
+                )
             serializer.save()
         db = serializer.instance
         response = {
@@ -537,6 +631,7 @@ class PublishedStateView(APIView):
         return Response(data=response, status=status.HTTP_201_CREATED)
 
     # Create a published state for an existing session
+    @extend_schema(description="Create a published state for an existing session.")
     def put(self, request, version=None):
         return self.post(request, version)
 
@@ -549,12 +644,17 @@ class SinglePublishedStateView(APIView):
     """
 
     # View a specific published state
+    @extend_schema(description="Retrieve a published state.")
     def get(self, request, ps_id, version=None):
         db = get_object_or_404(PublishedState, id=ps_id)
         if not permissions.check_permissions(request, db.session):
             if not request.user.is_authenticated:
-                return HttpResponse("Must be authenticated to view published state", status=401)
-            return HttpResponseForbidden("You do not have permission to view this published state.")
+                return HttpResponse(
+                    "Must be authenticated to view published state", status=401
+                )
+            return HttpResponseForbidden(
+                "You do not have permission to view this published state."
+            )
         serializer = PublishedStateSerializer(db)
         response_data = serializer.data
         response_data["title"] = db.session.title
@@ -566,13 +666,22 @@ class SinglePublishedStateView(APIView):
         return Response(response_data)
 
     # Modify a published state
+    @extend_schema(
+        description="Make changes to the published state of a session that you own."
+    )
     def put(self, request, ps_id, version=None):
         db = get_object_or_404(PublishedState, id=ps_id)
         if not permissions.check_permissions(request, db.session):
             if not request.user.is_authenticated:
-                return HttpResponse("Must be authenticated to modify published state", status=401)
-            return HttpResponseForbidden("Cannot modify a published state you do not own")
-        serializer = PublishedStateUpdateSerializer(db, request.data, context={"request": request}, partial=True)
+                return HttpResponse(
+                    "Must be authenticated to modify published state", status=401
+                )
+            return HttpResponseForbidden(
+                "Cannot modify a published state you do not own"
+            )
+        serializer = PublishedStateUpdateSerializer(
+            db, request.data, context={"request": request}, partial=True
+        )
         if serializer.is_valid(raise_exception=True):
             serializer.save()
         data = {
@@ -585,11 +694,14 @@ class SinglePublishedStateView(APIView):
         return Response(data)
 
     # Delete a published state
+    @extend_schema(description="Delete the published state of a session that you own.")
     def delete(self, request, ps_id, version=None):
         db = get_object_or_404(PublishedState, id=ps_id)
         if not permissions.check_permissions(request, db.session):
             if not request.user.is_authenticated:
-                return HttpResponse("Must be authenticated to delete a published state", status=401)
+                return HttpResponse(
+                    "Must be authenticated to delete a published state", status=401
+                )
             return HttpResponseForbidden("Not authorized to delete")
         db.delete()
         return Response({"success": True})

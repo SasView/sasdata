@@ -5,3 +5,4 @@ djangorestframework
 dj-rest-auth
 django-allauth
 django-rest-knox
+drf-spectacular

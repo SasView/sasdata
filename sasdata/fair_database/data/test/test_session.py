@@ -10,15 +10,21 @@ class TestSession(APITestCase):
 
     @classmethod
     def setUpTestData(cls):
-        cls.user1 = User.objects.create_user(id=1, username="testUser1", password="secret")
-        cls.user2 = User.objects.create_user(id=2, username="testUser2", password="secret")
+        cls.user1 = User.objects.create_user(
+            id=1, username="testUser1", password="secret"
+        )
+        cls.user2 = User.objects.create_user(
+            id=2, username="testUser2", password="secret"
+        )
         cls.public_session = Session.objects.create(
             id=1, current_user=cls.user1, title="Public Session", is_public=True
         )
         cls.private_session = Session.objects.create(
             id=2, current_user=cls.user1, title="Private Session", is_public=False
         )
-        cls.unowned_session = Session.objects.create(id=3, title="Unowned Session", is_public=True)
+        cls.unowned_session = Session.objects.create(
+            id=3, title="Unowned Session", is_public=True
+        )
         cls.auth_client1 = APIClient()
         cls.auth_client2 = APIClient()
         cls.auth_client1.force_authenticate(cls.user1)
@@ -43,13 +49,17 @@ class TestSession(APITestCase):
     def test_list_public(self):
         request = self.auth_client2.get("/v1/data/session/")
         self.assertEqual(request.status_code, status.HTTP_200_OK)
-        self.assertEqual(request.data, {"session_ids": {1: "Public Session", 3: "Unowned Session"}})
+        self.assertEqual(
+            request.data, {"session_ids": {1: "Public Session", 3: "Unowned Session"}}
+        )
 
     # Test listing sessions while unauthenticated
     def test_list_unauthenticated(self):
         request = self.client.get("/v1/data/session/")
         self.assertEqual(request.status_code, status.HTTP_200_OK)
-        self.assertEqual(request.data, {"session_ids": {1: "Public Session", 3: "Unowned Session"}})
+        self.assertEqual(
+            request.data, {"session_ids": {1: "Public Session", 3: "Unowned Session"}}
+        )
 
     # Test listing a session with access granted
     def test_list_granted_access(self):
@@ -70,13 +80,19 @@ class TestSession(APITestCase):
 
     # Test listing by username
     def test_list_username(self):
-        request = self.auth_client1.get("/v1/data/session/", data={"username": "testUser1"})
+        request = self.auth_client1.get(
+            "/v1/data/session/", data={"username": "testUser1"}
+        )
         self.assertEqual(request.status_code, status.HTTP_200_OK)
-        self.assertEqual(request.data, {"session_ids": {1: "Public Session", 2: "Private Session"}})
+        self.assertEqual(
+            request.data, {"session_ids": {1: "Public Session", 2: "Private Session"}}
+        )
 
     # Test listing by another user's username
     def test_list_other_username(self):
-        request = self.auth_client2.get("/v1/data/session/", data={"username": "testUser1"})
+        request = self.auth_client2.get(
+            "/v1/data/session/", data={"username": "testUser1"}
+        )
         self.assertEqual(request.status_code, status.HTTP_200_OK)
         self.assertEqual(request.data, {"session_ids": {1: "Public Session"}})
 
@@ -101,7 +117,9 @@ class TestSession(APITestCase):
             "is_public": True,
             "published_state": {"published": False},
         }
-        request = self.auth_client1.post("/v1/data/session/", data=session, format="json")
+        request = self.auth_client1.post(
+            "/v1/data/session/", data=session, format="json"
+        )
         max_id = Session.objects.aggregate(Max("id"))["id__max"]
         new_session = Session.objects.get(id=max_id)
         new_dataset = new_session.datasets.get()
@@ -147,7 +165,9 @@ class TestSession(APITestCase):
             ],
             "is_public": False,
         }
-        request = self.auth_client1.post("/v1/data/session/", data=session, format="json")
+        request = self.auth_client1.post(
+            "/v1/data/session/", data=session, format="json"
+        )
         max_id = Session.objects.aggregate(Max("id"))["id__max"]
         new_session = Session.objects.get(id=max_id)
         new_dataset = new_session.datasets.get()
@@ -232,7 +252,9 @@ class TestSession(APITestCase):
             ],
             "is_public": True,
         }
-        request = self.auth_client1.post("/v1/data/session/", data=session, format="json")
+        request = self.auth_client1.post(
+            "/v1/data/session/", data=session, format="json"
+        )
         self.assertEqual(request.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(len(Session.objects.all()), 3)
         self.assertEqual(len(DataSet.objects.all()), 0)
@@ -251,15 +273,21 @@ class TestSingleSession(APITestCase):
 
     @classmethod
     def setUpTestData(cls):
-        cls.user1 = User.objects.create_user(id=1, username="testUser1", password="secret")
-        cls.user2 = User.objects.create_user(id=2, username="testUser2", password="secret")
+        cls.user1 = User.objects.create_user(
+            id=1, username="testUser1", password="secret"
+        )
+        cls.user2 = User.objects.create_user(
+            id=2, username="testUser2", password="secret"
+        )
         cls.public_session = Session.objects.create(
             id=1, current_user=cls.user1, title="Public Session", is_public=True
         )
         cls.private_session = Session.objects.create(
             id=2, current_user=cls.user1, title="Private Session", is_public=False
         )
-        cls.unowned_session = Session.objects.create(id=3, title="Unowned Session", is_public=True)
+        cls.unowned_session = Session.objects.create(
+            id=3, title="Unowned Session", is_public=True
+        )
         cls.public_dataset = DataSet.objects.create(
             id=1,
             current_user=cls.user1,
@@ -392,7 +420,9 @@ class TestSingleSession(APITestCase):
 
     # Test updating a public session
     def test_update_public_session(self):
-        request = self.auth_client1.put("/v1/data/session/1/", data={"is_public": False})
+        request = self.auth_client1.put(
+            "/v1/data/session/1/", data={"is_public": False}
+        )
         session = Session.objects.get(id=1)
         self.assertEqual(request.status_code, status.HTTP_200_OK)
         self.assertEqual(
@@ -403,6 +433,7 @@ class TestSingleSession(APITestCase):
         session.is_public = False
         session.save()
 
+    # Test creating a published state by updating a session
     def test_update_session_new_published_state(self):
         request = self.auth_client1.put(
             "/v1/data/session/1/",
@@ -416,11 +447,15 @@ class TestSingleSession(APITestCase):
 
     # Test that another user's public session cannot be updated
     def test_update_public_session_unauthorized(self):
-        request1 = self.auth_client2.put("/v1/data/session/1/", data={"is_public": False})
+        request1 = self.auth_client2.put(
+            "/v1/data/session/1/", data={"is_public": False}
+        )
         request2 = self.client.put("/v1/data/session/1/", data={"is_public": False})
         session = Session.objects.get(id=1)
         session.users.add(self.user2)
-        request3 = self.auth_client2.put("/v1/data/session/1/", data={"is_public": False})
+        request3 = self.auth_client2.put(
+            "/v1/data/session/1/", data={"is_public": False}
+        )
         session.users.remove(self.user2)
         self.assertEqual(request1.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(request2.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -429,7 +464,9 @@ class TestSingleSession(APITestCase):
 
     # Test updating a private session
     def test_update_private_session(self):
-        request1 = self.auth_client1.put("/v1/data/session/2/", data={"is_public": True})
+        request1 = self.auth_client1.put(
+            "/v1/data/session/2/", data={"is_public": True}
+        )
         session = Session.objects.get(id=2)
         self.assertEqual(request1.status_code, status.HTTP_200_OK)
         self.assertEqual(
@@ -441,6 +478,7 @@ class TestSingleSession(APITestCase):
         session.is_public = False
         session.save()
 
+    # Test updating a published state through its session
     def test_update_session_published_state(self):
         request = self.auth_client1.put(
             "/v1/data/session/2/",
@@ -453,11 +491,15 @@ class TestSingleSession(APITestCase):
 
     # Test that another user's private session cannot be updated
     def test_update_private_session_unauthorized(self):
-        request1 = self.auth_client2.put("/v1/data/session/2/", data={"is_public": True})
+        request1 = self.auth_client2.put(
+            "/v1/data/session/2/", data={"is_public": True}
+        )
         request2 = self.client.put("/v1/data/session/2/", data={"is_public": True})
         session = Session.objects.get(id=2)
         session.users.add(self.user2)
-        request3 = self.auth_client2.put("/v1/data/session/2/", data={"is_public": True})
+        request3 = self.auth_client2.put(
+            "/v1/data/session/2/", data={"is_public": True}
+        )
         session.users.remove(self.user2)
         self.assertEqual(request1.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(request2.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -466,7 +508,9 @@ class TestSingleSession(APITestCase):
 
     # Test that an unowned session cannot be updated
     def test_update_unowned_session(self):
-        request = self.auth_client1.put("/v1/data/session/3/", data={"is_public": False})
+        request = self.auth_client1.put(
+            "/v1/data/session/3/", data={"is_public": False}
+        )
         self.assertEqual(request.status_code, status.HTTP_403_FORBIDDEN)
         self.assertTrue(Session.objects.get(id=3).is_public)
 
@@ -592,7 +636,9 @@ class TestSessionAccessManagement(APITestCase):
 
     # Test granting access to a session
     def test_grant_access(self):
-        request1 = self.client_owner.put("/v1/data/session/1/users/", {"username": "testUser2", "access": True})
+        request1 = self.client_owner.put(
+            "/v1/data/session/1/users/", {"username": "testUser2", "access": True}
+        )
         request2 = self.client_other.get("/v1/data/session/1/")
         request3 = self.client_other.get("/v1/data/set/1/")
         self.assertEqual(request1.status_code, status.HTTP_200_OK)
@@ -614,7 +660,9 @@ class TestSessionAccessManagement(APITestCase):
 
     # Test revoking access to a session
     def test_revoke_access(self):
-        request1 = self.client_owner.put("/v1/data/session/2/users/", {"username": "testUser2", "access": False})
+        request1 = self.client_owner.put(
+            "/v1/data/session/2/users/", {"username": "testUser2", "access": False}
+        )
         request2 = self.client_other.get("/v1/data/session/2/")
         request3 = self.client_other.get("/v1/data/session/2/")
         self.assertEqual(request1.status_code, status.HTTP_200_OK)
@@ -636,7 +684,9 @@ class TestSessionAccessManagement(APITestCase):
 
     # Test that only the owner can change access
     def test_revoke_access_unauthorized(self):
-        request1 = self.client_other.put("/v1/data/session/2/users/", {"username": "testUser2", "access": False})
+        request1 = self.client_other.put(
+            "/v1/data/session/2/users/", {"username": "testUser2", "access": False}
+        )
         request2 = self.client_other.get("/v1/data/session/2/")
         self.assertEqual(request1.status_code, status.HTTP_403_FORBIDDEN)
         self.assertEqual(request2.status_code, status.HTTP_200_OK)
