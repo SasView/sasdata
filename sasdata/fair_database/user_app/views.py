@@ -28,7 +28,9 @@ class KnoxRegisterView(RegisterView):
     def perform_create(self, serializer):
         user = serializer.save(self.request)
         self.token = create_knox_token(None, user, None)
-        complete_signup(self.request._request, user, allauth_settings.EMAIL_VERIFICATION, None)
+        complete_signup(
+            self.request._request, user, allauth_settings.EMAIL_VERIFICATION, None
+        )
         return user
 
 

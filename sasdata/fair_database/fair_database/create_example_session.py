@@ -50,7 +50,9 @@ session = {
                                     "parameters": {
                                         "a": {
                                             "operation": "constant",
-                                            "parameters": {"value": {"type": "int", "value": 7}},
+                                            "parameters": {
+                                                "value": {"type": "int", "value": 7}
+                                            },
                                         },
                                         "b": {
                                             "operation": "variable",
@@ -77,9 +79,19 @@ session = {
             ],
         },
     ],
-    "is_public": True,
+    "is_public": False,
 }
 
 url = "http://127.0.0.1:8000/v1/data/session/"
-
-requests.request("POST", url, json=session)
+login_data = {"email": "test@test.org", "username": "testUser", "password": "sasview!"}
+response = requests.post("http://127.0.0.1:8000/auth/login/", data=login_data)
+if response.status_code != 200:
+    register_data = {
+        "email": "test@test.org",
+        "username": "testUser",
+        "password1": "sasview!",
+        "password2": "sasview!",
+    }
+    response = requests.post("http://127.0.0.1:8000/auth/register/", data=register_data)
+token = response.json()["token"]
+requests.request("POST", url, json=session, headers={"Authorization": "Token " + token})

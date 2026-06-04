@@ -6,6 +6,8 @@ from rest_framework.test import APIClient
 
 # Create your tests here.
 class AuthTests(TestCase):
+    """Tests for authentication endpoints."""
+
     @classmethod
     def setUpTestData(cls):
         cls.client1 = APIClient()
@@ -26,10 +28,13 @@ class AuthTests(TestCase):
             "email": "email2@domain.org",
             "password": "sasview!",
         }
-        cls.user = User.objects.create_user(id=1, username="testUser2", password="sasview!", email="email2@domain.org")
+        cls.user = User.objects.create_user(
+            id=1, username="testUser2", password="sasview!", email="email2@domain.org"
+        )
         cls.client_authenticated = APIClient()
         cls.client_authenticated.force_authenticate(user=cls.user)
 
+    # Create an authentication header for a given token
     def auth_header(self, response):
         return {"Authorization": "Token " + response.data["token"]}
 
@@ -122,6 +127,7 @@ class AuthTests(TestCase):
         self.assertEqual(response2.status_code, status.HTTP_401_UNAUTHORIZED)
         User.objects.get(username="testUser").delete()
 
+    # Test multiple logins for the same account log out independently
     def test_multiple_logout(self):
         self.client1.post("/auth/login/", data=self.login_data_2)
         token = self.client2.post("/auth/login/", data=self.login_data_2)
@@ -134,7 +140,9 @@ class AuthTests(TestCase):
 
     # Test login is successful after registering then logging out
     def test_register_login(self):
-        register_response = self.client1.post("/auth/register/", data=self.register_data)
+        register_response = self.client1.post(
+            "/auth/register/", data=self.register_data
+        )
         logout_response = self.client1.post("/auth/logout/")
         login_response = self.client1.post("/auth/login/", data=self.login_data)
         self.assertEqual(register_response.status_code, status.HTTP_201_CREATED)
