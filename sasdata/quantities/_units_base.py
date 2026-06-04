@@ -219,16 +219,19 @@ class Unit:
         self.dimensions = dimensions
 
     def __mul__(self: Self, other: "Unit"):
-        if not isinstance(other, Unit):
-            return NotImplemented
-
-        return Unit(self.scale * other.scale, self.dimensions * other.dimensions)
+        if isinstance(other, Unit):
+            return Unit(self.scale * other.scale, self.dimensions * other.dimensions)
+        elif isinstance(other, (int, float)):
+            return Unit(other * self.scale, self.dimensions)
+        return NotImplemented
 
     def __truediv__(self: Self, other: "Unit"):
-        if not isinstance(other, Unit):
+        if isinstance(other, Unit):
+            return Unit(self.scale / other.scale, self.dimensions / other.dimensions)
+        elif isinstance(other, (int, float)):
+            return Unit(self.scale / other, self.dimensions)
+        else:
             return NotImplemented
-
-        return Unit(self.scale / other.scale, self.dimensions / other.dimensions)
 
     def __rtruediv__(self: Self, other: "Unit"):
         if isinstance(other, Unit):
@@ -280,12 +283,14 @@ class NamedUnit(Unit):
                  dimensions: Dimensions,
                  name: str | None = None,
                  ascii_symbol: str | None = None,
+                 latex_symbol: str | None = None,
                  symbol: str | None = None):
 
         super().__init__(si_scaling_factor, dimensions)
         self.name = name
         self.ascii_symbol = ascii_symbol
         self.symbol = symbol
+        self.latex_symbol = latex_symbol if latex_symbol is not None else ascii_symbol
 
     def __repr__(self):
         return self.name

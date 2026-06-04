@@ -1,4 +1,6 @@
+import json
 import typing
+from typing import Any
 
 import h5py
 import numpy as np
@@ -125,6 +127,37 @@ class SasData:
                     sasentry.attrs["sasview_key"] = key
                 data._save_h5(sasentry)
 
+    @staticmethod
+    def deserialise(data: str) -> "SasData":
+        json_data = json.loads(data)
+        return SasData.deserialise_json(json_data)
+
+    @staticmethod
+    def save_h5(data: dict[str, typing.Self], path: str | typing.BinaryIO):
+        with h5py.File(path, "w") as f:
+            for idx, (key, data) in enumerate(data.items()):
+                sasentry = f.create_group(f"sasentry{idx+1:02d}")
+                if not key.startswith("sasentry"):
+                    sasentry.attrs["sasview_key"] = key
+                data._save_h5(sasentry)
+
+
+    # TODO: fix serializers eventually
+    def _serialise_json(self) -> dict[str, Any]:
+        data = []
+        for d in self._data_contents:
+            quantity = self._data_contents[d]
+            quantity["label"] = d
+            data.append(quantity)
+        return {
+            "name": self.name,
+            "data_contents": data,
+            "dataset_type": None, # TODO: update when DatasetType is more finalized
+            "verbose": self._verbose,
+            "metadata": self.metadata.serialise_json(),
+            "mask": {},
+            "model_requirements": {}
+        }
 
 
 class SasDataEncoder(MetadataEncoder):
