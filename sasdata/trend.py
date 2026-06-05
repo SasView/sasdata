@@ -1,12 +1,10 @@
-from typing import Union, List
 
+import logging
 from dataclasses import dataclass
 
 import numpy as np
-import logging
 
 from sasdata.data import SasData
-from sasdata.data_backing import Dataset, Group
 from sasdata.quantities.quantity import Quantity
 from sasdata.transforms.rebinning import calculate_interpolation_matrix_1d
 
@@ -30,7 +28,7 @@ def get_metadatum_from_path(data: SasData, metadata_path: list[str]):
                     current_item = node
                     break
 
-        # If we did not find the item (either not a list or not found in list)        
+        # If we did not find the item (either not a list or not found in list)
         if current_item is None:
             raise ValueError('Path does not lead to a valid metadatum.')
 
@@ -44,7 +42,7 @@ def get_metadatum_from_path(data: SasData, metadata_path: list[str]):
 @dataclass
 class Trend:
     data: list[SasData]
-    trend_axes: dict[str, Union[list[str], list]]  # Path or manual values
+    trend_axes: dict[str, list[str] | list]  # Path or manual values
 
     def __post_init__(self):
 

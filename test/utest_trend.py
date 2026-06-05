@@ -1,14 +1,14 @@
 from os import listdir, path
-import numpy as np
 
+import numpy as np
 import pytest
 
 import sasdata.temp_ascii_reader as ascii_reader
 from sasdata.ascii_reader_metadata import AsciiMetadataCategory
 from sasdata.quantities.units import per_angstrom, per_nanometer
 from sasdata.temp_ascii_reader import AsciiReaderParams
-from sasdata.temp_xml_reader import load_data as xml_load_data
 from sasdata.temp_hdf5_reader import load_data as hdf_load_data
+from sasdata.temp_xml_reader import load_data as xml_load_data
 from sasdata.trend import Trend
 
 mumag_test_directories = [
@@ -103,7 +103,7 @@ def test_trend_build_interpolate(directory_name: str):
     """
     Try to build a trend object on the MuMag datasets.
     and interpolates the data to match the Q axes.
-    Maybe confusing to have here data axes ('Q', 'I', 'dI') 
+    Maybe confusing to have here data axes ('Q', 'I', 'dI')
     and trend axes ('field')?
     """
     files_to_load = get_files_to_load(directory_name)
