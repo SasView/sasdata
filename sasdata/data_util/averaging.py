@@ -138,6 +138,7 @@ class Boxavg(Boxsum):
 
         return (total_sum / count), (error / count)
 
+
 class SlabAngular(SlabROI):
     """
     Average I(Q_x, Q_y) over a slab, along an angular direction.
@@ -152,53 +153,108 @@ class SlabAngular(SlabROI):
     resulting in a 1D plot with only positive Q values shown.
     """
 
-    def __init__(self, qx_range: tuple[float, float] = (0.0, 0.0), qy_range: tuple[float, float] = (0.0, 0.0),
-                 nbins: int = 100, fold: bool = False, base: float = None):
+    def __init__(self, phi: float = 0.0, q_width: float = 0.05, num_bins: int = 100,
+                 fold: bool = False, base: float = None):
         """
-        Set up the ROI boundaries, the binning of the output 1D data, and fold.
 
-        The units of these parameters are A^-1
-        :param qx_range: The y intercepts for the slab.
-        :param qy_range: The x-intercepts for the slab.
-        :param nbins: The number of bins data is sorted into along the major axis.
-        :param fold: Whether the two halves of the ROI along Q_x should be
-                     folded together during averaging.
+        :param phi: (float) Angle of the strip slicer relative to the q_x axis (in degrees).
+        :param q_width: (float) Total q-width of the corridor (distance between the parallel lines).
+        :param num_bins: (int) Number of bins to generate the final 1D radial profile.
+        :param fold: (bool) Whether both sides of the slab should be be used in the averaging.
+
         """
-        super().__init__(qx_range=qx_range,
-                         qy_range=qy_range)
-        self.nbins = nbins
+        super().__init__(phi, q_width)
+        self.num_bins = num_bins
         self.fold = fold
         self.base = base
 
-    def __call__(self, data2d: Data2D = None) -> Data1D:
+    def __call__(self, data2d: Data2D) -> Data1D:
         """
-        Compute the 1D average of 2D data, projecting along the Q_x axis.
+        Executes the strip selection and circular average over a Data2D object.
 
-        :param data2d: The Data2D object for which the average is computed.
-        :return: Data1D object for plotting.
+        :param data2d: The input 2D SAS dataset.
+
+        :returns: The resulting 1D averaged data profile.
         """
-        self.validate_and_assign_data(data2d)
+        if not isinstance(data2d, Data2D):
+            raise TypeError("Input data must be an instance of sasdata Data2D.")
 
-        # SlabX is used by SasView's BoxInteractorX, which is designed so that
-        # the ROI is always centred on the origin. If this ever changes, then
-        # the behaviour of fold here will also need to change. Perhaps we could
-        # apply a transformation to the data like the one used in WedgePhi.
+        # Pull raw arrays out of the Data2D container
+        qx = data2d.qx_data
+        qy = data2d.qy_data
+        intensity = data2d.data
+        error = data2d.err_data
 
-        if self.fold:
-            major_lims = (0, self.qx_max)
-            self.qx_data = np.abs(self.qx_data)
+        # Respect any pre-existing user masks from Data2D
+        if hasattr(data2d, 'mask') and data2d.mask is not None:
+            base_mask = data2d.mask
         else:
-            major_lims = (self.qx_min, self.qx_max)
-        minor_lims = (self.qy_min, self.qy_max)
+            base_mask = np.ones_like(intensity, dtype=bool)
 
-        directional_average = DirectionalAverage(major_axis=self.qx_data,
-                                                 minor_axis=self.qy_data,
-                                                 lims=(major_lims,minor_lims),
-                                                 nbins=self.nbins, base=self.base)
-        qx_data, intensity, error = \
-            directional_average(data=self.data, err_data=self.err_data)
+        # 1. Convert orientation angle to radians
+        phi = np.radians(self.phi)
 
-        return Data1D(x=qx_data, y=intensity, dy=error)
+        # 2. Geometric evaluation: distance perpendicular to the center line
+        q_perp = -qx * np.sin(phi) + qy * np.cos(phi)
+
+        # 3. Create the parallel line geometric mask
+        half_width = self.q_width / 2.0
+        strip_mask = np.abs(q_perp) <= half_width
+
+        # 4. Filter data (respecting finite numbers, geometry, and base masks)
+        valid_mask = base_mask & strip_mask & np.isfinite(intensity)
+
+        qx_strip = qx[valid_mask]
+        qy_strip = qy[valid_mask]
+        i_strip = intensity[valid_mask]
+        di_strip = error[valid_mask] if error is not None else None
+
+        # Return empty Data1D object if no points fall within the boundary
+        if len(i_strip) == 0:
+            return Data1D(x=np.array([]), y=np.array([]), dy=np.array([]))
+
+        # 5. Compute radial distances from origin for circular averaging
+        q_radial = np.sqrt(qx_strip ** 2 + qy_strip ** 2)
+
+        # 6. Setup radial grid binning edges
+        bin_edges = np.linspace(q_radial.min(), q_radial.max(), self.num_bins + 1)
+        q_centers = 0.5 * (bin_edges[:-1] + bin_edges[1:])
+
+        # 7. Aggregate intensities via histograms
+        counts, _ = np.histogram(q_radial, bins=bin_edges)
+        i_sum, _ = np.histogram(q_radial, bins=bin_edges, weights=i_strip)
+
+        with np.errstate(divide='ignore', invalid='ignore'):
+            i_avg = i_sum / counts
+
+        # 8. Unbiased statistical error propagation
+        di_avg = None
+        if di_strip is not None:
+            error_sq_sum, _ = np.histogram(q_radial, bins=bin_edges, weights=di_strip ** 2)
+            with np.errstate(divide='ignore', invalid='ignore'):
+                di_avg = np.sqrt(error_sq_sum) / counts
+
+        # 9. Strip out empty bins from the final arrays
+        nonzero = counts > 0
+        q_centers = q_centers[nonzero]
+        i_avg = i_avg[nonzero]
+
+        if di_avg is not None:
+            di_avg = di_avg[nonzero]
+        else:
+            di_avg = np.zeros_like(i_avg)
+
+        # 10. Instantiate and format the 1D profile data object
+        output_1d = Data1D(x=q_centers, y=i_avg, dy=di_avg)
+
+        # Populate SasView's expected layout and axes labeling metadata
+        output_1d.xaxis(r"$q$", "A^{-1}")
+        output_1d.yaxis(r"$I(q)$", "cm^{-1}")
+
+        if hasattr(data2d, 'filename'):
+            output_1d.filename = f"strip_avg_{data2d.filename}"
+
+        return output_1d
 
 class SlabX(CartesianROI):
     """
