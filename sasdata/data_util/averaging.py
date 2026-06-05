@@ -191,17 +191,10 @@ class SlabAngular(SlabROI):
         else:
             base_mask = np.ones_like(intensity, dtype=bool)
 
-        # 1. Convert orientation angle to radians
         phi = np.radians(self.phi)
-
-        # 2. Geometric evaluation: distance perpendicular to the center line
         q_perp = -qx * np.sin(phi) + qy * np.cos(phi)
-
-        # 3. Create the parallel line geometric mask
         half_width = self.q_width / 2.0
         strip_mask = np.abs(q_perp) <= half_width
-
-        # 4. Filter data (respecting finite numbers, geometry, and base masks)
         valid_mask = base_mask & strip_mask & np.isfinite(intensity)
 
         qx_strip = qx[valid_mask]
@@ -213,28 +206,34 @@ class SlabAngular(SlabROI):
         if len(i_strip) == 0:
             return Data1D(x=np.array([]), y=np.array([]), dy=np.array([]))
 
-        # 5. Compute radial distances from origin for circular averaging
         q_radial = np.sqrt(qx_strip ** 2 + qy_strip ** 2)
 
-        # 6. Setup radial grid binning edges
-        bin_edges = np.linspace(q_radial.min(), q_radial.max(), self.num_bins + 1)
+        if self.fold:
+            q_eval = q_radial
+            actual_bins = self.num_bins
+        else:
+            # Project points along the length of the strip corridor
+            q_parallel = qx_strip * np.cos(phi) + qy_strip * np.sin(phi)
+            # Apply the sign of the projection to the radial distance
+            q_eval = np.sign(q_parallel) * q_radial
+            # Double the bin allocation to maintain the same delta_q width across the full span
+            actual_bins = self.num_bins * 2
+
+        bin_edges = np.linspace(q_eval.min(), q_eval.max(), actual_bins + 1)
         q_centers = 0.5 * (bin_edges[:-1] + bin_edges[1:])
 
-        # 7. Aggregate intensities via histograms
-        counts, _ = np.histogram(q_radial, bins=bin_edges)
-        i_sum, _ = np.histogram(q_radial, bins=bin_edges, weights=i_strip)
+        counts, _ = np.histogram(q_eval, bins=bin_edges)
+        i_sum, _ = np.histogram(q_eval, bins=bin_edges, weights=i_strip)
 
         with np.errstate(divide='ignore', invalid='ignore'):
             i_avg = i_sum / counts
 
-        # 8. Unbiased statistical error propagation
         di_avg = None
         if di_strip is not None:
-            error_sq_sum, _ = np.histogram(q_radial, bins=bin_edges, weights=di_strip ** 2)
+            error_sq_sum, _ = np.histogram(q_eval, bins=bin_edges, weights=di_strip ** 2)
             with np.errstate(divide='ignore', invalid='ignore'):
                 di_avg = np.sqrt(error_sq_sum) / counts
 
-        # 9. Strip out empty bins from the final arrays
         nonzero = counts > 0
         q_centers = q_centers[nonzero]
         i_avg = i_avg[nonzero]
@@ -244,17 +243,16 @@ class SlabAngular(SlabROI):
         else:
             di_avg = np.zeros_like(i_avg)
 
-        # 10. Instantiate and format the 1D profile data object
         output_1d = Data1D(x=q_centers, y=i_avg, dy=di_avg)
-
-        # Populate SasView's expected layout and axes labeling metadata
         output_1d.xaxis(r"$q$", "A^{-1}")
         output_1d.yaxis(r"$I(q)$", "cm^{-1}")
 
         if hasattr(data2d, 'filename'):
-            output_1d.filename = f"strip_avg_{data2d.filename}"
+            fold_str = "folded" if self.fold else "unfolded"
+            output_1d.filename = f"strip_{fold_str}_{data2d.filename}"
 
         return output_1d
+
 
 class SlabX(CartesianROI):
     """
