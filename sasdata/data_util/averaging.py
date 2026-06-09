@@ -27,8 +27,8 @@ def get_dq_data(data2d: SasData) -> npt.NDArray[np.floating]:
 
     q_data = np.sqrt(data2d._data_contents["Qx"].value**2 + data2d._data_contents["Qy"].value**2)
 
-    z_max = max(q_data)
-    z_min = min(q_data)
+    z_max = np.max(q_data)
+    z_min = np.min(q_data)
 
     dqx_data = np.sqrt(data2d._data_contents["Qx"].variance.value)
     dqy_data = np.sqrt(data2d._data_contents["Qy"].variance.value)
@@ -41,23 +41,24 @@ def get_dq_data(data2d: SasData) -> npt.NDArray[np.floating]:
     # Find qdx at q = 0
     dq_overlap_x = (dqx_at_z_min * z_max - dqx_at_z_max * z_min) / (z_max - z_min)
     # when extrapolation goes wrong
-    if dq_overlap_x > min(dqx_data):
-        dq_overlap_x = min(dqx_data)
+    if dq_overlap_x > np.min(dqx_data):
+        dq_overlap_x = np.min(dqx_data)
     dq_overlap_x *= dq_overlap_x
     # Find qdx at q = 0
     dq_overlap_y = (dqy_at_z_min * z_max - dqy_at_z_max * z_min) / (z_max - z_min)
     # when extrapolation goes wrong
-    if dq_overlap_y > min(dqy_data):
-        dq_overlap_y = min(dqy_data)
+    if dq_overlap_y > np.min(dqy_data):
+        dq_overlap_y = np.min(dqy_data)
     # get dq at q=0.
     dq_overlap_y *= dq_overlap_y
 
-    dq_overlap = np.sqrt((dq_overlap_x + dq_overlap_y) / 2.0)
+    dq_overlap = np.sqrt(0.5 * (dq_overlap_x + dq_overlap_y))
     # Final protection of dq
     if dq_overlap < 0:
         dq_overlap = dqy_at_z_min
-    dqx_data = dqx_data[np.isfinite(data2d.ordinate.value)]
-    dqy_data = dqy_data[np.isfinite(data2d.ordinate.value)] - dq_overlap
+    ordinate_mask = np.isfinite(data2d.ordinate.value)
+    dqx_data = dqx_data[ordinate_mask]
+    dqy_data = dqy_data[ordinate_mask] - dq_overlap
     # def; dqx_data = dq_r dqy_data = dq_phi
     # Convert dq 2D to 1D here
     dq_data = np.sqrt(dqx_data**2 + dqy_data**2)
@@ -77,7 +78,7 @@ class Boxsum(CartesianROI):
         """
         super().__init__(qx_range=qx_range, qy_range=qy_range)
 
-    def __call__(self, data2d: SasData = None) -> tuple[float, float, float]:
+    def __call__(self, data2d: SasData | None = None) -> tuple[float, float, float]:
         """
         Coordinate data processing operations and return the results.
 
@@ -104,7 +105,7 @@ class Boxsum(CartesianROI):
         data = weights * self.data
         # Not certain that the weights should be squared here, I'm just copying
         # how it was done in the old manipulations.py
-        err_squared = (weights * self.err_data) ** 2
+        err_squared = weights * weights * self.err_data * self.err_data
 
         total_sum = np.sum(data)
         total_errors_squared = np.sum(err_squared)
@@ -172,7 +173,7 @@ class SlabX(CartesianROI):
         self.fold: bool = fold
         self.base: float | None = base
 
-    def __call__(self, data2d: SasData = None) -> SasData:
+    def __call__(self, data2d: SasData | None = None) -> SasData:
         """
         Compute the 1D average of 2D data, projecting along the Q_x axis.
 
@@ -246,7 +247,7 @@ class SlabY(CartesianROI):
         self.fold: bool = fold
         self.base: float | None = base
 
-    def __call__(self, data2d: SasData = None) -> SasData:
+    def __call__(self, data2d: SasData | None = None) -> SasData:
         """
         Compute the 1D average of 2D data, projecting along the Q_y axis.
 
@@ -327,24 +328,24 @@ class CircularAverage(PolarROI):
         if not np.any(finite_mask):
             raise RuntimeError(f"Circular averaging: invalid q_data: {data2D.q_data}")
 
-        data_all = data2D.ordinate.value[finite_mask]
-        qx_all = data2D._data_contents["Qx"].value[finite_mask]
-        qy_all = data2D._data_contents["Qy"].value[finite_mask]
-        q_all = np.sqrt(data2D._data_contents["Qx"].value**2 + data2D._data_contents["Qy"].value**2)[finite_mask]
-        err_all = np.sqrt(data2D.ordinate.variance.value)[finite_mask]
-        mask_all = (data2D.mask if data2D.mask is not None else np.ones_like(data2D.ordinate.value, dtype=bool))[finite_mask]
+        data = data2D.ordinate.value[finite_mask]
+        qx = data2D._data_contents["Qx"].value[finite_mask]
+        qy = data2D._data_contents["Qy"].value[finite_mask]
+        q = np.sqrt(qx**2 + qy**2)
+        err = np.sqrt(data2D.ordinate.variance.value)[finite_mask]
+        mask = (data2D.mask if data2D.mask is not None else np.ones_like(data2D.ordinate.value, dtype=bool))[finite_mask]
 
         # Optional mask handling: legacy used an ismask flag to optionally skip masked points
         if ismask:
-            sel = mask_all
+            sel = mask
         else:
-            sel = np.ones_like(mask_all, dtype=bool)
+            sel = np.ones_like(mask, dtype=bool)
 
         # Selected arrays used for binning & averaging
-        major_axis = q_all[sel]
-        phi_axis = np.arctan2(qy_all[sel], qx_all[sel])
-        data_vals = data_all[sel]
-        err_vals = err_all[sel]
+        major_axis = q[sel]
+        phi_axis = np.arctan2(qy[sel], qx[sel])
+        data_vals = data[sel]
+        err_vals = err[sel]
 
         # Prepare dq_data if available, aligned to the finite mask and selection
         dq_vals = None
@@ -355,11 +356,13 @@ class CircularAverage(PolarROI):
         # Set up DirectionalAverage with full-circle phi range
         major_lims = (self.r_min, self.r_max)
         minor_lims = (0.0, TwoPi)
-        directional_average = DirectionalAverage(major_axis=major_axis,
-                                                 minor_axis=phi_axis,
-                                                 lims=(major_lims, minor_lims),
-                                                 nbins=self.nbins,
-                                                 base=self.base)
+        directional_average = DirectionalAverage(
+            major_axis=major_axis,
+            minor_axis=phi_axis,
+            lims=(major_lims, minor_lims),
+            nbins=self.nbins,
+            base=self.base
+        )
 
         # Compute weights, then produce averaged intensity/error via DirectionalAverage
         weights = directional_average.compute_weights()
@@ -446,7 +449,7 @@ class Ring(PolarROI):
         err_data = np.sqrt(data2D.ordinate.variance.value)[valid_data]
         qx_data = data2D._data_contents["Qx"].value[valid_data]
         qy_data = data2D._data_contents["Qy"].value[valid_data]
-        q_data = np.sqrt(data2D._data_contents["Qx"].value ** 2 + data2D._data_contents["Qy"].value ** 2)[valid_data]
+        q_data = np.sqrt(qx_data ** 2 + qy_data ** 2)
         mask_data = (data2D.mask if data2D.mask is not None else np.ones_like(data2D.ordinate.value, dtype=bool))[valid_data]
 
         # Set space for 1d outputs
@@ -556,7 +559,7 @@ class SectorQ(PolarROI):
         self.fold: bool = fold
         self.base: float | None = base
 
-    def __call__(self, data2d: SasData = None) -> SasData:
+    def __call__(self, data2d: SasData | None = None) -> SasData:
         """
         Compute the 1D average of 2D data, projecting along the Q_y axis.
 
@@ -690,7 +693,7 @@ class WedgeQ(PolarROI):
         self.nbins: int = nbins
         self.base: float | None = base
 
-    def __call__(self, data2d: SasData = None) -> SasData:
+    def __call__(self, data2d: SasData | None = None) -> SasData:
         """
         Compute the 1D average of 2D data, projecting along the Q_y axis.
 
@@ -776,7 +779,7 @@ class WedgePhi(PolarROI):
         self.nbins: int = nbins
         self.base: float | None = base
 
-    def __call__(self, data2d: SasData = None) -> SasData:
+    def __call__(self, data2d: SasData | None = None) -> SasData:
         """
         Compute the 1D average of 2D data, projecting along the Q_y axis.
 

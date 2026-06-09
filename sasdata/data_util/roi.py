@@ -26,7 +26,7 @@ class GenericROI:
         self.qx_data = None
         self.qy_data = None
 
-    def validate_and_assign_data(self, data2d: SasData = None) -> None:
+    def validate_and_assign_data(self, data2d: SasData | None = None) -> None:
         """
         Check that the data supplied is valid and assign data to variables.
         This method must be executed before any further data processing happens.
