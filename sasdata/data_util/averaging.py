@@ -160,7 +160,7 @@ class SlabAngular(SlabROI):
         :param phi: (float) Angle of the strip slicer relative to the q_x axis (in degrees).
         :param q_width: (float) Total q-width of the corridor (distance between the parallel lines).
         :param num_bins: (int) Number of bins to generate the final 1D radial profile.
-        :param fold: (bool) Whether both sides of the slab should be be used in the averaging.
+        :param fold: (bool) Whether both sides of the slab should be used in the averaging.
 
         """
         super().__init__(phi, q_width)
@@ -191,12 +191,16 @@ class SlabAngular(SlabROI):
         else:
             base_mask = np.ones_like(intensity, dtype=bool)
 
+        # Rotate the qx and qy values about the axis
         phi = np.radians(self.phi)
         q_perp = -qx * np.sin(phi) + qy * np.cos(phi)
+        # The q_width is the total width of the slab. Use 1/2 the value when masking about the origin line.
         half_width = self.q_width / 2.0
         strip_mask = np.abs(q_perp) <= half_width
+        # Combine the mask from the data, the mask from the slicer, and mask values that are not finite
         valid_mask = base_mask & strip_mask & np.isfinite(intensity)
 
+        # Apply the mask to the data
         qx_strip = qx[valid_mask]
         qy_strip = qy[valid_mask]
         i_strip = intensity[valid_mask]
@@ -207,6 +211,7 @@ class SlabAngular(SlabROI):
             return Data1D(x=np.array([]), y=np.array([]), dy=np.array([]))
 
         q_radial = np.sqrt(qx_strip ** 2 + qy_strip ** 2)
+        q_parallel = qx_strip * np.cos(phi) + qy_strip * np.sin(phi)
 
         if self.fold:
             q_eval = q_radial
