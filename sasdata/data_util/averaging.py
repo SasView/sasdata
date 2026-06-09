@@ -212,16 +212,19 @@ class SlabAngular(SlabROI):
 
         q_radial = np.sqrt(qx_strip ** 2 + qy_strip ** 2)
         q_parallel = qx_strip * np.cos(phi) + qy_strip * np.sin(phi)
+        minor_lims = (np.min(q_parallel), np.max(q_parallel))
 
         if self.fold:
             q_eval = q_radial
             actual_bins = self.num_bins
+            major_lims = (0, np.max(q_eval))
         else:
             # Project points along the length of the strip corridor
             # Apply the sign of the projection to the radial distance
             q_eval = np.sign(q_parallel) * q_radial
             # Double the bin allocation to maintain the same delta_q width across the full span
             actual_bins = self.num_bins * 2
+            major_lims = (np.min(q_eval), np.max(q_eval))
 
         directional_average = DirectionalAverage(major_axis=q_eval,
                                                  minor_axis=q_parallel,
