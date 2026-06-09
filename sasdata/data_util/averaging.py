@@ -213,45 +213,18 @@ class SlabAngular(SlabROI):
             actual_bins = self.num_bins
         else:
             # Project points along the length of the strip corridor
-            q_parallel = qx_strip * np.cos(phi) + qy_strip * np.sin(phi)
             # Apply the sign of the projection to the radial distance
             q_eval = np.sign(q_parallel) * q_radial
             # Double the bin allocation to maintain the same delta_q width across the full span
             actual_bins = self.num_bins * 2
 
-        bin_edges = np.linspace(q_eval.min(), q_eval.max(), actual_bins + 1)
-        q_centers = 0.5 * (bin_edges[:-1] + bin_edges[1:])
+        directional_average = DirectionalAverage(major_axis=q_eval,
+                                                 minor_axis=q_parallel,
+                                                 lims=(major_lims, minor_lims),
+                                                 nbins=actual_bins, base=self.base)
+        qx_data, intensity, error = directional_average(data=i_strip, err_data=di_strip)
 
-        counts, _ = np.histogram(q_eval, bins=bin_edges)
-        i_sum, _ = np.histogram(q_eval, bins=bin_edges, weights=i_strip)
-
-        with np.errstate(divide='ignore', invalid='ignore'):
-            i_avg = i_sum / counts
-
-        di_avg = None
-        if di_strip is not None:
-            error_sq_sum, _ = np.histogram(q_eval, bins=bin_edges, weights=di_strip ** 2)
-            with np.errstate(divide='ignore', invalid='ignore'):
-                di_avg = np.sqrt(error_sq_sum) / counts
-
-        nonzero = counts > 0
-        q_centers = q_centers[nonzero]
-        i_avg = i_avg[nonzero]
-
-        if di_avg is not None:
-            di_avg = di_avg[nonzero]
-        else:
-            di_avg = np.zeros_like(i_avg)
-
-        output_1d = Data1D(x=q_centers, y=i_avg, dy=di_avg)
-        output_1d.xaxis(r"$q$", "A^{-1}")
-        output_1d.yaxis(r"$I(q)$", "cm^{-1}")
-
-        if hasattr(data2d, 'filename'):
-            fold_str = "folded" if self.fold else "unfolded"
-            output_1d.filename = f"strip_{fold_str}_{data2d.filename}"
-
-        return output_1d
+        return Data1D(x=qx_data, y=intensity, dy=error)
 
 
 class SlabX(CartesianROI):
