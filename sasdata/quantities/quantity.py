@@ -1531,9 +1531,9 @@ class QuantityHistory:
             operation(*[history.operation_tree for history in histories], **extra_parameters), references
         )
 
-    def has_variance(self):
+    def has_error(self):
         for key in self.references:
-            if self.references[key].has_variance:
+            if self.references[key].has_error:
                 return True
 
         return False
@@ -1570,19 +1570,15 @@ class Quantity[QuantityType]:
         self.hash_value = -1
         """ Hash based on value and uncertainty for data, -1 if it is a derived hash value """
 
-        self._variance = None
-        """ Contains the variance if it is data driven """
+        self._standard_error = standard_error
+        """ Contains the standard error if it is data driven """
 
         if standard_error is None:
             self.hash_value = hash_data_via_numpy(hash_seed, value)
         else:
-            self._variance = standard_error**2
             self.hash_value = hash_data_via_numpy(hash_seed, value, standard_error)
 
         self.history = QuantityHistory.variable(self)
-
-        self._id_header = id_header
-        self.name = name
 
         self._id_header = id_header
         self.name = name
@@ -1604,17 +1600,21 @@ class Quantity[QuantityType]:
             )
 
     @property
-    def has_variance(self):
-        return self._variance is not None
+    def has_error(self):
+        return self._standard_error is not None
+
+    @property
+    def standard_error(self) -> "Quantity":
+        """Get the standard error of this object"""
+        if self.has_error:
+            return Quantity(self._standard_error, self.units, name=self.name, id_header=self._id_header)
+        else:
+            return Quantity(np.zeros_like(self.value), self.units, name=self.name, id_header=self._id_header)
 
     @property
     def variance(self) -> "Quantity":
         """Get the variance of this object"""
-        if self._variance is None:
-            return Quantity(np.zeros_like(self.value), self.units**2, name=self.name, id_header=self._id_header)
-        else:
-            return Quantity(self._variance, self.units**2)
-
+        return self.standard_error**2
 
     @property
     def unique_id(self) -> str:
@@ -1635,9 +1635,6 @@ class Quantity[QuantityType]:
                 hashed = f"{chr(61 + digit)}{hashed}"
             current_hash = (current_hash - digit) // 62
         return hashed
-
-    def standard_deviation(self) -> "Quantity":
-        return self.variance**0.5
 
     def in_units_of(self, units: Unit) -> QuantityType:
         """Get this quantity in other units"""
@@ -1669,16 +1666,15 @@ class Quantity[QuantityType]:
         return self.in_units_of(si_units)
 
     def in_units_of_with_standard_error(self, units):
-        variance = self.variance
-        units_squared = units**2
+        standard_error = self.standard_error
 
-        if variance.units.equivalent(units_squared):
-            return self.in_units_of(units), np.sqrt(self.variance.in_units_of(units_squared))
+        if standard_error.units.equivalent(units):
+            return self.in_units_of(units), self.standard_error.in_units_of(units)
         else:
-            raise UnitError(f"Target units ({units}) not compatible with existing units ({variance.units}).")
+            raise UnitError(f"Target units ({units}) not compatible with existing units ({standard_error.units}).")
 
     def in_si_with_standard_error(self):
-        if self.has_variance:
+        if self.has_error:
             return self.in_units_of_with_standard_error(self.units.si_equivalent())
         else:
             return self.in_si(), None
@@ -1837,7 +1833,7 @@ class Quantity[QuantityType]:
     def __repr__(self):
         if isinstance(self.units, NamedUnit):
             value = self.value
-            error = self.standard_deviation().in_units_of(self.units)
+            error = self.standard_error.in_units_of(self.units)
             unit_string = self.units.symbol
 
         else:
@@ -1848,12 +1844,12 @@ class Quantity[QuantityType]:
             # Get the array in short form
             numeric_string = self._array_repr_format(value)
 
-            if self.has_variance:
+            if self.has_error:
                 numeric_string += " ± " + self._array_repr_format(error)
 
         else:
             numeric_string = f"{value}"
-            if self.has_variance:
+            if self.has_error:
                 numeric_string += f" ± {error}"
 
         return numeric_string + " " + unit_string
@@ -1912,19 +1908,19 @@ class DerivedQuantity[QuantityType](Quantity[QuantityType]):
 
         self.history = history
         self._variance_cache = None
-        self._has_variance = history.has_variance()
+        self._has_error = history.has_error()
 
     def to_units_of(self, new_units: Unit) -> "Quantity[QuantityType]":
         # TODO: Lots of tests needed for this
         return DerivedQuantity(value=self.in_units_of(new_units), units=new_units, history=self.history)
 
     @property
-    def has_variance(self):
-        return self._has_variance
+    def has_error(self):
+        return self._has_error
 
     @property
-    def variance(self) -> Quantity:
+    def standard_error(self) -> Quantity:
         if self._variance_cache is None:
             self._variance_cache = self.history.variance_propagate(self.units)
 
-        return self._variance_cache
+        return self._variance_cache**0.5
