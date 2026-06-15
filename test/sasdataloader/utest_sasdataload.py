@@ -393,7 +393,7 @@ def test_load_file(test_case: BaseTestCase):
         for index, values in expected.items():
             for column, expected_value in values.items():
                 if is_uncertainty(column):
-                    assert loaded._data_contents[column[1::]]._variance[index] == pytest.approx(expected_value**2)
+                    assert loaded._data_contents[column[1::]]._standard_error[index] == pytest.approx(expected_value)
                 else:
                     assert loaded._data_contents[column].value[index] == pytest.approx(expected_value)
 
