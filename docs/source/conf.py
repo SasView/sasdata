@@ -32,3 +32,19 @@ exclude_patterns = []
 
 html_theme = 'default'
 html_static_path = ['_static']
+
+
+# Ignore missing references to sections in SasView documentation
+def on_missing_reference(app, env, node, contnode):
+    if node["reftarget"] in [
+        "file_converter_tool",
+        "image_viewer_tool",
+        "sans_calculator_tool",
+    ]:
+        return contnode
+    else:
+        return None
+
+
+def setup(app):
+    app.connect("missing-reference", on_missing_reference)
