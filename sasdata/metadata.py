@@ -763,11 +763,11 @@ def meta_tags(obj: dataclass) -> list[str]:
 
     Example:
 
-    >@dataclass
-     class Thermometer:
-       temperature: float
-       units: str
-       params: list
+    > @dataclass
+    > class Thermometer:
+    >   temperature: float
+    >   units: str
+    >   params: list
     > item = Example()
     > item.temperature = 273
     > item.units = "K"
