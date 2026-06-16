@@ -31,8 +31,6 @@ exclude_patterns = []
 # -- Options for HTML output -------------------------------------------------
 
 html_theme = 'default'
-html_static_path = ['_static']
-
 
 # Ignore missing references to sections in SasView documentation
 def on_missing_reference(app, env, node, contnode):
