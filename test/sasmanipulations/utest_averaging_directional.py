@@ -9,7 +9,7 @@ import unittest
 import numpy as np
 
 from sasdata.data_util.binning import DirectionalAverage
-from test.sasmanipulations.helper import MatrixToData2D
+from test.sasmanipulations.helper import MatrixToSasData
 
 # TODO - also check the errors are being calculated correctly
 
@@ -73,7 +73,7 @@ class DirectionalAverageFunctionalityTests(unittest.TestCase):
         x, y = np.meshgrid(self.qx_data, self.qy_data)
         # quadratic in x, linear in y
         data = x * x * y
-        self.data2d = MatrixToData2D(data)
+        self.data2d = MatrixToSasData(data)
 
         # ROI is the first quadrant only. Same limits for both axes.
         self.lims = (0.0, 1.0)
@@ -85,9 +85,10 @@ class DirectionalAverageFunctionalityTests(unittest.TestCase):
         self.bin_width = (self.lims[1] - self.lims[0]) / self.nbins
 
         self.directional_average = \
-            DirectionalAverage(major_axis=self.data2d.data.qx_data,
-                               minor_axis=self.data2d.data.qy_data,
-                               lims=(self.lims,self.lims), nbins=self.nbins)
+            DirectionalAverage(major_axis=self.data2d.data._data_contents["Qx"].value,
+                               minor_axis=self.data2d.data._data_contents["Qy"].value,
+                               lims=(self.lims,self.lims),
+                               nbins=self.nbins)
 
     def test_bin_width(self):
         """
@@ -140,8 +141,8 @@ class DirectionalAverageFunctionalityTests(unittest.TestCase):
         the bins.
         """
         x_axis_values, intensity, errors = \
-            self.directional_average(data=self.data2d.data.data,
-                                     err_data=self.data2d.data.err_data)
+            self.directional_average(data=self.data2d.data._data_contents["I"].value,
+                                     err_data=self.data2d.data._data_contents["dI"].value)
 
         expected_x = self.qx_data[self.in_roi]
         expected_intensity = np.mean(self.qy_data[self.in_roi]) * expected_x**2
@@ -156,8 +157,10 @@ class DirectionalAverageFunctionalityTests(unittest.TestCase):
         # move the region of interest to outside the range of the data
         self.directional_average.major_lims = (2, 3)
         self.directional_average.minor_lims = (2, 3)
-        self.assertRaises(ValueError, self.directional_average,
-                          self.data2d.data.data, self.data2d.data.err_data)
+        self.assertRaises(ValueError,
+                 self.directional_average,
+                          self.data2d.data._data_contents["I"].value,
+                          self.data2d.data._data_contents["dI"].value)
 
 if __name__ == '__main__':
     unittest.main()
