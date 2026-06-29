@@ -8,7 +8,7 @@ from scipy import integrate
 
 from sasdata.data_util.averaging import CircularAverage, Ring, SectorQ, WedgePhi, WedgeQ
 from sasdata.quantities.constants import Pi
-from test.sasmanipulations.helper import CircularTestingMatrix, MatrixToData2D
+from test.sasmanipulations.helper import CircularTestingMatrix, MatrixToSasData
 
 # TODO - also check the errors are being calculated correctly
 
@@ -56,7 +56,7 @@ class CircularAverageTests(unittest.TestCase):
         Check CircularAverage ensures the data supplied has `q_data` populated
         """
         # test_data = np.ones([100, 100])
-        # averager_data = DataMatrixToData2D(test_data)
+        # averager_data = DataMatrixToSasData(test_data)
         # # Overwrite q_data so it's empty
         # averager_data.data.q_data = np.array([])
         # circ_object = CircularAverage()
@@ -76,7 +76,7 @@ class CircularAverageTests(unittest.TestCase):
         Test CircularAverage raises ValueError when the ROI contains no data
         """
         test_data = np.ones([100, 100])
-        averager_data = MatrixToData2D(test_data)
+        averager_data = MatrixToSasData(test_data)
 
         # Region of interest well outside region with data
         circ_object = CircularAverage(r_range=(2 * averager_data.qmax,3 * averager_data.qmax))
@@ -88,7 +88,7 @@ class CircularAverageTests(unittest.TestCase):
         """
         test_data = CircularTestingMatrix(frequency=2, matrix_size=201,
                                           major_axis='Q')
-        averager_data = MatrixToData2D(test_data.matrix)
+        averager_data = MatrixToSasData(test_data.matrix)
 
         # Test the ability to average over a subsection of the data
         r_min = averager_data.qmax * 0.25
@@ -99,7 +99,7 @@ class CircularAverageTests(unittest.TestCase):
         data1d = circ_object(averager_data.data)
 
         expected_area = test_data.area_under_region(r_min=r_min, r_max=r_max)
-        actual_area = integrate.trapezoid(data1d.y, data1d.x)
+        actual_area = integrate.trapezoid(data1d._data_contents["I"].value, data1d._data_contents["Q"].value)
 
         # This used to be able to pass with a precision of 3 d.p. with the old
         # manipulations.py - I'm not sure why it doesn't anymore.
@@ -146,7 +146,7 @@ class RingTests(unittest.TestCase):
         Test Ring raises ValueError when the ROI contains no data
         """
         test_data = np.ones([100, 100])
-        averager_data = MatrixToData2D(test_data)
+        averager_data = MatrixToSasData(test_data)
 
         # Region of interest well outside region with data
         ring_object = Ring(r_range=(2 * averager_data.qmax, 3 * averager_data.qmax))
@@ -158,7 +158,7 @@ class RingTests(unittest.TestCase):
         """
         test_data = CircularTestingMatrix(frequency=1, matrix_size=201,
                                           major_axis='Phi')
-        averager_data = MatrixToData2D(test_data.matrix)
+        averager_data = MatrixToSasData(test_data.matrix)
 
         # Test the ability to average over a subsection of the data
         r_min = 0.25 * averager_data.qmax
@@ -169,7 +169,7 @@ class RingTests(unittest.TestCase):
         data1d = ring_object(averager_data.data)
 
         expected_area = test_data.area_under_region(r_min=r_min, r_max=r_max)
-        actual_area = integrate.simpson(data1d.y, data1d.x)
+        actual_area = integrate.simpson(data1d._data_contents["I"].value, data1d._data_contents["Phi"].value)
 
         self.assertAlmostEqual(actual_area, expected_area, 1)
 
@@ -219,13 +219,13 @@ class SectorQTests(unittest.TestCase):
         """
         test_data = CircularTestingMatrix(frequency=1, matrix_size=201,
                                           major_axis='Q')
-        averager_data = MatrixToData2D(test_data.matrix)
+        averager_data = MatrixToSasData(test_data.matrix)
 
         r_min = 0
         r_max = 0.9 * averager_data.qmax
-        phi_min = Pi/6
-        phi_max = 5*Pi/6
-        nbins = int(test_data.matrix_size * np.sqrt(2)/4)  # usually reliable
+        phi_min = Pi / 6.0
+        phi_max = 5.0 * Pi / 6.0
+        nbins = int(0.25 * test_data.matrix_size * np.sqrt(2))  # usually reliable
 
         wedge_object = SectorQ(r_range=(r_min, r_max), phi_range=(phi_min,phi_max), nbins=nbins)
         # Explicitly set fold to False - results span full +/- range
@@ -241,7 +241,7 @@ class SectorQTests(unittest.TestCase):
         expected_area += test_data.area_under_region(r_min=r_min, r_max=r_max,
                                                      phi_min=phi_min+Pi,
                                                      phi_max=phi_max+Pi)
-        actual_area = integrate.simpson(data1d.y, data1d.x)
+        actual_area = integrate.simpson(data1d._data_contents["I"].value, data1d._data_contents["Q"].value)
 
         self.assertAlmostEqual(actual_area, expected_area, 1)
 
@@ -252,13 +252,13 @@ class SectorQTests(unittest.TestCase):
         """
         test_data = CircularTestingMatrix(frequency=1, matrix_size=201,
                                           major_axis='Q')
-        averager_data = MatrixToData2D(test_data.matrix)
+        averager_data = MatrixToSasData(test_data.matrix)
 
         r_min = 0
         r_max = 0.9 * averager_data.qmax
-        phi_min = Pi/6
-        phi_max = 5*Pi/6
-        nbins = int(test_data.matrix_size * np.sqrt(2)/4)  # usually reliable
+        phi_min = Pi / 6.0
+        phi_max = 5.0 * Pi / 6.0
+        nbins = int(0.25 * test_data.matrix_size * np.sqrt(2))  # usually reliable
 
         wedge_object = SectorQ(r_range=(r_min, r_max), phi_range=(phi_min,phi_max), nbins=nbins)
         # Explicitly set fold to True - points either side of 0,0 are averaged
@@ -275,7 +275,7 @@ class SectorQTests(unittest.TestCase):
                                                      phi_min=phi_min+Pi,
                                                      phi_max=phi_max+Pi)
         expected_area /= 2
-        actual_area = integrate.simpson(data1d.y, data1d.x)
+        actual_area = integrate.simpson(data1d._data_contents["I"].value, data1d._data_contents["Q"].value)
 
         self.assertAlmostEqual(actual_area, expected_area, 1)
 
@@ -313,21 +313,20 @@ class WedgeQTests(unittest.TestCase):
         """
         test_data = CircularTestingMatrix(frequency=3, matrix_size=201,
                                           major_axis='Q')
-        averager_data = MatrixToData2D(test_data.matrix)
+        averager_data = MatrixToSasData(test_data.matrix)
 
         r_min = 0.1 * averager_data.qmax
         r_max = 0.9 * averager_data.qmax
-        phi_min = Pi/6
-        phi_max = 5*Pi/6
+        phi_min = Pi / 6.0
+        phi_max = 5.0 * Pi / 6.0
         nbins = int(test_data.matrix_size * np.sqrt(2)/4)  # usually reliable
 
         wedge_object = WedgeQ(r_range=(r_min, r_max), phi_range=(phi_min,phi_max), nbins=nbins)
         data1d = wedge_object(averager_data.data)
 
         expected_area = test_data.area_under_region(r_min=r_min, r_max=r_max,
-                                                    phi_min=phi_min,
-                                                    phi_max=phi_max)
-        actual_area = integrate.simpson(data1d.y, data1d.x)
+                                                    phi_min=phi_min, phi_max=phi_max)
+        actual_area = integrate.simpson(data1d._data_contents["I"].value, data1d._data_contents["Q"].value)
 
         self.assertAlmostEqual(actual_area, expected_area, 1)
 
@@ -351,8 +350,6 @@ class WedgePhiTests(unittest.TestCase):
         nbins = 100
         # base = 10
 
-        # wedge_object = WedgePhi(r_min=r_min, r_max=r_max, phi_min=phi_min,
-        #                           phi_max=phi_max, nbins=nbins, base=base)
         wedge_object = WedgePhi(r_range=(r_min, r_max), phi_range=(phi_min,phi_max), nbins=nbins)
 
         self.assertEqual(wedge_object.r_min, r_min)
@@ -376,21 +373,21 @@ class WedgePhiTests(unittest.TestCase):
         """
         test_data = CircularTestingMatrix(frequency=1, matrix_size=201,
                                           major_axis='Phi')
-        averager_data = MatrixToData2D(test_data.matrix)
+        averager_data = MatrixToSasData(test_data.matrix)
 
         r_min = 0.1 * averager_data.qmax
         r_max = 0.9 * averager_data.qmax
-        phi_min = Pi/6
-        phi_max = 5*Pi/6
-        nbins = int(test_data.matrix_size * np.sqrt(2)/4)  # usually reliable
+        phi_min = Pi / 6.0
+        phi_max = 5.0 * Pi / 6.0
+        nbins = int(0.25 *test_data.matrix_size * np.sqrt(2))  # usually reliable
 
         wedge_object = WedgePhi(r_range=(r_min, r_max), phi_range=(phi_min,phi_max), nbins=nbins)
         data1d = wedge_object(averager_data.data)
 
         expected_area = test_data.area_under_region(r_min=r_min, r_max=r_max,
-                                                    phi_min=phi_min,
-                                                    phi_max=phi_max)
-        actual_area = integrate.simpson(data1d.y, data1d.x)
+                                                    phi_min=phi_min, phi_max=phi_max)
+
+        actual_area = integrate.simpson(data1d._data_contents["I"].value, data1d._data_contents["Phi"].value)
 
         self.assertAlmostEqual(actual_area, expected_area, 1)
 

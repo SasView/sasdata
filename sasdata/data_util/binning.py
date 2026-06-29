@@ -11,7 +11,7 @@ class DirectionalAverage:
     Average along one coordinate axis of 2D data and return data for a 1D plot.
     This can also be thought of as a projection onto the major axis: 2D -> 1D.
 
-    This class operates on a decomposed Data2D object, and returns data needed
+    This class operates on a decomposed SasData object, and returns data needed
     to construct a Data1D object. The class is instantiated with two arrays of
     orthogonal coordinate data (depending on the coordinate system, these may
     have undergone some pre-processing) and two corresponding two-element
@@ -20,7 +20,7 @@ class DirectionalAverage:
     the other is divided into bins and becomes the dependent variable of the
     eventual 1D plot. These are called the minor and major axes respectively.
     When a class instance is called, it is passed the intensity and error data
-    from the original Data2D object. These should not have undergone any
+    from the original SasData object. These should not have undergone any
     coordinate system dependent pre-processing.
 
     Note that the old version of manipulations.py had an option for logarithmic
@@ -203,7 +203,7 @@ class DirectionalAverage:
         """
         Compute the directional average of the supplied intensity & error data.
 
-        :param data: intensity data from the origninal Data2D object.
+        :param data: intensity data from the original SasData object.
         :param err_data: the corresponding errors for the intensity data.
         """
         weights = self.compute_weights()
