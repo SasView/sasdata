@@ -41,6 +41,11 @@ venv
 tests.log
 /.pytest_cache
 
+# Unit test / coverage reports
+htmlcov/
+.coverage
+.cache/
+
 # Installer files
 /installers/build
 /installers/dist

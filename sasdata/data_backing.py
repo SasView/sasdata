@@ -27,7 +27,7 @@ class Dataset[DataType]:
         s += f"{indent*(indent_amount+1)}{shorten_string(str(self.data))}\n"
         for key in self.attributes:
             value = self.attributes[key]
-            if isinstance(value, (Group | Dataset)):
+            if isinstance(value, (Group, Dataset)):
                 value_string = value.summary(indent_amount+1, indent)
             else:
                 value_string = f"{indent * (indent_amount+1)}{key}: {shorten_string(repr(value))}\n"

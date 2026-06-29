@@ -26,7 +26,7 @@ SEPARATOR_PRECEDENCE = [
 T = TypeVar('T')
 
 # TODO: There may be a better place for this.
-pairings = {'I': 'dI', 'Q': 'dQ', 'Qx': 'dQx', 'Qy': 'dQy'}
+pairings = {'I': 'dI', 'Q': 'dQ', 'Qx': 'dQx', 'Qy': 'dQy', 'Qz': 'dQz'}
 pairing_error = {value: key for key, value in pairings.items()}
 # Allows this to be bidirectional.
 bidirectional_pairings = pairings | pairing_error
