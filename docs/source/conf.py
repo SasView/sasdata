@@ -33,8 +33,8 @@ release = sasdata_version
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
+    "sphinx.ext.mathjax",
     "dollarmath",
-    "mathjax",
 ]
 
 templates_path = ["_templates"]
