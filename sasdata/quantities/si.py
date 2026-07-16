@@ -78,24 +78,26 @@ Do not edit by hand, instead edit the files that build it (_build_tables.py)
 
 """
 
-from sasdata.quantities.units import meters
-from sasdata.quantities.units import seconds
-from sasdata.quantities.units import amperes
-from sasdata.quantities.units import kelvin
-from sasdata.quantities.units import hertz
-from sasdata.quantities.units import newtons
-from sasdata.quantities.units import pascals
-from sasdata.quantities.units import joules
-from sasdata.quantities.units import watts
-from sasdata.quantities.units import coulombs
-from sasdata.quantities.units import volts
-from sasdata.quantities.units import ohms
-from sasdata.quantities.units import farads
-from sasdata.quantities.units import siemens
-from sasdata.quantities.units import webers
-from sasdata.quantities.units import tesla
-from sasdata.quantities.units import henry
-from sasdata.quantities.units import kilograms
+from sasdata.quantities.units import (
+    amperes,
+    coulombs,
+    farads,
+    henry,
+    hertz,
+    joules,
+    kelvin,
+    kilograms,
+    meters,
+    newtons,
+    ohms,
+    pascals,
+    seconds,
+    siemens,
+    tesla,
+    volts,
+    watts,
+    webers,
+)
 
 all_si = [
     meters,
