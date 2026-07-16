@@ -323,6 +323,7 @@ class SlabX(SlabX):
 
     Old signature:
         SlabX(x_min=0, x_max=0, y_min=0, y_max=0, bin_width=0.001, fold=False)
+
     New signature uses nbins; translate bin_width -> nbins using ceil(range/bin_width)
     """
     def __init__(self, x_min=0.0, x_max=0.0, y_min=0.0,

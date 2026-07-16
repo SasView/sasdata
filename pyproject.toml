@@ -7,6 +7,8 @@ requires = [
   "h5py",
   "lxml",
   "numpy",
+  "scipy",
+  "matplotlib",
 ]
 build-backend = "hatchling.build"
 
@@ -94,6 +96,7 @@ header = "SasData"
 [[tool.hatch.build.targets.wheel.hooks.sphinx.tools]]
 tool = "build"
 format = "html"
+warnings = true
 source = "source"
 out_dir = "../build/docs"
 environment = { PYTHONPATH=".." }

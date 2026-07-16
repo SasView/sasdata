@@ -403,36 +403,6 @@ with open("units.py", 'w', encoding=encoding) as fid:
     fid.write("}\n\n")
 
 
-with open("accessors.py", 'w', encoding=encoding) as fid:
-
-
-    fid.write('"""'+(warning_text%"_build_tables.py, _accessor_base.py")+'"""\n\n')
-
-    with open("_accessor_base.py") as base:
-        for line in base:
-            fid.write(line)
-
-    for dimension_name, dimensions in dimension_names:
-
-        accessor_name = dimension_name.capitalize().replace("_", "") + "Accessor"
-
-        fid.write(f"\n"
-                  f"class {accessor_name}[T](QuantityAccessor[T]):\n"
-                  f"    dimension_name = '{dimension_name}'\n"
-                  f"    \n")
-
-        for unit_name in unit_types[hash(dimensions)]:
-            fid.write(f"    @property\n"
-                      f"    def {unit_name}(self) -> T:\n"
-                      f"        quantity = self.quantity\n"
-                      f"        if quantity is None:\n"
-                      f"            return None\n"
-                      f"        else:\n"
-                      f"            return quantity.in_units_of(units.{unit_name})\n"
-                      f"\n")
-
-        fid.write("\n")
-
 with open("si.py", 'w') as fid:
 
     fid.write('"""'+(warning_text%"_build_tables.py")+'"""\n\n')

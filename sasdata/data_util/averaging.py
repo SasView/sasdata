@@ -273,8 +273,8 @@ class SlabY(CartesianROI):
 
 
 class CircularAverage(PolarROI):
-    """
-    Calculate I(|Q|) by circularly averaging 2D data between 2 radial limits.
+    r"""
+    Calculate $I(|Q|)$ by circularly averaging 2D data between 2 radial limits.
 
     This class is initialised by specifying lower and upper limits on the
     magnitude of Q values to consider during the averaging, though currently
@@ -290,13 +290,13 @@ class CircularAverage(PolarROI):
         nbins: int = 100,
         base: float | None = None,
     ) -> None:
-        """
+        r"""
         Set up the lower and upper radial limits as well as the number of bins.
 
         The units are A^-1 for the radial parameters.
-        :param r_min: Lower limit for |Q| values to use during averaging.
-        :param r_max: Upper limit for |Q| values to use during averaging.
-        :param nbins: The number of bins data is sorted into along |Q| the axis
+        :param r_min: Lower limit for $|Q|$ values to use during averaging.
+        :param r_max: Upper limit for $|Q|$ values to use during averaging.
+        :param nbins: The number of bins data is sorted into along $|Q|$ the axis
         """
         super().__init__(r_range=r_range, center=center)
         self.nbins: int = nbins
@@ -396,12 +396,12 @@ class Ring(PolarROI):
         nbins: int = 100,
         base: float | None = None,
     ) -> None:
-        """
+        r"""
         Set up the lower and upper radial limits as well as the number of bins.
 
         The units are A^-1 for the radial parameters.
-        :param r_min: Lower limit for |Q| values to use during averaging.
-        :param r_max: Upper limit for |Q| values to use during averaging.
+        :param r_min: Lower limit for $|Q|$ values to use during averaging.
+        :param r_max: Upper limit for $|Q|$ values to use during averaging.
         :param nbins: The number of bins data is sorted into along Phi the axis
         """
         super().__init__(r_range=r_range, center=center)
@@ -549,7 +549,7 @@ class Ring(PolarROI):
 
 
 class SectorQ(PolarROI):
-    """
+    r"""
     Project I(Q, φ) data onto I(Q) within a region defined by Cartesian limits.
 
     The projection is computed by averaging together datapoints with the same
@@ -558,7 +558,7 @@ class SectorQ(PolarROI):
 
     This class is initialised by specifying lower and upper limits on both the
     magnitude of Q and the angle φ. These four parameters specify the primary
-    Region Of Interest, however there is a secondary ROI with the same |Q|
+    Region Of Interest, however there is a secondary ROI with the same $|Q|$
     values on the opposite side of the origin (φ + π). How this secondary ROI
     is treated depends on the value of the `fold` parameter. If fold is set to
     True, data on opposite sides of the origin are averaged together and the
@@ -579,14 +579,14 @@ class SectorQ(PolarROI):
         fold: bool = True,
         base: float | None = None,
     ) -> None:
-        """
+        r"""
         Set up the ROI boundaries, the binning of the output 1D data, and fold.
 
         The units are A^-1 for radial parameters, and radians for anglar ones.
-        :param r_range: Tuple (r_min, r_max) defining limits for |Q| values to use during averaging.
+        :param r_range: Tuple (r_min, r_max) defining limits for $|Q|$ values to use during averaging.
         :param phi_range: Tuple (phi_min, phi_max) defining limits for φ in radians (in the primary ROI).
         :Defaults to full circle (0, 2*pi).
-        :param nbins: The number of bins data is sorted into along the |Q| axis
+        :param nbins: The number of bins data is sorted into along the $|Q|$ axis
         :param fold: Whether the primary and secondary ROIs should be folded
                      together during averaging.
         """
@@ -709,14 +709,14 @@ class WedgeQ(PolarROI):
         nbins: int = 100,
         base: float | None = None,
     ) -> None:
-        """
+        r"""
         Set up the ROI boundaries, and the binning of the output 1D data.
 
         The units are A^-1 for radial parameters, and radians for anglar ones.
-        :param r_range: Tuple (r_min, r_max) defining limits for |Q| values to use during averaging.
+        :param r_range: Tuple (r_min, r_max) defining limits for $|Q|$ values to use during averaging.
         :param phi_range: Tuple (phi_min, phi_max) defining limits for φ in radians (in the primary ROI).
         :Defaults to full circle (0, 2*pi).
-        :param nbins: The number of bins data is sorted into along the |Q| axis
+        :param nbins: The number of bins data is sorted into along the $|Q|$ axis
         """
         super().__init__(r_range=r_range, phi_range=phi_range, center=center)
         self.nbins: int = nbins
@@ -791,11 +791,11 @@ class WedgePhi(PolarROI):
         nbins: int = 100,
         base: float | None = None,
     ) -> None:
-        """
+        r"""
         Set up the ROI boundaries, and the binning of the output 1D data.
 
         The units are A^-1 for radial parameters, and radians for anglar ones.
-        :param r_range: Tuple (r_min, r_max) defining limits for |Q| values to use during averaging.
+        :param r_range: Tuple (r_min, r_max) defining limits for $|Q|$ values to use during averaging.
         :param phi_range: Tuple (phi_min, phi_max) defining angular bounds in radians.
                           Defaults to full circle (0, 2*pi).
         :param nbins: The number of bins data is sorted into along the φ axis.

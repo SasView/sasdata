@@ -9,3 +9,5 @@ Developer Documentation
     :maxdepth: 8
 
     SasData <generated/sasdata>
+
+    Modules <generated/modules>

@@ -153,7 +153,7 @@ class DirectionalAverage:
         2pi to 0 discontinuity.
 
         :param value: A coordinate value in the binning interval along the major axis,
-        whose bin index should be returned. Must be between min_value and max_value.
+            whose bin index should be returned. Must be between min_value and max_value.
 
         The general formula logarithm binning is:
         bin = floor(N * (log(x) - log(min)) / (log(max) - log(min)))
