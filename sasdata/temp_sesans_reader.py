@@ -8,7 +8,7 @@ from itertools import groupby
 
 import numpy as np
 
-from sasdata.data import SasData
+from sasdata.data import SasMeasurement
 from sasdata.data_util.loader_exceptions import FileContentsException
 from sasdata.dataset_types import sesans
 from sasdata.metadata import (
@@ -191,11 +191,11 @@ def parse_data(lines: list[str], kvs: dict[str, str]) -> dict[str, Quantity]:
     return data_contents
 
 
-def parse_sesans(lines: list[str]) -> SasData:
+def parse_sesans(lines: list[str]) -> SasMeasurement:
     version, lines = parse_version(lines)
     metadata, kvs, lines = parse_metadata(lines)
     data_contents = parse_data(lines, kvs)
-    return SasData(
+    return SasMeasurement(
         name="Sesans",
         dataset_type=sesans,
         data_contents=data_contents,
@@ -204,7 +204,7 @@ def parse_sesans(lines: list[str]) -> SasData:
     )
 
 
-def load_data(filename) -> SasData:
+def load_data(filename) -> SasMeasurement:
     with open(filename) as infile:
         lines = infile.readlines()
     return parse_sesans(lines)

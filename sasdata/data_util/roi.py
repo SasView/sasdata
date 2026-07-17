@@ -38,9 +38,8 @@ class GenericROI:
         if not isinstance(data2d, SasData):
             msg = "Data supplied must be of type SasData."
             raise TypeError(msg)
-        if not ("Qx" in data2d._data_contents and
-                "Qy" in data2d._data_contents):
-            msg = "SasData object must contain 'Qx' and 'Qy' data."
+        if len(data2d.abscissae) < 2:
+            msg = "SasData object must contain at least two dimensions in Q."
             raise TypeError(msg)
         if len(data2d.metadata.instrument.detector) > 1:
             msg = (f"Invalid number of detectors: {len(data2d.metadata.instrument.detector)}."
@@ -58,8 +57,9 @@ class GenericROI:
         self.data = data2d.ordinate.value[valid_data]
         self.err_data = np.sqrt(data2d.ordinate.variance.value)[valid_data]
 
-        self.qx_data = data2d._data_contents["Qx"].value[valid_data] - self.center_x
-        self.qy_data = data2d._data_contents["Qy"].value[valid_data] - self.center_y
+        # We take the first two dimensions of the abscissae as the Qx and Qy data.
+        self.qx_data = data2d.abscissae[0].value[valid_data] - self.center_x
+        self.qy_data = data2d.abscissae[1].value[valid_data] - self.center_y
         self.q_data = np.sqrt(self.qx_data ** 2 + self.qy_data ** 2)
 
         # Compute phi in the legacy convention: atan2(qy,qx) + pi

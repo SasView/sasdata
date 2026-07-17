@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from sasdata.data import SasData
+from sasdata.data import SasData, SasMeasurement
 from sasdata.data_backing import Dataset, Group
 from sasdata.quantities.quantity import Quantity
 from sasdata.transforms.rebinning import calculate_interpolation_matrix_1d
@@ -77,7 +77,7 @@ class Trend:
                     continue
                 new_quantities[name] = quantity @ mat
 
-            new_datum = SasData(
+            new_datum = SasMeasurement(
                 name=datum.name,
                 data_contents=new_quantities,
                 dataset_type=datum.dataset_type,

@@ -1,6 +1,6 @@
 import numpy as np
 
-from sasdata.data import SasData
+from sasdata.data import SasMeasurement
 from sasdata.data_backing import Group
 from sasdata.dataset_types import angle_dim, one_dim, three_dim, two_dim
 from sasdata.metadata import Instrument, Metadata, Source
@@ -22,9 +22,9 @@ def test_1d():
         'I': i_quantity
     }
 
-    data = SasData('TestData', data_contents, one_dim, Group('root', {}), True)
+    data = SasMeasurement('TestData', data_contents, one_dim, Group('root', {}), True)
 
-    assert all(data.abscissae.value == np.array(q))
+    assert all(data.abscissae[0].value == np.array(q))
     assert all(data.ordinate.value == np.array(i))
 
 
@@ -45,10 +45,11 @@ def test_2d():
         'I': i_quantity
     }
 
-    data = SasData('TestData', data_contents, two_dim, Group('root', {}), True)
+    data = SasMeasurement('TestData', data_contents, two_dim, Group('root', {}), True)
 
     assert all(data.ordinate.value == np.array(i))
-    assert (data.abscissae.value == np.array([[1, 1], [1, 2], [1, 3], [2, 1], [2, 2], [2, 3], [3, 1], [3, 2], [3, 3]])).all().all()
+    assert (data.abscissae[0].value == np.array([1, 1, 1, 2, 2, 2, 3, 3, 3])).all()
+    assert (data.abscissae[1].value == np.array([1, 2, 3, 1, 2, 3, 1, 2, 3])).all()
 
 def test_3d():
     # test base 3D class
@@ -69,7 +70,7 @@ def test_3d():
         'I': i_quantity
     }
 
-    data = SasData('TestData', data_contents, three_dim, Group('root', {}), True)
+    data = SasMeasurement('TestData', data_contents, three_dim, Group('root', {}), True)
 
     assert (data._data_contents['Qx'].value == np.array(qx)).all()
 
@@ -101,7 +102,7 @@ def test_3d():
         'I': i_quantity
     }
 
-    data = SasData('TestData', data_contents, two_dim, metadata, True)
+    data = SasMeasurement('TestData', data_contents, two_dim, metadata, True)
 
     deduce_qz(data)
 
@@ -119,7 +120,7 @@ def test_angle():
         'I': i_quantity
     }
 
-    data = SasData('TestData', data_contents, angle_dim, Group('root', {}), True)
+    data = SasMeasurement('TestData', data_contents, angle_dim, Group('root', {}), True)
 
-    assert all(data.abscissae.value == np.array(phi))
+    assert all(data.abscissae[0].value == np.array(phi))
     assert all(data.ordinate.value == np.array(i))

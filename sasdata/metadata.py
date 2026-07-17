@@ -890,3 +890,6 @@ def collect_tags(objs: list[dataclass]) -> TagCollection:
             result.variable.add(term)
 
     return result
+
+class DerivedMetadata(Metadata):
+    pass
