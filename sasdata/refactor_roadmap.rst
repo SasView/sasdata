@@ -1,4 +1,4 @@
-* percentages updated last on 6th February 2026
+* percentages updated last on 20th July 2026
 
 SasData Side
 ============
@@ -34,7 +34,7 @@ SasData Side
 
     * Arithmetic operations (95%)
     * Special and not so special functions (90%)
-    * Linear algebra (30%)
+    * Linear algebra (70%)
 
 * Operation on datasets
 
