@@ -14,11 +14,15 @@ Features
 ========
 Wheel, egg, and tar.gz files are available on `pypi <https://pypi.org/project/sasdata/>`_.
 
-New in Version 0.12.0
+New in Version 0.12.1
 ----------------------
+
+.. note:: This is a point release because a tag was already created for 0.12.0, so this release is
+   being called 0.12.1 to avoid an issue with the release process.
+
 This release, which coincides with SasView 6.2.0, includes a number of bug fixes and feature enhancements.
 It includes a refactor and clean up of `manipulations.py` and `averaging.py` by @ehewins and @jellybean2004,
-optimised string concatenation by @mohasarc and a full rotation to units by @rprospero. Thew first part of
+optimised string concatenation by @mohasarc and a full rotation to units by @rprospero. The first part of
 CodeScene integration was added by @krzywon. Bug fixes included slicer fixes by @dehoni and a fix for PyPI
 upload by @krzywon. 
 
