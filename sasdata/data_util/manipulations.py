@@ -23,6 +23,7 @@ from warnings import warn
 
 import numpy as np
 
+from sasdata.abscissa import Abscissa
 from sasdata.data import SasData
 
 ################################################################################
@@ -392,12 +393,12 @@ class CircularAverage:
         # Get data W/ finite values
         finite_mask = np.isfinite(data2D.ordinate.value)
         data = data2D.ordinate.value[finite_mask]
-        q_data = np.sqrt(data2D.abscissae[0].value**2 + data2D.abscissae[1].value**2)[finite_mask]
+        q_data = np.sqrt(data2D.abscissae.axes[0].value**2 + data2D.abscissae.axes[1].value**2)[finite_mask]
         err_data = np.sqrt(data2D.ordinate.variance.value)[finite_mask]
         mask_data = (data2D.mask if data2D.mask is not None else np.ones_like(data2D.ordinate.value, dtype=bool))[finite_mask]
 
         dq_data = None
-        if data2D.abscissae[0].has_error and data2D.abscissae[1].has_error:
+        if data2D.abscissae.axes[0].has_error and data2D.abscissae.axes[1].has_error:
             dq_data = get_dq_data(data2D)
 
         if len(q_data) == 0:
@@ -479,10 +480,13 @@ class CircularAverage:
             msg = "Average Error: No points inside ROI to average..."
             raise ValueError(msg)
 
+        ordinate = Quantity(y[idx], data2D.ordinate.units, err_y[idx])
+        abscissa = Abscissa.determine([Quantity(x[idx], data2D.abscissae.axes[0].units, dQ)], ordinate)
+
         return SasData(
             name="Circular Average",
-            ordinate=Quantity(y[idx], data2D.ordinate.units, err_y[idx]),
-            abscissae=[Quantity(x[idx], data2D.abscissae[0].units, dQ)],
+            ordinate=ordinate,
+            abscissae=abscissa,
             mask=data2D.mask,
             dependents=[data2D],
             metadata=data2D.metadata
@@ -543,20 +547,20 @@ class _Sector:
 
         :return: SasData object
         """
-        if len(data2D.abscissae) != 2:
+        if data2D.abscissae.dimensionality < 2:
             raise RuntimeError("For averaging the SasData object must contain at least two dimensions in Q.")
 
         # Get all the data & info
         finite_mask = np.isfinite(data2D.ordinate.value)
         data = data2D.ordinate.value[finite_mask]
         err_data = np.sqrt(data2D.ordinate.variance.value)[finite_mask]
-        qx_data = data2D.abscissae[0].value[finite_mask]
-        qy_data = data2D.abscissae[1].value[finite_mask]
-        q_data = np.sqrt(data2D.abscissae[0].value**2 + data2D.abscissae[1].value**2)[finite_mask]
+        qx_data = data2D.abscissae.axes[0].value[finite_mask]
+        qy_data = data2D.abscissae.axes[1].value[finite_mask]
+        q_data = np.sqrt(data2D.abscissae.axes[0].value**2 + data2D.abscissae.axes[1].value**2)[finite_mask]
         mask_data = (data2D.mask if data2D.mask is not None else np.ones_like(data2D.ordinate.value, dtype=bool))[finite_mask]
 
         dq_data = None
-        if data2D.abscissae[0].has_error and data2D.abscissae[1].has_error:
+        if data2D.abscissae.axes[0].has_error and data2D.abscissae.axes[1].has_error:
             dq_data = get_dq_data(data2D)
 
         # set space for 1d outputs
@@ -721,10 +725,13 @@ class _Sector:
             msg = "Average Error: No points inside sector of ROI to average..."
             raise ValueError(msg)
 
+        ordinate = Quantity(y[idx], data2D.ordinate.units, y_err[idx])
+        abscissa = Abscissa.determine([Quantity(x[idx], data2D.abscissae.axes[0].units, dQ)], ordinate)
+
         return SasData(
             name="agv",
-            ordinate=Quantity(y[idx], data2D.ordinate.units, y_err[idx]),
-            abscissae=[Quantity(x[idx], data2D.abscissae[0].units, dQ)],
+            ordinate=ordinate,
+            abscissae=abscissa,
             mask=data2D.mask,
             dependents=[data2D],
             metadata=data2D.metadata

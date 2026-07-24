@@ -72,7 +72,7 @@ class Abscissa(ABC):
         # 1:
         if all([axis.shape == ordinate_shape for axis in axis_arrays]):
             # 1a:
-            if all([len(axis.shape)== 1 for axis in axis_arrays]):
+            if all([len(axis.shape) == 1 for axis in axis_arrays]):
                 # 1a-i:
                 if len(axis_arrays) == 1:
                     # Is it sorted
@@ -91,7 +91,7 @@ class Abscissa(ABC):
             else:
                 raise InterpretationError(Abscissa._determine_error_message(axis_arrays, ordinate_shape))
 
-        elif all([len(axis.shape)== 1 for axis in axis_arrays]) and \
+        elif all([len(axis.shape) == 1 for axis in axis_arrays]) and \
                 tuple([axis.shape[0] for axis in axis_arrays]) == ordinate_shape:
 
             # Require that they are sorted

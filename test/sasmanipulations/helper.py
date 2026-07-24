@@ -4,6 +4,7 @@ Shared test helpers for averaging tests.
 import numpy as np
 from scipy import integrate
 
+from sasdata.abscissa import Abscissa
 from sasdata.data import SasData
 from sasdata.metadata import Instrument, Metadata, Source
 from sasdata.quantities.constants import TwoPi
@@ -32,10 +33,10 @@ def integrate_1d_output(output, method="simpson"):
     - If output is a SasData-like object with "Q" and "I" -> integrate I(Q)
     - If output is a tuple (result, error[, npoints]) -> return numeric result
     """
-    if isinstance(output, SasData) and len(output.abscissae) == 1:
+    if isinstance(output, SasData) and output.abscissae.dimensionality == 1:
         if method == "trapezoid":
-            return integrate.trapezoid(output.ordinate.value, output.abscissae[0].value)
-        return integrate.simpson(output.ordinate.value, output.abscissae[0].value)
+            return integrate.trapezoid(output.ordinate.value, output.abscissae.axes[0].value)
+        return integrate.simpson(output.ordinate.value, output.abscissae.axes[0].value)
     if isinstance(output, tuple) and len(output) >= 1:
         return output[0]
     raise TypeError("Unsupported averager output type: %r" % type(output))
@@ -110,7 +111,10 @@ class MatrixToSasData:
         self.qmax = 1
 
         # Create a SasData object to use for testing the averagers.
-        wavelength = Quantity(1., angstroms)
+        ordinate = Quantity(data_flat, per_centimeter, err_flat)
+        abscissa = Abscissa.determine([Quantity(qx_data, per_angstrom), Quantity(qy_data, per_angstrom)], ordinate)
+
+        wavelength = Quantity(1.0, angstroms)
         source = Source(radiation=None,
                         beam_shape=None,
                         beam_size=None,
@@ -121,21 +125,21 @@ class MatrixToSasData:
         instrument = Instrument(collimations=[],
                                 source=source,
                                 detector=[])
-        metadata=Metadata(title=None,
-                        run=[],
-                        definition=None,
-                        process=[],
-                        sample=None,
-                        instrument=instrument,
-                        raw=None)
+        basic_metadata = Metadata(title=None,
+                                run=[],
+                                definition=None,
+                                process=[],
+                                sample=None,
+                                instrument=instrument,
+                                raw=None)
 
         self.data = SasData(
             name="Matrix Data",
-            ordinate=Quantity(data_flat, per_centimeter, err_flat),
-            abscissae=[Quantity(qx_data, per_angstrom), Quantity(qy_data, per_angstrom)],
+            ordinate=ordinate,
+            abscissae=abscissa,
             mask=None,
             dependents=None,
-            metadata=metadata
+            metadata=basic_metadata
             )
 
     def _validate_and_convert_inputs(self, data2d, err_data):

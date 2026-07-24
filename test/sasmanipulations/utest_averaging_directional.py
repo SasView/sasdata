@@ -85,8 +85,8 @@ class DirectionalAverageFunctionalityTests(unittest.TestCase):
         self.bin_width = (self.lims[1] - self.lims[0]) / self.nbins
 
         self.directional_average = \
-            DirectionalAverage(major_axis=self.data2d.data.abscissae[0].value,
-                               minor_axis=self.data2d.data.abscissae[1].value,
+            DirectionalAverage(major_axis=self.data2d.data.abscissae.axes[0].value,
+                               minor_axis=self.data2d.data.abscissae.axes[1].value,
                                lims=(self.lims,self.lims),
                                nbins=self.nbins)
 

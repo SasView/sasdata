@@ -39,5 +39,5 @@ def test_quantity_name(x):
     (f, expected) = x
     data = [v for v in local_load(f"data/{f}")][0]
     if data.metadata.title is not None:
-        assert data.abscissae[0].unique_id.startswith(data.metadata.title)
-    assert data.abscissae[0].unique_id == expected
+        assert data.abscissae.axes[0].unique_id.startswith(data.metadata.title)
+    assert data.abscissae.axes[0].unique_id == expected

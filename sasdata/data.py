@@ -7,6 +7,7 @@ import numpy as np
 from h5py._hl.group import Group as HDF5Group
 
 from sasdata import dataset_types
+from sasdata.abscissa import Abscissa
 from sasdata.dataset_types import DatasetType
 from sasdata.metadata import DerivedMetadata, Metadata, MetadataEncoder
 from sasdata.quantities.quantity import Quantity
@@ -18,7 +19,7 @@ class SasData:
     def __init__(self,
                  name: str,
                  ordinate: Quantity,
-                 abscissae: list[Quantity],
+                 abscissae: Abscissa,
                  mask: Quantity,
                  dependents: list["SasData"],
                  metadata: Metadata):
@@ -35,7 +36,7 @@ class SasData:
         return self._ordinate
 
     @property
-    def abscissae(self) -> list[Quantity]:
+    def abscissae(self) -> Abscissa:
         return self._abscissae
 
     @property
@@ -54,7 +55,7 @@ class SasDerivedMeasurement(SasData):
     def __init__(self,
                  name: str,
                  ordinate: Quantity,
-                 abscissae: list[Quantity],
+                 abscissae: Abscissa,
                  mask: Quantity,
                  dependents: list["SasData"],
                  metadata: DerivedMetadata):
@@ -100,6 +101,7 @@ class SasMeasurement(SasData):
         match self.dataset_type:
             case (dataset_types.one_dim |
                   dataset_types.two_dim |
+                  dataset_types.three_dim |
                   dataset_types.angle_dim):
                 return self._data_contents["I"]
             case dataset_types.sesans:
@@ -108,16 +110,22 @@ class SasMeasurement(SasData):
                 return None
 
     @property
-    def abscissae(self) -> Quantity:
+    def abscissae(self) -> Abscissa:
         match self.dataset_type:
             case dataset_types.one_dim:
-                return [self._data_contents["Q"]]
+                return Abscissa.determine([self._data_contents["Q"]], self.ordinate)
             case dataset_types.two_dim:
-                return [self._data_contents["Qx"], self._data_contents["Qy"]]
+                return Abscissa.determine([self._data_contents["Qx"], self._data_contents["Qy"]], self.ordinate)
             case dataset_types.angle_dim:
-                return [self._data_contents["Phi"]]
+                return Abscissa.determine([self._data_contents["Phi"]], self.ordinate)
+            case dataset_types.three_dim:
+                return Abscissa.determine([self._data_contents["Qx"],
+                                           self._data_contents["Qy"],
+                                           self._data_contents["Qz"]],
+                                           self.ordinate
+                                           )
             case dataset_types.sesans:
-                return [self._data_contents["SpinEchoLength"]]
+                return Abscissa.determine([self._data_contents["SpinEchoLength"]], self.ordinate)
             case _:
                 return None
 

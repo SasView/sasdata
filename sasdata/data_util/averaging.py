@@ -5,6 +5,7 @@ import math
 import numpy as np
 import numpy.typing as npt
 
+from sasdata.abscissa import Abscissa
 from sasdata.data import SasData, SasMeasurement
 from sasdata.data_util.binning import DirectionalAverage
 from sasdata.data_util.interval import IntervalType
@@ -24,13 +25,13 @@ def get_dq_data(data2d: SasMeasurement) -> npt.NDArray[np.floating]:
     Extrapolate dqx(r) and dqy(phi) at q = 0, and take an average.
     """
 
-    q_data = np.sqrt(data2d.abscissae[0].value**2 + data2d.abscissae[1].value**2)
+    q_data = np.sqrt(data2d.abscissae.axes[0].value**2 + data2d.abscissae.axes[1].value**2)
 
     z_max = np.max(q_data)
     z_min = np.min(q_data)
 
-    dqx_data = np.sqrt(data2d.abscissae[0].variance.value)
-    dqy_data = np.sqrt(data2d.abscissae[1].variance.value)
+    dqx_data = np.sqrt(data2d.abscissae.axes[0].variance.value)
+    dqy_data = np.sqrt(data2d.abscissae.axes[1].variance.value)
 
     dqx_at_z_max = dqx_data[np.argmax(q_data)]
     dqx_at_z_min = dqx_data[np.argmin(q_data)]
@@ -203,10 +204,13 @@ class SlabX(CartesianROI):
 
         qx_data, intensity, error = directional_average(data=self.data, err_data=self.err_data)
 
+        ordinate = Quantity(intensity, data2d.ordinate.units, error)
+        abscissa = Abscissa.determine([Quantity(qx_data, data2d.abscissae.axes[0].units, None)], ordinate)
+
         return SasData(
             name=f"{data2d.name}: Slab X Average",
-            ordinate=Quantity(intensity, data2d.ordinate.units, error),
-            abscissae=[Quantity(qx_data, data2d.abscissae[0].units, None)],
+            ordinate=ordinate,
+            abscissae=abscissa,
             mask=data2d.mask,
             dependents=[data2d],
             metadata=data2d.metadata
@@ -279,10 +283,13 @@ class SlabY(CartesianROI):
         )
         qy_data, intensity, error = directional_average(data=self.data, err_data=self.err_data)
 
+        ordinate = Quantity(intensity, data2d.ordinate.units, error)
+        abscissa = Abscissa.determine([Quantity(qy_data, data2d.abscissae.axes[1].units, None)], ordinate)
+
         return SasData(
             name=f"{data2d.name}: Slab Y Average",
-            ordinate=Quantity(intensity, data2d.ordinate.units, error),
-            abscissae=[Quantity(qy_data, data2d.abscissae[1].units, None)],
+            ordinate=ordinate,
+            abscissae=abscissa,
             mask=data2d.mask,
             dependents=[data2d],
             metadata=data2d.metadata
@@ -334,8 +341,8 @@ class CircularAverage(PolarROI):
             raise RuntimeError(f"Circular averaging: invalid q_data: {data2D.q_data}")
 
         data = data2D.ordinate.value[finite_mask]
-        qx = data2D.abscissae[0].value[finite_mask]
-        qy = data2D.abscissae[1].value[finite_mask]
+        qx = data2D.abscissae.axes[0].value[finite_mask]
+        qy = data2D.abscissae.axes[1].value[finite_mask]
         q = np.sqrt(qx**2 + qy**2)
         err = np.sqrt(data2D.ordinate.variance.value)[finite_mask]
         mask = (data2D.mask if data2D.mask is not None else np.ones_like(data2D.ordinate.value, dtype=bool))[finite_mask]
@@ -354,7 +361,7 @@ class CircularAverage(PolarROI):
 
         # Prepare dq_data if available, aligned to the finite mask and selection
         dq_vals = None
-        if data2D.abscissae[0].has_error and data2D.abscissae[1].has_error:
+        if data2D.abscissae.axes[0].has_error and data2D.abscissae.axes[1].has_error:
             dq_full = get_dq_data(data2D)  # already uses np.isfinite(data2D.data)
             dq_vals = dq_full[sel]
 
@@ -391,10 +398,13 @@ class CircularAverage(PolarROI):
         else:
             dQ = None
 
+        ordinate = Quantity(intensity, data2D.ordinate.units, error)
+        abscissa = Abscissa.determine([Quantity(x, data2D.abscissae.axes[0].units, dQ)], ordinate)
+
         return SasData(
             name=f"{data2D.name}: Circular Average",
-            ordinate=Quantity(intensity, data2D.ordinate.units, error),
-            abscissae=[Quantity(x, data2D.abscissae[0].units, dQ)],
+            ordinate=ordinate,
+            abscissae=abscissa,
             mask=data2D.mask,
             dependents=[data2D],
             metadata=data2D.metadata
@@ -445,7 +455,7 @@ class Ring(PolarROI):
         if not isinstance(data2D, SasData):
             msg = "Data supplied for ring averaging must be of type SasData."
             raise RuntimeError(msg)
-        if len(data2D.abscissae) < 2:
+        if data2D.abscissae.dimensionality < 2:
             msg = "SasData object for ring averaging must contain at least two dimensions in Q."
             raise RuntimeError(msg)
 
@@ -454,8 +464,8 @@ class Ring(PolarROI):
 
         data = data2D.ordinate.value[valid_data]
         err_data = np.sqrt(data2D.ordinate.variance.value)[valid_data]
-        qx_data = data2D.abscissae[0].value[valid_data]
-        qy_data = data2D.abscissae[1].value[valid_data]
+        qx_data = data2D.abscissae.axes[0].value[valid_data]
+        qy_data = data2D.abscissae.axes[1].value[valid_data]
         q_data = np.sqrt(qx_data ** 2 + qy_data ** 2)
         mask_data = (data2D.mask if data2D.mask is not None else np.ones_like(data2D.ordinate.value, dtype=bool))[valid_data]
 
@@ -512,10 +522,13 @@ class Ring(PolarROI):
             msg = "Average Error: No points inside ROI to average..."
             raise ValueError(msg)
 
+        ordinate = Quantity(phi_bins[idx], data2D.ordinate.units, phi_err[idx])
+        abscissa = Abscissa.determine([Quantity(phi_values[idx], radians, None)], ordinate)
+
         return SasData(
             name=f"{data2D.name}: Ring Average",
-            ordinate=Quantity(phi_bins[idx], data2D.ordinate.units, phi_err[idx]),
-            abscissae=[Quantity(phi_values[idx], radians, None)],
+            ordinate=ordinate,
+            abscissae=abscissa,
             mask=data2D.mask,
             dependents=[data2D],
             metadata=data2D.metadata
@@ -651,7 +664,7 @@ class SectorQ(PolarROI):
 
             finite = np.isfinite(average_intensity)
 
-            average_q = Quantity(combined_q[finite], data2d.abscissae[0].units, None)
+            average_q = Quantity(combined_q[finite], data2d.abscissae.axes[0].units, None)
             average_I = Quantity(average_intensity[finite], data2d.ordinate.units, combined_err[finite])
         else:
             # The secondary ROI is labelled with negative Q values.
@@ -659,13 +672,16 @@ class SectorQ(PolarROI):
             combined_intensity = np.append(np.flip(secondary_I), primary_I)
             combined_error = np.append(np.flip(secondary_err), primary_err)
 
-            average_q = Quantity(combined_q, data2d.abscissae[0].units, None)
+            average_q = Quantity(combined_q, data2d.abscissae.axes[0].units, None)
             average_I = Quantity(combined_intensity, data2d.ordinate.units, combined_error)
+
+        ordinate = average_I
+        abscissa = Abscissa.determine([average_q], ordinate)
 
         return SasData(
             name=f"{data2d.name}: SectorQ Average",
-            ordinate=average_I,
-            abscissae=[average_q],
+            ordinate=ordinate,
+            abscissae=abscissa,
             mask=data2d.mask,
             dependents=[data2d],
             metadata=data2d.metadata
@@ -751,10 +767,13 @@ class WedgeQ(PolarROI):
 
         q_data, intensity, error = directional_average(data=self.data, err_data=self.err_data)
 
+        ordinate = Quantity(intensity, data2d.ordinate.units, error)
+        abscissa = Abscissa.determine([Quantity(q_data, data2d.abscissae.axes[0].units, None)], ordinate)
+
         return SasData(
             name=f"{data2d.name}: Wedge Q Average",
-            ordinate=Quantity(intensity, data2d.ordinate.units, error),
-            abscissae=[Quantity(q_data, data2d.abscissae[0].units, None)],
+            ordinate=ordinate,
+            abscissae=abscissa,
             mask=data2d.mask,
             dependents=[data2d],
             metadata=data2d.metadata
@@ -863,10 +882,13 @@ class WedgePhi(PolarROI):
         phi_centers = full_phi[populated] + directional_average.bin_widths[populated] / 2.0
 
         # intensity and error returned by DirectionalAverage are already filtered to the populated/finite bins
+        ordinate = Quantity(intensity, data2d.ordinate.units, error)
+        abscissa = Abscissa.determine([Quantity(phi_centers, radians, None)], ordinate)
+
         return SasData(
             name=f"{data2d.name}: Wedge Phi Average",
-            ordinate=Quantity(intensity, data2d.ordinate.units, error),
-            abscissae=[Quantity(phi_centers, radians, None)],
+            ordinate=ordinate,
+            abscissae=abscissa,
             mask=data2d.mask,
             dependents=[data2d],
             metadata=data2d.metadata

@@ -156,7 +156,7 @@ class DataInfoTests(unittest.TestCase):
         self.assertEqual(len(answer_list), 1)
         for i in range(r.nbins_phi - 1):
             # Current ascii reader implementation assumes file data is "one_dim"
-            self.assertAlmostEqual(o.abscissae[0].value[i], answer.abscissae[0].value[i], 4)
+            self.assertAlmostEqual(o.abscissae.axes[0].value[i], answer.abscissae.axes[0].value[i], 4)
             self.assertAlmostEqual(o.ordinate.value[i], answer.ordinate.value[i], 4)
             self.assertAlmostEqual(o.ordinate.variance.value[i], answer.ordinate.variance.value[i], 4)
 
@@ -174,7 +174,7 @@ class DataInfoTests(unittest.TestCase):
         filepath = find('avg_testdata.txt')
         answer = ascii_load_data(filepath)[0]
         for i in range(r.nbins_phi):
-            self.assertAlmostEqual(o.abscissae[0].value[i], answer.abscissae[0].value[i], delta=1e-4)
+            self.assertAlmostEqual(o.abscissae.axes[0].value[i], answer.abscissae.axes[0].value[i], delta=1e-4)
             self.assertAlmostEqual(o.ordinate.value[i], answer.ordinate.value[i], delta=1e-4)
             self.assertAlmostEqual(o.ordinate.variance.value[i], answer.ordinate.variance.value[i], delta=1e-4)
 
@@ -208,8 +208,8 @@ class DataInfoTests(unittest.TestCase):
 
         filepath = find('slabx_testdata.txt')
         answer = ascii_load_data(filepath)[0]
-        for i in range(len(o.abscissae[0].value)):
-            self.assertAlmostEqual(o.abscissae[0].value[i], answer.abscissae[0].value[i], 4)
+        for i in range(len(o.abscissae.axes[0].value)):
+            self.assertAlmostEqual(o.abscissae.axes[0].value[i], answer.abscissae.axes[0].value[i], 4)
             self.assertAlmostEqual(o.ordinate.value[i], answer.ordinate.value[i], 4)
             self.assertAlmostEqual(o.ordinate.variance.value[i], answer.ordinate.variance.value[i], 4)
 
@@ -226,8 +226,8 @@ class DataInfoTests(unittest.TestCase):
 
         filepath = find('slaby_testdata.txt')
         answer = ascii_load_data(filepath)[0]
-        for i in range(len(o.abscissae[0].value)):
-            self.assertAlmostEqual(o.abscissae[0].value[i], answer.abscissae[0].value[i], 4)
+        for i in range(len(o.abscissae.axes[0].value)):
+            self.assertAlmostEqual(o.abscissae.axes[0].value[i], answer.abscissae.axes[0].value[i], 4)
             self.assertAlmostEqual(o.ordinate.value[i], answer.ordinate.value[i], 4)
             self.assertAlmostEqual(o.ordinate.variance.value[i], answer.ordinate.variance.value[i], 4)
 
@@ -252,8 +252,8 @@ class DataInfoTests(unittest.TestCase):
 
         filepath = find('ring_testdata.txt')
         answer = ascii_load_data(filepath)[0]
-        for i in range(len(o.abscissae[0].value)-1):
-            self.assertAlmostEqual(o.abscissae[0].value[i], answer.abscissae[0].value[i+1], 4)
+        for i in range(len(o.abscissae.axes[0].value)-1):
+            self.assertAlmostEqual(o.abscissae.axes[0].value[i], answer.abscissae.axes[0].value[i+1], 4)
             self.assertAlmostEqual(o.ordinate.value[i], answer.ordinate.value[i+1], 4)
             self.assertAlmostEqual(o.ordinate.variance.value[i], answer.ordinate.variance.value[i+1], 4)
 
@@ -269,8 +269,8 @@ class DataInfoTests(unittest.TestCase):
 
         filepath = find('sectorphi_testdata.txt')
         answer = ascii_load_data(filepath)[0]
-        for i in range(len(o.abscissae[0].value)):
-            self.assertAlmostEqual(o.abscissae[0].value[i], answer.abscissae[0].value[i], 4)
+        for i in range(len(o.abscissae.axes[0].value)):
+            self.assertAlmostEqual(o.abscissae.axes[0].value[i], answer.abscissae.axes[0].value[i], 4)
             self.assertAlmostEqual(o.ordinate.value[i], answer.ordinate.value[i], 4)
             self.assertAlmostEqual(o.ordinate.variance.value[i], answer.ordinate.variance.value[i], 4)
 
@@ -286,8 +286,8 @@ class DataInfoTests(unittest.TestCase):
 
         filepath = find('sectorq_testdata.txt')
         answer = ascii_load_data(filepath)[0]
-        for i in range(len(o.abscissae[0].value)):
-            self.assertAlmostEqual(o.abscissae[0].value[i], answer.abscissae[0].value[i], 4)
+        for i in range(len(o.abscissae.axes[0].value)):
+            self.assertAlmostEqual(o.abscissae.axes[0].value[i], answer.abscissae.axes[0].value[i], 4)
             self.assertAlmostEqual(o.ordinate.value[i], answer.ordinate.value[i], 4)
             self.assertAlmostEqual(o.ordinate.variance.value[i], answer.ordinate.variance.value[i], 4)
 
@@ -302,8 +302,8 @@ class DataInfoTests(unittest.TestCase):
         o = r(self.data)
 
         expected_binning = np.logspace(np.log10(0.005), np.log10(0.01), 20, base=10)
-        for i in range(len(o.abscissae[0].value)):
-            self.assertAlmostEqual(o.abscissae[0].value[i], expected_binning[i], 3)
+        for i in range(len(o.abscissae.axes[0].value)):
+            self.assertAlmostEqual(o.abscissae.axes[0].value[i], expected_binning[i], 3)
 
         # TODO: Test for Y values (o.y)
         # print len(self.data.x_bins)
