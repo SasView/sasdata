@@ -68,6 +68,33 @@ class Rot3:
     yaw: Quantity[float] | None
 
     @staticmethod
+    def deserialise_json(json_data: dict):
+        roll = None
+        pitch = None
+        yaw = None
+        if "roll" in json_data:
+            roll = Quantity.deserialise_json(json_data["roll"])
+        if "pitch" in json_data:
+            pitch = Quantity.deserialise_json(json_data["pitch"])
+        if "yaw" in json_data:
+            yaw = Quantity.deserialise_json(json_data["yaw"])
+        return Rot3(roll=roll, pitch=pitch, yaw=yaw)
+
+    def serialise_json(self):
+        data = {
+            "roll": None,
+            "pitch": None,
+            "yaw": None
+        }
+        if self.roll is not None:
+            data["roll"] = self.roll.serialise_json()
+        if self.pitch is not None:
+            data["pitch"] = self.pitch.serialise_json()
+        if self.yaw is not None:
+            data["yaw"] = self.yaw.serialise_json()
+        return data
+
+    @staticmethod
     def from_json(obj: dict) -> Quantity | None:
         if obj is None:
             return None
@@ -566,6 +593,22 @@ class Metadata:
             instrument=Instrument.from_json(obj["instrument"]) if obj["instrument"] else None,
             raw=MetaNode.from_json(obj["raw"]),
         )
+
+    def serialise_json(self):
+        serialized = {
+            "instrument": None,
+            "process": [p.serialise_json() for p in self.process],
+            "sample": None,
+            "title": self.title,
+            "run": self.run,
+            "definition": self.definition
+        }
+        if self.sample is not None:
+            serialized["sample"] = self.sample.serialise_json()
+        if self.instrument is not None:
+            serialized["instrument"] = self.instrument.serialise_json()
+
+        return serialized
 
     @property
     def id_header(self):

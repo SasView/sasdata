@@ -5,12 +5,12 @@ sasentry01
   I
 Metadata:
 
-  , Run: 
+  , Run:
   =======
 
-Definition: 
+Definition:
 Sample:
-   ID:           
+   ID:
    Transmission: None
    Thickness:    None
    Temperature:  None
@@ -19,7 +19,7 @@ Sample:
 Collimation:
    Length: None
 Detector:
-   Name:         
+   Name:
    Distance:     None
    Offset:       None
    Orientation:  None

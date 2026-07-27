@@ -1,4 +1,6 @@
+import json
 import typing
+from typing import Any
 
 import h5py
 import numpy as np
@@ -129,6 +131,40 @@ class SasData:
                     sasentry.attrs["sasview_key"] = key
                 data._save_h5(sasentry)
 
+    @staticmethod
+    def deserialise(data: str) -> "SasData":
+        json_data = json.loads(data)
+        return SasData.deserialise_json(json_data)
+
+    @staticmethod
+    def deserialise_json(json_data: dict) -> "SasData":
+        name = json_data["name"]
+        data_contents = {}
+        dataset_type = json_data["dataset_type"] # TODO: update when DatasetType is more finalized
+        metadata = json_data["metadata"].deserialise_json()
+        for quantity in json_data["data_contents"]:
+            data_contents[quantity["label"]] = Quantity.deserialise_json(quantity)
+        return SasData(name, data_contents, dataset_type, metadata)
+
+    def serialise(self) -> str:
+        return json.dumps(self._serialise_json())
+
+    # TODO: fix serializers eventually
+    def _serialise_json(self) -> dict[str, Any]:
+        data = []
+        for d in self._data_contents:
+            quantity = self._data_contents[d]
+            quantity["label"] = d
+            data.append(quantity)
+        return {
+            "name": self.name,
+            "data_contents": data,
+            "dataset_type": None, # TODO: update when DatasetType is more finalized
+            "verbose": self._verbose,
+            "metadata": self.metadata.serialise_json(),
+            "mask": {},
+            "model_requirements": {}
+        }
 
 
 class SasDataEncoder(MetadataEncoder):
