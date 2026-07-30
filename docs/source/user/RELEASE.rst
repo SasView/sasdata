@@ -14,11 +14,11 @@ Features
 ========
 Wheel, egg, and tar.gz files are available on `pypi <https://pypi.org/project/sasdata/>`_.
 
-New in Version 0.12.1
+New in Version 0.12.2
 ----------------------
 
-.. note:: This is a point release because a tag was already created for 0.12.0, so this release is
-   being called 0.12.1 to avoid an issue with the release process.
+.. note:: This is a point release because a tag was already created for 0.12.0 and 0.12.1 accidentally, so this release is
+   being called 0.12.2 to avoid an issue with the release process.
 
 This release, which coincides with SasView 6.2.0, includes a number of bug fixes and feature enhancements.
 It includes a refactor and clean up of `manipulations.py` and `averaging.py` by @ehewins and @jellybean2004,
