@@ -30,6 +30,11 @@ To run sasdata from the source, create a python environment using python 3.10 or
        $ conda activate sasdata
        (sasdata) $ python -m pip install -e .
 
+If you are wanting to work on the development of `sasdata`, then the packages to run
+unit tests and build documentation can be installed with::
+
+      $ python -m pip install -r requirements-dev.txt
+
 ## Data Formats
 
 The `Loader()` class is directly callable so a transient call can be made to the class or, for cases where repeated calls
