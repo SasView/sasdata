@@ -14,16 +14,17 @@ from sasdata.quantities.quantity import Quantity
 
 
 class SasData:
-    """ General object containing data in the SasView ecosystem"""
+    """General object containing data in the SasView ecosystem"""
 
-    def __init__(self,
-                 name: str,
-                 ordinate: Quantity,
-                 abscissae: Abscissa,
-                 mask: Quantity,
-                 dependents: list["SasData"],
-                 metadata: Metadata):
-
+    def __init__(
+        self,
+        name: str,
+        ordinate: Quantity,
+        abscissae: Abscissa,
+        mask: Quantity,
+        dependents: list["SasData"],
+        metadata: Metadata,
+    ):
         self.name = name
         self._ordinate = ordinate
         self._abscissae = abscissae
@@ -44,33 +45,28 @@ class SasData:
         return self._mask
 
     def scatter_data(self):
-        """ Return data in the coordinate/value form [(x1, x2, x3, y)...]"""
+        """Return data in the coordinate/value form [(x1, x2, x3, y)...]"""
 
 
 class SasDerivedMeasurement(SasData):
-    """ General object sas measurement that has not come directly from a file,
+    """General object sas measurement that has not come directly from a file,
     for example, the difference between two datasets"""
 
-
-    def __init__(self,
-                 name: str,
-                 ordinate: Quantity,
-                 abscissae: Abscissa,
-                 mask: Quantity,
-                 dependents: list["SasData"],
-                 metadata: DerivedMetadata):
-
+    def __init__(
+        self,
+        name: str,
+        ordinate: Quantity,
+        abscissae: Abscissa,
+        mask: Quantity,
+        dependents: list["SasData"],
+        metadata: DerivedMetadata,
+    ):
         super().__init__(
-            name=name,
-            ordinate=ordinate,
-            abscissae=abscissae,
-            mask=mask,
-            dependents=dependents,
-            metadata=metadata)
+            name=name, ordinate=ordinate, abscissae=abscissae, mask=mask, dependents=dependents, metadata=metadata
+        )
 
 
 class SasMeasurement(SasData):
-
     def __init__(
         self,
         name: str,
@@ -99,10 +95,7 @@ class SasMeasurement(SasData):
     @property
     def ordinate(self) -> Quantity:
         match self.dataset_type:
-            case (dataset_types.one_dim |
-                  dataset_types.two_dim |
-                  dataset_types.three_dim |
-                  dataset_types.angle_dim):
+            case dataset_types.one_dim | dataset_types.two_dim | dataset_types.three_dim | dataset_types.angle_dim:
                 return self._data_contents["I"]
             case dataset_types.sesans:
                 return self._data_contents["Depolarisation"]
@@ -119,11 +112,9 @@ class SasMeasurement(SasData):
             case dataset_types.angle_dim:
                 return Abscissa.determine([self._data_contents["Phi"]], self.ordinate)
             case dataset_types.three_dim:
-                return Abscissa.determine([self._data_contents["Qx"],
-                                           self._data_contents["Qy"],
-                                           self._data_contents["Qz"]],
-                                           self.ordinate
-                                           )
+                return Abscissa.determine(
+                    [self._data_contents["Qx"], self._data_contents["Qy"], self._data_contents["Qz"]], self.ordinate
+                )
             case dataset_types.sesans:
                 return Abscissa.determine([self._data_contents["SpinEchoLength"]], self.ordinate)
             case _:
@@ -173,7 +164,7 @@ class SasMeasurement(SasData):
     def save_h5(data: dict[str, typing.Self], path: str | typing.BinaryIO):
         with h5py.File(path, "w") as f:
             for idx, (key, data) in enumerate(data.items()):
-                sasentry = f.create_group(f"sasentry{idx+1:02d}")
+                sasentry = f.create_group(f"sasentry{idx + 1:02d}")
                 if not key.startswith("sasentry"):
                     sasentry.attrs["sasview_key"] = key
                 data._save_h5(sasentry)
@@ -187,7 +178,7 @@ class SasMeasurement(SasData):
     def deserialise_json(json_data: dict) -> "SasData":
         name = json_data["name"]
         data_contents = {}
-        dataset_type = json_data["dataset_type"] # TODO: update when DatasetType is more finalized
+        dataset_type = json_data["dataset_type"]  # TODO: update when DatasetType is more finalized
         metadata = json_data["metadata"].deserialise_json()
         for quantity in json_data["data_contents"]:
             data_contents[quantity["label"]] = Quantity.deserialise_json(quantity)
@@ -206,11 +197,11 @@ class SasMeasurement(SasData):
         return {
             "name": self.name,
             "data_contents": data,
-            "dataset_type": None, # TODO: update when DatasetType is more finalized
+            "dataset_type": None,  # TODO: update when DatasetType is more finalized
             "verbose": self._verbose,
             "metadata": self.metadata.serialise_json(),
             "mask": {},
-            "model_requirements": {}
+            "model_requirements": {},
         }
 
 
@@ -264,7 +255,7 @@ def sasdata_reader2D_converter(data2d: SasData | None = None) -> SasData:
     mask = np.ones(len(new_data), dtype=bool)
 
     data2d._data_contents["I"].value = new_data
-    data2d._data_contents["I"].variance.value = new_err_data ** 2
+    data2d._data_contents["I"].variance.value = new_err_data**2
     data2d._data_contents["Qx"].value = qx_data
     data2d._data_contents["Qy"].value = qy_data
     data2d._mask = mask

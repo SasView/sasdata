@@ -9,20 +9,19 @@ from sasdata.util import is_increasing
 
 
 class Abscissa(ABC):
-
     def __init__(self, axes: list[Quantity]):
         self._axes = axes
         self._dimensionality = len(axes)
 
     @property
     def dimensionality(self) -> int:
-        """ Dimensionality of this data """
+        """Dimensionality of this data"""
         return self._dimensionality
 
     @property
     @abstractmethod
     def is_grid(self) -> bool:
-        """ Are these coordinates using a grid representation
+        """Are these coordinates using a grid representation
         (as opposed to a general list representation)
 
         is_grid = True: implies that the corresponding ordinate is n-dimensional tensor
@@ -33,7 +32,7 @@ class Abscissa(ABC):
 
     @property
     def axes(self) -> list[Quantity]:
-        """ Axes of the data:
+        """Axes of the data:
 
         If it's an (n1-by-n2-by-n3...) grid (is_grid=True): give the values for each axis, returning a list like
           [Quantity(length n1), Quantity(length n2), Quantity(length n3) ... ]
@@ -41,12 +40,11 @@ class Abscissa(ABC):
         If it is not grid data (is_grid=False), but n points on a general mesh, give one array for each dimension
           [Quantity(length n), Quantity(length n), Quantity(length n) ... ]
         """
-
         return self._axes
 
     @staticmethod
     def _determine_error_message(axis_arrays: list[np.ndarray], ordinate_shape: tuple):
-        """ Error message for the `.determine` function"""
+        """Error message for the `.determine` function"""
 
         shape_string = ", ".join([str(axis.shape) for axis in axis_arrays])
 
@@ -54,7 +52,7 @@ class Abscissa(ABC):
 
     @staticmethod
     def determine(axis_data: list[Quantity[ArrayLike]], ordinate_data: Quantity[ArrayLike]) -> "Abscissa":
-        """ Get an Abscissa object that fits the combination of axes and data"""
+        """Get an Abscissa object that fits the combination of axes and data"""
 
         # Different posibilites:
         #   1: axes_data[i].shape == axes_data[j].shape == ordinate_data.shape
@@ -85,18 +83,17 @@ class Abscissa(ABC):
                     return ScatterAbscissa(axis_data)
             # 1b
             elif all([len(axis.shape) == len(axis_arrays) for axis in axis_arrays]):
-
                 return MeshgridAbscissa(axis_data)
 
             else:
                 raise InterpretationError(Abscissa._determine_error_message(axis_arrays, ordinate_shape))
 
-        elif all([len(axis.shape) == 1 for axis in axis_arrays]) and \
-                tuple([axis.shape[0] for axis in axis_arrays]) == ordinate_shape:
-
+        elif (
+            all([len(axis.shape) == 1 for axis in axis_arrays])
+            and tuple([axis.shape[0] for axis in axis_arrays]) == ordinate_shape
+        ):
             # Require that they are sorted
             if all([is_increasing(axis) for axis in axis_arrays]):
-
                 return GridAbscissa(axis_data)
 
             else:
@@ -105,20 +102,20 @@ class Abscissa(ABC):
         else:
             raise InterpretationError(Abscissa._determine_error_message(axis_arrays, ordinate_shape))
 
-class GridAbscissa(Abscissa):
 
+class GridAbscissa(Abscissa):
     @property
     def is_grid(self):
         return True
+
 
 class MeshgridAbscissa(Abscissa):
-
     @property
     def is_grid(self):
         return True
 
-class ScatterAbscissa(Abscissa):
 
+class ScatterAbscissa(Abscissa):
     @property
     def is_grid(self):
         return False

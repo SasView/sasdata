@@ -1,2 +1,2 @@
 class InterpretationError(Exception):
-    """ Error interpreting data """
+    """Error interpreting data"""
