@@ -5,6 +5,7 @@ from sasdata.dataset_types import angle_dim, one_dim, three_dim, two_dim
 from sasdata.postprocess import deduce_qz
 from sasdata.quantities.constants import Pi
 from sasdata.quantities.quantity import Quantity
+from sasdata.quantities.units import none as unitless
 from sasdata.quantities.units import per_angstrom, per_centimeter, radians
 
 
@@ -15,12 +16,9 @@ def test_1d(basic_metadata):
     q_quantity = Quantity(np.array(q), per_angstrom)
     i_quantity = Quantity(np.array(i), per_centimeter)
 
-    data_contents = {
-        'Q': q_quantity,
-        'I': i_quantity
-    }
+    data_contents = {"Q": q_quantity, "I": i_quantity}
 
-    data = SasMeasurement('TestData', data_contents, one_dim, basic_metadata, True)
+    data = SasMeasurement("TestData", data_contents, one_dim, basic_metadata, True)
 
     assert data.abscissae.dimensionality == 1
     assert all(data.abscissae.axes[0].value == np.array(q))
@@ -38,18 +36,15 @@ def test_2d(basic_metadata):
     qy_quantity = Quantity(np.array(qy), per_angstrom)
     i_quantity = Quantity(np.array(i), per_centimeter)
 
-    data_contents = {
-        'Qx': qx_quantity,
-        'Qy': qy_quantity,
-        'I': i_quantity
-    }
+    data_contents = {"Qx": qx_quantity, "Qy": qy_quantity, "I": i_quantity}
 
-    data = SasMeasurement('TestData', data_contents, two_dim, basic_metadata, True)
+    data = SasMeasurement("TestData", data_contents, two_dim, basic_metadata, True)
 
     assert data.abscissae.dimensionality == 2
     assert (data.ordinate.value == np.array(i)).all()
     assert (data.abscissae.axes[0].value == np.array(qx)).all()
     assert (data.abscissae.axes[1].value == np.array(qy)).all()
+
 
 def test_3d(basic_metadata):
     # test base 3D class
@@ -63,14 +58,9 @@ def test_3d(basic_metadata):
     qz_quantity = Quantity(np.array(qz), per_angstrom)
     i_quantity = Quantity(np.array(i), per_centimeter)
 
-    data_contents = {
-        'Qx': qx_quantity,
-        'Qy': qy_quantity,
-        'Qz': qz_quantity,
-        'I': i_quantity
-    }
+    data_contents = {"Qx": qx_quantity, "Qy": qy_quantity, "Qz": qz_quantity, "I": i_quantity}
 
-    data = SasMeasurement('TestData', data_contents, three_dim, basic_metadata, True)
+    data = SasMeasurement("TestData", data_contents, three_dim, basic_metadata, True)
 
     assert data.abscissae.dimensionality == 3
     assert (data.ordinate.value == np.array(i)).all()
@@ -80,30 +70,31 @@ def test_3d(basic_metadata):
 
 
 def test_deduce_qz(basic_metadata):
-    qx = [[[1, 1], [2, 2]], [[1, 1], [2, 2]]]
-    qy = [[[1, 1], [1, 1]], [[2, 2], [2, 2]]]
-    i = [[[1, 0], [1, 0]], [[0, 1], [0, 1]]]
+    root_two_pi = np.sqrt(2) * np.pi
+    qx = [
+        [root_two_pi, root_two_pi, root_two_pi],
+        [root_two_pi, root_two_pi, root_two_pi],
+        [root_two_pi, root_two_pi, root_two_pi],
+    ]
+    qy = [
+        [root_two_pi, root_two_pi, root_two_pi],
+        [root_two_pi, root_two_pi, root_two_pi],
+        [root_two_pi, root_two_pi, root_two_pi],
+    ]
+    i = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
 
-    qx_quantity = Quantity(np.array(qx), per_angstrom)
-    qy_quantity = Quantity(np.array(qy), per_angstrom)
+    qx_quantity = Quantity(np.array(qx), unitless) / basic_metadata.instrument.source.wavelength
+    qy_quantity = Quantity(np.array(qy), unitless) / basic_metadata.instrument.source.wavelength
     i_quantity = Quantity(np.array(i), per_centimeter)
 
-    data_contents = {
-        'Qx': qx_quantity,
-        'Qy': qy_quantity,
-        'I': i_quantity
-    }
+    data_contents = {"Qx": qx_quantity, "Qy": qy_quantity, "I": i_quantity}
 
-    data = SasMeasurement('TestData', data_contents, two_dim, basic_metadata, True)
+    data = SasMeasurement("TestData", data_contents, two_dim, basic_metadata, True)
+    qz = deduce_qz(data)
 
-    assert data.abscissae.dimensionality == 2
-    assert (data.ordinate.value == np.array(i)).all()
-    assert (data.abscissae.axes[0].value == np.array(qx)).all()
-    assert (data.abscissae.axes[1].value == np.array(qy)).all()
+    assert qz.value.shape == data.abscissae.axes[0].value.shape
+    assert (qz.value == 2 * np.pi).all()
 
-    deduce_qz(data)
-
-    assert (data._data_contents['Qz'].value != (0*data._data_contents['Qx'].value)).all()
 
 def test_angle(basic_metadata):
     phi = [0.4 * Pi, 0.8 * Pi, 1.2 * Pi, 1.6 * Pi, 2 * Pi]
@@ -112,12 +103,9 @@ def test_angle(basic_metadata):
     phi_quantity = Quantity(np.array(phi), radians)
     i_quantity = Quantity(np.array(i), per_centimeter)
 
-    data_contents = {
-        'Phi': phi_quantity,
-        'I': i_quantity
-    }
+    data_contents = {"Phi": phi_quantity, "I": i_quantity}
 
-    data = SasMeasurement('TestData', data_contents, angle_dim, basic_metadata, True)
+    data = SasMeasurement("TestData", data_contents, angle_dim, basic_metadata, True)
 
     assert data.abscissae.dimensionality == 1
     assert all(data.abscissae.axes[0].value == np.array(phi))
