@@ -6,7 +6,7 @@ import numpy as np
 from h5py._hl.dataset import Dataset as HDF5Dataset
 from h5py._hl.group import Group as HDF5Group
 
-from sasdata.data import SasData
+from sasdata.data import SasMeasurement
 from sasdata.data_backing import Dataset as SASDataDataset
 from sasdata.data_backing import Group as SASDataGroup
 from sasdata.dataset_types import one_dim, three_dim, two_dim
@@ -404,9 +404,9 @@ def parse_metadata(node : HDF5Group) -> Metadata:
                     raw=raw)
 
 
-def load_data(filename: str) -> dict[str, SasData]:
+def load_data(filename: str) -> dict[str, SasMeasurement]:
     with h5py.File(filename, "r") as f:
-        loaded_data: dict[str, SasData] = {}
+        loaded_data: dict[str, SasMeasurement] = {}
 
         for root_key in f.keys():
             entry = f[root_key]
@@ -439,7 +439,7 @@ def load_data(filename: str) -> dict[str, SasData]:
 
             entry_key = entry.attrs["sasview_key"] if "sasview_key" in entry.attrs else root_key
 
-            loaded_data[entry_key] = SasData(
+            loaded_data[entry_key] = SasMeasurement(
                     name=root_key,
                     dataset_type=dataset_type,
                     data_contents=data_contents,

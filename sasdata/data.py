@@ -7,12 +7,66 @@ import numpy as np
 from h5py._hl.group import Group as HDF5Group
 
 from sasdata import dataset_types
+from sasdata.abscissa import Abscissa
 from sasdata.dataset_types import DatasetType
-from sasdata.metadata import Metadata, MetadataEncoder
+from sasdata.metadata import DerivedMetadata, Metadata, MetadataEncoder
 from sasdata.quantities.quantity import Quantity
 
 
 class SasData:
+    """General object containing data in the SasView ecosystem"""
+
+    def __init__(
+        self,
+        name: str,
+        ordinate: Quantity,
+        abscissae: Abscissa,
+        mask: Quantity,
+        dependents: list["SasData"],
+        metadata: Metadata,
+    ):
+        self.name = name
+        self._ordinate = ordinate
+        self._abscissae = abscissae
+        self._mask = mask
+        self.dependents = dependents
+        self.metadata = metadata
+
+    @property
+    def ordinate(self) -> Quantity:
+        return self._ordinate
+
+    @property
+    def abscissae(self) -> Abscissa:
+        return self._abscissae
+
+    @property
+    def mask(self) -> Quantity:
+        return self._mask
+
+    def scatter_data(self):
+        """Return data in the coordinate/value form [(x1, x2, x3, y)...]"""
+
+
+class SasDerivedMeasurement(SasData):
+    """General object sas measurement that has not come directly from a file,
+    for example, the difference between two datasets"""
+
+    def __init__(
+        self,
+        name: str,
+        ordinate: Quantity,
+        abscissae: Abscissa,
+        mask: Quantity,
+        dependents: list["SasData"],
+        metadata: DerivedMetadata,
+    ):
+        super().__init__(
+            name=name, ordinate=ordinate, abscissae=abscissae, mask=mask, dependents=dependents, metadata=metadata
+        )
+
+
+class SasMeasurement(SasData):
     def __init__(
         self,
         name: str,
@@ -34,16 +88,14 @@ class SasData:
         self.dataset_type: DatasetType = dataset_type
 
         # Components that need to be organised after creation
-        self.mask = None  # TODO: fill out
+        self._mask = None  # TODO: fill out
         self.model_requirements = None  # TODO: fill out
 
     # TODO: Handle the other data types.
     @property
     def ordinate(self) -> Quantity:
         match self.dataset_type:
-            case (dataset_types.one_dim |
-                  dataset_types.two_dim |
-                  dataset_types.angle_dim):
+            case dataset_types.one_dim | dataset_types.two_dim | dataset_types.three_dim | dataset_types.angle_dim:
                 return self._data_contents["I"]
             case dataset_types.sesans:
                 return self._data_contents["Depolarisation"]
@@ -51,35 +103,22 @@ class SasData:
                 return None
 
     @property
-    def abscissae(self) -> Quantity:
+    def abscissae(self) -> Abscissa:
         match self.dataset_type:
             case dataset_types.one_dim:
-                return self._data_contents["Q"]
+                return Abscissa.determine([self._data_contents["Q"]], self.ordinate)
             case dataset_types.two_dim:
-                # Type hinting is a bit lacking. Assume each part of the zip is a scalar value.
-                data_contents = np.array(
-                    list(
-                        zip(
-                            self._data_contents["Qx"].value,
-                            self._data_contents["Qy"].value,
-                        )
-                    )
-                )
-                # Use this value to extract units etc. Assume they will be the same for Qy.
-                reference_data_content = self._data_contents["Qx"]
-                # TODO: If this is a derived quantity then we are going to lose that
-                # information.
-                #
-                # TODO: Won't work when there's errors involved. On reflection, we
-                # probably want to avoid creating a new Quantity but at the moment I
-                # can't see a way around it.
-                return Quantity(data_contents, reference_data_content.units, name=self._data_contents["Qx"].name, id_header=self._data_contents["Qx"]._id_header)
+                return Abscissa.determine([self._data_contents["Qx"], self._data_contents["Qy"]], self.ordinate)
             case dataset_types.angle_dim:
-                return self._data_contents["Phi"]
+                return Abscissa.determine([self._data_contents["Phi"]], self.ordinate)
+            case dataset_types.three_dim:
+                return Abscissa.determine(
+                    [self._data_contents["Qx"], self._data_contents["Qy"], self._data_contents["Qz"]], self.ordinate
+                )
             case dataset_types.sesans:
-                return self._data_contents["SpinEchoLength"]
+                return Abscissa.determine([self._data_contents["SpinEchoLength"]], self.ordinate)
             case _:
-                None
+                return None
 
     def __getitem__(self, item: str):
         return self._data_contents[item]
@@ -98,7 +137,7 @@ class SasData:
 
     @staticmethod
     def from_json(obj):
-        return SasData(
+        return SasMeasurement(
             name=obj["name"],
             dataset_type=DatasetType(
                 name=obj["type"]["name"],
@@ -121,12 +160,11 @@ class SasData:
         for idx, (key, sasdata) in enumerate(self._data_contents.items()):
             sasdata.as_h5(group, key)
 
-
     @staticmethod
     def save_h5(data: dict[str, typing.Self], path: str | typing.BinaryIO):
         with h5py.File(path, "w") as f:
             for idx, (key, data) in enumerate(data.items()):
-                sasentry = f.create_group(f"sasentry{idx+1:02d}")
+                sasentry = f.create_group(f"sasentry{idx + 1:02d}")
                 if not key.startswith("sasentry"):
                     sasentry.attrs["sasview_key"] = key
                 data._save_h5(sasentry)
@@ -140,7 +178,7 @@ class SasData:
     def deserialise_json(json_data: dict) -> "SasData":
         name = json_data["name"]
         data_contents = {}
-        dataset_type = json_data["dataset_type"] # TODO: update when DatasetType is more finalized
+        dataset_type = json_data["dataset_type"]  # TODO: update when DatasetType is more finalized
         metadata = json_data["metadata"].deserialise_json()
         for quantity in json_data["data_contents"]:
             data_contents[quantity["label"]] = Quantity.deserialise_json(quantity)
@@ -159,11 +197,11 @@ class SasData:
         return {
             "name": self.name,
             "data_contents": data,
-            "dataset_type": None, # TODO: update when DatasetType is more finalized
+            "dataset_type": None,  # TODO: update when DatasetType is more finalized
             "verbose": self._verbose,
             "metadata": self.metadata.serialise_json(),
             "mask": {},
-            "model_requirements": {}
+            "model_requirements": {},
         }
 
 
@@ -210,16 +248,16 @@ def sasdata_reader2D_converter(data2d: SasData | None = None) -> SasData:
     qx_data = new_x.flatten()
     qy_data = new_y.flatten()
     err_data = np.sqrt(data2d._data_contents["I"].variance.value)
-    if not data2d._data_contents["I"].has_variance or np.any(err_data <= 0):
+    if not data2d._data_contents["I"].has_error or np.any(err_data <= 0):
         new_err_data = np.sqrt(np.abs(new_data))
     else:
         new_err_data = err_data.flatten()
     mask = np.ones(len(new_data), dtype=bool)
 
     data2d._data_contents["I"].value = new_data
-    data2d._data_contents["I"].variance.value = new_err_data ** 2
+    data2d._data_contents["I"].variance.value = new_err_data**2
     data2d._data_contents["Qx"].value = qx_data
     data2d._data_contents["Qy"].value = qy_data
-    data2d.mask = mask
+    data2d._mask = mask
 
     return data2d

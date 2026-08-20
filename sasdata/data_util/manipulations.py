@@ -23,6 +23,7 @@ from warnings import warn
 
 import numpy as np
 
+from sasdata.abscissa import Abscissa
 from sasdata.data import SasData
 
 ################################################################################
@@ -48,29 +49,11 @@ from sasdata.data_util.averaging import (
 )
 from sasdata.dataloader.data_info import Data2D
 from sasdata.dataloader.data_info import reader2D_converter as _di_reader2D_converter
-from sasdata.dataset_types import one_dim
 from sasdata.quantities.constants import Pi, TwoPi
 from sasdata.quantities.quantity import Quantity
 
 warn("sasdata.data_util.manipulations is deprecated. Unless otherwise noted, update your import to "
      "sasdata.data_util.averaging.", DeprecationWarning, stacklevel=2)
-
-
-def deduce_qz(qx: float, qy: float, wavelength: float) -> float:
-    """
-    If you know qx, qy, and the wavelength, you can derive qz
-
-    :param qx: qx [inverse length]
-    :param dy: qy [inverse length]
-    :param wavelength: neutron wavelength [length]
-
-    :return: qz
-    """
-
-    k0 = 2*np.pi/wavelength
-    twotheta = np.arcsin((qx**2 + qy**2) / k0)
-    qz = (1 - np.cos(twotheta)) * k0
-    return qz
 
 
 def position_and_wavelength_to_q(dx: float, dy: float, detector_distance: float, wavelength: float) -> float:
@@ -393,12 +376,12 @@ class CircularAverage:
         # Get data W/ finite values
         finite_mask = np.isfinite(data2D.ordinate.value)
         data = data2D.ordinate.value[finite_mask]
-        q_data = np.sqrt(data2D._data_contents["Qx"].value**2 + data2D._data_contents["Qy"].value**2)[finite_mask]
+        q_data = np.sqrt(data2D.abscissae.axes[0].value**2 + data2D.abscissae.axes[1].value**2)[finite_mask]
         err_data = np.sqrt(data2D.ordinate.variance.value)[finite_mask]
         mask_data = (data2D.mask if data2D.mask is not None else np.ones_like(data2D.ordinate.value, dtype=bool))[finite_mask]
 
         dq_data = None
-        if data2D._data_contents["Qx"].has_variance and data2D._data_contents["Qy"].has_variance:
+        if data2D.abscissae.axes[0].has_error and data2D.abscissae.axes[1].has_error:
             dq_data = get_dq_data(data2D)
 
         if len(q_data) == 0:
@@ -480,11 +463,17 @@ class CircularAverage:
             msg = "Average Error: No points inside ROI to average..."
             raise ValueError(msg)
 
-        data_contents = {
-            "Q": Quantity(x[idx], data2D._data_contents["Qx"].units, dQ),
-            "I": Quantity(y[idx], data2D.ordinate.units, err_y[idx]),
-        }
-        return SasData("Circular Average", data_contents, one_dim, data2D.metadata)
+        ordinate = Quantity(y[idx], data2D.ordinate.units, err_y[idx])
+        abscissa = Abscissa.determine([Quantity(x[idx], data2D.abscissae.axes[0].units, dQ)], ordinate)
+
+        return SasData(
+            name="Circular Average",
+            ordinate=ordinate,
+            abscissae=abscissa,
+            mask=data2D.mask,
+            dependents=[data2D],
+            metadata=data2D.metadata
+        )
 
 ################################################################################
 
@@ -541,23 +530,20 @@ class _Sector:
 
         :return: SasData object
         """
-        if not ("Qx" in data2D._data_contents and
-                "Qy" in data2D._data_contents):
-            raise RuntimeError("For averaging the SasData object must contain 'Qx' and 'Qy' data.")
+        if data2D.abscissae.dimensionality < 2:
+            raise RuntimeError("For averaging the SasData object must contain at least two dimensions in Q.")
 
         # Get all the data & info
         finite_mask = np.isfinite(data2D.ordinate.value)
         data = data2D.ordinate.value[finite_mask]
         err_data = np.sqrt(data2D.ordinate.variance.value)[finite_mask]
-        qx_data = data2D._data_contents["Qx"].value[finite_mask]
-        qy_data = data2D._data_contents["Qy"].value[finite_mask]
-        q_data = np.sqrt(data2D._data_contents["Qx"].value ** 2 +
-                         data2D._data_contents["Qy"].value ** 2
-                         )[finite_mask]
+        qx_data = data2D.abscissae.axes[0].value[finite_mask]
+        qy_data = data2D.abscissae.axes[1].value[finite_mask]
+        q_data = np.sqrt(data2D.abscissae.axes[0].value**2 + data2D.abscissae.axes[1].value**2)[finite_mask]
         mask_data = (data2D.mask if data2D.mask is not None else np.ones_like(data2D.ordinate.value, dtype=bool))[finite_mask]
 
         dq_data = None
-        if data2D._data_contents["Qx"].has_variance and data2D._data_contents["Qy"].has_variance:
+        if data2D.abscissae.axes[0].has_error and data2D.abscissae.axes[1].has_error:
             dq_data = get_dq_data(data2D)
 
         # set space for 1d outputs
@@ -722,12 +708,17 @@ class _Sector:
             msg = "Average Error: No points inside sector of ROI to average..."
             raise ValueError(msg)
 
-        data_contents = {
-            "Q": Quantity(x[idx], data2D._data_contents["Qx"].units, dQ),
-            "I": Quantity(y[idx], data2D.ordinate.units, y_err[idx]),
-        }
-        return SasData("agv", data_contents, one_dim, data2D.metadata)
+        ordinate = Quantity(y[idx], data2D.ordinate.units, y_err[idx])
+        abscissa = Abscissa.determine([Quantity(x[idx], data2D.abscissae.axes[0].units, dQ)], ordinate)
 
+        return SasData(
+            name="agv",
+            ordinate=ordinate,
+            abscissae=abscissa,
+            mask=data2D.mask,
+            dependents=[data2D],
+            metadata=data2D.metadata
+        )
 
 
 class SectorPhi(_Sector):
