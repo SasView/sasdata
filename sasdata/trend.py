@@ -2,12 +2,13 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from sasdata.data import SasData
+from sasdata.data import SasData, SasMeasurement
 from sasdata.data_backing import Dataset, Group
 from sasdata.quantities.quantity import Quantity
 from sasdata.transforms.rebinning import calculate_interpolation_matrix_1d
 
 # Axis strs refer to the name of their associated NamedQuantity.
+
 
 # TODO: This probably shouldn't be here but will keep it here for now.
 # TODO: Not sure how to type hint the return.
@@ -16,12 +17,12 @@ def get_metadatum_from_path(data: SasData, metadata_path: list[str]):
     for path_item in metadata_path:
         current_item = current_group.children.get(path_item, None)
         if current_item is None or (isinstance(current_item, Dataset) and path_item != metadata_path[-1]):
-            raise ValueError('Path does not lead to valid a metadatum.')
+            raise ValueError("Path does not lead to valid a metadatum.")
         elif isinstance(current_item, Group):
             current_group = current_item
         else:
             return current_item.data
-    raise ValueError('End of path without finding a dataset.')
+    raise ValueError("End of path without finding a dataset.")
 
 
 @dataclass
@@ -40,6 +41,7 @@ class Trend:
             if metadatum == item:
                 return datum
         raise KeyError()
+
     @property
     def trend_axes(self) -> list[float]:
         return [get_metadatum_from_path(datum, self.trend_axis) for datum in self.data]
@@ -77,13 +79,12 @@ class Trend:
                     continue
                 new_quantities[name] = quantity @ mat
 
-            new_datum = SasData(
+            new_datum = SasMeasurement(
                 name=datum.name,
                 data_contents=new_quantities,
                 dataset_type=datum.dataset_type,
                 metadata=datum.metadata,
             )
             new_data.append(new_datum)
-        new_trend = Trend(new_data,
-                          self.trend_axis)
+        new_trend = Trend(new_data, self.trend_axis)
         return new_trend

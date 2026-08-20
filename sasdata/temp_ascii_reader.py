@@ -11,7 +11,7 @@ from sasdata.ascii_reader_metadata import (
     bidirectional_pairings,
     pairings,
 )
-from sasdata.data import SasData
+from sasdata.data import SasMeasurement
 from sasdata.dataset_types import DatasetType, one_dim, unit_kinds
 from sasdata.default_units import get_default_unit
 from sasdata.guess import (
@@ -188,11 +188,13 @@ def merge_uncertainties(quantities: dict[str, Quantity]) -> dict[str, Quantity]:
     return new_quantities
 
 
-def load_data(params: AsciiReaderParams) -> list[SasData]:
-    """This loads a series of SasData objects based on the params. The amount of
-    SasData objects loaded will depend on how many filenames are present in the
-    list contained in the params."""
-    loaded_data: list[SasData] = []
+def load_data(params: AsciiReaderParams) -> list[SasMeasurement]:
+    """
+    This loads a series of SasMeasurement objects based on the params.
+    The amount of SasMeasurement objects loaded will depend on how many
+    filenames are present in the list contained in the params.
+    """
+    loaded_data: list[SasMeasurement] = []
     for filename in params.filenames:
         raw_metadata = import_metadata(
             params.metadata.all_file_metadata(path.basename(filename))
@@ -207,7 +209,7 @@ def load_data(params: AsciiReaderParams) -> list[SasData]:
             raw=raw_metadata,
         )
         quantities = load_quantities(params, filename, metadata)
-        data = SasData(
+        data = SasMeasurement(
             path.basename(filename),
             merge_uncertainties(quantities),
             params.dataset_type,
@@ -217,6 +219,6 @@ def load_data(params: AsciiReaderParams) -> list[SasData]:
     return loaded_data
 
 
-def load_data_default_params(filename: str) -> list[SasData]:
+def load_data_default_params(filename: str) -> list[SasMeasurement]:
     params = guess_params_from_filename(filename, guess_dataset_type(filename))
     return load_data(params)

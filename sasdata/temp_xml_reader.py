@@ -5,7 +5,7 @@ import numpy as np
 from lxml import etree
 
 import sasdata.quantities.unit_parser as unit_parser
-from sasdata.data import SasData
+from sasdata.data import SasMeasurement
 from sasdata.dataset_types import one_dim
 from sasdata.metadata import (
     Aperture,
@@ -282,9 +282,9 @@ def load_raw(node: etree._Element, version: str) -> MetaNode:
     return MetaNode(name=etree.QName(node).localname, attrs=attrib, contents=contents)
 
 
-def load_data(filename: str) -> dict[str, SasData]:
+def load_data(filename: str) -> dict[str, SasMeasurement]:
     """Load scattering data from an XML file"""
-    loaded_data: dict[str, SasData] = {}
+    loaded_data: dict[str, SasMeasurement] = {}
     tree = etree.parse(filename)
     root = tree.getroot()
 
@@ -327,7 +327,7 @@ def load_data(filename: str) -> dict[str, SasData]:
             data = data_set
             break
 
-        loaded_data[name] = SasData(
+        loaded_data[name] = SasMeasurement(
             name=name,
             dataset_type=one_dim,
             data_contents=data,

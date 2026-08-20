@@ -12,7 +12,7 @@ import numpy as np
 import pytest
 
 import sasdata.quantities.units as units
-from sasdata.data import SasData, SasDataEncoder
+from sasdata.data import SasData, SasDataEncoder, SasMeasurement
 from sasdata.dataset_types import one_dim
 from sasdata.guess import guess_columns
 from sasdata.quantities.quantity import Quantity
@@ -424,7 +424,7 @@ def test_load_file(test_case: BaseTestCase):
             raw = json.loads("".join(infile.readlines()))
             parsed = {}
             for k in raw:
-                parsed[k] = SasData.from_json(raw[k])
+                parsed[k] = SasMeasurement.from_json(raw[k])
 
         for k in combined_data:
             expect = combined_data[k]
@@ -437,7 +437,7 @@ def test_load_file(test_case: BaseTestCase):
 
     if test_case.round_trip:
         bio = io.BytesIO()
-        SasData.save_h5(combined_data, bio)
+        SasMeasurement.save_h5(combined_data, bio)
         bio.seek(0)
 
         result = hdf_load_data(bio)

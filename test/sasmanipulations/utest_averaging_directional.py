@@ -85,8 +85,8 @@ class DirectionalAverageFunctionalityTests(unittest.TestCase):
         self.bin_width = (self.lims[1] - self.lims[0]) / self.nbins
 
         self.directional_average = \
-            DirectionalAverage(major_axis=self.data2d.data._data_contents["Qx"].value,
-                               minor_axis=self.data2d.data._data_contents["Qy"].value,
+            DirectionalAverage(major_axis=self.data2d.data.abscissae.axes[0].value,
+                               minor_axis=self.data2d.data.abscissae.axes[1].value,
                                lims=(self.lims,self.lims),
                                nbins=self.nbins)
 
@@ -141,8 +141,8 @@ class DirectionalAverageFunctionalityTests(unittest.TestCase):
         the bins.
         """
         x_axis_values, intensity, errors = \
-            self.directional_average(data=self.data2d.data._data_contents["I"].value,
-                                     err_data=self.data2d.data._data_contents["dI"].value)
+            self.directional_average(data=self.data2d.data.ordinate.value,
+                                     err_data=self.data2d.data.ordinate.standard_error.value)
 
         expected_x = self.qx_data[self.in_roi]
         expected_intensity = np.mean(self.qy_data[self.in_roi]) * expected_x**2
@@ -159,8 +159,8 @@ class DirectionalAverageFunctionalityTests(unittest.TestCase):
         self.directional_average.minor_lims = (2, 3)
         self.assertRaises(ValueError,
                  self.directional_average,
-                          self.data2d.data._data_contents["I"].value,
-                          self.data2d.data._data_contents["dI"].value)
+                          self.data2d.data.ordinate.value,
+                          self.data2d.data.ordinate.standard_error.value)
 
 if __name__ == '__main__':
     unittest.main()

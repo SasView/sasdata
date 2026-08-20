@@ -38,13 +38,14 @@ class GenericROI:
         if not isinstance(data2d, SasData):
             msg = "Data supplied must be of type SasData."
             raise TypeError(msg)
-        if not ("Qx" in data2d._data_contents and
-                "Qy" in data2d._data_contents):
-            msg = "SasData object must contain 'Qx' and 'Qy' data."
+        if data2d.abscissae.dimensionality < 2:
+            msg = "SasData object must contain at least two dimensions in Q."
             raise TypeError(msg)
         if len(data2d.metadata.instrument.detector) > 1:
-            msg = (f"Invalid number of detectors: {len(data2d.metadata.instrument.detector)}."
-                   "Cannot have more than 1 detector.")
+            msg = (
+                f"Invalid number of detectors: {len(data2d.metadata.instrument.detector)}. "
+                "Cannot have more than 1 detector."
+            )
             raise ValueError(msg)
 
         # Only use data which is finite and not masked off
@@ -58,9 +59,10 @@ class GenericROI:
         self.data = data2d.ordinate.value[valid_data]
         self.err_data = np.sqrt(data2d.ordinate.variance.value)[valid_data]
 
-        self.qx_data = data2d._data_contents["Qx"].value[valid_data] - self.center_x
-        self.qy_data = data2d._data_contents["Qy"].value[valid_data] - self.center_y
-        self.q_data = np.sqrt(self.qx_data ** 2 + self.qy_data ** 2)
+        # We take the first two dimensions of the abscissae as the Qx and Qy data.
+        self.qx_data = data2d.abscissae.axes[0].value[valid_data] - self.center_x
+        self.qy_data = data2d.abscissae.axes[1].value[valid_data] - self.center_y
+        self.q_data = np.sqrt(self.qx_data**2 + self.qy_data**2)
 
         # Compute phi in the legacy convention: atan2(qy,qx) + pi
         # (legacy code used this origin; keeping it here makes all polar
@@ -71,6 +73,7 @@ class GenericROI:
         # the square root of the data. This code was added to replicate
         # previous functionality. It's a bit dodgy, so feel free to remove.
         self.err_data[self.err_data == 0] = np.sqrt(np.abs(self.data[self.err_data == 0]))
+
 
 class CartesianROI(GenericROI):
     """Base class for data manipulators with a Cartesian (rectangular) ROI."""
@@ -91,14 +94,16 @@ class CartesianROI(GenericROI):
         self.qy_min = qy_min
         self.qy_max = qy_max
 
+
 class PolarROI(GenericROI):
     """Base class for data manipulators with a polar ROI."""
 
-    def __init__(self,
-                 r_range: tuple[float, float],
-                 phi_range: tuple[float, float] = (0.0, TwoPi),
-                 center: tuple[float, float] = (0.0, 0.0)
-                 ) -> None:
+    def __init__(
+        self,
+        r_range: tuple[float, float],
+        phi_range: tuple[float, float] = (0.0, TwoPi),
+        center: tuple[float, float] = (0.0, 0.0),
+    ) -> None:
         """
         Assign the variables used to label the properties of the SasData object.
         Also establish the upper and lower bounds defining the ROI.
@@ -108,7 +113,7 @@ class PolarROI(GenericROI):
 
         Note that Phi is measured anti-clockwise from the positive x-axis.
         """
-        super().__init__(center = center)
+        super().__init__(center=center)
 
         self.phi_data = None
 
