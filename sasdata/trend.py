@@ -149,6 +149,9 @@ class Trend:
             return axis_config.copy()  # Return copy to prevent modification
 
     def get_trend_data_value(self, data: SasData, axis_name: str):
+        """Get the value of `axis_name` for `data`. `data` is assumed to be part
+        of the trend, although it doesn't necessarily have to. However, it will
+        fail if the metadata doesn't exist on `data`."""
         return get_metadatum_from_path(data, self.trend_axes[axis_name])
 
     def add_manual_axis(self, axis_name: str, values: list):
@@ -171,6 +174,7 @@ class Trend:
 
     @property
     def axis_names(self) -> list[str]:
+        """Return all of the trend's axis names."""
         return list(self.trend_axes.keys())
 
     def is_manual_axis(self, axis_name: str) -> bool:
