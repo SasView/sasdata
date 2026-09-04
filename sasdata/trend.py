@@ -148,6 +148,9 @@ class Trend:
             # Manual values - return as-is
             return axis_config.copy()  # Return copy to prevent modification
 
+    def get_trend_data_value(self, data: SasData, axis_name: str):
+        return get_metadatum_from_path(data, self.trend_axes[axis_name])
+
     def add_manual_axis(self, axis_name: str, values: list):
         """Add a new manual trend axis"""
         if len(values) != len(self.data):
