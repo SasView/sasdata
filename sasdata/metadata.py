@@ -1,7 +1,7 @@
 """
 Contains classes describing the metadata for a scattering run
 
-The metadata is structures around the CANSas format version 1.1, found at
+The metadata is structured around the CANSas format version 1.1, found at
 https://www.cansas.org/formats/canSAS1d/1.1/doc/specification.html
 
 Metadata from other file formats should be massaged to fit into the data classes presented here.
@@ -169,6 +169,7 @@ class Detector:
         if self.slit_length:
             self.slit_length.as_h5(group, "slit_length")
 
+
 @dataclass(kw_only=True)
 class Aperture:
     distance: Quantity[float] | None
@@ -195,7 +196,6 @@ class Aperture:
             type_=obj["type"],
         )
 
-
     def as_h5(self, group: h5py.Group):
         """Export data onto an HDF5 group"""
         if self.distance is not None:
@@ -209,7 +209,6 @@ class Aperture:
             self.size.as_h5(size_group)
             if self.size_name is not None:
                 size_group.attrs["name"] = self.size_name
-
 
 
 @dataclass(kw_only=True)
@@ -306,9 +305,6 @@ class Source:
             self.wavelength_max.as_h5(group, "wavelength_max")
         if self.wavelength_spread:
             self.wavelength_spread.as_h5(group, "wavelength_spread")
-
-
-
 
 
 @dataclass(kw_only=True)
@@ -485,14 +481,13 @@ class MetaNode:
             )
         else:
             attributes = ""
-        if self.contents:
-            if type(self.contents) is str:
-                children = f"\n{header}  {self.contents}"
-            else:
+        match self.contents:
+            case list() | tuple():
                 children = "".join([n.to_string(header + "  ") for n in self.contents])
-        else:
-            children = ""
-
+            case None | "":
+                children = ""
+            case _:
+                children = f"\n{header}  {self.contents}"
         return f"\n{header}{self.name}:{attributes}{children}"
 
     def filter(self, name: str) -> list[ndarray | Quantity | str]:
@@ -616,7 +611,7 @@ class Metadata:
         title = ""
         if self.title is not None:
             title = self.title
-        return f"{title}:{",".join(self.run)}"
+        return f"{title}:{','.join(self.run)}"
 
     def as_h5(self, f: h5py.Group):
         """Export data onto an HDF5 group"""
