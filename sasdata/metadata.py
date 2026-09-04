@@ -484,7 +484,7 @@ class MetaNode:
         match self.contents:
             case list() | tuple():
                 children = "".join([n.to_string(header + "  ") for n in self.contents])
-            case None:
+            case None | "":
                 children = ""
             case _:
                 children = f"\n{header}  {self.contents}"
