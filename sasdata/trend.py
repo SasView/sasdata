@@ -185,9 +185,9 @@ class Trend:
         axis_config = self.trend_axes[axis_name]
         return not (isinstance(axis_config, list) and len(axis_config) > 0 and isinstance(axis_config[0], str))
 
-    # TODO: Assumes there are at least 2 items in data. Is this reasonable to assume? Should there be error handling for
-    # situations where this may not be the case?
     def all_axis_match(self, axis: str) -> bool:
+        if len(self.data) < 2:
+            return True
         reference_data = self.data[0]
         data_axis = reference_data[axis]
         for datum in self.data[1::]:
