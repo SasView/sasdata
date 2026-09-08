@@ -148,6 +148,12 @@ class Trend:
             # Manual values - return as-is
             return axis_config.copy()  # Return copy to prevent modification
 
+    def get_trend_data_value(self, data: SasData, axis_name: str):
+        """Get the value of `axis_name` for `data`. `data` is assumed to be part
+        of the trend, although it doesn't necessarily have to. However, it will
+        fail if the metadata doesn't exist on `data`."""
+        return get_metadatum_from_path(data, self.trend_axes[axis_name])
+
     def add_manual_axis(self, axis_name: str, values: list):
         """Add a new manual trend axis"""
         if len(values) != len(self.data):
@@ -168,6 +174,7 @@ class Trend:
 
     @property
     def axis_names(self) -> list[str]:
+        """Return all of the trend's axis names."""
         return list(self.trend_axes.keys())
 
     def is_manual_axis(self, axis_name: str) -> bool:
@@ -178,9 +185,9 @@ class Trend:
         axis_config = self.trend_axes[axis_name]
         return not (isinstance(axis_config, list) and len(axis_config) > 0 and isinstance(axis_config[0], str))
 
-    # TODO: Assumes there are at least 2 items in data. Is this reasonable to assume? Should there be error handling for
-    # situations where this may not be the case?
     def all_axis_match(self, axis: str) -> bool:
+        if len(self.data) < 2:
+            return True
         reference_data = self.data[0]
         data_axis = reference_data[axis]
         for datum in self.data[1::]:
