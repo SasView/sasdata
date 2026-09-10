@@ -517,7 +517,10 @@ class MetaNode:
                     "contents": contents,
                     "shape": shape,
                 }:
-                    return np.frombuffer(base64.b64decode(contents), dtype=dtype).reshape(shape)
+                    # ensure that the data is in native byte order once read
+                    data = np.frombuffer(base64.b64decode(contents), dtype=dtype).reshape(shape)
+                    data = np.asarray(data, dtype=data.dtype.newbyteorder('='))
+                    return data
                 case {"value": value, "units": units}:
                     return from_json_quantity({"value": from_content(value), "units": from_content(units)})
                 case _:
@@ -598,6 +601,9 @@ class MetadataEncoder(json.JSONEncoder):
             case Quantity():
                 return {"value": obj.value, "units": obj.units.ascii_symbol}
             case ndarray():
+                # Ensure that the data is little-endian, no matter what the original format and
+                # data source; this standardises serialisation, as expected by the test suite
+                obj = np.asarray(obj, dtype=obj.dtype.newbyteorder('<'))
                 return {
                     "type": "ndarray",
                     "encoding": "base64",
