@@ -4,15 +4,15 @@ from typing import Literal
 import pytest
 
 from sasdata.ascii_reader_metadata import AsciiMetadataCategory, AsciiReaderMetadata
-from sasdata.dataset_types import one_dim
-from sasdata.guess import guess_columns
-from sasdata.quantities.units import per_angstrom, per_centimeter
-from sasdata.temp_ascii_reader import (
+from sasdata.data_io.importers.import_ascii import (
     AsciiReaderParams,
     guess_params_from_filename,
     load_data,
     load_data_default_params,
 )
+from sasdata.dataset_types import one_dim
+from sasdata.guess import guess_columns
+from sasdata.quantities.units import per_angstrom, per_centimeter
 
 # TODO: These are using the private _data_contents temporarily. Later, there will be a public way of accessing these,
 # and that should be used instead.

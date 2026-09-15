@@ -3,12 +3,12 @@ from os import listdir, path
 import numpy as np
 import pytest
 
-import sasdata.temp_ascii_reader as ascii_reader
+import sasdata.data_io.importers.import_ascii as ascii_reader
 from sasdata.ascii_reader_metadata import AsciiMetadataCategory
+from sasdata.data_io.importers.import_ascii import AsciiReaderParams
+from sasdata.data_io.importers.import_hdf5 import load_data as hdf_load_data
+from sasdata.data_io.importers.import_xml import load_data as xml_load_data
 from sasdata.quantities.units import per_angstrom, per_nanometer
-from sasdata.temp_ascii_reader import AsciiReaderParams
-from sasdata.temp_hdf5_reader import load_data as hdf_load_data
-from sasdata.temp_xml_reader import load_data as xml_load_data
 from sasdata.trend import Trend
 
 mumag_test_directories = [

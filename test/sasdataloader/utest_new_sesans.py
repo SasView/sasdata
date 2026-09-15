@@ -7,6 +7,7 @@ import os
 import numpy as np
 import pytest
 
+from sasdata.data_io.importers.import_sesans import load_data
 from sasdata.model_requirements import (
     ComposeRequirements,
     ModellingRequirements,
@@ -18,7 +19,6 @@ from sasdata.model_requirements import (
 )
 from sasdata.quantities import unit_parser, units
 from sasdata.quantities.quantity import Quantity
-from sasdata.temp_sesans_reader import load_data
 
 test_file_names = ["sphere2micron", "sphere_isis"]
 
