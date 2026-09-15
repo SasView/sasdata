@@ -4,6 +4,8 @@ import unittest
 import numpy as np
 
 from sasdata.data import SasMeasurement, sasdata_reader2D_converter
+from sasdata.data_io.importers.import_ascii import load_data_default_params as ascii_load_data
+from sasdata.data_io.importers.import_hdf5 import load_data as hdf_load_data
 from sasdata.data_util.manipulations import (
     Boxavg,
     Boxsum,
@@ -20,8 +22,6 @@ from sasdata.metadata import Detector, Instrument, Metadata, Source, Vec3
 from sasdata.quantities.constants import Pi, TwoPi
 from sasdata.quantities.quantity import Quantity
 from sasdata.quantities.units import angstroms, millimeters, none, per_angstrom, per_centimeter
-from sasdata.temp_ascii_reader import load_data_default_params as ascii_load_data
-from sasdata.temp_hdf5_reader import load_data as hdf_load_data
 
 
 def find(filename):

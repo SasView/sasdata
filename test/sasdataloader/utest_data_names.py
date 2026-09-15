@@ -7,9 +7,9 @@ import os
 import pytest
 
 from sasdata.data import SasData
-from sasdata.temp_ascii_reader import load_data_default_params
-from sasdata.temp_hdf5_reader import load_data as hdf_load_data
-from sasdata.temp_xml_reader import load_data as xml_load_data
+from sasdata.data_io.importers.import_ascii import load_data_default_params
+from sasdata.data_io.importers.import_hdf5 import load_data as hdf_load_data
+from sasdata.data_io.importers.import_xml import load_data as xml_load_data
 
 
 def local_load(path: str) -> SasData:
