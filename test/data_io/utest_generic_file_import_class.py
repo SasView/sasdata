@@ -11,12 +11,13 @@ import numpy as np
 from sasdata.dataloader.data_info import Data1D, DataInfo, plottable_1D
 from sasdata.dataloader.filereader import FileReader
 from sasdata.dataloader.loader import Loader
+from test import local_data_finder
 
 logger = logging.getLogger(__name__)
 
 
 def find(filename):
-    return os.path.join(os.path.dirname(__file__), 'data', filename)
+    return local_data_finder(filename)
 
 
 class GenericFileReaderTests(unittest.TestCase):

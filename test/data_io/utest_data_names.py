@@ -2,27 +2,10 @@
 Tests for generation of unique, but reproducible, names for data quantities
 """
 
-import os
 
 import pytest
 
-from sasdata.data import SasData
-from sasdata.data_io.importers.import_ascii import load_data_default_params
-from sasdata.data_io.importers.import_hdf5 import load_data as hdf_load_data
-from sasdata.data_io.importers.import_xml import load_data as xml_load_data
-
-
-def local_load(path: str) -> SasData:
-    """Get local file path"""
-    base = os.path.join(os.path.dirname(__file__), path)
-    if os.path.exists(f"{base}.h5"):
-        return hdf_load_data(f"{base}.h5").values()
-    if os.path.exists(f"{base}.xml"):
-        return xml_load_data(f"{base}.xml").values()
-    if os.path.exists(f"{base}.txt"):
-        return load_data_default_params(f"{base}.txt")
-    assert False
-
+from test import local_data_finder, local_load
 
 test_file_names = [
     ("ascii_test_1", "::Q:3KrS58TPgclJ1rgyr0VQp3"),
@@ -37,7 +20,7 @@ test_file_names = [
 @pytest.mark.parametrize("x", test_file_names)
 def test_quantity_name(x):
     (f, expected) = x
-    data = [v for v in local_load(f"data/{f}")][0]
+    data = [v for v in local_load(local_data_finder(f))][0]
     if data.metadata.title is not None:
         assert data.abscissae.axes[0].unique_id.startswith(data.metadata.title)
     assert data.abscissae.axes[0].unique_id == expected

@@ -4,7 +4,6 @@ Unit tests for the new recursive cansas reader
 
 import io
 import json
-import os
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -27,42 +26,17 @@ from sasdata.dataset_types import one_dim
 from sasdata.guess import guess_columns
 from sasdata.quantities.quantity import Quantity
 from sasdata.quantities.units import per_angstrom
-
-
-def local_load(path: str):
-    """Get local file path"""
-    base = os.path.join(os.path.dirname(__file__), path)
-    if os.path.exists(f"{base}.h5"):
-        return f"{base}.h5"
-    if os.path.exists(f"{base}.xml"):
-        return f"{base}.xml"
-    return f"{base}"
-
-
-def local_reference_load(path: str):
-    return local_load(f"{os.path.join('reference', path)}")
-
-
-def local_data_load(path: str):
-    return local_load(f"{os.path.join('data', path)}")
-
-
-def local_json_load(path: str):
-    return local_load(f"{os.path.join('json', path)}")
-
-
-def local_sesans_load(path: str):
-    return local_load(f"{os.path.join('sesans_data', path)}")
+from test import local_data_finder, local_json_finder, local_reference_finder, local_sesans_finder
 
 
 @pytest.mark.sasdata
 def test_filter_data():
-    data = xml_load_data(local_load("data/cansas1d_notitle"))
+    data = xml_load_data(local_data_finder("cansas1d_notitle.xml"))
     for k, v in data.items():
         assert v.metadata.raw.filter("transmission") == ["0.327"]
         assert v.metadata.raw.filter("wavelength")[0] == Quantity(6.0, units.angstroms)
         assert v.metadata.raw.filter("SDD")[0] == Quantity(4.15, units.meters)
-    data = hdf_load_data(local_load("data/nxcansas_1Dand2D_multisasentry"))
+    data = hdf_load_data(local_data_finder("nxcansas_1Dand2D_multisasentry.h5"))
     for k, v in data.items():
         assert v.metadata.raw.filter("radiation") == ["Spallation Neutron Source"]
         assert v.metadata.raw.filter("SDD") == [
@@ -115,7 +89,7 @@ class SesansTestCase(BaseTestCase):
 test_cases = [
     pytest.param(
         AsciiTestCase(
-            reader_params=local_data_load("ascii_test_1.txt"),
+            reader_params=local_data_finder("ascii_test_1.txt"),
             expected_values={
                 0: {"Q": 0.002618, "I": 0.02198, "dI": 0.002704},
                 -1: {"Q": 0.0497, "I": 8.346, "dI": 0.191},
@@ -124,7 +98,7 @@ test_cases = [
         marks=pytest.mark.xfail(reason="The ASCII reader cannot make the right guesses for this file."),
     ),
     AsciiTestCase(
-        reader_params=local_data_load("test_3_columns.txt"),
+        reader_params=local_data_finder("test_3_columns.txt"),
         expected_values={
             0: {"Q": 0, "I": 2.83954, "dI": 0.6},
             -1: {"Q": 1.22449, "I": 7.47487, "dI": 1.05918},
@@ -132,7 +106,7 @@ test_cases = [
     ),
     pytest.param(
         AsciiTestCase(
-            reader_params=local_data_load("detector_rectangular.DAT"),
+            reader_params=local_data_finder("detector_rectangular.DAT"),
             expected_values={
                 0: {
                     "Qx": -0.009160664,
@@ -155,7 +129,7 @@ test_cases = [
     BulkAsciiTestCase(
         reader_params=AsciiReaderParams(
             filenames=[
-                local_data_load(filename)
+                local_data_finder(filename)
                 for filename in [
                     "1_33_1640_22.874115.csv",
                     "2_42_1640_23.456895.csv",
@@ -197,7 +171,7 @@ test_cases = [
         },
     ),
     XmlTestCase(
-        filename=local_data_load("ISIS_1_0.xml"),
+        filename=local_data_finder("ISIS_1_0.xml"),
         entry="79680main_1D_2.2_10.0",
         expected_values={
             0: {"Q": 0.009, "I": 85.3333, "dI": 0.852491, "dQ": 0},
@@ -210,126 +184,126 @@ test_cases = [
         },
     ),
     Hdf5TestCase(
-        filename=local_data_load("simpleexamplefile.h5"),
-        metadata_file=local_reference_load("simpleexamplefile.txt"),
+        filename=local_data_finder("simpleexamplefile.h5"),
+        metadata_file=local_reference_finder("simpleexamplefile.txt"),
         expected_values={
             0: {"Q": 0.5488135039273248, "I": 0.6778165367962301},
             -1: {"Q": 0.004695476192547066, "I": 0.4344166255581208},
         },
     ),
     Hdf5TestCase(
-        filename=local_data_load("MAR07232_rest.h5"),
-        metadata_file=local_reference_load("MAR07232_rest.txt"),
+        filename=local_data_finder("MAR07232_rest.h5"),
+        metadata_file=local_reference_finder("MAR07232_rest.txt"),
         expected_values={},
     ),
     Hdf5TestCase(
-        filename=local_data_load("x25000_no_di.h5"),
+        filename=local_data_finder("x25000_no_di.h5"),
         expected_values={},
     ),
     Hdf5TestCase(
-        filename=local_data_load("nxcansas_1Dand2D_multisasentry.h5"),
-        metadata_file=local_reference_load("nxcansas_1Dand2D_multisasentry.txt"),
+        filename=local_data_finder("nxcansas_1Dand2D_multisasentry.h5"),
+        metadata_file=local_reference_finder("nxcansas_1Dand2D_multisasentry.txt"),
         expected_values={},
     ),
     Hdf5TestCase(
-        filename=local_data_load("nxcansas_1Dand2D_multisasdata.h5"),
-        metadata_file=local_reference_load("nxcansas_1Dand2D_multisasdata.txt"),
+        filename=local_data_finder("nxcansas_1Dand2D_multisasdata.h5"),
+        metadata_file=local_reference_finder("nxcansas_1Dand2D_multisasdata.txt"),
         expected_values={},
     ),
     XmlTestCase(
-        filename=local_data_load("ISIS_1_0.xml"),
+        filename=local_data_finder("ISIS_1_0.xml"),
         entry="79680main_1D_2.2_10.0",
-        metadata_file=local_reference_load("ISIS_1_0.txt"),
-        json_file=local_json_load("ISIS_1_0.json"),
+        metadata_file=local_reference_finder("ISIS_1_0.txt"),
+        json_file=local_json_finder("ISIS_1_0.json"),
         expected_values={},
     ),
     XmlTestCase(
-        filename=local_data_load("ISIS_1_1.xml"),
+        filename=local_data_finder("ISIS_1_1.xml"),
         entry="79680main_1D_2.2_10.0",
-        metadata_file=local_reference_load("ISIS_1_1.txt"),
-        json_file=local_json_load("ISIS_1_1.json"),
+        metadata_file=local_reference_finder("ISIS_1_1.txt"),
+        json_file=local_json_finder("ISIS_1_1.json"),
         expected_values={},
     ),
     XmlTestCase(
-        filename=local_data_load("ISIS_1_1_doubletrans.xml"),
+        filename=local_data_finder("ISIS_1_1_doubletrans.xml"),
         entry="79680main_1D_2.2_10.0",
-        metadata_file=local_reference_load("ISIS_1_1_doubletrans.txt"),
-        json_file=local_json_load("ISIS_1_1_doubletrans.json"),
+        metadata_file=local_reference_finder("ISIS_1_1_doubletrans.txt"),
+        json_file=local_json_finder("ISIS_1_1_doubletrans.json"),
         expected_values={},
     ),
     XmlTestCase(
-        filename=local_data_load("ISIS_1_1_notrans.xml"),
+        filename=local_data_finder("ISIS_1_1_notrans.xml"),
         entry="79680main_1D_2.2_10.0",
-        metadata_file=local_reference_load("ISIS_1_1_notrans.txt"),
-        json_file=local_json_load("ISIS_1_1_notrans.json"),
+        metadata_file=local_reference_finder("ISIS_1_1_notrans.txt"),
+        json_file=local_json_finder("ISIS_1_1_notrans.json"),
         expected_values={},
     ),
     XmlTestCase(
-        filename=local_data_load("TestExtensions.xml"),
+        filename=local_data_finder("TestExtensions.xml"),
         entry="TK49 c10_SANS",
-        metadata_file=local_reference_load("TestExtensions.txt"),
-        json_file=local_json_load("TestExtensions.json"),
+        metadata_file=local_reference_finder("TestExtensions.txt"),
+        json_file=local_json_finder("TestExtensions.json"),
         expected_values={},
     ),
     XmlTestCase(
-        filename=local_data_load("cansas1d.xml"),
+        filename=local_data_finder("cansas1d.xml"),
         entry="Test title",
-        metadata_file=local_reference_load("cansas1d.txt"),
-        json_file=local_json_load("cansas1d.json"),
+        metadata_file=local_reference_finder("cansas1d.txt"),
+        json_file=local_json_finder("cansas1d.json"),
         expected_values={},
     ),
     XmlTestCase(
-        filename=local_data_load("cansas1d_badunits.xml"),
+        filename=local_data_finder("cansas1d_badunits.xml"),
         entry="Test title",
-        metadata_file=local_reference_load("cansas1d_badunits.txt"),
-        json_file=local_json_load("cansas1d_badunits.json"),
+        metadata_file=local_reference_finder("cansas1d_badunits.txt"),
+        json_file=local_json_finder("cansas1d_badunits.json"),
         expected_values={},
     ),
     XmlTestCase(
-        filename=local_data_load("cansas1d_notitle.xml"),
+        filename=local_data_finder("cansas1d_notitle.xml"),
         entry="SasData01",
-        metadata_file=local_reference_load("cansas1d_notitle.txt"),
-        json_file=local_json_load("cansas1d_notitle.json"),
+        metadata_file=local_reference_finder("cansas1d_notitle.txt"),
+        json_file=local_json_finder("cansas1d_notitle.json"),
         expected_values={},
     ),
     XmlTestCase(
-        filename=local_data_load("cansas1d_slit.xml"),
+        filename=local_data_finder("cansas1d_slit.xml"),
         entry="Test title",
-        metadata_file=local_reference_load("cansas1d_slit.txt"),
-        json_file=local_json_load("cansas1d_slit.json"),
+        metadata_file=local_reference_finder("cansas1d_slit.txt"),
+        json_file=local_json_finder("cansas1d_slit.json"),
         expected_values={},
     ),
     XmlTestCase(
-        filename=local_data_load("cansas1d_units.xml"),
+        filename=local_data_finder("cansas1d_units.xml"),
         entry="Test title",
-        metadata_file=local_reference_load("cansas1d_units.txt"),
-        json_file=local_json_load("cansas1d_units.json"),
+        metadata_file=local_reference_finder("cansas1d_units.txt"),
+        json_file=local_json_finder("cansas1d_units.json"),
         expected_values={},
     ),
     XmlTestCase(
-        filename=local_data_load("cansas_test.xml"),
+        filename=local_data_finder("cansas_test.xml"),
         entry="ILL-D11 example1: 2A 5mM 0%D2O",
-        metadata_file=local_reference_load("cansas_test.txt"),
-        json_file=local_json_load("cansas_test.json"),
+        metadata_file=local_reference_finder("cansas_test.txt"),
+        json_file=local_json_finder("cansas_test.json"),
         expected_values={},
     ),
     XmlTestCase(
-        filename=local_data_load("cansas_test_modified.xml"),
+        filename=local_data_finder("cansas_test_modified.xml"),
         entry="ILL-D11 example1: 2A 5mM 0%D2O",
-        metadata_file=local_reference_load("cansas_test_modified.txt"),
-        json_file=local_json_load("cansas_test_modified.json"),
+        metadata_file=local_reference_finder("cansas_test_modified.txt"),
+        json_file=local_json_finder("cansas_test_modified.json"),
         expected_values={},
     ),
     XmlTestCase(
-        filename=local_data_load("valid_cansas_xml.xml"),
+        filename=local_data_finder("valid_cansas_xml.xml"),
         entry="80514main_1D_2.2_10.0",
-        metadata_file=local_reference_load("valid_cansas_xml.txt"),
-        json_file=local_json_load("valid_cansas_xml.json"),
+        metadata_file=local_reference_finder("valid_cansas_xml.txt"),
+        json_file=local_json_finder("valid_cansas_xml.json"),
         expected_values={},
     ),
     SesansTestCase(
-        filename=local_sesans_load("sphere2micron.ses"),
-        metadata_file=local_reference_load("sphere2micron.txt"),
+        filename=local_sesans_finder("sphere2micron.ses"),
+        metadata_file=local_reference_finder("sphere2micron.txt"),
         expected_values={
             0: {"SpinEchoLength": 391.56, "Depolarisation": 0.0041929},
             -1: {"SpinEchoLength": 46099, "Depolarisation": -0.19956},
