@@ -1,4 +1,3 @@
-import os
 from typing import Literal
 
 import pytest
@@ -13,6 +12,7 @@ from sasdata.data_io.importers.import_ascii import (
 from sasdata.dataset_types import one_dim
 from sasdata.guess import guess_columns
 from sasdata.quantities.units import per_angstrom, per_centimeter
+from test import local_data_finder, local_mumag_finder
 
 # TODO: These are using the private _data_contents temporarily. Later, there will be a public way of accessing these,
 # and that should be used instead.
@@ -24,16 +24,9 @@ def find(filename: str, locations: Literal["sasdataloader", "mumag"]) -> str:
     # This match statement is here in case we want to pull data out of other locations.
     match locations:
         case "sasdataloader":
-            return os.path.join(
-                os.path.dirname(__file__), "sasdataloader", "data", filename
-            )
+            return local_data_finder(filename)
         case "mumag":
-            return os.path.join(
-                os.path.dirname(__file__),
-                "mumag",
-                "Nanoperm_perpendicular_Honecker_et_al",
-                filename,
-            )
+            return local_mumag_finder(filename)
 
 
 def test_ascii_1():
@@ -109,13 +102,13 @@ def test_ascii_2d():
 
 def test_mumag_metadata():
     filenames = [
-        "1_33_1640_22.874115.csv",
-        "1_33_1640_22.874115.csv",
-        "2_42_1640_23.456895.csv",
-        "3_61_1640_23.748285.csv",
-        "4_103_1640_24.039675.csv",
-        "5_312_1640_24.331065.csv",
-        "6_1270_1640_24.331065.csv",
+        "Nanoperm_perpendicular_Honecker_et_al/1_33_1640_22.874115.csv",
+        "Nanoperm_perpendicular_Honecker_et_al/1_33_1640_22.874115.csv",
+        "Nanoperm_perpendicular_Honecker_et_al/2_42_1640_23.456895.csv",
+        "Nanoperm_perpendicular_Honecker_et_al/3_61_1640_23.748285.csv",
+        "Nanoperm_perpendicular_Honecker_et_al/4_103_1640_24.039675.csv",
+        "Nanoperm_perpendicular_Honecker_et_al/5_312_1640_24.331065.csv",
+        "Nanoperm_perpendicular_Honecker_et_al/6_1270_1640_24.331065.csv",
     ]
     param_filenames = []
     for filename in filenames:

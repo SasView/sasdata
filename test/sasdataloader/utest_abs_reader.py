@@ -7,10 +7,11 @@ import unittest
 from sasdata.dataloader.loader import Loader
 from sasdata.dataloader.readers.abs_reader import Reader as AbsReader
 from sasdata.dataloader.readers.danse_reader import Reader as DANSEReader
+from test import local_data_finder
 
 
 def find(filename):
-    return os.path.join(os.path.dirname(__file__), 'data', filename)
+    return local_data_finder(filename)
 
 
 class abs_reader(unittest.TestCase):

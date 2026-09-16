@@ -11,6 +11,7 @@ import numpy as np
 
 from sasdata.dataloader.loader import Loader as LoaderMain
 from sasdata.dataloader.loader import Registry as Loader
+from test import local_data_finder
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +19,7 @@ BASE_URL = 'https://github.com/SasView/sasdata/raw/master/test/sasdataloader/dat
 
 
 def find(filename):
-    return os.path.join(os.path.dirname(__file__), 'data', filename)
+    return local_data_finder(filename)
 
 
 class ExtensionRegistryTests(unittest.TestCase):
