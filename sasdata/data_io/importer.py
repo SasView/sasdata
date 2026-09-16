@@ -5,7 +5,7 @@ from sasdata.data import SasData
 Path_Type = str | Path
 
 
-class Import:
+class Importer:
     def __init__(self):
         pass
 
