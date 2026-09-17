@@ -8,6 +8,7 @@ import unittest
 
 import numpy as np
 
+from sasdata.data_io.importer import Importer
 from sasdata.dataloader.data_info import Data1D, DataInfo, plottable_1D
 from sasdata.dataloader.filereader import FileReader
 from sasdata.dataloader.loader import Loader
@@ -103,3 +104,12 @@ class TestFileReader(FileReader):
         self.current_datainfo = DataInfo()
         self.current_datainfo.meta_data["blah"] = self.nextline()
         self.send_to_output()
+
+
+class TestImporterClass:
+    def test_basic_import(self):
+        file_list = [find("TestExtensions.xml"), find("FEB18012.ASC")]
+        importer = Importer()
+        imported_data, errors = importer.import_data(file_list)
+        assert len(imported_data) == 2
+        assert len(errors) == 0
