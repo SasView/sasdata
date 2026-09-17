@@ -1,5 +1,6 @@
 import logging
 from collections.abc import Callable
+from pathlib import Path
 
 import h5py
 import numpy as np
@@ -404,7 +405,7 @@ def parse_metadata(node : HDF5Group) -> Metadata:
                     raw=raw)
 
 
-def load_data(filename: str) -> dict[str, SasMeasurement]:
+def load_data(filename: str | Path) -> dict[str, SasMeasurement]:
     with h5py.File(filename, "r") as f:
         loaded_data: dict[str, SasMeasurement] = {}
 
