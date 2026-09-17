@@ -2,6 +2,7 @@ import re
 from dataclasses import dataclass, field, replace
 from enum import Enum
 from os import path
+from pathlib import Path
 
 import numpy as np
 
@@ -219,6 +220,6 @@ def load_data(params: AsciiReaderParams) -> list[SasMeasurement]:
     return loaded_data
 
 
-def load_data_default_params(filename: str) -> list[SasMeasurement]:
+def load_data_default_params(filename: str | Path) -> list[SasMeasurement]:
     params = guess_params_from_filename(filename, guess_dataset_type(filename))
     return load_data(params)
