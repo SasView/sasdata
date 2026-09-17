@@ -19,7 +19,8 @@ class Importer:
         errors = []
         if configs is None:
             configs = []
-        for file, config in zip_longest(files, configs, fillvalue=configs[-1]):
+        fill_value = configs[-1] if len(configs) > 0 else None
+        for file, config in zip_longest(files, configs, fillvalue=fill_value):
             file = Path(file)
             if measurements := self._import_from_url(file, config):
                 output.append(measurements)
