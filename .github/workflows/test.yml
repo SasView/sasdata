@@ -34,10 +34,13 @@ jobs:
           '3.13',
           '3.14',
           '3.15-dev',
-          ]
+        ]
 
     env:
       BUILD_WHEEL: ${{ matrix.python-version == '3.12' && 'true' || '' }}
+      EXPERIMENTAL: ${{ endsWith(matrix.python-version, '-dev') && 'true' || '' }}
+
+    continue-on-error: ${{ endsWith(matrix.python-version, '-dev') }}
 
     steps:
 
@@ -56,6 +59,15 @@ jobs:
             **/requirements*.txt
 
       ### Build sasdata sdist and wheel
+      - name: Allow use of scientific-python nightly wheels for experimental builds
+        if: env.EXPERIMENTAL
+        run: |
+          # Enable the scientific-python-nightly wheels as primary source
+          echo "PIP_INDEX_URL=https://pypi.anaconda.org/scientific-python-nightly-wheels/simple" >> $GITHUB_ENV
+          # with a fallback to regular pypi (since most wheels will not be there)
+          echo "PIP_EXTRA_INDEX_URL=https://pypi.org/simple" >> $GITHUB_ENV
+          # and we will need to permit prereleases for the nightly wheels
+          echo "PIP_PRE=true" >> $GITHUB_ENV
 
       - name: Build sasdata
         if: env.BUILD_WHEEL
