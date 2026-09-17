@@ -32,54 +32,54 @@ jobs:
       fail-fast: false
 
     env:
-       BUILD_WHEEL: ${{ matrix.python-version == '3.12' && 'true' || '' }}
+      BUILD_WHEEL: ${{ matrix.python-version == '3.12' && 'true' || '' }}
 
     steps:
 
-    - name: Obtain SasData source from git
-      uses: actions/checkout@v7
-      with:
-        fetch-depth: 0
+      - name: Obtain SasData source from git
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v7
-      with:
-        python-version: ${{ matrix.python-version }}
-        cache: 'pip'
-        cache-dependency-path: |
-          **/test.yml
-          **/requirements*.txt
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+          cache-dependency-path: |
+            **/test.yml
+            **/requirements*.txt
 
-    ### Build sasdata sdist and wheel
+      ### Build sasdata sdist and wheel
 
-    - name: Build sasdata
-      if: env.BUILD_WHEEL
-      run: |
-        python -m pip install build
-        python -m build --sdist --wheel
-        python -m pip install dist/sasdata*whl
+      - name: Build sasdata
+        if: env.BUILD_WHEEL
+        run: |
+          python -m pip install build
+          python -m build --sdist --wheel
+          python -m pip install dist/sasdata*whl
 
-    - name: Publish sdist and wheel package
-      if: env.BUILD_WHEEL
-      uses: actions/upload-artifact@v7
-      with:
-        name: sasdata-${{ matrix.os }}-${{ matrix.python-version }}
-        path: |
-           dist/sasdata*whl
-           dist/sasdata*tar*
-        if-no-files-found: ignore
+      - name: Publish sdist and wheel package
+        if: env.BUILD_WHEEL
+        uses: actions/upload-artifact@v7
+        with:
+          name: sasdata-${{ matrix.os }}-${{ matrix.python-version }}
+          path: |
+            dist/sasdata*whl
+            dist/sasdata*tar*
+          if-no-files-found: ignore
 
-    ### Installation of test-dependencies
+      ### Installation of test-dependencies
 
-    - name: Install Python dependencies (test)
-      run: |
-        python -m pip install -r requirements.txt -r requirements-test.txt
+      - name: Install Python dependencies (test)
+        run: |
+          python -m pip install -r requirements.txt -r requirements-test.txt
 
-    ### Test sasdata
+      ### Test sasdata
 
-    - name: Test with pytest
-      run: |
-        python -m pytest -v -s test
+      - name: Test with pytest
+        run: |
+          python -m pytest -v -s test
 
   publish-to-pypi:
     name: Publish to pypi
