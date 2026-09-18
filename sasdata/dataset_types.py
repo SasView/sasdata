@@ -76,6 +76,7 @@ unit_kinds = {
     "dQx": units.inverse_length,
     "dQy": units.inverse_length,
     "dQz": units.inverse_length,
+    "Phi": units.angle,
     "SpinEchoLength": units.length,
     "Depolarisation": units.inverse_volume,
     "Wavelength": units.length,
