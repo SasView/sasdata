@@ -9,6 +9,7 @@ default_units = {
     "I": [unit.per_centimeter, unit.per_meter],
     "dQ": "Q",
     "dI": "I",
+    "Phi": [unit.degrees]
 }
 
 
