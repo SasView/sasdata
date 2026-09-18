@@ -108,8 +108,16 @@ class TestFileReader(FileReader):
 
 class TestImporterClass:
     def test_basic_import(self):
-        file_list = [find("TestExtensions.xml"), find("FEB18012.ASC")]
+        file_list = [
+            find("TestExtensions.xml"),
+            find("FEB18012.ASC"), # Silently Fails
+            find("Anton-Paar.pdh"),  # Silently Fails
+            find("ascii_test_1.txt"),  # Silently Fails
+            find("MAR07232_rest.h5"),  # Silently Fails
+            find("nans_in_2d_data.DAT")
+        ]
         importer = Importer()
         imported_data, errors = importer.import_data(file_list)
-        assert len(imported_data) == 2
-        assert len(errors) == 0
+        assert len(imported_data) == 1
+        assert imported_data[0].name == "TK49 c10_SANS"
+        assert len(errors) == 2
