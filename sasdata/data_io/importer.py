@@ -31,6 +31,9 @@ class Importer:
         file = Path(url)
         if not file.exists():
             return [], [f'File does not exist: "{file}"']
+        # Deprecation Warning:
+        #     mimetypes.guess_type() is soft deprecated in favor of mimetypes.guess_file_type() as of python 3.13
+        #     Once we move forward from python 3.12, this line should change
         mime_type, encoding = mimetypes.guess_type(url)
         imported = []
         errors = []
