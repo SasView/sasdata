@@ -54,7 +54,7 @@ sesans = DatasetType(
     name="SESANS",
     required=["SpinEchoLength", "Depolarisation", "Wavelength"],
     optional=["Transmission", "Polarisation"],
-    expected_orders=[["z", "G"]])
+    expected_orders=[["SpinEchoLength", "Depolarisation", "Wavelength"]])
 
 dataset_types = {dataset.name for dataset in [one_dim, two_dim, angle_dim, sesans]}
 
