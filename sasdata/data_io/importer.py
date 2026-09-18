@@ -51,4 +51,7 @@ class Importer:
                     imported.extend(file_list)
         except Exception as e:
             errors.append(f'Error accessing "{file}": {e}')
+        for file in imported:
+            if hasattr(file, "errors"):
+                errors.extend(file.errors)
         return imported, errors
