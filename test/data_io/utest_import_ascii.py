@@ -103,7 +103,6 @@ def test_ascii_2d():
 def test_mumag_metadata():
     filenames = [
         "Nanoperm_perpendicular_Honecker_et_al/1_33_1640_22.874115.csv",
-        "Nanoperm_perpendicular_Honecker_et_al/1_33_1640_22.874115.csv",
         "Nanoperm_perpendicular_Honecker_et_al/2_42_1640_23.456895.csv",
         "Nanoperm_perpendicular_Honecker_et_al/3_61_1640_23.748285.csv",
         "Nanoperm_perpendicular_Honecker_et_al/4_103_1640_24.039675.csv",
