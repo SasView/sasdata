@@ -115,6 +115,9 @@ testpaths = [
   "sasdata",
   "test",
 ]
+pythonpath = [
+    "test/test_files"
+]
 norecursedirs = [
   "sasdata",
 ]
