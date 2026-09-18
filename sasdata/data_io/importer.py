@@ -22,16 +22,15 @@ class Importer:
         fill_value = configs[-1] if len(configs) > 0 else None
         for file, config in zip_longest(files, configs, fillvalue=fill_value):
             file = Path(file)
-            if measurements := self._import_from_url(file, config):
-                output.append(measurements)
-            else:
-                errors.append(f'File "{file}" not found.')
+            measurements, errors = self._import_from_url(file, config)
+            output.extend(measurements)
+            errors.extend(errors)
         return output, errors
 
     def _import_from_url(self, url: Path_Type, config: dict[str, Value_Type] | None = None) -> (list[SasMeasurement], list[str]):
         file = Path(url)
         if not file.exists():
-            return [], []
+            return [], [f'File does not exist: "{file}"']
         mime_type, encoding = mimetypes.guess_type(url)
         imported = []
         errors = []
@@ -45,7 +44,8 @@ class Importer:
                     file_list = import_hdf5.load_data(file)
                     imported.extend(file_list)
                 case _:
-                    import_ascii.load_data_default_params(file)
+                    file_list = import_ascii.load_data_default_params(file)
+                    imported.extend(file_list)
         except Exception as e:
             errors.append(f'Error accessing "{file}": {e}')
         return imported, errors
