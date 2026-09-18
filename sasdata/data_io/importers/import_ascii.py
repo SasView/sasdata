@@ -2,6 +2,7 @@ import re
 from dataclasses import dataclass, field, replace
 from enum import Enum
 from os import path
+from pathlib import Path
 
 import numpy as np
 
@@ -72,11 +73,8 @@ class AsciiReaderParams:
         ]
 
 
-# TODO: Should I make this work on a list of filenames as well?
-def guess_params_from_filename(
-    filename: str, dataset_type: DatasetType
-) -> AsciiReaderParams:
-    # Lets just assume we want all of the seaprators on. This seems to work for most files.
+def guess_params_from_filename(filename: str, dataset_type: DatasetType) -> AsciiReaderParams:
+    # Lets just assume we want all separators on. This seems to work for most files.
     separator_dict = initialise_separator_dict(True)
     with open(filename) as file:
         lines = file.readlines()
@@ -219,6 +217,6 @@ def load_data(params: AsciiReaderParams) -> list[SasMeasurement]:
     return loaded_data
 
 
-def load_data_default_params(filename: str) -> list[SasMeasurement]:
+def load_data_default_params(filename: str | Path) -> list[SasMeasurement]:
     params = guess_params_from_filename(filename, guess_dataset_type(filename))
     return load_data(params)
