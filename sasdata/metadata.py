@@ -466,6 +466,12 @@ class Instrument:
         for idx, d in enumerate(self.detector):
             d.as_h5(group.create_group(f"sasdetector{idx:02d}"))
 
+@dataclass(kw_only=True)
+class Magnetic:
+    applied_magnetic_field: Quantity
+    saturation_magnetization: Quantity
+    demagnetizing_field: Quantity
+
 
 @dataclass(kw_only=True)
 class MetaNode:
@@ -560,6 +566,7 @@ class Metadata:
     process: list[Process]
     sample: Sample | None
     instrument: Instrument | None
+    magnetic: Magnetic | None
     raw: MetaNode | None
 
     def summary(self):
