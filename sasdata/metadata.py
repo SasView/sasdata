@@ -468,9 +468,9 @@ class Instrument:
 
 @dataclass(kw_only=True)
 class Magnetic:
-    applied_magnetic_field: Quantity
-    saturation_magnetization: Quantity
-    demagnetizing_field: Quantity
+    applied_magnetic_field: Quantity[float]
+    saturation_magnetization: Quantity[float]
+    demagnetizing_field: Quantity[float]
 
     def single_line_desc(self):
         return f"Applied Magnetic Field: {self.applied_magnetic_field}, Saturation Magnetization: {self.saturation_magnetization}, Demagnetizing Field: {self.demagnetizing_field}"
