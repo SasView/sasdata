@@ -486,7 +486,7 @@ class Magnetic:
         return Magnetic(
             applied_magnetic_field=from_json_quantity(obj["applied_magnetic_field"]),
             saturation_magnetization=from_json_quantity(obj["saturation_magnetization"]),
-            demagnetizing_field=from_json_quantity(obj["demagnetizing_field"])
+            demagnetizing_field=from_json_quantity(obj["demagnetizing_field"]),
         )
 
     def as_h5(self, group: h5py.Group):
@@ -618,6 +618,7 @@ class Metadata:
             process=[Process.from_json(p) for p in obj["process"]],
             sample=Sample.from_json(obj["sample"]) if obj["sample"] else None,
             instrument=Instrument.from_json(obj["instrument"]) if obj["instrument"] else None,
+            magnetic=Magnetic.from_json(obj["magnetic"] if obj["magnetic"] else None),
             raw=MetaNode.from_json(obj["raw"]),
         )
 
