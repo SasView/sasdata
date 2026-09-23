@@ -489,6 +489,14 @@ class Magnetic:
             demagnetizing_field=from_json_quantity(obj["demagnetizing_field"])
         )
 
+    def as_h5(self, group: h5py.Group):
+        if self.applied_magnetic_field:
+            self.applied_magnetic_field.as_h5(group, "applied_magnetic_field")
+        if self.saturation_magnetization:
+            self.saturation_magnetization.as_h5(group, "saturation_magnetization")
+        if self.demagnetizing_field:
+            self.demagnetizing_field.as_h5(group, "demagnetizing_field")
+
 
 @dataclass(kw_only=True)
 class MetaNode:
