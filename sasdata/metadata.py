@@ -13,6 +13,7 @@ import base64
 import json
 import re
 from dataclasses import dataclass, field, fields, is_dataclass
+from textwrap import dedent
 from typing import Any
 
 import h5py
@@ -474,6 +475,11 @@ class Magnetic:
 
     def single_line_desc(self):
         return f"Applied Magnetic Field: {self.applied_magnetic_field}, Saturation Magnetization: {self.saturation_magnetization}, Demagnetizing Field: {self.demagnetizing_field}"
+
+    def summary(self):
+        return dedent(f"""Applied Magnetic Field: {self.applied_magnetic_field}
+        Saturation Magnetization: {self.saturation_magnetization}
+        Demagnetizing Field: {self.demagnetizing_field}""")
 
 
 @dataclass(kw_only=True)
