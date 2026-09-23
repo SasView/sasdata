@@ -47,6 +47,7 @@ def test_tag_listing():
     assert sorted(meta_tags(meta)) == [
         ".definition",
         ".instrument",
+        ".magnetic",
         ".process[0].date",
         ".process[0].description",
         ".process[0].name",
@@ -114,6 +115,7 @@ def test_tag_merge():
             ".run[1]",
             ".sample",
             ".instrument",
+            ".magnetic",
             ".raw",
         ]
     )

@@ -70,6 +70,7 @@ class Averaging(unittest.TestCase):
                           process=[],
                           sample=None,
                           instrument=instrument,
+                          magnetic=None,
                           raw=None)
 
         self.data = SasMeasurement("Test Averaging", data_contents, two_dim, metadata)
