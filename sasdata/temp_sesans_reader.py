@@ -149,6 +149,7 @@ def parse_metadata(lines: list[str]) -> tuple[Metadata, dict[str, str], list[str
             title=parse_title(kvs),
             run=[],
             definition=None,
+            magnetic=None,
             raw=parse_metanode(kvs),
         ),
         kvs,

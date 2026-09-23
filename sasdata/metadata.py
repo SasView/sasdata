@@ -618,7 +618,7 @@ class Metadata:
             process=[Process.from_json(p) for p in obj["process"]],
             sample=Sample.from_json(obj["sample"]) if obj["sample"] else None,
             instrument=Instrument.from_json(obj["instrument"]) if obj["instrument"] else None,
-            magnetic=Magnetic.from_json(obj["magnetic"] if obj["magnetic"] else None),
+            magnetic=Magnetic.from_json(obj["magnetic"]) if obj.get("magnetic") else None,
             raw=MetaNode.from_json(obj["raw"]),
         )
 

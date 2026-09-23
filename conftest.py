@@ -28,6 +28,6 @@ def basic_metadata():
         wavelength_spread=None,
     )
     instrument = Instrument(collimations=[], source=source, detector=[])
-    metadata = Metadata(title=None, run=[], definition=None, process=[], sample=None, instrument=instrument, raw=None)
+    metadata = Metadata(title=None, run=[], definition=None, process=[], sample=None, instrument=instrument, magnetic=None, raw=None)
 
     return metadata
