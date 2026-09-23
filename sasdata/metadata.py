@@ -472,6 +472,9 @@ class Magnetic:
     saturation_magnetization: Quantity
     demagnetizing_field: Quantity
 
+    def single_line_desc(self):
+        return f"Applied Magnetic Field: {self.applied_magnetic_field}, Saturation Magnetization: {self.saturation_magnetization}, Demagnetizing Field: {self.demagnetizing_field}"
+
 
 @dataclass(kw_only=True)
 class MetaNode:
