@@ -206,6 +206,7 @@ def load_data(params: AsciiReaderParams) -> list[SasMeasurement]:
             sample=None,
             instrument=None,
             process=None,
+            magnetic=None,
             raw=raw_metadata,
         )
         quantities = load_quantities(params, filename, metadata)

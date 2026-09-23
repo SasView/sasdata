@@ -315,6 +315,7 @@ def load_data(filename: str) -> dict[str, SasMeasurement]:
             process=all_parse(entry, "SASprocess", version, parse_process),
             sample=opt_parse(entry, "SASsample", version, parse_sample),
             definition=opt_parse(entry, "SASdefinition", version, parse_string),
+            magnetic=None, # NOTE: Magnetic data isn't part of the XML format.
             raw=load_raw(root, version),
         )
 

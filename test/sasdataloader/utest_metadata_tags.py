@@ -19,6 +19,7 @@ def test_tag_access():
         sample=None,
         instrument=None,
         raw=None,
+        magnetic=None
     )
 
     assert access_meta(meta, ".title") == "Example"
@@ -39,12 +40,14 @@ def test_tag_listing():
         process=processes,
         sample=None,
         instrument=None,
+        magnetic=None,
         raw=None,
     )
 
     assert sorted(meta_tags(meta)) == [
         ".definition",
         ".instrument",
+        ".magnetic",
         ".process[0].date",
         ".process[0].description",
         ".process[0].name",
@@ -76,6 +79,7 @@ def test_tag_merge():
         process=processes,
         sample=None,
         instrument=None,
+        magnetic=None,
         raw=None,
     )
 
@@ -95,6 +99,7 @@ def test_tag_merge():
         process=processes2,
         sample=None,
         instrument=None,
+        magnetic=None,
         raw=None,
     )
 
@@ -110,6 +115,7 @@ def test_tag_merge():
             ".run[1]",
             ".sample",
             ".instrument",
+            ".magnetic",
             ".raw",
         ]
     )
