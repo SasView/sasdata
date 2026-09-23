@@ -481,6 +481,14 @@ class Magnetic:
         Saturation Magnetization: {self.saturation_magnetization}
         Demagnetizing Field: {self.demagnetizing_field}""")
 
+    @staticmethod
+    def from_json(obj):
+        return Magnetic(
+            applied_magnetic_field=from_json_quantity(obj["applied_magnetic_field"]),
+            saturation_magnetization=from_json_quantity(obj["saturation_magnetization"]),
+            demagnetizing_field=from_json_quantity(obj["demagnetizing_field"])
+        )
+
 
 @dataclass(kw_only=True)
 class MetaNode:
