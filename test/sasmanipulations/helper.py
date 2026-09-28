@@ -131,6 +131,7 @@ class MatrixToSasData:
                                 process=[],
                                 sample=None,
                                 instrument=instrument,
+                                magnetic=None,
                                 raw=None)
 
         self.data = SasData(
