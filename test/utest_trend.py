@@ -10,6 +10,7 @@ from sasdata.data_io.importers.import_hdf5 import load_data as hdf_load_data
 from sasdata.data_io.importers.import_xml import load_data as xml_load_data
 from sasdata.quantities.units import per_angstrom, per_nanometer
 from sasdata.trend import Trend
+from test import local_data_finder, local_mumag_finder
 
 mumag_test_directories = [
     "FeNiB_perpendicular_Bersweiler_et_al",
@@ -17,16 +18,16 @@ mumag_test_directories = [
     "NdFeB_parallel_Bick_et_al",
 ]
 
-xml_file = path.join(path.dirname(__file__), "trend_test_data", "xml_test_files", "cansas1d_notitle.xml")
+xml_file = local_data_finder("cansas1d_notitle.xml")
 
-hdf_file = path.join(path.dirname(__file__), "trend_test_data", "hdf_test_files", "nxcansas_1Dand2D_multisasentry.h5")
+hdf_file = local_data_finder("nxcansas_1Dand2D_multisasentry.h5")
 
 
 custom_test_directory = "custom_test"
 
 
 def get_files_to_load(directory_name: str) -> list[str]:
-    load_from = path.join(path.dirname(__file__), "trend_test_data", directory_name)
+    load_from = local_mumag_finder(directory_name)
     base_filenames_to_load = listdir(load_from)
     files_to_load = [path.join(load_from, basename) for basename in base_filenames_to_load]
     return files_to_load
@@ -139,7 +140,8 @@ def test_trend_q_axis_match():
     and check if the Q axes match.
     But the file contents are skipped, so 'Q' and 'I' are zeroes!
     """
-    files_to_load = get_files_to_load(custom_test_directory)
+    file_list = ['1.txt', '2.txt', '3.txt']
+    files_to_load = [local_data_finder(file_name) for file_name in file_list]
     params = AsciiReaderParams(filenames=files_to_load, columns=[("Q", per_angstrom), ("I", per_angstrom)])
     params.metadata.master_metadata["magnetic"] = AsciiMetadataCategory(
         values={

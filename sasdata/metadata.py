@@ -13,6 +13,7 @@ import base64
 import json
 import re
 from dataclasses import dataclass, field, fields, is_dataclass
+from textwrap import dedent
 from typing import Any
 
 import h5py
@@ -466,6 +467,36 @@ class Instrument:
         for idx, d in enumerate(self.detector):
             d.as_h5(group.create_group(f"sasdetector{idx:02d}"))
 
+@dataclass(kw_only=True)
+class Magnetic:
+    applied_magnetic_field: Quantity[float] | None
+    saturation_magnetization: Quantity[float] | None
+    demagnetizing_field: Quantity[float] | None
+
+    def single_line_desc(self):
+        return f"Applied Magnetic Field: {self.applied_magnetic_field}, Saturation Magnetization: {self.saturation_magnetization}, Demagnetizing Field: {self.demagnetizing_field}"
+
+    def summary(self):
+        return dedent(f"""Applied Magnetic Field: {self.applied_magnetic_field}
+        Saturation Magnetization: {self.saturation_magnetization}
+        Demagnetizing Field: {self.demagnetizing_field}""")
+
+    @staticmethod
+    def from_json(obj):
+        return Magnetic(
+            applied_magnetic_field=from_json_quantity(obj["applied_magnetic_field"]),
+            saturation_magnetization=from_json_quantity(obj["saturation_magnetization"]),
+            demagnetizing_field=from_json_quantity(obj["demagnetizing_field"]),
+        )
+
+    def as_h5(self, group: h5py.Group):
+        if self.applied_magnetic_field:
+            self.applied_magnetic_field.as_h5(group, "applied_magnetic_field")
+        if self.saturation_magnetization:
+            self.saturation_magnetization.as_h5(group, "saturation_magnetization")
+        if self.demagnetizing_field:
+            self.demagnetizing_field.as_h5(group, "demagnetizing_field")
+
 
 @dataclass(kw_only=True)
 class MetaNode:
@@ -560,6 +591,7 @@ class Metadata:
     process: list[Process]
     sample: Sample | None
     instrument: Instrument | None
+    magnetic: Magnetic | None
     raw: MetaNode | None
 
     def summary(self):
@@ -586,6 +618,7 @@ class Metadata:
             process=[Process.from_json(p) for p in obj["process"]],
             sample=Sample.from_json(obj["sample"]) if obj["sample"] else None,
             instrument=Instrument.from_json(obj["instrument"]) if obj["instrument"] else None,
+            magnetic=Magnetic.from_json(obj["magnetic"]) if obj.get("magnetic") else None,
             raw=MetaNode.from_json(obj["raw"]),
         )
 

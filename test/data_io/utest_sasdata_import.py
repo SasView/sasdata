@@ -26,7 +26,7 @@ from sasdata.dataset_types import one_dim
 from sasdata.guess import guess_columns
 from sasdata.quantities.quantity import Quantity
 from sasdata.quantities.units import per_angstrom
-from test import local_data_finder, local_json_finder, local_reference_finder, local_sesans_finder
+from test import local_data_finder, local_json_finder, local_mumag_finder, local_reference_finder, local_sesans_finder
 
 
 @pytest.mark.sasdata
@@ -129,14 +129,14 @@ test_cases = [
     BulkAsciiTestCase(
         reader_params=AsciiReaderParams(
             filenames=[
-                local_data_finder(filename)
+                local_mumag_finder(filename)
                 for filename in [
-                    "1_33_1640_22.874115.csv",
-                    "2_42_1640_23.456895.csv",
-                    "3_61_1640_23.748285.csv",
-                    "4_103_1640_24.039675.csv",
-                    "5_312_1640_24.331065.csv",
-                    "6_1270_1640_24.331065.csv",
+                    "Nanoperm_perpendicular_Honecker_et_al/1_33_1640_22.874115.csv",
+                    "Nanoperm_perpendicular_Honecker_et_al/2_42_1640_23.456895.csv",
+                    "Nanoperm_perpendicular_Honecker_et_al/3_61_1640_23.748285.csv",
+                    "Nanoperm_perpendicular_Honecker_et_al/4_103_1640_24.039675.csv",
+                    "Nanoperm_perpendicular_Honecker_et_al/5_312_1640_24.331065.csv",
+                    "Nanoperm_perpendicular_Honecker_et_al/6_1270_1640_24.331065.csv",
                 ]
             ],
             columns=[(column, per_angstrom) for column in guess_columns(3, one_dim)],

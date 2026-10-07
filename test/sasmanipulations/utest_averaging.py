@@ -1,4 +1,3 @@
-import os
 import unittest
 
 import numpy as np
@@ -22,10 +21,11 @@ from sasdata.metadata import Detector, Instrument, Metadata, Source, Vec3
 from sasdata.quantities.constants import Pi, TwoPi
 from sasdata.quantities.quantity import Quantity
 from sasdata.quantities.units import angstroms, millimeters, none, per_angstrom, per_centimeter
+from test import local_data_finder
 
 
 def find(filename):
-    return os.path.join(os.path.dirname(__file__), 'data', filename)
+    return local_data_finder(filename)
 
 
 class Averaging(unittest.TestCase):
@@ -70,6 +70,7 @@ class Averaging(unittest.TestCase):
                           process=[],
                           sample=None,
                           instrument=instrument,
+                          magnetic=None,
                           raw=None)
 
         self.data = SasMeasurement("Test Averaging", data_contents, two_dim, metadata)
