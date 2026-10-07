@@ -17,6 +17,7 @@ from sasdata.dataloader.loader import Loader
 from sasdata.dataloader.readers.cansas_constants import CansasConstants
 from sasdata.dataloader.readers.cansas_reader import Reader
 from sasdata.dataloader.readers.xml_reader import XMLreader
+from test import local_data_finder
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +28,7 @@ CANSAS_NS = CansasConstants.CANSAS_NS
 
 
 def find(filename):
-    return os.path.join(os.path.dirname(__file__), 'data', filename)
+    return local_data_finder(filename)
 
 
 class cansas_reader_xml(unittest.TestCase):
