@@ -8,6 +8,7 @@ import unittest
 
 import numpy as np
 
+from sasdata.data_io.importer import Importer
 from sasdata.dataloader.data_info import Data1D, DataInfo, plottable_1D
 from sasdata.dataloader.filereader import FileReader
 from sasdata.dataloader.loader import Loader
@@ -103,3 +104,20 @@ class TestFileReader(FileReader):
         self.current_datainfo = DataInfo()
         self.current_datainfo.meta_data["blah"] = self.nextline()
         self.send_to_output()
+
+
+class TestImporterClass:
+    def test_basic_import(self):
+        file_list = [
+            find("TestExtensions.xml"),
+            find("FEB18012.ASC"), # Silently Fails
+            find("Anton-Paar.pdh"),  # Silently Fails
+            find("ascii_test_1.txt"),  # Silently Fails
+            find("MAR07232_rest.h5"),  # Silently Fails
+            find("nans_in_2d_data.DAT")
+        ]
+        importer = Importer()
+        imported_data, errors = importer.import_data(file_list)
+        assert len(imported_data) == 1
+        assert imported_data[0].name == "TK49 c10_SANS"
+        assert len(errors) == 2

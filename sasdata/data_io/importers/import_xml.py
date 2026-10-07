@@ -1,5 +1,6 @@
 import logging
 from collections.abc import Callable
+from pathlib import Path
 
 import numpy as np
 from lxml import etree
@@ -282,7 +283,7 @@ def load_raw(node: etree._Element, version: str) -> MetaNode:
     return MetaNode(name=etree.QName(node).localname, attrs=attrib, contents=contents)
 
 
-def load_data(filename: str) -> dict[str, SasMeasurement]:
+def load_data(filename: str | Path) -> dict[str, SasMeasurement]:
     """Load scattering data from an XML file"""
     loaded_data: dict[str, SasMeasurement] = {}
     tree = etree.parse(filename)

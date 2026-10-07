@@ -5,6 +5,7 @@ Import SESANS data in SasData format
 import re
 from collections import defaultdict
 from itertools import groupby
+from pathlib import Path
 
 import numpy as np
 
@@ -205,7 +206,7 @@ def parse_sesans(lines: list[str]) -> SasMeasurement:
     )
 
 
-def load_data(filename) -> SasMeasurement:
+def load_data(filename: str | Path) -> SasMeasurement:
     with open(filename) as infile:
         lines = infile.readlines()
     return parse_sesans(lines)
