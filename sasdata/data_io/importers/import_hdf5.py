@@ -401,6 +401,7 @@ def parse_metadata(node : HDF5Group) -> Metadata:
                     title=title,
                     run=run,
                     definition=definition,
+                    magnetic=None, # NOTE: Magnetic is not in the CANSAS format so this is left to None.
                     raw=raw)
 
 
