@@ -622,6 +622,19 @@ class Metadata:
             raw=MetaNode.from_json(obj["raw"]),
         )
 
+    @staticmethod
+    def initialise_empty():
+        return Metadata(
+            title=None,
+            run=[],
+            definition=None,
+            process=[],
+            sample=None,
+            instrument=None,
+            magnetic=None,
+            raw=None
+        )
+
     def serialise_json(self):
         serialized = {
             "instrument": None,
