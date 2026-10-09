@@ -89,7 +89,7 @@ class SasMeasurement(SasData):
             self.metadata = metadata
         else:
             self.metadata = Metadata.initialise_empty()
-            
+
 
         # TODO: Could this be optional?
         self.dataset_type: DatasetType = dataset_type
