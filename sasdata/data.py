@@ -23,14 +23,17 @@ class SasData:
         abscissae: Abscissa,
         mask: Quantity,
         dependents: list["SasData"],
-        metadata: Metadata,
+        metadata: Metadata | None = None,
     ):
         self.name = name
         self._ordinate = ordinate
         self._abscissae = abscissae
         self._mask = mask
         self.dependents = dependents
-        self.metadata = metadata
+        if self.metadata:
+            self.metadata = metadata
+        else:
+            self.metadata = Metadata.initialise_empty()
 
     @property
     def ordinate(self) -> Quantity:
@@ -72,7 +75,7 @@ class SasMeasurement(SasData):
         name: str,
         data_contents: dict[str, Quantity],
         dataset_type: DatasetType,
-        metadata: Metadata,
+        metadata: Metadata | None = None,
         verbose: bool = False,
     ):
         self.name = name
@@ -82,7 +85,11 @@ class SasMeasurement(SasData):
         self._data_contents = data_contents
         self._verbose = verbose
 
-        self.metadata = metadata
+        if self.metadata:
+            self.metadata = metadata
+        else:
+            self.metadata = Metadata.initialise_empty()
+            
 
         # TODO: Could this be optional?
         self.dataset_type: DatasetType = dataset_type
