@@ -30,7 +30,7 @@ class SasData:
         self._abscissae = abscissae
         self._mask = mask
         self.dependents = dependents
-        if self.metadata:
+        if metadata:
             self.metadata = metadata
         else:
             self.metadata = Metadata.initialise_empty()
@@ -85,7 +85,7 @@ class SasMeasurement(SasData):
         self._data_contents = data_contents
         self._verbose = verbose
 
-        if self.metadata:
+        if metadata:
             self.metadata = metadata
         else:
             self.metadata = Metadata.initialise_empty()
