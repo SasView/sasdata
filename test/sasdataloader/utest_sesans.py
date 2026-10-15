@@ -2,16 +2,16 @@
     Unit tests for the SESANS .ses reader
 """
 
-import os.path
 import unittest
 
 from sasdata.data_util.loader_exceptions import FileContentsException
 from sasdata.dataloader.loader import Loader
 from sasdata.dataloader.readers.sesans_reader import Reader
+from test import local_sesans_finder
 
 
 def find(filename):
-    return os.path.join(os.path.dirname(__file__), 'sesans_data', filename)
+    return local_sesans_finder(filename)
 
 
 class sesans_reader(unittest.TestCase):

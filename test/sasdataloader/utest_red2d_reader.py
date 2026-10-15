@@ -1,17 +1,17 @@
 """
     Unit tests for the red2d (3-7-column) reader
 """
-import os.path
 import unittest
 import warnings
 
 from sasdata.dataloader.loader import Loader
+from test import local_data_finder
 
 warnings.simplefilter("ignore")
 
 
 def find(filename):
-    return os.path.join(os.path.dirname(__file__), 'data', filename)
+    return local_data_finder(filename)
 
 
 BASE_POINTS = 36864

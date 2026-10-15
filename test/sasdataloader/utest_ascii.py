@@ -9,12 +9,13 @@ import warnings
 
 from sasdata.dataloader.data_info import Data2D
 from sasdata.dataloader.loader import Loader
+from test import local_data_finder
 
 warnings.simplefilter("ignore")
 
 
 def find(filename):
-    return os.path.join(os.path.dirname(__file__), 'data', filename)
+    return local_data_finder(filename)
 
 
 class ABSReaderTests(unittest.TestCase):

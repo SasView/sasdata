@@ -1,15 +1,14 @@
-import os
-import os.path
 import unittest
 from xml.etree import ElementTree as ET
 
 import numpy as np
 
 from sasdata.file_converter.bsl_loader import BSLLoader
+from test import local_data_finder
 
 
 def find(filename):
-    return os.path.join(os.path.dirname(__file__), 'data', filename)
+    return local_data_finder(filename)
 
 
 class bsl_test(unittest.TestCase):

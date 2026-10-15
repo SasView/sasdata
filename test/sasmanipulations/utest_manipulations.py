@@ -3,7 +3,6 @@
 """
 
 import math
-import os.path
 import unittest
 
 import numpy as np
@@ -11,12 +10,13 @@ from numpy.testing import assert_allclose
 
 from sasdata.dataloader.data_info import Data1D, Data2D
 from sasdata.dataloader.loader import Loader
+from test import local_data_finder
 
 RTOL = 1e-12
 
 
 def find(filename):
-    return os.path.join(os.path.dirname(__file__), 'data', filename)
+    return local_data_finder(filename)
 
 
 class DataInfoTests(unittest.TestCase):

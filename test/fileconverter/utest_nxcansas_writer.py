@@ -5,12 +5,13 @@ import warnings
 
 from sasdata.dataloader.loader import Loader
 from sasdata.file_converter.nxcansas_writer import NXcanSASWriter
+from test import local_data_finder
 
 warnings.simplefilter("ignore")
 
 
 def find(filename):
-    return os.path.join(os.path.dirname(__file__), 'data', filename)
+    return local_data_finder(filename)
 
 
 class nxcansas_writer(unittest.TestCase):
