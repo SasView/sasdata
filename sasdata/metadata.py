@@ -595,6 +595,35 @@ class Metadata:
             raw=MetaNode.from_json(obj["raw"]),
         )
 
+    @staticmethod
+    def initialise_empty():
+        return Metadata(
+            title=None,
+            run=[],
+            definition=None,
+            process=[],
+            sample=None,
+            instrument=None,
+            magnetic=None,
+            raw=None
+        )
+
+    def serialise_json(self):
+        serialized = {
+            "instrument": None,
+            "process": [p.serialise_json() for p in self.process],
+            "sample": None,
+            "title": self.title,
+            "run": self.run,
+            "definition": self.definition
+        }
+        if self.sample is not None:
+            serialized["sample"] = self.sample.serialise_json()
+        if self.instrument is not None:
+            serialized["instrument"] = self.instrument.serialise_json()
+
+        return serialized
+
     @property
     def id_header(self):
         """Generate a header for used in the unique_id for datasets"""
