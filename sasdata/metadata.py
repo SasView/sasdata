@@ -9,12 +9,13 @@ Any useful metadata which cannot be included in these classes represent a bug in
 
 """
 
+import abc
 import base64
 import json
 import re
 from dataclasses import dataclass, field, fields, is_dataclass
 from textwrap import dedent
-from typing import Any
+from typing import Any, Self
 
 import h5py
 import numpy as np
@@ -32,19 +33,41 @@ def from_json_quantity(obj: dict) -> Quantity | None:
     return Quantity(obj["value"], parse_unit(obj["units"]))
 
 
+class MetadataSerial(abc.ABC):
+    """Abstract class for metadata which can be serialisaed and deserialised"""
+
+    @classmethod
+    @abc.abstractmethod
+    def from_json(cls, obj: dict) -> Self | None:
+        """Load this metadata from a JSON dict"""
+        return None
+
+    @abc.abstractmethod
+    def as_h5(self, f: h5py.Group):
+        """Export data onto an HDF5 group"""
+        pass
+
+
+class MetadataSummarisable(MetadataSerial):
+
+    @abc.abstractmethod
+    def summary(self) -> str:
+        return ""
+
+
 @dataclass(kw_only=True)
-class Vec3:
+class Vec3(MetadataSerial):
     """A three-vector of measured quantities"""
 
     x: Quantity[float] | None
     y: Quantity[float] | None
     z: Quantity[float] | None
 
-    @staticmethod
-    def from_json(obj: dict) -> Quantity | None:
+    @classmethod
+    def from_json(cls, obj: dict) -> Self | None:
         if obj is None:
             return None
-        return Vec3(
+        return cls(
             x=from_json_quantity(obj["x"]),
             y=from_json_quantity(obj["y"]),
             z=from_json_quantity(obj["z"]),
@@ -61,7 +84,7 @@ class Vec3:
 
 
 @dataclass(kw_only=True)
-class Rot3:
+class Rot3(MetadataSerial):
     """A measured rotation in 3-space"""
 
     roll: Quantity[float] | None
@@ -95,11 +118,11 @@ class Rot3:
             data["yaw"] = self.yaw.serialise_json()
         return data
 
-    @staticmethod
-    def from_json(obj: dict) -> Quantity | None:
+    @classmethod
+    def from_json(cls, obj: dict) -> Self | None:
         if obj is None:
             return None
-        return Rot3(
+        return cls(
             roll=from_json_quantity(obj["roll"]),
             pitch=from_json_quantity(obj["pitch"]),
             yaw=from_json_quantity(obj["yaw"]),
@@ -116,7 +139,7 @@ class Rot3:
 
 
 @dataclass(kw_only=True)
-class Detector:
+class Detector(MetadataSummarisable):
     """
     Detector information
     """
@@ -172,7 +195,7 @@ class Detector:
 
 
 @dataclass(kw_only=True)
-class Aperture:
+class Aperture(MetadataSummarisable):
     distance: Quantity[float] | None
     size: Vec3 | None
     size_name: str | None
@@ -213,7 +236,7 @@ class Aperture:
 
 
 @dataclass(kw_only=True)
-class Collimation:
+class Collimation(MetadataSummarisable):
     """
     Class to hold collimation information
     """
@@ -240,7 +263,7 @@ class Collimation:
 
 
 @dataclass(kw_only=True)
-class BeamSize:
+class BeamSize(MetadataSerial):
     name: str | None
     size: Vec3 | None
 
@@ -257,7 +280,7 @@ class BeamSize:
 
 
 @dataclass(kw_only=True)
-class Source:
+class Source(MetadataSummarisable):
     radiation: str | None
     beam_shape: str | None
     beam_size: BeamSize | None
@@ -309,7 +332,7 @@ class Source:
 
 
 @dataclass(kw_only=True)
-class Sample:
+class Sample(MetadataSummarisable):
     """
     Class to hold the sample description
     """
@@ -368,7 +391,7 @@ class Sample:
 
 
 @dataclass(kw_only=True)
-class Process:
+class Process(MetadataSummarisable):
     """
     Class that holds information about the processes
     performed on the data.
@@ -438,7 +461,7 @@ class Process:
 
 
 @dataclass
-class Instrument:
+class Instrument(MetadataSummarisable):
     collimations: list[Collimation]
     source: Source | None
     detector: list[Detector]
@@ -468,7 +491,7 @@ class Instrument:
             d.as_h5(group.create_group(f"sasdetector{idx:02d}"))
 
 @dataclass(kw_only=True)
-class Magnetic:
+class Magnetic(MetadataSummarisable):
     applied_magnetic_field: Quantity[float] | None
     saturation_magnetization: Quantity[float] | None
     demagnetizing_field: Quantity[float] | None
@@ -584,7 +607,7 @@ class MetaNode:
 
 
 @dataclass(kw_only=True, eq=True)
-class Metadata:
+class Metadata(MetadataSummarisable):
     title: str | None
     run: list[str]
     definition: str | None
