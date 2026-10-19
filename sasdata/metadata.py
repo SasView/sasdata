@@ -54,6 +54,42 @@ class MetadataSummarisable(MetadataSerial):
     def summary(self) -> str:
         return ""
 
+    @staticmethod
+    def summarize_join(x, between : str="") -> str:
+        match x:
+            case None:
+                return ""
+            case MetadataSummarisable():
+                return x.summary()
+            case list():
+                return between.join([MetadataSummarisable.summarize_join(i, between) for i in x])
+            case (list(), str()):
+                return MetadataSummarisable.summarize_join(x[0], x[1])
+            case _:
+                return str(x)
+
+
+    def _pretty_field(self, x: str) -> str:
+        match x:
+            case "sample_id":
+                return "ID"
+            case _:
+                return x.capitalize().replace("_", " ")
+
+    def introspect_summary(self, name:str | None, indent:int=0, adjust=0, skip=[]) -> str:
+        if name is None:
+            result = ""
+        else:
+            result = " "*indent + name + ":\n"
+        spacing = max(map(len, self.__dataclass_fields__)) + 2
+
+        for key in self.__dataclass_fields__:
+            if key in skip: continue
+            pretty = self._pretty_field(key)
+            result += " "*(indent+3) + pretty + ":" + " " * (spacing - len(pretty) + adjust) + str(getattr(self, key)) + "\n"
+        return result
+
+
 
 @dataclass(kw_only=True)
 class Vec3(MetadataSerial):
@@ -153,16 +189,7 @@ class Detector(MetadataSummarisable):
     slit_length: Quantity[float] | None
 
     def summary(self):
-        return (
-            f"Detector:\n"
-            f"   Name:         {self.name}\n"
-            f"   Distance:     {self.distance}\n"
-            f"   Offset:       {self.offset}\n"
-            f"   Orientation:  {self.orientation}\n"
-            f"   Beam center:  {self.beam_center}\n"
-            f"   Pixel size:   {self.pixel_size}\n"
-            f"   Slit length:  {self.slit_length}\n"
-        )
+        return self.introspect_summary("Detector")
 
     @staticmethod
     def from_json(obj):
@@ -245,7 +272,7 @@ class Collimation(MetadataSummarisable):
     apertures: list[Aperture]
 
     def summary(self):
-        return f"Collimation:\n   Length: {self.length}\n" + "".join([a.summary() for a in self.apertures])
+        return f"Collimation:\n   Length: {self.length}\n" + self.summarize_join(self.apertures)
 
     @staticmethod
     def from_json(obj):
@@ -339,23 +366,15 @@ class Sample(MetadataSummarisable):
 
     name: str | None
     sample_id: str | None
-    thickness: Quantity[float] | None
     transmission: float | None
+    thickness: Quantity[float] | None
     temperature: Quantity[float] | None
     position: Vec3 | None
     orientation: Rot3 | None
     details: list[str]
 
     def summary(self) -> str:
-        return (
-            f"Sample:\n"
-            f"   ID:           {self.sample_id}\n"
-            f"   Transmission: {self.transmission}\n"
-            f"   Thickness:    {self.thickness}\n"
-            f"   Temperature:  {self.temperature}\n"
-            f"   Position:     {self.position}\n"
-            f"   Orientation:  {self.orientation}\n"
-        )
+        return self.introspect_summary("Sample", adjust=-1, skip=["name", "details"])
 
     @staticmethod
     def from_json(obj):
@@ -467,11 +486,7 @@ class Instrument(MetadataSummarisable):
     detector: list[Detector]
 
     def summary(self):
-        return (
-            "\n".join([c.summary() for c in self.collimations])
-            + "".join([d.summary() for d in self.detector])
-            + (self.source.summary() if self.source is not None else "")
-        )
+        return self.summarize_join([(self.collimations, "\n") , self.detector , self.source])
 
     @staticmethod
     def from_json(obj):
@@ -627,9 +642,7 @@ class Metadata(MetadataSummarisable):
             + "=" * len(run_string)
             + "\n\n"
             + f"Definition: {self.title}\n"
-            + "".join([p.summary() for p in self.process])
-            + (self.sample.summary() if self.sample else "")
-            + (self.instrument.summary() if self.instrument else "")
+            + self.summarize_join([self.process, self.sample, self.instrument])
         )
 
     @staticmethod
