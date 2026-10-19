@@ -14,7 +14,7 @@ import base64
 import json
 import re
 from dataclasses import dataclass, field, fields, is_dataclass
-from typing import Any, Self
+from typing import TYPE_CHECKING, Any, Self
 
 import h5py
 import numpy as np
@@ -24,6 +24,11 @@ from sasdata.quantities.quantity import Quantity
 from sasdata.quantities.unit_parser import parse_unit
 from sasdata.quantities.units import NamedUnit
 
+if TYPE_CHECKING:
+    from _typeshed import DataclassInstance
+else:
+    DataclassInstance = object
+
 
 def from_json_quantity(obj: dict) -> Quantity | None:
     if obj is None:
@@ -32,8 +37,8 @@ def from_json_quantity(obj: dict) -> Quantity | None:
     return Quantity(obj["value"], parse_unit(obj["units"]))
 
 
-class MetadataSerial(abc.ABC):
-    """Abstract class for metadata which can be serialisaed and deserialised"""
+class MetadataSerial(abc.ABC, DataclassInstance):
+    """Abstract class for metadata which can be serialised and deserialised"""
 
     @classmethod
     @abc.abstractmethod
@@ -48,7 +53,6 @@ class MetadataSerial(abc.ABC):
 
 
 class MetadataSummarisable(MetadataSerial):
-
     @abc.abstractmethod
     def summary(self) -> str:
         return ""
@@ -840,7 +844,7 @@ class MetadataEncoder(json.JSONEncoder):
                 return super().default(obj)
 
 
-def access_meta(obj: dataclass, key: str) -> Any | None:
+def access_meta(obj: DataclassInstance, key: str) -> Any | None:
     """Use a string accessor to locate a key from within the data
     object.
 
@@ -896,7 +900,7 @@ def access_meta(obj: dataclass, key: str) -> Any | None:
     return result
 
 
-def meta_tags(obj: dataclass) -> list[str]:
+def meta_tags(obj: DataclassInstance) -> list[str]:
     """Find all leaf accessors from a data object.
 
     The function treats the passed in object as a tree.  Lists, dicts,
@@ -929,7 +933,7 @@ def meta_tags(obj: dataclass) -> list[str]:
     retrieved with the `access_meta` function.
 
     """
-    result = []
+    result : list[str] = []
     items = [("", obj)]
     while items:
         path, item = items.pop()
@@ -956,7 +960,7 @@ class TagCollection:
     variable: set[str] = field(default_factory=set)
 
 
-def collect_tags(objs: list[dataclass]) -> TagCollection:
+def collect_tags(objs: list[DataclassInstance]) -> TagCollection:
     """Identify uniform and varying data within a groups of data objects
 
     The resulting TagCollection contains every accessor string that is
@@ -972,7 +976,7 @@ def collect_tags(objs: list[dataclass]) -> TagCollection:
 
     """
     if not objs:
-        return ([], [])
+        return TagCollection()
     first = objs.pop()
     terms = set(meta_tags(first))
     for obj in objs:
