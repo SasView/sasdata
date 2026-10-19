@@ -8,8 +8,8 @@ Metadata:
 
 Definition: None
 Process:
-    Name: spol
-    Date: 04-Sep-2007 18:35:02
+    Name:        spol
+    Date:        04-Sep-2007 18:35:02
     Description: None
     Terms:
         radialstep: 10.0 mm
@@ -23,8 +23,8 @@ Process:
 				H2O Buffer
         V... 13552 3 1.00E+00 H2O5m
 Process:
-    Name: NCNR-IGOR
-    Date: 03-SEP-2006 11:42:47
+    Name:        NCNR-IGOR
+    Date:        03-SEP-2006 11:42:47
     Description: 
     Terms:
         average_type: Circular
@@ -40,35 +40,35 @@ Process:
     Notes:
         No Information
 Sample:
-   ID:           SI600-new-long
-   Transmission: 0.327
-   Thickness:    1.03 mm
-   Temperature:  0.0 K
-   Position:     Vec3(x=10.0 mm, y=0.0 mm, z=None)
-   Orientation:  Rot3(roll=22.5 deg, pitch=0.02 deg, yaw=None)
+    ID:           SI600-new-long
+    Transmission: 0.327
+    Thickness:    1.03 mm
+    Temperature:  0.0 K
+    Position:     Vec3(x=10.0 mm, y=0.0 mm, z=None)
+    Orientation:  Rot3(roll=22.5 deg, pitch=0.02 deg, yaw=None)
 Collimation:
-   Length: 123.0 mm
-   Aperture:
-     Name: source
-     Aperture size: Vec3(x=50.0 mm, y=None, z=None)
-     Aperture distance: 11.0 m
-   Aperture:
-     Name: sample
-     Aperture size: Vec3(x=1.0 mm, y=None, z=None)
-     Aperture distance: None
+    Length: 123.0 mm
+    Aperture:
+        Name:      source
+        Size:      Vec3(x=50.0 mm, y=None, z=None)
+        Distance:  11.0 m
+    Aperture:
+        Name:      sample
+        Size:      Vec3(x=1.0 mm, y=None, z=None)
+        Distance:  None
 Detector:
-   Name:         fictional hybrid
-   Distance:     4.15 m
-   Offset:       Vec3(x=1.0 mm, y=2.0 mm, z=None)
-   Orientation:  Rot3(roll=1.0 deg, pitch=0.0 deg, yaw=0.0 deg)
-   Beam center:  Vec3(x=322.64 mm, y=327.68 mm, z=None)
-   Pixel size:   Vec3(x=5.0 mm, y=5.0 mm, z=None)
-   Slit length:  None
+    Name:        fictional hybrid
+    Distance:    4.15 m
+    Offset:      Vec3(x=1.0 mm, y=2.0 mm, z=None)
+    Orientation: Rot3(roll=1.0 deg, pitch=0.0 deg, yaw=0.0 deg)
+    Beam center: Vec3(x=322.64 mm, y=327.68 mm, z=None)
+    Pixel size:  Vec3(x=5.0 mm, y=5.0 mm, z=None)
+    Slit length: None
 Source:
     Radiation:         neutron
     Shape:             disc
     Wavelength:        6.0 Å
     Min. Wavelength:   0.22 nm
     Max. Wavelength:   1.0 nm
-    Wavelength Spread: 14.3 %
-    Beam Size:         BeamSize(name='bm', size=Vec3(x=12.0 mm, y=13.0 mm, z=None))
+    Wavelength spread: 14.3 %
+    Beam size:         BeamSize(name='bm', size=Vec3(x=12.0 mm, y=13.0 mm, z=None))

@@ -14,7 +14,6 @@ import base64
 import json
 import re
 from dataclasses import dataclass, field, fields, is_dataclass
-from textwrap import dedent
 from typing import Any, Self
 
 import h5py
@@ -55,40 +54,54 @@ class MetadataSummarisable(MetadataSerial):
         return ""
 
     @staticmethod
-    def summarize_join(x, between : str="") -> str:
+    def summarize_join(x, between: str = "") -> str:
         match x:
             case None:
                 return ""
             case MetadataSummarisable():
                 return x.summary()
             case list():
-                return between.join([MetadataSummarisable.summarize_join(i, between) for i in x])
+                return between.join(
+                    [MetadataSummarisable.summarize_join(i, between) for i in x]
+                )
             case (list(), str()):
                 return MetadataSummarisable.summarize_join(x[0], x[1])
             case _:
                 return str(x)
 
-
     def _pretty_field(self, x: str) -> str:
         match x:
             case "sample_id":
                 return "ID"
+            case "wavelength_min":
+                return "Min. Wavelength"
+            case "wavelength_max":
+                return "Max. Wavelength"
+            case "beam_shape":
+                return "Shape"
             case _:
                 return x.capitalize().replace("_", " ")
 
-    def introspect_summary(self, name:str | None, indent:int=0, adjust=0, skip=[]) -> str:
+    def introspect_summary(self, name: str | None, indent: int = 0, skip=[]) -> str:
         if name is None:
             result = ""
         else:
-            result = " "*indent + name + ":\n"
-        spacing = max(map(len, self.__dataclass_fields__)) + 2
+            result = " " * indent + name + ":\n"
+        spacing = max(map(len, self.__dataclass_fields__)) + 1
 
         for key in self.__dataclass_fields__:
-            if key in skip: continue
+            if key in skip:
+                continue
             pretty = self._pretty_field(key)
-            result += " "*(indent+3) + pretty + ":" + " " * (spacing - len(pretty) + adjust) + str(getattr(self, key)) + "\n"
+            result += (
+                " " * (indent + 4)
+                + pretty
+                + ":"
+                + " " * (spacing - len(pretty))
+                + str(getattr(self, key))
+                + "\n"
+            )
         return result
-
 
 
 @dataclass(kw_only=True)
@@ -141,11 +154,7 @@ class Rot3(MetadataSerial):
         return Rot3(roll=roll, pitch=pitch, yaw=yaw)
 
     def serialise_json(self):
-        data = {
-            "roll": None,
-            "pitch": None,
-            "yaw": None
-        }
+        data = {"roll": None, "pitch": None, "yaw": None}
         if self.roll is not None:
             data["roll"] = self.roll.serialise_json()
         if self.pitch is not None:
@@ -223,18 +232,15 @@ class Detector(MetadataSummarisable):
 
 @dataclass(kw_only=True)
 class Aperture(MetadataSummarisable):
-    distance: Quantity[float] | None
-    size: Vec3 | None
-    size_name: str | None
     name: str | None
+    size: Vec3 | None
+    distance: Quantity[float] | None
+    size_name: str | None
     type_: str | None
 
     def summary(self):
-        return (
-            f"   Aperture:\n"
-            f"     Name: {self.name}\n"
-            f"     Aperture size: {self.size}\n"
-            f"     Aperture distance: {self.distance}\n"
+        return self.introspect_summary(
+            "Aperture", indent=4, skip=["type_", "size_name"]
         )
 
     @staticmethod
@@ -272,7 +278,9 @@ class Collimation(MetadataSummarisable):
     apertures: list[Aperture]
 
     def summary(self):
-        return f"Collimation:\n   Length: {self.length}\n" + self.summarize_join(self.apertures)
+        return f"Collimation:\n    Length: {self.length}\n" + self.summarize_join(
+            self.apertures
+        )
 
     @staticmethod
     def from_json(obj):
@@ -310,30 +318,23 @@ class BeamSize(MetadataSerial):
 class Source(MetadataSummarisable):
     radiation: str | None
     beam_shape: str | None
-    beam_size: BeamSize | None
     wavelength: Quantity[float] | None
     wavelength_min: Quantity[float] | None
     wavelength_max: Quantity[float] | None
     wavelength_spread: Quantity[float] | None
+    beam_size: BeamSize | None
 
     def summary(self) -> str:
-        return (
-            f"Source:\n"
-            f"    Radiation:         {self.radiation}\n"
-            f"    Shape:             {self.beam_shape}\n"
-            f"    Wavelength:        {self.wavelength}\n"
-            f"    Min. Wavelength:   {self.wavelength_min}\n"
-            f"    Max. Wavelength:   {self.wavelength_max}\n"
-            f"    Wavelength Spread: {self.wavelength_spread}\n"
-            f"    Beam Size:         {self.beam_size}\n"
-        )
+        return self.introspect_summary("Source")
 
     @staticmethod
     def from_json(obj):
         return Source(
             radiation=obj["radiation"],
             beam_shape=obj["beam_shape"],
-            beam_size=BeamSize.from_json(obj["beam_size"]) if obj["beam_size"] else None,
+            beam_size=(
+                BeamSize.from_json(obj["beam_size"]) if obj["beam_size"] else None
+            ),
             wavelength=obj["wavelength"],
             wavelength_min=obj["wavelength_min"],
             wavelength_max=obj["wavelength_max"],
@@ -374,7 +375,7 @@ class Sample(MetadataSummarisable):
     details: list[str]
 
     def summary(self) -> str:
-        return self.introspect_summary("Sample", adjust=-1, skip=["name", "details"])
+        return self.introspect_summary("Sample", skip=["name", "details"])
 
     @staticmethod
     def from_json(obj):
@@ -430,22 +431,27 @@ class Process(MetadataSummarisable):
 
     def summary(self):
         if self.terms:
-            termInfo = "    Terms:\n" + "\n".join([f"        {k}: {v}" for k, v in self.terms.items()]) + "\n"
+            termInfo = (
+                "    Terms:\n"
+                + "\n".join([f"        {k}: {v}" for k, v in self.terms.items()])
+                + "\n"
+            )
         else:
             termInfo = ""
 
         if self.notes:
-            noteInfo = "    Notes:\n" + "\n".join([f"        {note}" for note in self.notes]) + "\n"
+            noteInfo = (
+                "    Notes:\n"
+                + "\n".join([f"        {note}" for note in self.notes])
+                + "\n"
+            )
         else:
             noteInfo = ""
 
         return (
-            f"Process:\n"
-            f"    Name: {self.name}\n"
-            f"    Date: {self.date}\n"
-            f"    Description: {self.description}\n"
-            f"{termInfo}"
-            f"{noteInfo}"
+            self.introspect_summary("Process", skip=["terms", "notes"])
+            + termInfo
+            + noteInfo
         )
 
     @staticmethod
@@ -486,7 +492,9 @@ class Instrument(MetadataSummarisable):
     detector: list[Detector]
 
     def summary(self):
-        return self.summarize_join([(self.collimations, "\n") , self.detector , self.source])
+        return self.summarize_join(
+            [(self.collimations, "\n"), self.detector, self.source]
+        )
 
     @staticmethod
     def from_json(obj):
@@ -505,6 +513,7 @@ class Instrument(MetadataSummarisable):
         for idx, d in enumerate(self.detector):
             d.as_h5(group.create_group(f"sasdetector{idx:02d}"))
 
+
 @dataclass(kw_only=True)
 class Magnetic(MetadataSummarisable):
     applied_magnetic_field: Quantity[float] | None
@@ -515,15 +524,15 @@ class Magnetic(MetadataSummarisable):
         return f"Applied Magnetic Field: {self.applied_magnetic_field}, Saturation Magnetization: {self.saturation_magnetization}, Demagnetizing Field: {self.demagnetizing_field}"
 
     def summary(self):
-        return dedent(f"""Applied Magnetic Field: {self.applied_magnetic_field}
-        Saturation Magnetization: {self.saturation_magnetization}
-        Demagnetizing Field: {self.demagnetizing_field}""")
+        return self.introspect_summary(None)
 
     @staticmethod
     def from_json(obj):
         return Magnetic(
             applied_magnetic_field=from_json_quantity(obj["applied_magnetic_field"]),
-            saturation_magnetization=from_json_quantity(obj["saturation_magnetization"]),
+            saturation_magnetization=from_json_quantity(
+                obj["saturation_magnetization"]
+            ),
             demagnetizing_field=from_json_quantity(obj["demagnetizing_field"]),
         )
 
@@ -567,7 +576,9 @@ class MetaNode:
             case list():
                 return [y for x in self.contents for y in x.filter(name)]
             case _:
-                raise RuntimeError(f"Cannot filter contents of type {type(self.contents)}: {self.contents}")
+                raise RuntimeError(
+                    f"Cannot filter contents of type {type(self.contents)}: {self.contents}"
+                )
         return []
 
     def __eq__(self, other) -> bool:
@@ -608,9 +619,13 @@ class MetaNode:
                     "contents": contents,
                     "shape": shape,
                 }:
-                    return np.frombuffer(base64.b64decode(contents), dtype=dtype).reshape(shape)
+                    return np.frombuffer(
+                        base64.b64decode(contents), dtype=dtype
+                    ).reshape(shape)
                 case {"value": value, "units": units}:
-                    return from_json_quantity({"value": from_content(value), "units": from_content(units)})
+                    return from_json_quantity(
+                        {"value": from_content(value), "units": from_content(units)}
+                    )
                 case _:
                     return con
 
@@ -653,8 +668,12 @@ class Metadata(MetadataSummarisable):
             definition=obj["definition"] if obj["definition"] else None,
             process=[Process.from_json(p) for p in obj["process"]],
             sample=Sample.from_json(obj["sample"]) if obj["sample"] else None,
-            instrument=Instrument.from_json(obj["instrument"]) if obj["instrument"] else None,
-            magnetic=Magnetic.from_json(obj["magnetic"]) if obj.get("magnetic") else None,
+            instrument=(
+                Instrument.from_json(obj["instrument"]) if obj["instrument"] else None
+            ),
+            magnetic=(
+                Magnetic.from_json(obj["magnetic"]) if obj.get("magnetic") else None
+            ),
             raw=MetaNode.from_json(obj["raw"]),
         )
 
@@ -668,7 +687,7 @@ class Metadata(MetadataSummarisable):
             sample=None,
             instrument=None,
             magnetic=None,
-            raw=None
+            raw=None,
         )
 
     def serialise_json(self):
@@ -678,7 +697,7 @@ class Metadata(MetadataSummarisable):
             "sample": None,
             "title": self.title,
             "run": self.run,
-            "definition": self.definition
+            "definition": self.definition,
         }
         if self.sample is not None:
             serialized["sample"] = self.sample.serialise_json()
@@ -862,10 +881,14 @@ def access_meta(obj: dataclass, key: str) -> Any | None:
                         key = accessor[len(field_string) :]
                         result = getattr(result, fld.name)
                         break
-            case index if (type(result) is list) and (matches := re.match(r"\[(\d+?)\](.*)", index)):
+            case index if (type(result) is list) and (
+                matches := re.match(r"\[(\d+?)\](.*)", index)
+            ):
                 result = result[int(matches[1])]
                 key = matches[2]
-            case name if (type(result) is dict) and (matches := re.match(r'\["(.+)"\](.*)', name)):
+            case name if (type(result) is dict) and (
+                matches := re.match(r'\["(.+)"\](.*)', name)
+            ):
                 result = result[matches[1]]
                 key = matches[2]
             case _:
@@ -967,6 +990,7 @@ def collect_tags(objs: list[dataclass]) -> TagCollection:
             result.variable.add(term)
 
     return result
+
 
 class DerivedMetadata(Metadata):
     pass
