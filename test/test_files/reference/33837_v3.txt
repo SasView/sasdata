@@ -40,8 +40,8 @@ Source:
     Wavelength:        None
     Min. Wavelength:   None
     Max. Wavelength:   None
-    Wavelength Spread: None
-    Beam Size:         None
+    Wavelength spread: None
+    Beam size:         None
 Transmission Spectrum:
     Name:             None
     Timestamp:        None

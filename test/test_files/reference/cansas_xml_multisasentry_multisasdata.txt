@@ -30,8 +30,8 @@ Source:
     Wavelength:        0.85 nm
     Min. Wavelength:   None
     Max. Wavelength:   None
-    Wavelength Spread: 25.0 %
-    Beam Size:         None
+    Wavelength spread: 25.0 %
+    Beam size:         None
 AF1410:1h
   Q
   I
@@ -64,8 +64,8 @@ Source:
     Wavelength:        0.85 nm
     Min. Wavelength:   None
     Max. Wavelength:   None
-    Wavelength Spread: 25.0 %
-    Beam Size:         None
+    Wavelength spread: 25.0 %
+    Beam size:         None
 AF1410:20
   Q
   I
@@ -98,8 +98,8 @@ Source:
     Wavelength:        0.85 nm
     Min. Wavelength:   None
     Max. Wavelength:   None
-    Wavelength Spread: 25.0 %
-    Beam Size:         None
+    Wavelength spread: 25.0 %
+    Beam size:         None
 AF1410:2h
   Q
   I
@@ -132,8 +132,8 @@ Source:
     Wavelength:        0.85 nm
     Min. Wavelength:   None
     Max. Wavelength:   None
-    Wavelength Spread: 25.0 %
-    Beam Size:         None
+    Wavelength spread: 25.0 %
+    Beam size:         None
 AF1410:50
   Q
   I
@@ -166,8 +166,8 @@ Source:
     Wavelength:        0.85 nm
     Min. Wavelength:   None
     Max. Wavelength:   None
-    Wavelength Spread: 25.0 %
-    Beam Size:         None
+    Wavelength spread: 25.0 %
+    Beam size:         None
 AF1410:5h
   Q
   I
@@ -200,8 +200,8 @@ Source:
     Wavelength:        0.85 nm
     Min. Wavelength:   None
     Max. Wavelength:   None
-    Wavelength Spread: 25.0 %
-    Beam Size:         None
+    Wavelength spread: 25.0 %
+    Beam size:         None
 AF1410:8h
   Q
   I
@@ -234,8 +234,8 @@ Source:
     Wavelength:        0.85 nm
     Min. Wavelength:   None
     Max. Wavelength:   None
-    Wavelength Spread: 25.0 %
-    Beam Size:         None
+    Wavelength spread: 25.0 %
+    Beam size:         None
 AF1410:cc
   Q
   I
@@ -268,8 +268,8 @@ Source:
     Wavelength:        0.85 nm
     Min. Wavelength:   None
     Max. Wavelength:   None
-    Wavelength Spread: 25.0 %
-    Beam Size:         None
+    Wavelength spread: 25.0 %
+    Beam size:         None
 AF1410:hf
   Q
   I
@@ -302,8 +302,8 @@ Source:
     Wavelength:        0.85 nm
     Min. Wavelength:   None
     Max. Wavelength:   None
-    Wavelength Spread: 25.0 %
-    Beam Size:         None
+    Wavelength spread: 25.0 %
+    Beam size:         None
 AF1410:qu
   Q
   I
@@ -336,5 +336,5 @@ Source:
     Wavelength:        0.85 nm
     Min. Wavelength:   None
     Max. Wavelength:   None
-    Wavelength Spread: 25.0 %
-    Beam Size:         None
+    Wavelength spread: 25.0 %
+    Beam size:         None

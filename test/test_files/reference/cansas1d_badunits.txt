@@ -8,8 +8,8 @@ Metadata:
 
 Definition: Test title
 Process:
-    Name: spol
-    Date: 04-Sep-2007 18:35:02
+    Name:        spol
+    Date:        04-Sep-2007 18:35:02
     Description: None
     Terms:
         radialstep: 10.0 mm
@@ -23,8 +23,8 @@ Process:
 				H2O Buffer
         V... 13552 3 1.00E+00 H2O5m
 Process:
-    Name: NCNR-IGOR
-    Date: 03-SEP-2006 11:42:47
+    Name:        NCNR-IGOR
+    Date:        03-SEP-2006 11:42:47
     Description: 
     Terms:
         average_type: Circular
@@ -38,35 +38,35 @@ Process:
         ABS:IZERO: 230.09
         ABS:XSECT: 1.0 mm
 Sample:
-   ID:           SI600-new-long
-   Transmission: 0.327
-   Thickness:    0.00103 none
-   Temperature:  0.0 K
-   Position:     Vec3(x=10000000.0 nm, y=0.0 mm, z=None)
-   Orientation:  Rot3(roll=0.39269908 rad, pitch=0.00034906585 rad, yaw=None)
+    ID:           SI600-new-long
+    Transmission: 0.327
+    Thickness:    0.00103 none
+    Temperature:  0.0 K
+    Position:     Vec3(x=10000000.0 nm, y=0.0 mm, z=None)
+    Orientation:  Rot3(roll=0.39269908 rad, pitch=0.00034906585 rad, yaw=None)
 Collimation:
-   Length: 0.123 m
-   Aperture:
-     Name: source
-     Aperture size: Vec3(x=50000.0 µm, y=None, z=None)
-     Aperture distance: 1100.0 cm
-   Aperture:
-     Name: sample
-     Aperture size: Vec3(x=0.1 cm, y=None, z=None)
-     Aperture distance: None
+    Length: 0.123 m
+    Aperture:
+        Name:      source
+        Size:      Vec3(x=50000.0 µm, y=None, z=None)
+        Distance:  1100.0 cm
+    Aperture:
+        Name:      sample
+        Size:      Vec3(x=0.1 cm, y=None, z=None)
+        Distance:  None
 Detector:
-   Name:         fictional hybrid
-   Distance:     4.15 m
-   Offset:       Vec3(x=1000000.0 nm, y=2000.0 µm, z=None)
-   Orientation:  Rot3(roll=0.0174533 rad, pitch=0.0 rad, yaw=0.0 rad)
-   Beam center:  Vec3(x=0.32264 m, y=0.32768 m, z=None)
-   Pixel size:   Vec3(x=0.5 cm, y=0.5 cm, z=None)
-   Slit length:  None
+    Name:        fictional hybrid
+    Distance:    4.15 m
+    Offset:      Vec3(x=1000000.0 nm, y=2000.0 µm, z=None)
+    Orientation: Rot3(roll=0.0174533 rad, pitch=0.0 rad, yaw=0.0 rad)
+    Beam center: Vec3(x=0.32264 m, y=0.32768 m, z=None)
+    Pixel size:  Vec3(x=0.5 cm, y=0.5 cm, z=None)
+    Slit length: None
 Source:
     Radiation:         neutron
     Shape:             disc
     Wavelength:        0.6 nm
     Min. Wavelength:   2.2 Å
     Max. Wavelength:   10.0 Å
-    Wavelength Spread: 14.3 %
-    Beam Size:         BeamSize(name='bm', size=Vec3(x=0.012 m, y=13000.0 µm, z=None))
+    Wavelength spread: 14.3 %
+    Beam size:         BeamSize(name='bm', size=Vec3(x=0.012 m, y=13000.0 µm, z=None))
