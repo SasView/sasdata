@@ -73,18 +73,8 @@ class MetadataSummarisable(MetadataSerial):
             case _:
                 return str(x)
 
-    def _pretty_field(self, x: str) -> str:
-        match x:
-            case "sample_id":
-                return "ID"
-            case "wavelength_min":
-                return "Min. Wavelength"
-            case "wavelength_max":
-                return "Max. Wavelength"
-            case "beam_shape":
-                return "Shape"
-            case _:
-                return x.capitalize().replace("_", " ")
+    _pretty_field = {"sample_id": "ID", "wavelength_min": "Min. Wavelength",
+                     "wavelength_max": "Max. Wavelength", "beam_shape": "Shape"}
 
     def introspect_summary(self, name: str | None, indent: int = 0, skip=[]) -> str:
         if name is None:
@@ -96,7 +86,10 @@ class MetadataSummarisable(MetadataSerial):
         for key in self.__dataclass_fields__:
             if key in skip:
                 continue
-            pretty = self._pretty_field(key)
+            if key in self._pretty_field:
+                pretty = self._pretty_field[key]
+            else:
+                pretty = key.capitalize().replace("_", " ")
             result += (
                 " " * (indent + 4)
                 + pretty
