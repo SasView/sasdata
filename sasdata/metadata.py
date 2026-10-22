@@ -482,7 +482,8 @@ class Process(MetadataSummarisable):
                 node.attrs["name"] = term
                 if type(value) is Quantity:
                     node.attrs["value"] = value.value
-                    node.attrs["unit"] = value.units.symbol
+                    if isinstance(value.units, NamedUnit):
+                        node.attrs["unit"] = value.units.symbol
                 else:
                     node.attrs["value"] = value
         for idx, note in enumerate(self.notes):
