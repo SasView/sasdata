@@ -9,17 +9,17 @@ Metadata:
 
 Definition: PMMA in Mixed Deuterated decalin
 Process:
-    Name: SESANS Processing
-    Date: None
+    Name:        SESANS Processing
+    Date:        None
     Description: Polarisation measurement through a SESANS instrument
     Terms:
         ymax: 0.09 rad
         zmax: 0.09 rad
         orientation: Z
 Sample:
-   ID:           None
-   Transmission: None
-   Thickness:    2.0 mm
-   Temperature:  None
-   Position:     None
-   Orientation:  None
+    ID:           None
+    Transmission: None
+    Thickness:    2.0 mm
+    Temperature:  None
+    Position:     None
+    Orientation:  None
