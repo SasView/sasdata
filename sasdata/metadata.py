@@ -44,12 +44,12 @@ class MetadataSerial(abc.ABC, DataclassInstance):
     @abc.abstractmethod
     def from_json(cls, obj: dict) -> Self | None:
         """Load this metadata from a JSON dict"""
-        return None
+        raise NotImplementedError("Attempted to convert an abstract class to JSON")
 
     @abc.abstractmethod
     def as_h5(self, f: h5py.Group):
         """Export data onto an HDF5 group"""
-        pass
+        raise NotImplementedError("Attempted to convert an abstract class to HDF5")
 
 
 class MetadataSummarisable(MetadataSerial):
