@@ -1,7 +1,7 @@
 from re import findall, fullmatch
 
 import sasdata.quantities.units as units
-from sasdata.quantities.units import Dimensions, NamedUnit, Unit, UnitGroup, symbol_lookup, unit_groups
+from sasdata.quantities.units import NamedUnit, Unit, UnitGroup, symbol_lookup, unit_groups
 
 # TODO: This shouldn't be in this file but I don't want to edit Lucas' code before he is finished.
 
