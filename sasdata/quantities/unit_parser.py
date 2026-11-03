@@ -1,6 +1,7 @@
 from re import findall, fullmatch
 
-from sasdata.quantities.units import Dimensions, NamedUnit, Unit, UnitGroup, symbol_lookup, unit_groups
+import sasdata.quantities.units as units
+from sasdata.quantities.units import NamedUnit, Unit, UnitGroup, symbol_lookup, unit_groups
 
 # TODO: This shouldn't be in this file but I don't want to edit Lucas' code before he is finished.
 
@@ -128,7 +129,7 @@ def parse_unit(unit_str: str, longest_unit: bool = True) -> Unit:
     try:
         if not validate_unit_str(unit_str):
             raise ValueError(f"unit_str ({unit_str}) contains forbidden characters.")
-        parsed_unit = Unit(1, Dimensions())
+        parsed_unit = units.none
         unit_stack = parse_unit_stack(unit_str, longest_unit)
         for unit in unit_stack:
             # parsed_unit = combine_units(parsed_unit, unit)

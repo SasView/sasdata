@@ -9,42 +9,42 @@ Metadata:
 
 Definition: MH4_5deg_16T_SLOW
 Process:
-    Name: Mantid generated CanSAS1D XML
-    Date: 11-May-2016 12:15:34
+    Name:        Mantid generated CanSAS1D XML
+    Date:        11-May-2016 12:15:34
     Description: None
 Sample:
-   ID:           
-   Transmission: None
-   Thickness:    None
-   Temperature:  None
-   Position:     None
-   Orientation:  None
+    ID:           
+    Transmission: None
+    Thickness:    None
+    Temperature:  None
+    Position:     None
+    Orientation:  None
 Collimation:
-   Length: None
+    Length: None
 Detector:
-   Name:         front-detector
-   Distance:     2845.26 mm
-   Offset:       None
-   Orientation:  None
-   Beam center:  None
-   Pixel size:   None
-   Slit length:  None
+    Name:        front-detector
+    Distance:    2845.26 mm
+    Offset:      None
+    Orientation: None
+    Beam center: None
+    Pixel size:  None
+    Slit length: None
 Detector:
-   Name:         rear-detector
-   Distance:     4385.28 mm
-   Offset:       None
-   Orientation:  None
-   Beam center:  None
-   Pixel size:   None
-   Slit length:  None
+    Name:        rear-detector
+    Distance:    4385.28 mm
+    Offset:      None
+    Orientation: None
+    Beam center: None
+    Pixel size:  None
+    Slit length: None
 Source:
     Radiation:         Spallation Neutron Source
     Shape:             None
     Wavelength:        None
     Min. Wavelength:   None
     Max. Wavelength:   None
-    Wavelength Spread: None
-    Beam Size:         None
+    Wavelength spread: None
+    Beam size:         None
 sasentry02
   Qy
   Qx
@@ -56,39 +56,39 @@ Metadata:
 
 Definition: MH4_5deg_16T_SLOW
 Process:
-    Name: Mantid generated CanSAS1D XML
-    Date: 11-May-2016 12:15:34
+    Name:        Mantid generated CanSAS1D XML
+    Date:        11-May-2016 12:15:34
     Description: None
 Sample:
-   ID:           
-   Transmission: None
-   Thickness:    None
-   Temperature:  None
-   Position:     None
-   Orientation:  None
+    ID:           
+    Transmission: None
+    Thickness:    None
+    Temperature:  None
+    Position:     None
+    Orientation:  None
 Collimation:
-   Length: None
+    Length: None
 Detector:
-   Name:         front-detector
-   Distance:     2845.26 mm
-   Offset:       None
-   Orientation:  None
-   Beam center:  None
-   Pixel size:   None
-   Slit length:  None
+    Name:        front-detector
+    Distance:    2845.26 mm
+    Offset:      None
+    Orientation: None
+    Beam center: None
+    Pixel size:  None
+    Slit length: None
 Detector:
-   Name:         rear-detector
-   Distance:     4385.28 mm
-   Offset:       None
-   Orientation:  None
-   Beam center:  None
-   Pixel size:   None
-   Slit length:  None
+    Name:        rear-detector
+    Distance:    4385.28 mm
+    Offset:      None
+    Orientation: None
+    Beam center: None
+    Pixel size:  None
+    Slit length: None
 Source:
     Radiation:         Spallation Neutron Source
     Shape:             None
     Wavelength:        None
     Min. Wavelength:   None
     Max. Wavelength:   None
-    Wavelength Spread: None
-    Beam Size:         None
+    Wavelength spread: None
+    Beam size:         None
