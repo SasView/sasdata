@@ -442,7 +442,7 @@ def load_data(filename: str | Path) -> dict[str, SasMeasurement]:
             entry_key = entry.attrs["sasview_key"] if "sasview_key" in entry.attrs else root_key
 
             loaded_data[entry_key] = SasMeasurement(
-                    name=root_key,
+                    name=metadata.title if metadata.title else entry_key,
                     dataset_type=dataset_type,
                     data_contents=data_contents,
                     metadata=metadata,
