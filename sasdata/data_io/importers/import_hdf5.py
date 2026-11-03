@@ -29,12 +29,12 @@ from sasdata.quantities import units
 from sasdata.quantities.quantity import NamedQuantity, Quantity
 from sasdata.quantities.unit_parser import parse
 
-# test_file = "./example_data/1d_data/33837rear_1D_1.75_16.5_NXcanSAS_v3.h5"
-# test_file = "./example_data/1d_data/33837rear_1D_1.75_16.5_NXcanSAS.h5"
-test_file = "./example_data/2d_data/BAM_2D.h5"
-# test_file = "./example_data/2d_data/14250_2D_NoDetInfo_NXcanSAS_v3.h5"
-# test_file = "./example_data/2d_data/33837rear_2D_1.75_16.5_NXcanSAS_v3.h5"
-test_file = "./test/sasdataloader/data/nxcansas_1Dand2D_multisasdata.h5"
+# test_file = "../example_data/1d_data/33837rear_1D_1.75_16.5_NXcanSAS_v3.h5"
+# test_file = "../example_data/1d_data/33837rear_1D_1.75_16.5_NXcanSAS.h5"
+test_file = "../../../sasdata/example_data/2d_data/BAM_2D.h5"
+# test_file = "../example_data/2d_data/14250_2D_NoDetInfo_NXcanSAS_v3.h5"
+# test_file = "../example_data/2d_data/33837rear_2D_1.75_16.5_NXcanSAS_v3.h5"
+#test_file = "../../../test/test_files/data/nxcansas_1Dand2D_multisasdata.h5"
 
 logger = logging.getLogger(__name__)
 
