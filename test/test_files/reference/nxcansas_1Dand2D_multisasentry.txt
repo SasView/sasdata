@@ -1,4 +1,4 @@
-sasentry01
+MH4_5deg_16T_SLOW
   dQ
   Q
   I
@@ -45,7 +45,7 @@ Source:
     Max. Wavelength:   None
     Wavelength spread: None
     Beam size:         None
-sasentry02
+MH4_5deg_16T_SLOW
   Qy
   Qx
   I
