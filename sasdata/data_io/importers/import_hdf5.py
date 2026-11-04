@@ -4,8 +4,8 @@ from pathlib import Path
 
 import h5py
 import numpy as np
-from h5py._hl.dataset import Dataset as HDF5Dataset
-from h5py._hl.group import Group as HDF5Group
+from h5py import Dataset as HDF5Dataset
+from h5py import Group as HDF5Group
 
 from sasdata.data import SasMeasurement
 from sasdata.data_backing import Dataset as SASDataDataset
