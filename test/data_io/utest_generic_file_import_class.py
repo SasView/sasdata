@@ -24,7 +24,7 @@ def find(filename):
 class GenericFileReaderTests(unittest.TestCase):
 
     def setUp(self):
-        self.reader = TestFileReader()
+        self.reader = MockFileReader()
         self.bad_file = find("ACB123.txt")
         self.good_file = find("123ABC.txt")
         self.generic_reader = Loader()
@@ -92,7 +92,7 @@ class GenericFileReaderTests(unittest.TestCase):
         if os.path.isfile(self.good_file):
             os.remove(self.good_file)
 
-class TestFileReader(FileReader):
+class MockFileReader(FileReader):
     def get_file_contents(self):
         """
         Reader specific class to access the contents of the file
