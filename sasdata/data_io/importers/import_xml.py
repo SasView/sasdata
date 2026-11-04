@@ -7,6 +7,7 @@ from lxml import etree
 
 import sasdata.quantities.unit_parser as unit_parser
 from sasdata.data import SasMeasurement
+from sasdata.data_io.importer import Importer, Source_Type, is_text, read_header
 from sasdata.dataset_types import one_dim
 from sasdata.metadata import (
     Aperture,
@@ -283,61 +284,92 @@ def load_raw(node: etree._Element, version: str) -> MetaNode:
     return MetaNode(name=etree.QName(node).localname, attrs=attrib, contents=contents)
 
 
-def load_data(filename: str | Path) -> dict[str, SasMeasurement]:
-    """Load scattering data from an XML file"""
-    loaded_data: dict[str, SasMeasurement] = {}
-    tree = etree.parse(filename)
-    root = tree.getroot()
+class XmlImporter(Importer):
+    """Importer for canSAS 1D XML files (v1.0 and v1.1)."""
 
-    version = get_cansas_version(root)
+    name = "canSAS XML"
+    priority = 20
 
-    if version is None:
-        logger.error(f"Invalid root: {root.tag!r}")
+    @classmethod
+    def can_import(cls, source: Source_Type) -> bool:
+        """The file is canSAS XML if its root element is a SASroot in one of the canSAS namespaces."""
+        header = read_header(source)
+        if not is_text(header) or not header.lstrip(b"\xef\xbb\xbf \t\r\n").startswith(b"<"):
+            return False
+        try:
+            if isinstance(source, (str, Path)):
+                with open(source, "rb") as f:
+                    return cls._root_is_cansas(f)
+            try:
+                return cls._root_is_cansas(source)
+            finally:
+                source.seek(0)
+        except Exception:
+            return False
+
+    @staticmethod
+    def _root_is_cansas(handle) -> bool:
+        """Parse only as far as the root element and check that it is a canSAS SASroot."""
+        for _, element in etree.iterparse(handle, events=("start",)):
+            return get_cansas_version(element) is not None
+        return False
+
+    def load_data(self, source: Source_Type) -> dict[str, SasMeasurement]:
+        """Load scattering data from an XML file"""
+        filename = str(source) if isinstance(source, Path) else source
+        loaded_data: dict[str, SasMeasurement] = {}
+        tree = etree.parse(filename)
+        root = tree.getroot()
+
+        version = get_cansas_version(root)
+
+        if version is None:
+            logger.error(f"Invalid root: {root.tag!r}")
+            return loaded_data
+
+        # How many data sets have we loaded?
+        dataindex = 1
+
+        for entry in tree.getroot().findall(f"{version}:SASentry", ns):
+            name = attr_parse(entry, "name")
+
+            title = opt_parse(entry, "Title", version, parse_string)
+
+            if name is None:
+                if title is None:
+                    name = f"SasData{dataindex:02}"
+                else:
+                    name = title
+
+            metadata = Metadata(
+                title=title,
+                run=all_parse(entry, "Run", version, parse_string),
+                instrument=opt_parse(entry, "SASinstrument", version, parse_instrument),
+                process=all_parse(entry, "SASprocess", version, parse_process),
+                sample=opt_parse(entry, "SASsample", version, parse_sample),
+                definition=opt_parse(entry, "SASdefinition", version, parse_string),
+                magnetic=None, # NOTE: Magnetic data isn't part of the XML format.
+                raw=load_raw(root, version),
+            )
+
+            data = {}
+
+            datacount = 0
+            for n in entry.findall(f"{version}:SASdata", ns):
+                datacount += 1
+                data_set = parse_data(n, version, metadata)
+                data = data_set
+                break
+
+            loaded_data[name] = SasMeasurement(
+                name=name,
+                dataset_type=one_dim,
+                data_contents=data,
+                metadata=metadata,
+                verbose=False,
+            )
+            dataindex += 1
         return loaded_data
-
-    # How many data sets have we loaded?
-    dataindex = 1
-
-    for entry in tree.getroot().findall(f"{version}:SASentry", ns):
-        name = attr_parse(entry, "name")
-
-        title = opt_parse(entry, "Title", version, parse_string)
-
-        if name is None:
-            if title is None:
-                name = f"SasData{dataindex:02}"
-            else:
-                name = title
-
-        metadata = Metadata(
-            title=title,
-            run=all_parse(entry, "Run", version, parse_string),
-            instrument=opt_parse(entry, "SASinstrument", version, parse_instrument),
-            process=all_parse(entry, "SASprocess", version, parse_process),
-            sample=opt_parse(entry, "SASsample", version, parse_sample),
-            definition=opt_parse(entry, "SASdefinition", version, parse_string),
-            magnetic=None, # NOTE: Magnetic data isn't part of the XML format.
-            raw=load_raw(root, version),
-        )
-
-        data = {}
-
-        datacount = 0
-        for n in entry.findall(f"{version}:SASdata", ns):
-            datacount += 1
-            data_set = parse_data(n, version, metadata)
-            data = data_set
-            break
-
-        loaded_data[name] = SasMeasurement(
-            name=name,
-            dataset_type=one_dim,
-            data_contents=data,
-            metadata=metadata,
-            verbose=False,
-        )
-        dataindex += 1
-    return loaded_data
 
 
 if __name__ == "__main__":
@@ -350,7 +382,7 @@ if __name__ == "__main__":
 
     for f in files:
         print(f)
-        data = load_data(f)
+        data = XmlImporter().load_data(f)
 
         for dataset in data.values():
             print(dataset.summary())
