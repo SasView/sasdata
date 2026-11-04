@@ -12,16 +12,16 @@ import pytest
 
 import sasdata.quantities.units as units
 from sasdata.data import SasData, SasDataEncoder, SasMeasurement
+from sasdata.data_io.importer import Importer
 from sasdata.data_io.importers.import_ascii import (
+    AsciiImporter,
     AsciiMetadataCategory,
     AsciiReaderMetadata,
     AsciiReaderParams,
-    load_data_default_params,
 )
-from sasdata.data_io.importers.import_ascii import load_data as ascii_load_data
-from sasdata.data_io.importers.import_hdf5 import load_data as hdf_load_data
-from sasdata.data_io.importers.import_sesans import load_data as sesans_load_data
-from sasdata.data_io.importers.import_xml import load_data as xml_load_data
+from sasdata.data_io.importers.import_hdf5 import HDF5Importer
+from sasdata.data_io.importers.import_sesans import SesansImporter
+from sasdata.data_io.importers.import_xml import XmlImporter
 from sasdata.dataset_types import one_dim
 from sasdata.guess import guess_columns
 from sasdata.quantities.quantity import Quantity
@@ -31,12 +31,12 @@ from test import local_data_finder, local_json_finder, local_mumag_finder, local
 
 @pytest.mark.sasdata
 def test_filter_data():
-    data = xml_load_data(local_data_finder("cansas1d_notitle.xml"))
+    data = XmlImporter().load_data(local_data_finder("cansas1d_notitle.xml"))
     for k, v in data.items():
         assert v.metadata.raw.filter("transmission") == ["0.327"]
         assert v.metadata.raw.filter("wavelength")[0] == Quantity(6.0, units.angstroms)
         assert v.metadata.raw.filter("SDD")[0] == Quantity(4.15, units.meters)
-    data = hdf_load_data(local_data_finder("nxcansas_1Dand2D_multisasentry.h5"))
+    data = HDF5Importer().load_data(local_data_finder("nxcansas_1Dand2D_multisasentry.h5"))
     for k, v in data.items():
         assert v.metadata.raw.filter("radiation") == ["Spallation Neutron Source"]
         assert v.metadata.raw.filter("SDD") == [
@@ -336,25 +336,25 @@ def is_uncertainty(column: str) -> bool:
 def test_load_file(test_case: BaseTestCase):
     match test_case:
         case BulkAsciiTestCase():
-            loaded_data = ascii_load_data(test_case.reader_params)
+            loaded_data = list(AsciiImporter(params=test_case.reader_params).load_data().values())
         case AsciiTestCase():
             if isinstance(test_case.reader_params, str):
-                loaded_data = load_data_default_params(test_case.reader_params)[0]
+                loaded_data = list(AsciiImporter().load_data(test_case.reader_params).values())[0]
             elif isinstance(test_case.reader_params, AsciiReaderParams):
-                loaded_data = ascii_load_data(test_case.reader_params)[0]
+                loaded_data = list(AsciiImporter(params=test_case.reader_params).load_data().values())[0]
             else:
                 raise TypeError("Invalid type for reader_params.")
         case Hdf5TestCase():
-            combined_data = hdf_load_data(test_case.filename)
+            combined_data = HDF5Importer().load_data(test_case.filename)
             loaded_data = combined_data[test_case.entry]
-        # TODO: Support SESANS
         case XmlTestCase():
             # Not bulk, so just assume we get one dataset.
-            combined_data = xml_load_data(test_case.filename)
+            combined_data = XmlImporter().load_data(test_case.filename)
             loaded_data = combined_data[test_case.entry]
         case SesansTestCase():
-            loaded_data = sesans_load_data(test_case.filename)
-            combined_data = {"only": loaded_data}
+            combined_data = SesansImporter().load_data(test_case.filename)
+            assert len(combined_data) == 1
+            loaded_data = next(iter(combined_data.values()))
         case _:
             raise ValueError("Invalid loader")
     if isinstance(test_case, BulkAsciiTestCase):
@@ -414,7 +414,8 @@ def test_load_file(test_case: BaseTestCase):
         SasMeasurement.save_h5(combined_data, bio)
         bio.seek(0)
 
-        result = hdf_load_data(bio)
+        assert HDF5Importer.can_import(bio)
+        result = HDF5Importer().load_data(bio)
         bio.close()
 
         for name, entry in result.items():
@@ -428,3 +429,31 @@ def test_load_file(test_case: BaseTestCase):
             assert np.all(combined_data[name].ordinate.value == entry.ordinate.value)
             assert combined_data[name].abscissae.units == entry.abscissae.units
             assert np.all(combined_data[name].abscissae.value == entry.abscissae.value)
+
+
+expected_importers: dict[type[BaseTestCase], type[Importer]] = {
+    XmlTestCase: XmlImporter,
+    Hdf5TestCase: HDF5Importer,
+    SesansTestCase: SesansImporter,
+}
+inference_cases = [
+    (case.filename, expected_importers[type(case)])
+    for case in test_cases
+    if type(case) in expected_importers
+] + [
+    (local_data_finder("test_3_columns.txt"), AsciiImporter),
+    (local_data_finder("ascii_test_1.txt"), AsciiImporter),
+]
+
+
+@pytest.mark.dataload
+@pytest.mark.parametrize("filename, expected_importer", inference_cases)
+def test_infer_importer(filename: str, expected_importer: type[Importer]):
+    """The generic Importer selects the right child importer from the file contents"""
+    assert Importer.find_importer(filename) is expected_importer
+    assert expected_importer.can_import(filename)
+    # Data loaded through the generic importer should be identical to using the specific importer directly.
+    inferred = Importer.load(filename)
+    direct = expected_importer().load_data(filename)
+    assert list(inferred.keys()) == list(direct.keys())
+    assert [d.summary() for d in inferred.values()] == [d.summary() for d in direct.values()]
