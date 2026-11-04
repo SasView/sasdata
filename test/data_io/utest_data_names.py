@@ -16,7 +16,6 @@ test_file_names = [
 ]
 
 
-@pytest.mark.names
 @pytest.mark.parametrize("x", test_file_names)
 def test_quantity_name(x):
     (f, expected) = x
