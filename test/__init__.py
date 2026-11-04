@@ -2,21 +2,16 @@ import os
 import pathlib
 
 from sasdata.data import SasData
-from sasdata.data_io.importers.import_ascii import load_data_default_params
-from sasdata.data_io.importers.import_hdf5 import load_data as hdf_load_data
-from sasdata.data_io.importers.import_xml import load_data as xml_load_data
+from sasdata.data_io.importer import Importer
 from test.test_files import data, json, mumag, reference, sesans_data
 
 
-def local_load(path: str) -> SasData:
-    """Get local file path"""
+def local_load(path: str) -> list[SasData]:
+    """Load a local file, letting the Importer infer the file type from its contents"""
     base = os.path.join(os.path.dirname(__file__), path)
-    if os.path.exists(f"{base}.h5"):
-        return hdf_load_data(f"{base}.h5").values()
-    if os.path.exists(f"{base}.xml"):
-        return xml_load_data(f"{base}.xml").values()
-    if os.path.exists(f"{base}.txt"):
-        return load_data_default_params(f"{base}.txt")
+    for extension in ("h5", "xml", "txt"):
+        if os.path.exists(f"{base}.{extension}"):
+            return list(Importer.load(f"{base}.{extension}").values())
 
 
 def local_reference_finder(path: str):
