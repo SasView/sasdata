@@ -1,5 +1,6 @@
 import re
 from dataclasses import dataclass, field
+from os.path import splitext
 from typing import TypeVar
 
 initial_metadata = {
@@ -59,7 +60,18 @@ class AsciiReaderMetadata:
             splitted = re.split(base_str.replace('{}', separator), filename)
         else:
             splitted = re.findall(base_str.replace('{}', CASING_REGEX), filename)
+
+        if not splitted:
+            # The regex could not split the filename, so we just
+            # return the filename as usual
+            if cut_off_extension:
+                return [splitext(filename)[0]]
+            else:
+                return [filename]
+
         # If the last component has a file extensions, remove it.
+        # The information after the first period is *NOT* included in
+        # the metadata, so we should not use splitext
         last_component = splitted[-1]
         if cut_off_extension and '.' in last_component:
             pos = last_component.index('.')
