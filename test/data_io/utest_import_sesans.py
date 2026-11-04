@@ -6,7 +6,8 @@ Unit tests for the new recursive cansas reader
 import numpy as np
 import pytest
 
-from sasdata.data_io.importers.import_sesans import load_data
+from sasdata.data_io.importer import Importer
+from sasdata.data_io.importers.import_sesans import SesansImporter
 from sasdata.model_requirements import (
     ComposeRequirements,
     ModellingRequirements,
@@ -26,15 +27,28 @@ test_file_names = ["sphere2micron", "sphere_isis"]
 @pytest.mark.sesans
 @pytest.mark.parametrize("f", test_file_names)
 def test_load_file(f):
-    data = load_data(local_sesans_finder(f"{f}.ses"))
+    loaded = SesansImporter().load_data(local_sesans_finder(f"{f}.ses"))
+    assert len(loaded) == 1
+    data = loaded["Sesans"]
 
     with open(local_reference_finder(f"{f}.txt")) as infile:
         expected = "".join(infile.readlines())
     assert data.summary() == expected
 
 @pytest.mark.sesans
+@pytest.mark.parametrize("f", test_file_names)
+def test_sesans_importer_inferred(f):
+    """The generic importer recognises SESANS files from their contents"""
+    filename = local_sesans_finder(f"{f}.ses")
+    assert Importer.find_importer(filename) is SesansImporter
+    assert SesansImporter.can_import(filename)
+    inferred = Importer.load(filename)
+    direct = SesansImporter().load_data(filename)
+    assert [d.summary() for d in inferred.values()] == [d.summary() for d in direct.values()]
+
+@pytest.mark.sesans
 def test_sesans_modelling():
-    data = load_data(local_sesans_finder("sphere2micron.ses"))
+    data = SesansImporter().load_data(local_sesans_finder("sphere2micron.ses"))["Sesans"]
     req = guess_requirements(data)
     assert type(req) is SesansModel
 
