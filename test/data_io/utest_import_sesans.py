@@ -24,7 +24,6 @@ from test import local_reference_finder, local_sesans_finder
 test_file_names = ["sphere2micron", "sphere_isis"]
 
 
-@pytest.mark.sesans
 @pytest.mark.parametrize("f", test_file_names)
 def test_load_file(f):
     loaded = SesansImporter().load_data(local_sesans_finder(f"{f}.ses"))
@@ -35,7 +34,6 @@ def test_load_file(f):
         expected = "".join(infile.readlines())
     assert data.summary() == expected
 
-@pytest.mark.sesans
 @pytest.mark.parametrize("f", test_file_names)
 def test_sesans_importer_inferred(f):
     """The generic importer recognises SESANS files from their contents"""
@@ -46,7 +44,6 @@ def test_sesans_importer_inferred(f):
     direct = SesansImporter().load_data(filename)
     assert [d.summary() for d in inferred.values()] == [d.summary() for d in direct.values()]
 
-@pytest.mark.sesans
 def test_sesans_modelling():
     data = SesansImporter().load_data(local_sesans_finder("sphere2micron.ses"))["Sesans"]
     req = guess_requirements(data)
@@ -63,11 +60,9 @@ def test_sesans_modelling():
     xi_squared = smear(req, data._data_contents["SpinEchoLength"].value, full_data=data, y = data._data_contents["Depolarisation"].in_units_of(unit_parser.parse("A-2 cm-1")) / f2, radius=radius)
     assert 1.0 < xi_squared < 1.5
 
-@pytest.mark.sesans
 def test_pinhole_zero():
     assert pinhole_smear(0) == 0
 
-@pytest.mark.sesans
 def test_pinhole_smear():
     smearing = [3**x for x in range(-1, 6)]
     smears = [pinhole_smear(x) for x in smearing]
@@ -78,11 +73,9 @@ def test_pinhole_smear():
         old = smear
     assert pinhole_smear(3**6) > 1.2
 
-@pytest.mark.sesans
 def test_slit_zero():
     assert slit_smear(0, 0) == 0
 
-@pytest.mark.sesans
 def test_slit_smear():
     smears = [(length, width, slit_smear(3**length, 3**width)) for length in range(-1, 6) for width in range(-1, 6) if length + width == 6]
     for length, width, smear in smears:
@@ -123,7 +116,6 @@ def smear(req: ModellingRequirements, data: np.ndarray, y=None, full_data=None, 
 
 
 
-@pytest.mark.sesans
 def test_model_algebra():
     ses = SesansModel()
     pin = PinholeModel(np.linspace(1e-3, 1, 1000))
