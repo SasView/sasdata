@@ -81,10 +81,15 @@ def connected_data(node: SASDataGroup, name_prefix="", metadata=None) -> dict[st
 
     uncertainty_map = {}
     uncertainties = set()
+    resolutions = set()
     entries = {}
 
     for name in node.children:
         child = node.children[name]
+
+        if hasattr(child, "children"):
+            # Some files include other metadata that gives various reduction steps within the data - Ignore
+            continue
 
         if "units" in child.attributes and child.attributes["units"]:
             units = parse(child.attributes["units"])
@@ -101,6 +106,9 @@ def connected_data(node: SASDataGroup, name_prefix="", metadata=None) -> dict[st
                 uncertainty_name = child.attributes["uncertainties"]
             uncertainty_map[name] = uncertainty_name
             uncertainties.add(uncertainty_name)
+        if "resolutions" in child.attributes:
+            resolutions_name = child.attributes["resolutions"]
+            resolutions.add(resolutions_name)
 
         entries[name] = quantity
 
@@ -112,6 +120,9 @@ def connected_data(node: SASDataGroup, name_prefix="", metadata=None) -> dict[st
                 uncertainty = entries[uncertainty_map[name]]
                 new_entry = entry.with_standard_error(uncertainty)
                 output[name] = new_entry
+            elif name in resolutions and not str(name).startswith('dQ'):
+                # Resolutions are sometimes labeled as Qdev - set to dQ in this case
+                output['dQ'] = entry
             else:
                 output[name] = entry
 
@@ -305,7 +316,7 @@ def parse_instrument(node : HDF5Group) -> Instrument:
     detector = [parse_detector(node[p]) for p in keys]  # Empty list of keys will give an empty collimations list
 
     keys = find_canSAS_key(node, "SASsource")
-    source = parse_source(node[keys[0]]) if keys is not None else None
+    source = parse_source(node[keys[0]]) if keys is not None and any(keys) else None
 
     return Instrument(
         collimations=collimations,
