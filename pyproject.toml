@@ -9,6 +9,7 @@ requires = [
   "numpy",
   "scipy",
   "matplotlib",
+  "django"
 ]
 build-backend = "hatchling.build"
 
