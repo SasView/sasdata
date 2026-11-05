@@ -38,7 +38,7 @@ extensions = [
 ]
 
 templates_path = ["_templates"]
-exclude_patterns = []
+exclude_patterns = ['**/fair_database/**']
 
 # -- Options for HTML output -------------------------------------------------
 
