@@ -105,6 +105,10 @@ def connected_data(node: SASDataGroup, name_prefix="", metadata=None) -> dict[st
                 uncertainty_name = child.attributes["uncertainties"]
             uncertainty_map[name] = uncertainty_name
             uncertainties.add(uncertainty_name)
+        if "resolutions" in child.attributes:
+            uncertainty_name = child.attributes["resolutions"]
+            uncertainty_map[name] = uncertainty_name
+            uncertainties.add(uncertainty_name)
 
         entries[name] = quantity
 
