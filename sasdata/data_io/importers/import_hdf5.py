@@ -313,7 +313,7 @@ def parse_instrument(node : HDF5Group) -> Instrument:
     detector = [parse_detector(node[p]) for p in keys]  # Empty list of keys will give an empty collimations list
 
     keys = find_canSAS_key(node, "SASsource")
-    source = parse_source(node[keys[0]]) if keys is not None else None
+    source = parse_source(node[keys[0]]) if keys is not None and any(keys) else None
 
     return Instrument(
         collimations=collimations,
