@@ -81,6 +81,7 @@ def connected_data(node: SASDataGroup, name_prefix="", metadata=None) -> dict[st
 
     uncertainty_map = {}
     uncertainties = set()
+    resolutions = set()
     entries = {}
 
     for name in node.children:
