@@ -1,5 +1,6 @@
-from data.models import DataFile
 from django import forms
+
+from sasdata.fair_database.data.models import DataFile
 
 
 # Create the form class.

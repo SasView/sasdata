@@ -1,16 +1,6 @@
 import json
 import os
 
-from data.forms import DataFileForm
-from data.models import DataFile, DataSet, PublishedState, Session
-from data.serializers import (
-    AccessManagementSerializer,
-    DataFileSerializer,
-    DataSetSerializer,
-    PublishedStateSerializer,
-    PublishedStateUpdateSerializer,
-    SessionSerializer,
-)
 from django.contrib.auth.models import User
 from django.http import (
     FileResponse,
@@ -21,13 +11,23 @@ from django.http import (
 )
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema
-from fair_database import permissions
-from fair_database.permissions import DataPermission
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from sasdata.dataloader.loader import Loader
+from sasdata.fair_database.data.forms import DataFileForm
+from sasdata.fair_database.data.models import DataFile, DataSet, PublishedState, Session
+from sasdata.fair_database.data.serializers import (
+    AccessManagementSerializer,
+    DataFileSerializer,
+    DataSetSerializer,
+    PublishedStateSerializer,
+    PublishedStateUpdateSerializer,
+    SessionSerializer,
+)
+from sasdata.fair_database.fair_database import permissions
+from sasdata.fair_database.fair_database.permissions import DataPermission
 
 
 class DataFileView(APIView):

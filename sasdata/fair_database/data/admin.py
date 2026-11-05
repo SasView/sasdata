@@ -1,5 +1,6 @@
-from data import models
 from django.contrib import admin
+
+from sasdata.fair_database.data import models
 
 admin.site.register(models.DataFile)
 admin.site.register(models.Session)

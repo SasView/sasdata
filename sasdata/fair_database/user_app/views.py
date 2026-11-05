@@ -4,8 +4,9 @@ from allauth.socialaccount.providers.orcid.views import OrcidOAuth2Adapter
 from dj_rest_auth.registration.views import RegisterView, SocialLoginView
 from dj_rest_auth.views import LoginView
 from rest_framework.response import Response
-from user_app.serializers import KnoxSerializer
-from user_app.util import create_knox_token
+
+from sasdata.fair_database.user_app.serializers import KnoxSerializer
+from sasdata.fair_database.user_app.util import create_knox_token
 
 # Login using knox tokens rather than django-rest-framework tokens.
 
