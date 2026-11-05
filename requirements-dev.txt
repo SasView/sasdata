@@ -6,11 +6,3 @@ html5lib
 
 # Other stuff
 pre-commit
-
-# Fair database requirements
-django
-djangorestframework
-dj-rest-auth
-django-allauth
-django-rest-knox
-drf-spectacular

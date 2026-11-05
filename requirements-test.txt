@@ -3,3 +3,10 @@ pytest
 unittest-xml-reporting
 matplotlib
 
+# Fair database requirements
+django
+djangorestframework
+dj-rest-auth
+django-allauth
+django-rest-knox
+drf-spectacular
