@@ -98,6 +98,12 @@ jobs:
         run: |
           python -m pytest -v -s test
 
+      ### Test fair_database
+
+      - name: Run Django fair_database tests
+        run: |
+          python sasdata/fair_database/manage.py test sasdata.fair_database
+
   publish-to-pypi:
     name: Publish to pypi
     if: startsWith(github.ref, 'refs/tags/')
