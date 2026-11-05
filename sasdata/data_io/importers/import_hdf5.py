@@ -86,6 +86,10 @@ def connected_data(node: SASDataGroup, name_prefix="", metadata=None) -> dict[st
     for name in node.children:
         child = node.children[name]
 
+        if hasattr(child, "children"):
+            # Some files include other metadata that gives various reduction steps within the data - Ignore
+            continue
+
         if "units" in child.attributes and child.attributes["units"]:
             units = parse(child.attributes["units"])
         else:
