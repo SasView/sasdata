@@ -14,7 +14,8 @@ requires = [
   "dj-rest-auth",
   "django-allauth",
   "django-rest-knox",
-  "drf-spectacular"
+  "drf-spectacular",
+    "pytest" # Checking if this moves me forward
 ]
 build-backend = "hatchling.build"
 
