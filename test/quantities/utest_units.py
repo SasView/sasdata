@@ -2,8 +2,6 @@ import math
 
 import pytest
 
-import pytest
-
 import sasdata.quantities.units as units
 from sasdata.quantities.units import UnknownUnit
 
