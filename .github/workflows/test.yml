@@ -102,7 +102,7 @@ jobs:
 
       - name: Run Django fair_database tests
         run: |
-          python sasdata/fair_database/manage.py test sasdata.fair_database
+          python sasdata/fair_database/manage.py test sasdata/fair_database
 
   publish-to-pypi:
     name: Publish to pypi
