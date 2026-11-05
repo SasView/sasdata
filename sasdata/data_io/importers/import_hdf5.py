@@ -106,9 +106,8 @@ def connected_data(node: SASDataGroup, name_prefix="", metadata=None) -> dict[st
             uncertainty_map[name] = uncertainty_name
             uncertainties.add(uncertainty_name)
         if "resolutions" in child.attributes:
-            uncertainty_name = child.attributes["resolutions"]
-            uncertainty_map[name] = uncertainty_name
-            uncertainties.add(uncertainty_name)
+            resolutions_name = child.attributes["resolutions"]
+            resolutions.add(resolutions_name)
 
         entries[name] = quantity
 
@@ -120,6 +119,9 @@ def connected_data(node: SASDataGroup, name_prefix="", metadata=None) -> dict[st
                 uncertainty = entries[uncertainty_map[name]]
                 new_entry = entry.with_standard_error(uncertainty)
                 output[name] = new_entry
+            elif name in resolutions and not str(name).startswith('dQ'):
+                # Resolutions are sometimes labeled as Qdev - set to dQ in this case
+                output['dQ'] = entry
             else:
                 output[name] = entry
 
