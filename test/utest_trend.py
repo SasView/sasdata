@@ -3,11 +3,10 @@ from os import listdir, path
 import numpy as np
 import pytest
 
-import sasdata.data_io.importers.import_ascii as ascii_reader
 from sasdata.ascii_reader_metadata import AsciiMetadataCategory
-from sasdata.data_io.importers.import_ascii import AsciiReaderParams
-from sasdata.data_io.importers.import_hdf5 import load_data as hdf_load_data
-from sasdata.data_io.importers.import_xml import load_data as xml_load_data
+from sasdata.data_io.importers.import_ascii import AsciiImporter, AsciiReaderParams
+from sasdata.data_io.importers.import_hdf5 import HDF5Importer
+from sasdata.data_io.importers.import_xml import XmlImporter
 from sasdata.quantities.units import per_angstrom, per_nanometer
 from sasdata.trend import Trend
 from test import local_data_finder, local_mumag_finder
@@ -40,7 +39,7 @@ def test_trend_build_from_xml():
     and currently a single Metadata (no tree of MetaNodes), but this should be
     corrected in the future in the XML reader, I guess!
     """
-    data = xml_load_data(xml_file)  # dict of SasData objects
+    data = XmlImporter().load_data(xml_file)  # dict of SasData objects
     trend = Trend(data=[data["SasData01"]], trend_axes={"entry": ["SASentry"]})
     assert not trend.is_manual_axis("entry")
     assert len(trend.get_trend_values("entry")) == 1
@@ -52,7 +51,7 @@ def test_trend_build_from_hdf5_with_multiple_axes():
     The loader returns a dict of SasData objects (here two, named 'sasentry01' and 'sasentry02')
     Need to think how to compare the Quantity objects
     """
-    data = hdf_load_data(hdf_file)  # dict of SasData objects
+    data = HDF5Importer().load_data(hdf_file)  # dict of SasData objects
     trend = Trend(
         data=list(data.values()),
         trend_axes={
@@ -90,7 +89,7 @@ def test_trend_build_from_ascii_with_manual_axis(directory_name: str):
             "demagnetizing_field": 3,
         }
     )
-    data = ascii_reader.load_data(params)
+    data = list(AsciiImporter(params=params).load_data().values())
     trend = Trend(
         data=data,
         trend_axes={
@@ -125,7 +124,7 @@ def test_trend_build_interpolate(directory_name: str):
             "demagnetizing_field": 3,
         }
     )
-    data = ascii_reader.load_data(params)
+    data = list(AsciiImporter(params=params).load_data().values())
     trend = Trend(data=data, trend_axes={"field": ["magnetic", "applied_magnetic_field"]})
     # Initially, the q axes in this data don't exactly match
     to_interpolate_on = "Q"
@@ -148,6 +147,6 @@ def test_trend_q_axis_match():
             "counting_index": 0,
         }
     )
-    data = ascii_reader.load_data(params)
+    data = list(AsciiImporter(params=params).load_data().values())
     trend = Trend(data=data, trend_axes={"index": ["magnetic", "counting_index"]})
     assert trend.all_axis_match("Q")

@@ -4,12 +4,13 @@ from pathlib import Path
 
 import h5py
 import numpy as np
-from h5py._hl.dataset import Dataset as HDF5Dataset
-from h5py._hl.group import Group as HDF5Group
+from h5py import Dataset as HDF5Dataset
+from h5py import Group as HDF5Group
 
 from sasdata.data import SasMeasurement
 from sasdata.data_backing import Dataset as SASDataDataset
 from sasdata.data_backing import Group as SASDataGroup
+from sasdata.data_io.importer import Importer, Source_Type, read_header
 from sasdata.dataset_types import one_dim, three_dim, two_dim
 from sasdata.metadata import (
     Aperture,
@@ -406,54 +407,83 @@ def parse_metadata(node : HDF5Group) -> Metadata:
                     raw=raw)
 
 
-def load_data(filename: str | Path) -> dict[str, SasMeasurement]:
-    with h5py.File(filename, "r") as f:
-        loaded_data: dict[str, SasMeasurement] = {}
+# The HDF5 format signature. It is normally at the start of the file, but may be offset by a user block whose size is
+# 512 bytes or a larger power of two.
+HDF5_SIGNATURE = b"\x89HDF\r\n\x1a\n"
 
-        for root_key in f.keys():
-            entry = f[root_key]
 
-            # if this is actually a SASentry
-            if not get_canSAS_class(entry) == 'SASentry':
-                continue
-            data_contents : dict[str, Quantity] = {}
+class HDF5Importer(Importer):
+    """Importer for NXcanSAS (and older SasView canSAS) HDF5 files."""
 
-            entry_keys = entry.keys()
+    name = "NXcanSAS HDF5"
+    priority = 10
 
-            if not [k for k in entry_keys if get_canSAS_class(entry[k])=='SASdata']:
-                logger.warning("No sasdata or data key")
-                logger.warning(f"Known keys: {[k for k in entry_keys]}")
+    @classmethod
+    def can_import(cls, source: Source_Type) -> bool:
+        """The file is HDF5 if the HDF5 format signature is found at offset 0 or at a user block boundary."""
+        if isinstance(source, (str, Path)):
+            try:
+                return h5py.is_hdf5(source)
+            except Exception:
+                return False
+        header = read_header(source, size=4096)
+        offset = 0
+        while offset + len(HDF5_SIGNATURE) <= len(header):
+            if header[offset:offset + len(HDF5_SIGNATURE)] == HDF5_SIGNATURE:
+                return True
+            offset = 512 if offset == 0 else offset * 2
+        return False
 
-            metadata = parse_metadata(f[root_key])
+    def load_data(self, source: Source_Type) -> dict[str, SasMeasurement]:
+        """Load all SASentry groups in an HDF5 file"""
+        filename = source
+        with h5py.File(filename, "r") as f:
+            loaded_data: dict[str, SasMeasurement] = {}
 
-            for key in entry_keys:
-                component = entry[key]
-                if get_canSAS_class(entry[key])=='SASdata':
-                    datum = recurse_hdf5(component)
-                    data_contents = connected_data(datum, str(filename), metadata)
+            for root_key in f.keys():
+                entry = f[root_key]
 
-            if "Qz" in data_contents:
-                dataset_type = three_dim
-            elif "Qy" in data_contents:
-                dataset_type = two_dim
-            else:
-                dataset_type = one_dim
+                # if this is actually a SASentry
+                if not get_canSAS_class(entry) == 'SASentry':
+                    continue
+                data_contents : dict[str, Quantity] = {}
 
-            entry_key = entry.attrs["sasview_key"] if "sasview_key" in entry.attrs else root_key
+                entry_keys = entry.keys()
 
-            loaded_data[entry_key] = SasMeasurement(
-                    name=metadata.title if metadata.title else entry_key,
-                    dataset_type=dataset_type,
-                    data_contents=data_contents,
-                    metadata=metadata,
-                    verbose=False,
-                )
+                if not [k for k in entry_keys if get_canSAS_class(entry[k])=='SASdata']:
+                    logger.warning("No sasdata or data key")
+                    logger.warning(f"Known keys: {[k for k in entry_keys]}")
 
-        return loaded_data
+                metadata = parse_metadata(f[root_key])
+
+                for key in entry_keys:
+                    component = entry[key]
+                    if get_canSAS_class(entry[key])=='SASdata':
+                        datum = recurse_hdf5(component)
+                        data_contents = connected_data(datum, str(filename), metadata)
+
+                if "Qz" in data_contents:
+                    dataset_type = three_dim
+                elif "Qy" in data_contents:
+                    dataset_type = two_dim
+                else:
+                    dataset_type = one_dim
+
+                entry_key = entry.attrs["sasview_key"] if "sasview_key" in entry.attrs else root_key
+
+                loaded_data[entry_key] = SasMeasurement(
+                        name=metadata.title if metadata.title else entry_key,
+                        dataset_type=dataset_type,
+                        data_contents=data_contents,
+                        metadata=metadata,
+                        verbose=False,
+                    )
+
+            return loaded_data
 
 
 if __name__ == "__main__":
-    data = load_data(test_file)
+    data = HDF5Importer().load_data(test_file)
 
     for dataset in data.values():
         print(dataset.summary())

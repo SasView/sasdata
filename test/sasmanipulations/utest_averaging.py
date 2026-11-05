@@ -3,8 +3,8 @@ import unittest
 import numpy as np
 
 from sasdata.data import SasMeasurement, sasdata_reader2D_converter
-from sasdata.data_io.importers.import_ascii import load_data_default_params as ascii_load_data
-from sasdata.data_io.importers.import_hdf5 import load_data as hdf_load_data
+from sasdata.data_io.importers.import_ascii import AsciiImporter
+from sasdata.data_io.importers.import_hdf5 import HDF5Importer
 from sasdata.data_util.manipulations import (
     Boxavg,
     Boxsum,
@@ -131,7 +131,7 @@ class DataInfoTests(unittest.TestCase):
 
     def setUp(self):
         filepath = find('MAR07232_rest.h5')
-        data_dict = hdf_load_data(filepath)
+        data_dict = HDF5Importer().load_data(filepath)
         self.data = data_dict['sasentry01']
 
     def test_ring(self):
@@ -151,7 +151,7 @@ class DataInfoTests(unittest.TestCase):
 
         o = r(self.data)
         filepath = find('ring_testdata.txt')
-        answer_list = ascii_load_data(filepath)
+        answer_list = list(AsciiImporter().load_data(filepath).values())
         answer = answer_list[0]
 
         self.assertEqual(len(answer_list), 1)
@@ -173,7 +173,7 @@ class DataInfoTests(unittest.TestCase):
         o = r(self.data)
 
         filepath = find('avg_testdata.txt')
-        answer = ascii_load_data(filepath)[0]
+        answer = list(AsciiImporter().load_data(filepath).values())[0]
         for i in range(r.nbins_phi):
             self.assertAlmostEqual(o.abscissae.axes[0].value[i], answer.abscissae.axes[0].value[i], delta=1e-4)
             self.assertAlmostEqual(o.ordinate.value[i], answer.ordinate.value[i], delta=1e-4)
@@ -208,7 +208,7 @@ class DataInfoTests(unittest.TestCase):
         o = r(self.data)
 
         filepath = find('slabx_testdata.txt')
-        answer = ascii_load_data(filepath)[0]
+        answer = list(AsciiImporter().load_data(filepath).values())[0]
         for i in range(len(o.abscissae.axes[0].value)):
             self.assertAlmostEqual(o.abscissae.axes[0].value[i], answer.abscissae.axes[0].value[i], 4)
             self.assertAlmostEqual(o.ordinate.value[i], answer.ordinate.value[i], 4)
@@ -226,7 +226,7 @@ class DataInfoTests(unittest.TestCase):
         o = r(self.data)
 
         filepath = find('slaby_testdata.txt')
-        answer = ascii_load_data(filepath)[0]
+        answer = list(AsciiImporter().load_data(filepath).values())[0]
         for i in range(len(o.abscissae.axes[0].value)):
             self.assertAlmostEqual(o.abscissae.axes[0].value[i], answer.abscissae.axes[0].value[i], 4)
             self.assertAlmostEqual(o.ordinate.value[i], answer.ordinate.value[i], 4)
@@ -252,7 +252,7 @@ class DataInfoTests(unittest.TestCase):
         o = r(self.data)
 
         filepath = find('ring_testdata.txt')
-        answer = ascii_load_data(filepath)[0]
+        answer = list(AsciiImporter().load_data(filepath).values())[0]
         for i in range(len(o.abscissae.axes[0].value)-1):
             self.assertAlmostEqual(o.abscissae.axes[0].value[i], answer.abscissae.axes[0].value[i+1], 4)
             self.assertAlmostEqual(o.ordinate.value[i], answer.ordinate.value[i+1], 4)
@@ -269,7 +269,7 @@ class DataInfoTests(unittest.TestCase):
         o = r(self.data)
 
         filepath = find('sectorphi_testdata.txt')
-        answer = ascii_load_data(filepath)[0]
+        answer = list(AsciiImporter().load_data(filepath).values())[0]
         for i in range(len(o.abscissae.axes[0].value)):
             self.assertAlmostEqual(o.abscissae.axes[0].value[i], answer.abscissae.axes[0].value[i], 4)
             self.assertAlmostEqual(o.ordinate.value[i], answer.ordinate.value[i], 4)
@@ -286,7 +286,7 @@ class DataInfoTests(unittest.TestCase):
         o = r(self.data)
 
         filepath = find('sectorq_testdata.txt')
-        answer = ascii_load_data(filepath)[0]
+        answer = list(AsciiImporter().load_data(filepath).values())[0]
         for i in range(len(o.abscissae.axes[0].value)):
             self.assertAlmostEqual(o.abscissae.axes[0].value[i], answer.abscissae.axes[0].value[i], 4)
             self.assertAlmostEqual(o.ordinate.value[i], answer.ordinate.value[i], 4)

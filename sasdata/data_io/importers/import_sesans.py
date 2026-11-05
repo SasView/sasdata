@@ -10,6 +10,7 @@ from pathlib import Path
 import numpy as np
 
 from sasdata.data import SasMeasurement
+from sasdata.data_io.importer import Importer, Source_Type, is_text, read_header
 from sasdata.data_util.loader_exceptions import FileContentsException
 from sasdata.dataset_types import sesans
 from sasdata.metadata import (
@@ -206,7 +207,30 @@ def parse_sesans(lines: list[str]) -> SasMeasurement:
     )
 
 
-def load_data(filename: str | Path) -> SasMeasurement:
-    with open(filename) as infile:
-        lines = infile.readlines()
-    return parse_sesans(lines)
+class SesansImporter(Importer):
+    """Importer for SESANS (.ses) files."""
+
+    name = "SESANS"
+    priority = 30
+
+    @classmethod
+    def can_import(cls, source: Source_Type) -> bool:
+        """SESANS files declare their format version in the header of the first line."""
+        header = read_header(source)
+        if not is_text(header):
+            return False
+        first_line = header.decode("utf-8", errors="replace").lstrip("\ufeff").splitlines()
+        return bool(first_line) and re.search(r"FileFormatVersion\s+\S+", first_line[0]) is not None
+
+    def load_data(self, source: Source_Type) -> dict[str, SasMeasurement]:
+        """Load a SESANS file. The file holds a single measurement, which is keyed by its name."""
+        if isinstance(source, (str, Path)):
+            with open(source) as infile:
+                lines = infile.readlines()
+        else:
+            contents = source.read()
+            if isinstance(contents, bytes):
+                contents = contents.decode("utf-8")
+            lines = contents.splitlines(keepends=True)
+        measurement = parse_sesans(lines)
+        return {measurement.name: measurement}
