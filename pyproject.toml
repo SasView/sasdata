@@ -93,7 +93,6 @@ out_dir = "source/dev/generated"
 depth = 8
 private = false
 header = "SasData"
-exclude_patterns = ['sasdata/fair_database']
 
 [[tool.hatch.build.targets.wheel.hooks.sphinx.tools]]
 tool = "build"
