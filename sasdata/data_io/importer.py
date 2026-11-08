@@ -121,7 +121,8 @@ class Importer:
             configs = []
         fill_value = configs[-1] if len(configs) > 0 else None
         for file, config in zip_longest(files, configs, fillvalue=fill_value):
-            if file is None:
+            if file == fill_value:
+                # If this is reached, the most likely scenario is len(configs) > len(files) in which case, break out of the loop
                 break
             measurements, file_errors = self._import_file(Path(file), config)
             output.extend(measurements)
