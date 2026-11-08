@@ -157,7 +157,7 @@ def read_header(source: Source_Type, size: int = SNIFF_SIZE) -> bytes:
     Returns an empty bytes object if the source cannot be read.
     """
     try:
-        if isinstance(source, (str, Path)):
+        if isinstance(source, Path_Type):
             path = Path(source)
             if not path.is_file():
                 return b""
@@ -172,6 +172,9 @@ def read_header(source: Source_Type, size: int = SNIFF_SIZE) -> bytes:
                 source.seek(position)
             return header if isinstance(header, bytes) else header.encode()
     except (OSError, ValueError):
+        # File access or read errors will fall through here, implying the reader cannot interpret the file.
+        # An empty byte string will be returned, but there may be other cases where this try/except are bypassed, so
+        # explicitly do nothing here.
         pass
     return b""
 
