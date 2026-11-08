@@ -98,10 +98,7 @@ exclude_patterns = ['sasdata/fair_database']
 [[tool.hatch.build.targets.wheel.hooks.sphinx.tools]]
 tool = "build"
 format = "html"
-# NOTE: This should be true, but it has been set to false because it causes lots
-# of errors relating to the fair database. That database has a different set of
-# dependencies which won't get installed with sasdata.
-warnings = false
+warnings = true
 source = "source"
 out_dir = "../build/docs"
 environment = { PYTHONPATH=".." }
