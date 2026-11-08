@@ -304,7 +304,7 @@ class XmlImporter(Importer):
                 return cls._root_is_cansas(source)
             finally:
                 source.seek(0)
-        except Exception:
+        except (FileNotFoundError, ValueError):
             return False
 
     @staticmethod
