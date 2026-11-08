@@ -68,13 +68,19 @@ class AsciiReaderParams:
                 self.metadata.filename_separator[basename] = "_"
                 self.metadata.filename_specific_metadata[basename] = {}
 
+    @staticmethod
+    def is_column_included(column: tuple[str, NamedUnit | None]) -> bool:
+        """Whether a column is loaded, i.e. it isn't ignored and has a unit."""
+        return column[0] != "<ignore>" and isinstance(column[1], NamedUnit)
+
     @property
     def columns_included(self) -> list[tuple[str, NamedUnit]]:
-        return [
-            column
-            for column in self.columns
-            if column[0] != "<ignore>" and isinstance(column[1], NamedUnit)
-        ]
+        return [column for column in self.columns if self.is_column_included(column)]
+
+    @property
+    def column_positions_included(self) -> list[int]:
+        """Position in each line of the columns in columns_included. Ignored columns still take up a position."""
+        return [position for position, column in enumerate(self.columns) if self.is_column_included(column)]
 
 
 def guess_params_from_filename(filename: str, dataset_type: DatasetType) -> AsciiReaderParams:
@@ -85,10 +91,11 @@ def guess_params_from_filename(filename: str, dataset_type: DatasetType) -> Asci
         lines_split = [split_line(separator_dict, line) for line in lines]
         startpos = guess_starting_position(lines_split)
         colcount = guess_column_count(lines_split, startpos)
+        # Columns we don't know the unit for are ignored. They are kept as <ignore> rather than removed, so the
+        # columns after them still line up with the data.
         columns = [
-            (x, get_default_unit(x, unit_kinds[x]))
+            (x, get_default_unit(x, unit_kinds[x])) if x in unit_kinds else ("<ignore>", None)
             for x in guess_columns(colcount, dataset_type)
-            if x in unit_kinds
         ]
         params = AsciiReaderParams(
             [filename],
@@ -134,22 +141,24 @@ def load_quantities(params: AsciiReaderParams, filename: str, metadata: Metadata
     with open(filename) as ascii_file:
         lines = ascii_file.readlines()
 
-    column_count = len(params.columns_included)
+    # Ignored columns are skipped, but still count when finding the position of the other columns in each line.
+    positions = params.column_positions_included
+    column_count = len(positions)
+    required_length = max(positions) + 1 if positions else 0
     rows: list[list[float]] = []
     for i, current_line in enumerate(lines):
         if i < params.starting_line or i in params.excluded_lines:
             continue
         line_split = split_line(params.separator_dict, current_line)
-        # Sometimes in the split, there might be extra columns that don't need to be there (e.g. an empty string.)
-        # These won't convert to a float so we need to ignore them.
-        tokens = line_split[:column_count]
-        if len(tokens) < column_count:
+        # Values after the last loaded column (e.g. an empty string at the end of the line, or extra columns) and in
+        # ignored columns aren't read, so they don't need to be numbers.
+        if len(line_split) < required_length:
             logger.info(f"{path.basename(filename)}: line {i + 1} skipped as it has too few columns.")
             continue
         try:
             # TODO: Values are parsed as floats; decimal commas, Fortran 'D' exponents and non-numeric columns (e.g. a
             # boolean mask) are not handled and cause the row to be skipped.
-            rows.append([float(token) for token in tokens])
+            rows.append([float(line_split[position]) for position in positions])
         except ValueError:
             # If any of the lines contain non-numerical data, then this line can't be read in as a quantity so it
             # should be ignored entirely.

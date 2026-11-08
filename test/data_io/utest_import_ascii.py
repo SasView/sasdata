@@ -157,13 +157,14 @@ ALL_SEPARATORS = {"Comma": True, "Whitespace": True, "Tab": True}
 Q_I_DI_COLUMNS = [("Q", per_angstrom), ("I", per_centimeter), ("dI", per_centimeter)]
 
 
-def load_text(tmp_path, text: str, **kwargs) -> dict:
-    """Write text to a temporary ASCII file, load it with Q, I, dI columns, and return the loaded quantities."""
+def load_text(tmp_path, text: str, columns=Q_I_DI_COLUMNS, **kwargs) -> dict:
+    """Write text to a temporary ASCII file, load it with the given columns (Q, I, dI by default), and return the
+    loaded quantities."""
     filename = tmp_path / "data.txt"
     filename.write_text(text)
     params = AsciiReaderParams(
         filenames=[str(filename)],
-        columns=Q_I_DI_COLUMNS,
+        columns=columns,
         separator_dict=ALL_SEPARATORS,
         **kwargs,
     )
@@ -245,5 +246,28 @@ def test_unreadable_lines_are_skipped_not_zeroed(tmp_path):
 def test_extra_columns_are_ignored(tmp_path):
     text = "0.01 100 1 0.001 5\n0.02 90 2 0.002 5\n"
     data = load_text(tmp_path, text)
+    assert data["Q"].value == pytest.approx([0.01, 0.02])
+    assert data["I"].value == pytest.approx([100, 90])
+
+
+# Tests for ignored columns (issue #263).
+
+IGNORE = ("<ignore>", None)
+
+
+def test_ignored_column_in_the_middle(tmp_path):
+    columns = [("Q", per_angstrom), IGNORE, ("I", per_centimeter), ("dI", per_centimeter)]
+    data = load_text(tmp_path, "0.01 999 100 1\n0.02 999 90 2\n", columns=columns)
+    assert data["Q"].value == pytest.approx([0.01, 0.02])
+    assert data["I"].value == pytest.approx([100, 90])
+    _, standard_error = data["I"].in_units_of_with_standard_error(per_centimeter)
+    assert standard_error == pytest.approx([1, 2])
+
+
+def test_column_without_unit_is_ignored(tmp_path):
+    # A column with no unit isn't loaded, but still takes up its position in the line.
+    columns = [("Q", per_angstrom), ("dQ", None), ("I", per_centimeter), ("dI", per_centimeter)]
+    data = load_text(tmp_path, "0.01 999 100 1\n0.02 999 90 2\n", columns=columns)
+    assert "dQ" not in data
     assert data["Q"].value == pytest.approx([0.01, 0.02])
     assert data["I"].value == pytest.approx([100, 90])
