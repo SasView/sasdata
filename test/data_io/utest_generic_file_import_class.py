@@ -161,7 +161,9 @@ class TestImporterClass:
         for importer in (HDF5Importer, XmlImporter, SesansImporter, AsciiImporter):
             assert importer in importers
             assert issubclass(importer, Importer)
-        # The generic ASCII importer must be the last resort
+        # Check priorities are in proper order and the Ascii Importer is always a last resort
+        priorities = [importer.priority for importer in importers]
+        assert all(x < y for x, y in zip(priorities, priorities[1:]))
         assert importers[-1] is AsciiImporter
 
     def test_unknown_file_type(self):
