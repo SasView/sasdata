@@ -2,7 +2,6 @@ import re
 from dataclasses import dataclass, field, replace
 from enum import Enum
 from os import path
-from pathlib import Path
 
 import numpy as np
 
@@ -13,7 +12,7 @@ from sasdata.ascii_reader_metadata import (
     pairings,
 )
 from sasdata.data import SasMeasurement
-from sasdata.data_io.importer import Importer, Source_Type, is_text, measurements_by_name, read_header
+from sasdata.data_io.importer import Importer, Path_Type, Source_Type, is_text, measurements_by_name, read_header
 from sasdata.dataset_types import DatasetType, one_dim, unit_kinds
 from sasdata.default_units import get_default_unit
 from sasdata.guess import (
@@ -239,7 +238,7 @@ class AsciiImporter(Importer):
     @classmethod
     def can_import(cls, source: Source_Type) -> bool:
         """Any text file on disk could be a column-based ASCII file."""
-        if not isinstance(source, (str, Path)):
+        if not isinstance(source, Path_Type):
             return False
         return is_text(read_header(source))
 
@@ -255,7 +254,7 @@ class AsciiImporter(Importer):
             if self.params is None:
                 raise ValueError("A file to load, or AsciiReaderParams listing the files to load, must be given.")
             params = self.params
-        elif not isinstance(source, (str, Path)):
+        elif not isinstance(source, Path_Type):
             raise TypeError("The ASCII importer can only load files from a path.")
         elif self.params is not None:
             params = replace(self.params, filenames=[str(source)])

@@ -7,7 +7,7 @@ from lxml import etree
 
 import sasdata.quantities.unit_parser as unit_parser
 from sasdata.data import SasMeasurement
-from sasdata.data_io.importer import Importer, Source_Type, is_text, read_header
+from sasdata.data_io.importer import Importer, Path_Type, Source_Type, is_text, read_header
 from sasdata.dataset_types import one_dim
 from sasdata.metadata import (
     Aperture,
@@ -297,7 +297,7 @@ class XmlImporter(Importer):
         if not is_text(header) or not header.lstrip(b"\xef\xbb\xbf \t\r\n").startswith(b"<"):
             return False
         try:
-            if isinstance(source, (str, Path)):
+            if isinstance(source, Path_Type):
                 with open(source, "rb") as f:
                     return cls._root_is_cansas(f)
             try:
