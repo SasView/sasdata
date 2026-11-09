@@ -9,8 +9,8 @@ from sasdata.data_io.importers.import_ascii import (
     load_data,
     load_data_default_params,
 )
-from sasdata.dataset_types import one_dim
-from sasdata.guess import guess_columns
+from sasdata.dataset_types import one_dim, two_dim
+from sasdata.guess import guess_columns, guess_dataset_type
 from sasdata.quantities.units import per_angstrom, per_centimeter
 from test import local_data_finder, local_mumag_finder
 
@@ -248,3 +248,27 @@ def test_extra_columns_are_ignored(tmp_path):
     data = load_text(tmp_path, text)
     assert data["Q"].value == pytest.approx([0.01, 0.02])
     assert data["I"].value == pytest.approx([100, 90])
+
+
+THREE_COLUMN_DATA = "0.01 100 1\n0.02 90 2\n0.03 80 3\n"
+
+
+def test_guess_params_honours_requested_dataset_type(tmp_path):
+    # guess_dataset_type() classifies every .dat file as 2D. An explicit request
+    # for 1D must win, otherwise the 1D columns are checked against the 2D type.
+    filename = tmp_path / "data.dat"
+    filename.write_text(THREE_COLUMN_DATA)
+    params = guess_params_from_filename(str(filename), one_dim)
+    assert params.dataset_type is one_dim
+    data = load_data(params)[0]
+    assert data.dataset_type is one_dim
+    assert data["Q"].value == pytest.approx([0.01, 0.02, 0.03])
+    assert data["I"].value == pytest.approx([100, 90, 80])
+
+
+def test_guess_params_with_guessed_dataset_type(tmp_path):
+    # Passing guess_dataset_type() keeps the old guessing behaviour (used by load_data_default_params).
+    filename = tmp_path / "data.dat"
+    filename.write_text(THREE_COLUMN_DATA)
+    params = guess_params_from_filename(str(filename), guess_dataset_type(str(filename)))
+    assert params.dataset_type is two_dim
