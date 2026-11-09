@@ -22,6 +22,7 @@ from pathlib import Path
 from typing import IO, ClassVar
 
 from sasdata.data import SasMeasurement
+from sasdata.data_io.config import ConfigLike, ImporterConfig
 
 Path_Type = str | Path
 Source_Type = Path_Type | IO[bytes]
@@ -53,8 +54,12 @@ class Importer:
         if register and cls not in Importer._registry:
             Importer._registry.append(cls)
 
-    def __init__(self, config: dict[str, Value_Type] | None = None):
-        self.config: dict[str, Value_Type] = config if config is not None else {}
+    def __init__(self, config: ConfigLike = None):
+        """
+        :param config: Where to find metadata in the file, as an :class:`ImporterConfig`, a dictionary or YAML text with
+            the same content, or the path of a YAML file. See :mod:`sasdata.data_io.config`.
+        """
+        self.config: ImporterConfig = ImporterConfig.coerce(config)
 
     # ------------------------------------------------------------------------------------------------------------------
     # Interface to be implemented by every child importer
@@ -97,7 +102,7 @@ class Importer:
         return None
 
     @classmethod
-    def load(cls, source: Source_Type, config: dict[str, Value_Type] | None = None) -> dict[str, SasMeasurement]:
+    def load(cls, source: Source_Type, config: ConfigLike = None) -> dict[str, SasMeasurement]:
         """Convenience method: infer the file type of ``source`` and load it."""
         return Importer(config).load_data(source)
 
@@ -105,7 +110,7 @@ class Importer:
     # Bulk import
     # ------------------------------------------------------------------------------------------------------------------
 
-    def import_data(self, files: list[Path_Type], configs: list[dict[str, Value_Type]] | None = None) \
+    def import_data(self, files: list[Path_Type], configs: list[ConfigLike] | None = None) \
             -> tuple[list[SasMeasurement], list[str]]:
         """
         Import a series of files, inferring the importer for each one from its contents.
@@ -129,15 +134,15 @@ class Importer:
             errors.extend(file_errors)
         return output, errors
 
-    def _import_file(self, file: Path, config: dict[str, Value_Type] | None = None) \
+    def _import_file(self, file: Path, config: ConfigLike = None) \
             -> tuple[list[SasMeasurement], list[str]]:
         if not file.exists():
             return [], [f'File does not exist: "{file}"']
         importer = self.find_importer(file)
         if importer is None:
             return [], [f'Unable to determine the file type of "{file}"']
-        merged_config = {**self.config, **(config or {})}
         try:
+            merged_config = self.config.merged(ImporterConfig.coerce(config))
             imported = list(importer(merged_config).load_data(file).values())
         except Exception as e:
             return [], [f'Error loading "{file}" with the {importer.name} importer: {e}']
