@@ -10,7 +10,12 @@ from sasdata.data_io.importers.import_ascii import (
 )
 from sasdata.dataset_types import one_dim
 from sasdata.guess import guess_columns
-from sasdata.quantities.units import per_angstrom, per_centimeter
+from sasdata.quantities.units import (
+    per_angstrom,
+    per_centimeter,
+    per_meter,
+    per_nanometer,
+)
 from test import local_data_finder, local_mumag_finder
 
 # TODO: These are using the private _data_contents temporarily. Later, there will be a public way of accessing these,
@@ -168,7 +173,7 @@ def load_text(tmp_path, text: str, columns=Q_I_DI_COLUMNS, **kwargs) -> dict:
         separator_dict=ALL_SEPARATORS,
         **kwargs,
     )
-    return load_data(params)[0]._data_contents
+    return list(AsciiImporter(params=params).load_data().values())[0]._data_contents
 
 
 # Line numbers in the comments are the (0-based) indices used for excluded_lines.
@@ -271,3 +276,33 @@ def test_column_without_unit_is_ignored(tmp_path):
     assert "dQ" not in data
     assert data["Q"].value == pytest.approx([0.01, 0.02])
     assert data["I"].value == pytest.approx([100, 90])
+
+
+def test_column_headings(tmp_path):
+    """Column names and units in a heading line are used instead of guessing them"""
+    filename = tmp_path / "headings.txt"
+    filename.write_text(
+        "# A comment\n"
+        "Q(nm^-1) <ignore> I(m^-1) dI(m^-1)\n"
+        "0.1 99 10 1\n"
+        "0.2 99 20 2\n"
+        "0.3 99 30 3\n"
+    )
+    params = guess_params_from_filename(str(filename), one_dim)
+    assert [name for name, _ in params.columns] == ["Q", "<ignore>", "I", "dI"]
+    data = list(AsciiImporter().load_data(filename).values())[0]
+    assert data.dataset_type.name == one_dim.name
+    # The units in the headings are kept as they are, and not converted to 1/Å and 1/cm
+    assert data["Q"].units == per_nanometer
+    assert data["I"].units == per_meter
+    assert data["I"].value == pytest.approx([10, 20, 30])
+    assert data["I"].standard_error.value == pytest.approx([1, 2, 3])
+    assert data["Q"].value == pytest.approx([0.1, 0.2, 0.3])
+
+
+def test_unrecognised_headings_are_guessed(tmp_path):
+    """Headings that are not all known column names are ignored, and the columns guessed as before"""
+    filename = tmp_path / "unknown.txt"
+    filename.write_text("<X> <Y> <dY>\n0.1 10 1\n0.2 20 2\n0.3 30 3\n")
+    params = guess_params_from_filename(str(filename), one_dim)
+    assert [name for name, _ in params.columns] == ["Q", "I", "dI"]
