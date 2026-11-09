@@ -9,8 +9,8 @@ from sasdata.data_io.importers.import_ascii import (
     load_data,
     load_data_default_params,
 )
-from sasdata.dataset_types import one_dim
-from sasdata.guess import guess_columns
+from sasdata.dataset_types import one_dim, two_dim
+from sasdata.guess import guess_column_count, guess_columns, guess_dataset_type
 from sasdata.quantities.units import per_angstrom, per_centimeter
 from test import local_data_finder, local_mumag_finder
 
@@ -251,6 +251,34 @@ def test_extra_columns_are_ignored(tmp_path):
     assert data["I"].value == pytest.approx([100, 90])
 
 
+THREE_COLUMN_DATA = "0.01 100 1\n0.02 90 2\n0.03 80 3\n"
+
+
+def test_guess_params_honours_requested_dataset_type(tmp_path):
+    # guess_dataset_type() classifies every .dat file as 2D. An explicit request
+    # for 1D must win, otherwise the 1D columns are checked against the 2D type.
+    filename = tmp_path / "data.dat"
+    filename.write_text(THREE_COLUMN_DATA)
+    params = guess_params_from_filename(str(filename), one_dim)
+    assert params.dataset_type is one_dim
+    data = load_data(params)[0]
+    assert data.dataset_type is one_dim
+    assert data["Q"].value == pytest.approx([0.01, 0.02, 0.03])
+    assert data["I"].value == pytest.approx([100, 90, 80])
+
+
+# Qx wraps around at the end of each Qy row, as in 2D detector files.
+GRID_DATA = "-0.1 -0.1 5\n0.0 -0.1 6\n0.1 -0.1 7\n-0.1 0.0 8\n0.0 0.0 9\n0.1 0.0 10\n"
+
+
+def test_guess_params_with_guessed_dataset_type(tmp_path):
+    # Passing guess_dataset_type() uses the guessed type (as load_data_default_params does).
+    filename = tmp_path / "data.dat"
+    filename.write_text(GRID_DATA)
+    params = guess_params_from_filename(str(filename), guess_dataset_type(str(filename)))
+    assert params.dataset_type is two_dim
+
+
 # Tests for ignored columns (issue #263).
 
 IGNORE = ("<ignore>", None)
@@ -272,3 +300,60 @@ def test_column_without_unit_is_ignored(tmp_path):
     assert "dQ" not in data
     assert data["Q"].value == pytest.approx([0.01, 0.02])
     assert data["I"].value == pytest.approx([100, 90])
+
+
+def test_dat_file_with_monotonic_q_is_guessed_as_1d(tmp_path):
+    filename = tmp_path / "data.dat"
+    filename.write_text(THREE_COLUMN_DATA)
+    assert guess_dataset_type(str(filename)) is one_dim
+
+
+def test_non_dat_file_is_always_guessed_as_1d(tmp_path):
+    filename = tmp_path / "data.txt"
+    filename.write_text(GRID_DATA)
+    assert guess_dataset_type(str(filename)) is one_dim
+
+
+@pytest.mark.parametrize(
+    "filename, expected",
+    [
+        ("detector_square.dat", two_dim),
+        ("exp18_14_igor_2dqxqy.dat", two_dim),
+        ("nans_in_2d_data.DAT", two_dim),  # has a blank line after every data row
+        ("nans_in_1d_data.dat", one_dim),
+    ],
+)
+def test_dat_dataset_type_guess_on_real_files(filename, expected):
+    assert guess_dataset_type(find(filename, "sasdataloader")) is expected
+
+
+# Layout of an Anton Paar SAXSess export: a title, a line of integers and two
+# lines of instrument parameters before the Q, I, dI rows. Classic Mac line endings.
+SAXSESS_DATA = "\r".join(
+    [
+        "",
+        "SAXS BOX",
+        "       4        30         0         0         0         0         0         0",
+        "  0.000000E+00   0.261200E+03   0.000000E+00   0.100000E+01   0.154200E+00",
+        "  0.100000E+01   0.155999E+01   0.000000E+00   0.000000E+00   0.000000E+00",
+        "  0.754396E-01   0.975440E+00   0.938981E+02",
+        "  0.150879E+00   0.975745E+00   0.991879E+02",
+        "  0.226319E+00   0.975473E+00   0.767819E+02",
+        "  0.301758E+00   0.974517E+00   0.131319E+03",
+        "",
+    ]
+)
+
+
+def test_saxsess_header_lines_are_not_read_as_data(tmp_path):
+    filename = tmp_path / "beam_profile.DAT"
+    filename.write_bytes(SAXSESS_DATA.encode())
+    data = load_data_default_params(str(filename))[0]
+    assert data.dataset_type is one_dim
+    assert data["Q"].value == pytest.approx([0.0754396, 0.150879, 0.226319, 0.301758])
+    assert data["I"].value == pytest.approx([0.975440, 0.975745, 0.975473, 0.974517])
+
+
+def test_blank_lines_between_rows_do_not_change_the_column_count():
+    rows = [["0.01", "100", "1"], [""], ["0.02", "90", "2"], [""], ["0.03", "80", "3"], [""]]
+    assert guess_column_count(rows, 0) == 3
