@@ -5,7 +5,9 @@ The files start with comment lines describing the data, followed by a line namin
 ``Q(Ang^-1) I(cm^-1) dI(cm^-1) dQ(Ang^-1)``, so :class:`sasdata.data_io.importers.import_ascii.AsciiImporter` reads the
 columns back with the correct names and units.
 
-The columns are written in the order SasView expects, in the units SasView assumes (1/Å and 1/cm):
+The columns are written in the order SasView expects, in the units of the data. Nothing is converted, so SasView, which
+assumes 1/Å and 1/cm for text files and ignores the units in the headings, only reads data that is already in those
+units correctly:
 
 * 1D data: ``Q I dI dQ``, then any of ``dQw dQl Qmean Shadowfactor``. SasView reads these from ``.txt`` and ``.csv``
   files.

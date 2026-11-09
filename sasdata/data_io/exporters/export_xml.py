@@ -3,6 +3,11 @@ Export SasData to canSAS 1D XML files (version 1.1).
 
 The files are valid against the canSAS 1.1 schema (http://www.cansas.org/formats/1.1/cansas1d.xsd), so they can be
 read by both :class:`sasdata.data_io.importers.import_xml.XmlImporter` and SasView. The format only holds 1D data.
+
+Quantities are written in their own units, which are not converted. The only exception is a separate ``dQ`` quantity,
+which is converted to the units of Q because the format holds a single unit for Q and its resolution. SasView only
+converts XML units that it knows (which do not include nm^-1), so data should be in 1/Å and 1/cm to be read correctly
+by SasView.
 """
 
 import math

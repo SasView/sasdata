@@ -7,7 +7,14 @@ list of SasMeasurement objects to a single file in one format, in a form that th
 
 Children register themselves automatically when they are defined. :meth:`Exporter.export_data` selects the exporter
 for each file, either by name or from the file extension, checks that the destination can be written to, and then
-writes the file::
+writes the file.
+
+Units are never converted: every quantity is written in the units it has in the data, and those units are recorded in
+the file (in the column headings of text files and the unit attributes of HDF5 and XML files), so the sasdata importers
+read the data back unchanged. SasView's own loaders assume 1/Å and 1/cm for text files, do not convert the units of
+HDF5 files, and only convert the XML units that they know (which do not include nm^-1), so data should already be in
+1/Å and 1/cm to be read correctly by SasView. The one exception is the canSAS XML format, which can only hold the Q
+resolution in the units of Q, so a separate ``dQ`` quantity is converted to the units of Q::
 
     from sasdata.data_io.exporter import Exporter
 

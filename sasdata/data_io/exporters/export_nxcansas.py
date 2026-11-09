@@ -5,6 +5,9 @@ The files follow the NXcanSAS definition (https://manual.nexusformat.org/classes
 written by SasView: each dataset is written to its own SASentry, with its data in a SASdata group. Uncertainties are
 linked to their data with the ``uncertainties`` attribute and resolutions to Q with the ``resolutions`` attribute, so
 the files can be read by both :class:`sasdata.data_io.importers.import_hdf5.HDF5Importer` and SasView.
+
+Quantities are written in their own units, which are not converted. SasView does not convert the units of HDF5 files
+either, so data should be in 1/Å and 1/cm to be read correctly by SasView.
 """
 
 import re
