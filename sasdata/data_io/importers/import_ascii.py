@@ -1,3 +1,4 @@
+import logging
 import re
 from dataclasses import dataclass, field, replace
 from enum import Enum
@@ -25,6 +26,8 @@ from sasdata.guess import (
 from sasdata.metadata import Metadata, MetaNode
 from sasdata.quantities.quantity import NamedQuantity, Quantity
 from sasdata.quantities.units import NamedUnit
+
+logger = logging.getLogger(__name__)
 
 
 class AsciiSeparator(Enum):
@@ -121,32 +124,41 @@ def split_line(separator_dict: dict[str, bool], line: str) -> list[str]:
 
 # TODO: Implement error handling.
 def load_quantities(params: AsciiReaderParams, filename: str, metadata: Metadata) -> dict[str, Quantity]:
-    """Load a list of quantities from the filename based on the params."""
+    """Load a list of quantities from the filename based on the params.
+
+    Only the lines that will actually be used become data points. A line is skipped if it is before
+    ``params.starting_line``, if its (0-based) line number is in ``params.excluded_lines``, or if it can't be read as a
+    row of numbers (e.g. blank lines, comments, or lines with too few columns). Skipped lines are left out entirely
+    rather than being stored as zeros.
+    """
     with open(filename) as ascii_file:
         lines = ascii_file.readlines()
-        arrays: list[np.ndarray] = []
-        for _ in params.columns_included:
-            arrays.append(np.zeros(len(lines) - params.starting_line))
-        for i, current_line in enumerate(lines):
-            if i < params.starting_line or current_line in params.excluded_lines:
-                continue
-            line_split = split_line(params.separator_dict, current_line)
-            try:
-                for j, token in enumerate(line_split):
-                    # Sometimes in the split, there might be an extra column that doesn't need to be there (e.g. an empty
-                    # string.) This won't convert to a float so we need to ignore it.
-                    if j >= len(params.columns_included):
-                        continue
-                    # TODO: Data might not be floats. Maybe don't hard code this.
-                    arrays[j][i - params.starting_line] = float(token)
-            except ValueError:
-                # If any of the lines contain non-numerical data, then this line can't be read in as a quantity so it
-                # should be ignored entirely.
-                print(f"Line {i + 1} skipped.")
-                continue
+
+    column_count = len(params.columns_included)
+    rows: list[list[float]] = []
+    for i, current_line in enumerate(lines):
+        if i < params.starting_line or i in params.excluded_lines:
+            continue
+        line_split = split_line(params.separator_dict, current_line)
+        # Sometimes in the split, there might be extra columns that don't need to be there (e.g. an empty string.)
+        # These won't convert to a float so we need to ignore them.
+        tokens = line_split[:column_count]
+        if len(tokens) < column_count:
+            logger.info(f"{path.basename(filename)}: line {i + 1} skipped as it has too few columns.")
+            continue
+        try:
+            # TODO: Values are parsed as floats; decimal commas, Fortran 'D' exponents and non-numeric columns (e.g. a
+            # boolean mask) are not handled and cause the row to be skipped.
+            rows.append([float(token) for token in tokens])
+        except ValueError:
+            # If any of the lines contain non-numerical data, then this line can't be read in as a quantity so it
+            # should be ignored entirely.
+            logger.info(f"{path.basename(filename)}: line {i + 1} skipped as it contains non-numerical data.")
+
+    data = np.array(rows, dtype=float).reshape(len(rows), column_count)
     file_quantities = {
-        name: NamedQuantity(name, arrays[i], unit, id_header=metadata.id_header)
-        for i, (name, unit) in enumerate(params.columns_included)
+        name: NamedQuantity(name, data[:, j].copy(), unit, id_header=metadata.id_header)
+        for j, (name, unit) in enumerate(params.columns_included)
     }
     return file_quantities
 
