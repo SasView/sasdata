@@ -15,7 +15,7 @@ from sasdata.ascii_reader_metadata import (
 )
 from sasdata.data import SasMeasurement
 from sasdata.data_io.importer import Importer, Source_Type, is_text, measurements_by_name, read_header
-from sasdata.dataset_types import DatasetType, one_dim, unit_kinds
+from sasdata.dataset_types import DatasetType, angle_dim, one_dim, sesans, three_dim, two_dim, unit_kinds
 from sasdata.default_units import get_default_unit
 from sasdata.guess import (
     guess_column_count,
@@ -24,10 +24,14 @@ from sasdata.guess import (
     guess_starting_position,
 )
 from sasdata.metadata import Metadata, MetaNode
+from sasdata.quantities import unit_parser, units
 from sasdata.quantities.quantity import NamedQuantity, Quantity
 from sasdata.quantities.units import NamedUnit
 
 logger = logging.getLogger(__name__)
+
+# Dataset types that the columns in a header line are matched against, in order of preference.
+all_dataset_types = [one_dim, two_dim, three_dim, angle_dim, sesans]
 
 
 class AsciiSeparator(Enum):
@@ -91,20 +95,96 @@ def guess_params_from_filename(filename: str, dataset_type: DatasetType) -> Asci
         lines_split = [split_line(separator_dict, line) for line in lines]
         startpos = guess_starting_position(lines_split)
         colcount = guess_column_count(lines_split, startpos)
-        # Columns we don't know the unit for are ignored. They are kept as <ignore> rather than removed, so the
-        # columns after them still line up with the data.
-        columns = [
-            (x, get_default_unit(x, unit_kinds[x])) if x in unit_kinds else ("<ignore>", None)
-            for x in guess_columns(colcount, dataset_type)
-        ]
+        header = find_column_header(lines_split, startpos, colcount)
+        if header is not None:
+            # The file names its columns, so use those (and their units) instead of guessing.
+            columns, dataset_type = header
+        else:
+            # Columns we don't know the unit for are ignored. They are kept as <ignore> rather than removed, so the
+            # columns after them still line up with the data.
+            columns = [
+                (x, get_default_unit(x, unit_kinds[x])) if x in unit_kinds else ("<ignore>", None)
+                for x in guess_columns(colcount, dataset_type)
+            ]
+            dataset_type = guess_dataset_type(filename)
         params = AsciiReaderParams(
             [filename],
             columns,
             starting_line=startpos,
             separator_dict=separator_dict,
-            dataset_type=guess_dataset_type(filename),
+            dataset_type=dataset_type,
         )
         return params
+
+
+# Every column name that can appear in a dataset, which may be used to name columns in a header line.
+KNOWN_COLUMNS = set(unit_kinds) | {
+    column for dataset in all_dataset_types for column in dataset.required + dataset.optional
+}
+
+# A column heading: a name optionally followed by units in brackets, e.g. 'Q', 'Q(Ang^-1)', 'I[cm^-1]'.
+COLUMN_HEADING = re.compile(r"^(?P<name><ignore>|[A-Za-z][A-Za-z0-9_]*)(?:\((?P<unit>[^()]*)\)|\[(?P<bracket_unit>[^\]]*)\])?$")
+
+
+def parse_column_header(tokens: list[str]) -> tuple[list[tuple[str, NamedUnit | None]], DatasetType] | None:
+    """
+    Try to read a line of tokens as column headings, each of which is the name of a quantity optionally followed by
+    its units, e.g. ``Q(Ang^-1) I(cm^-1) dI(cm^-1)``. Columns named ``<ignore>`` are skipped.
+
+    :return: The columns and the dataset type they make up, or None if the tokens are not all recognised headings.
+    """
+    tokens = [token for token in tokens if token]
+    if tokens and tokens[0].startswith("#"):
+        tokens[0] = tokens[0].lstrip("#")
+        tokens = [token for token in tokens if token]
+    columns: list[tuple[str, NamedUnit | None]] = []
+    for token in tokens:
+        match = COLUMN_HEADING.match(token)
+        if match is None:
+            return None
+        name = match.group("name")
+        if name == "<ignore>":
+            columns.append((name, None))
+            continue
+        if name not in KNOWN_COLUMNS:
+            return None
+        unit_string = match.group("unit") or match.group("bracket_unit")
+        if unit_string:
+            try:
+                unit = unit_parser.parse(unit_string.strip())
+            except Exception:
+                return None
+        elif name in unit_kinds:
+            unit = get_default_unit(name, unit_kinds[name])
+        else:
+            unit = units.none
+        if not isinstance(unit, NamedUnit):
+            return None
+        columns.append((name, unit))
+
+    names = [name for name, _ in columns if name != "<ignore>"]
+    if len(set(names)) != len(names):
+        return None
+    for dataset_type in all_dataset_types:
+        if all(name in names for name in dataset_type.required) and \
+                all(name in dataset_type.required + dataset_type.optional for name in names):
+            return columns, replace(dataset_type)
+    return None
+
+
+def find_column_header(lines_split: list[list[str]], startpos: int, colcount: int) \
+        -> tuple[list[tuple[str, NamedUnit | None]], DatasetType] | None:
+    """Look back through the lines before the data for one that names each column."""
+    for line in reversed(lines_split[:startpos]):
+        tokens = [token for token in line if token]
+        if tokens and tokens[0] == "#":
+            tokens = tokens[1:]
+        if len(tokens) != colcount:
+            continue
+        header = parse_column_header(tokens)
+        if header is not None:
+            return header
+    return None
 
 
 def split_line(separator_dict: dict[str, bool], line: str) -> list[str]:
