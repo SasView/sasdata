@@ -8,11 +8,11 @@ import pytest
 from test import local_data_finder, local_load
 
 test_file_names = [
-    ("ascii_test_1", "::Q:3KrS58TPgclJ1rgyr0VQp3"),
-    ("ISIS_1_1", "TK49 c10_SANS:79680:Q:4TghWEoJi6xxhyeDXhS751"),
-    ("cansas1d", "Test title:1234:Q:440tNBqdx9jvci6CgjmrmD"),
-    ("MAR07232_rest", "MAR07232_rest_out.dat:2:/sasentry01/sasdata01/Qx:37t0tPj1o8oQcQEB3DVUlw"),
-    ("simpleexamplefile", "::/sasentry01/sasdata01/Q:uoHMeB8mukElC1uLCy7Sd"),
+    ("ascii_test_1.txt", "::Q:3KrS58TPgclJ1rgyr0VQp3"),
+    ("ISIS_1_1.xml", "TK49 c10_SANS:79680:Q:4TghWEoJi6xxhyeDXhS751"),
+    ("cansas1d.xml", "Test title:1234:Q:440tNBqdx9jvci6CgjmrmD"),
+    ("MAR07232_rest.h5", "MAR07232_rest_out.dat:2:/sasentry01/sasdata01/Qx:37t0tPj1o8oQcQEB3DVUlw"),
+    ("simpleexamplefile.h5", "::/sasentry01/sasdata01/Q:uoHMeB8mukElC1uLCy7Sd"),
 ]
 
 

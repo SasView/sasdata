@@ -56,7 +56,9 @@ sesans = DatasetType(
     optional=["Transmission", "Polarisation"],
     expected_orders=[["SpinEchoLength", "Depolarisation", "Wavelength"]])
 
-dataset_types = {dataset.name for dataset in [one_dim, two_dim, angle_dim, sesans]}
+# Dataset types that can be selected when loading data (e.g. in the ASCII dialog), by name, in the order they should be
+# shown. This is a dict rather than a set so that the order is fixed. three_dim isn't included.
+dataset_types: dict[str, DatasetType] = {dataset.name: dataset for dataset in [one_dim, two_dim, angle_dim, sesans]}
 
 
 #

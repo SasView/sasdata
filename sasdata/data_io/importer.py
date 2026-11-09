@@ -121,7 +121,8 @@ class Importer:
             configs = []
         fill_value = configs[-1] if len(configs) > 0 else None
         for file, config in zip_longest(files, configs, fillvalue=fill_value):
-            if file is None:
+            if file == fill_value:
+                # If this is reached, the most likely scenario is len(configs) > len(files) in which case, break out of the loop
                 break
             measurements, file_errors = self._import_file(Path(file), config)
             output.extend(measurements)
@@ -156,7 +157,7 @@ def read_header(source: Source_Type, size: int = SNIFF_SIZE) -> bytes:
     Returns an empty bytes object if the source cannot be read.
     """
     try:
-        if isinstance(source, (str, Path)):
+        if isinstance(source, Path_Type):
             path = Path(source)
             if not path.is_file():
                 return b""
@@ -171,6 +172,9 @@ def read_header(source: Source_Type, size: int = SNIFF_SIZE) -> bytes:
                 source.seek(position)
             return header if isinstance(header, bytes) else header.encode()
     except (OSError, ValueError):
+        # File access or read errors will fall through here, implying the reader cannot interpret the file.
+        # An empty byte string will be returned, but there may be other cases where this try/except are bypassed, so
+        # explicitly do nothing here.
         pass
     return b""
 

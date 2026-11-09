@@ -8,10 +8,9 @@ from test.test_files import data, json, mumag, reference, sesans_data
 
 def local_load(path: str) -> list[SasData]:
     """Load a local file, letting the Importer infer the file type from its contents"""
-    base = os.path.join(os.path.dirname(__file__), path)
-    for extension in ("h5", "xml", "txt"):
-        if os.path.exists(f"{base}.{extension}"):
-            return list(Importer.load(f"{base}.{extension}").values())
+    f_path = pathlib.Path(path)
+    if f_path.exists() and f_path.is_file():
+        return list(Importer.load(f_path).values())
 
 
 def local_reference_finder(path: str):

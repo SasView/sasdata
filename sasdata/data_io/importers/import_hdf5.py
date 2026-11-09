@@ -10,7 +10,7 @@ from h5py import Group as HDF5Group
 from sasdata.data import SasMeasurement
 from sasdata.data_backing import Dataset as SASDataDataset
 from sasdata.data_backing import Group as SASDataGroup
-from sasdata.data_io.importer import Importer, Source_Type, read_header
+from sasdata.data_io.importer import SNIFF_SIZE, Importer, Source_Type, read_header
 from sasdata.dataset_types import one_dim, three_dim, two_dim
 from sasdata.metadata import (
     Aperture,
@@ -30,11 +30,11 @@ from sasdata.quantities import units
 from sasdata.quantities.quantity import NamedQuantity, Quantity
 from sasdata.quantities.unit_parser import parse
 
-# test_file = "../example_data/1d_data/33837rear_1D_1.75_16.5_NXcanSAS_v3.h5"
-# test_file = "../example_data/1d_data/33837rear_1D_1.75_16.5_NXcanSAS.h5"
+# test_file = "../../../sasdata/example_data/1d_data/33837rear_1D_1.75_16.5_NXcanSAS_v3.h5"
+# test_file = "../../../sasdata/example_data/1d_data/33837rear_1D_1.75_16.5_NXcanSAS.h5"
 test_file = "../../../sasdata/example_data/2d_data/BAM_2D.h5"
-# test_file = "../example_data/2d_data/14250_2D_NoDetInfo_NXcanSAS_v3.h5"
-# test_file = "../example_data/2d_data/33837rear_2D_1.75_16.5_NXcanSAS_v3.h5"
+# test_file = "../../../sasdata/example_data/2d_data/14250_2D_NoDetInfo_NXcanSAS_v3.h5"
+# test_file = "../../../sasdata/example_data/2d_data/33837rear_2D_1.75_16.5_NXcanSAS_v3.h5"
 #test_file = "../../../test/test_files/data/nxcansas_1Dand2D_multisasdata.h5"
 
 logger = logging.getLogger(__name__)
@@ -437,7 +437,7 @@ class HDF5Importer(Importer):
                 return h5py.is_hdf5(source)
             except Exception:
                 return False
-        header = read_header(source, size=4096)
+        header = read_header(source, size=SNIFF_SIZE)
         offset = 0
         while offset + len(HDF5_SIGNATURE) <= len(header):
             if header[offset:offset + len(HDF5_SIGNATURE)] == HDF5_SIGNATURE:
