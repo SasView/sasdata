@@ -1,3 +1,4 @@
+import logging
 import re
 from dataclasses import dataclass, field, replace
 from enum import Enum
@@ -14,7 +15,7 @@ from sasdata.ascii_reader_metadata import (
 )
 from sasdata.data import SasMeasurement
 from sasdata.data_io.importer import Importer, Source_Type, is_text, measurements_by_name, read_header
-from sasdata.dataset_types import DatasetType, one_dim, unit_kinds
+from sasdata.dataset_types import DatasetType, angle_dim, one_dim, sesans, three_dim, two_dim, unit_kinds
 from sasdata.default_units import get_default_unit
 from sasdata.guess import (
     guess_column_count,
@@ -23,8 +24,14 @@ from sasdata.guess import (
     guess_starting_position,
 )
 from sasdata.metadata import Metadata, MetaNode
+from sasdata.quantities import unit_parser, units
 from sasdata.quantities.quantity import NamedQuantity, Quantity
 from sasdata.quantities.units import NamedUnit
+
+logger = logging.getLogger(__name__)
+
+# Dataset types that the columns in a header line are matched against, in order of preference.
+all_dataset_types = [one_dim, two_dim, three_dim, angle_dim, sesans]
 
 
 class AsciiSeparator(Enum):
@@ -65,13 +72,19 @@ class AsciiReaderParams:
                 self.metadata.filename_separator[basename] = "_"
                 self.metadata.filename_specific_metadata[basename] = {}
 
+    @staticmethod
+    def is_column_included(column: tuple[str, NamedUnit | None]) -> bool:
+        """Whether a column is loaded, i.e. it isn't ignored and has a unit."""
+        return column[0] != "<ignore>" and isinstance(column[1], NamedUnit)
+
     @property
     def columns_included(self) -> list[tuple[str, NamedUnit]]:
-        return [
-            column
-            for column in self.columns
-            if column[0] != "<ignore>" and isinstance(column[1], NamedUnit)
-        ]
+        return [column for column in self.columns if self.is_column_included(column)]
+
+    @property
+    def column_positions_included(self) -> list[int]:
+        """Position in each line of the columns in columns_included. Ignored columns still take up a position."""
+        return [position for position, column in enumerate(self.columns) if self.is_column_included(column)]
 
 
 def guess_params_from_filename(filename: str, dataset_type: DatasetType) -> AsciiReaderParams:
@@ -82,19 +95,96 @@ def guess_params_from_filename(filename: str, dataset_type: DatasetType) -> Asci
         lines_split = [split_line(separator_dict, line) for line in lines]
         startpos = guess_starting_position(lines_split)
         colcount = guess_column_count(lines_split, startpos)
-        columns = [
-            (x, get_default_unit(x, unit_kinds[x]))
-            for x in guess_columns(colcount, dataset_type)
-            if x in unit_kinds
-        ]
+        header = find_column_header(lines_split, startpos, colcount)
+        if header is not None:
+            # The file names its columns, so use those (and their units) instead of guessing.
+            columns, dataset_type = header
+        else:
+            # Columns we don't know the unit for are ignored. They are kept as <ignore> rather than removed, so the
+            # columns after them still line up with the data.
+            columns = [
+                (x, get_default_unit(x, unit_kinds[x])) if x in unit_kinds else ("<ignore>", None)
+                for x in guess_columns(colcount, dataset_type)
+            ]
+            dataset_type = guess_dataset_type(filename)
         params = AsciiReaderParams(
             [filename],
             columns,
             starting_line=startpos,
             separator_dict=separator_dict,
-            dataset_type=guess_dataset_type(filename),
+            dataset_type=dataset_type,
         )
         return params
+
+
+# Every column name that can appear in a dataset, which may be used to name columns in a header line.
+KNOWN_COLUMNS = set(unit_kinds) | {
+    column for dataset in all_dataset_types for column in dataset.required + dataset.optional
+}
+
+# A column heading: a name optionally followed by units in brackets, e.g. 'Q', 'Q(Ang^-1)', 'I[cm^-1]'.
+COLUMN_HEADING = re.compile(r"^(?P<name><ignore>|[A-Za-z][A-Za-z0-9_]*)(?:\((?P<unit>[^()]*)\)|\[(?P<bracket_unit>[^\]]*)\])?$")
+
+
+def parse_column_header(tokens: list[str]) -> tuple[list[tuple[str, NamedUnit | None]], DatasetType] | None:
+    """
+    Try to read a line of tokens as column headings, each of which is the name of a quantity optionally followed by
+    its units, e.g. ``Q(Ang^-1) I(cm^-1) dI(cm^-1)``. Columns named ``<ignore>`` are skipped.
+
+    :return: The columns and the dataset type they make up, or None if the tokens are not all recognised headings.
+    """
+    tokens = [token for token in tokens if token]
+    if tokens and tokens[0].startswith("#"):
+        tokens[0] = tokens[0].lstrip("#")
+        tokens = [token for token in tokens if token]
+    columns: list[tuple[str, NamedUnit | None]] = []
+    for token in tokens:
+        match = COLUMN_HEADING.match(token)
+        if match is None:
+            return None
+        name = match.group("name")
+        if name == "<ignore>":
+            columns.append((name, None))
+            continue
+        if name not in KNOWN_COLUMNS:
+            return None
+        unit_string = match.group("unit") or match.group("bracket_unit")
+        if unit_string:
+            try:
+                unit = unit_parser.parse(unit_string.strip())
+            except Exception:
+                return None
+        elif name in unit_kinds:
+            unit = get_default_unit(name, unit_kinds[name])
+        else:
+            unit = units.none
+        if not isinstance(unit, NamedUnit):
+            return None
+        columns.append((name, unit))
+
+    names = [name for name, _ in columns if name != "<ignore>"]
+    if len(set(names)) != len(names):
+        return None
+    for dataset_type in all_dataset_types:
+        if all(name in names for name in dataset_type.required) and \
+                all(name in dataset_type.required + dataset_type.optional for name in names):
+            return columns, replace(dataset_type)
+    return None
+
+
+def find_column_header(lines_split: list[list[str]], startpos: int, colcount: int) \
+        -> tuple[list[tuple[str, NamedUnit | None]], DatasetType] | None:
+    """Look back through the lines before the data for one that names each column."""
+    for line in reversed(lines_split[:startpos]):
+        tokens = [token for token in line if token]
+        if tokens and tokens[0] == "#":
+            tokens = tokens[1:]
+        if len(tokens) != colcount:
+            continue
+        header = parse_column_header(tokens)
+        if header is not None:
+            return header
+    return None
 
 
 def split_line(separator_dict: dict[str, bool], line: str) -> list[str]:
@@ -121,32 +211,43 @@ def split_line(separator_dict: dict[str, bool], line: str) -> list[str]:
 
 # TODO: Implement error handling.
 def load_quantities(params: AsciiReaderParams, filename: str, metadata: Metadata) -> dict[str, Quantity]:
-    """Load a list of quantities from the filename based on the params."""
+    """Load a list of quantities from the filename based on the params.
+
+    Only the lines that will actually be used become data points. A line is skipped if it is before
+    ``params.starting_line``, if its (0-based) line number is in ``params.excluded_lines``, or if it can't be read as a
+    row of numbers (e.g. blank lines, comments, or lines with too few columns). Skipped lines are left out entirely
+    rather than being stored as zeros.
+    """
     with open(filename) as ascii_file:
         lines = ascii_file.readlines()
-        arrays: list[np.ndarray] = []
-        for _ in params.columns_included:
-            arrays.append(np.zeros(len(lines) - params.starting_line))
-        for i, current_line in enumerate(lines):
-            if i < params.starting_line or current_line in params.excluded_lines:
-                continue
-            line_split = split_line(params.separator_dict, current_line)
-            try:
-                for j, token in enumerate(line_split):
-                    # Sometimes in the split, there might be an extra column that doesn't need to be there (e.g. an empty
-                    # string.) This won't convert to a float so we need to ignore it.
-                    if j >= len(params.columns_included):
-                        continue
-                    # TODO: Data might not be floats. Maybe don't hard code this.
-                    arrays[j][i - params.starting_line] = float(token)
-            except ValueError:
-                # If any of the lines contain non-numerical data, then this line can't be read in as a quantity so it
-                # should be ignored entirely.
-                print(f"Line {i + 1} skipped.")
-                continue
+
+    # Ignored columns are skipped, but still count when finding the position of the other columns in each line.
+    positions = params.column_positions_included
+    column_count = len(positions)
+    required_length = max(positions) + 1 if positions else 0
+    rows: list[list[float]] = []
+    for i, current_line in enumerate(lines):
+        if i < params.starting_line or i in params.excluded_lines:
+            continue
+        line_split = split_line(params.separator_dict, current_line)
+        # Values after the last loaded column (e.g. an empty string at the end of the line, or extra columns) and in
+        # ignored columns aren't read, so they don't need to be numbers.
+        if len(line_split) < required_length:
+            logger.info(f"{path.basename(filename)}: line {i + 1} skipped as it has too few columns.")
+            continue
+        try:
+            # TODO: Values are parsed as floats; decimal commas, Fortran 'D' exponents and non-numeric columns (e.g. a
+            # boolean mask) are not handled and cause the row to be skipped.
+            rows.append([float(line_split[position]) for position in positions])
+        except ValueError:
+            # If any of the lines contain non-numerical data, then this line can't be read in as a quantity so it
+            # should be ignored entirely.
+            logger.info(f"{path.basename(filename)}: line {i + 1} skipped as it contains non-numerical data.")
+
+    data = np.array(rows, dtype=float).reshape(len(rows), column_count)
     file_quantities = {
-        name: NamedQuantity(name, arrays[i], unit, id_header=metadata.id_header)
-        for i, (name, unit) in enumerate(params.columns_included)
+        name: NamedQuantity(name, data[:, j].copy(), unit, id_header=metadata.id_header)
+        for j, (name, unit) in enumerate(params.columns_included)
     }
     return file_quantities
 
