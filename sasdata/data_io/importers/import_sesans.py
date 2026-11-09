@@ -4,12 +4,13 @@ Import SESANS data in SasData format
 
 import re
 from collections import defaultdict
-from itertools import groupby
+from itertools import groupby, takewhile
 from pathlib import Path
 
 import numpy as np
 
 from sasdata.data import SasMeasurement
+from sasdata.data_io.config import TextSource
 from sasdata.data_io.importer import Importer, Source_Type, is_text, read_header
 from sasdata.data_util.loader_exceptions import FileContentsException
 from sasdata.dataset_types import sesans
@@ -233,4 +234,7 @@ class SesansImporter(Importer):
                 contents = contents.decode("utf-8")
             lines = contents.splitlines(keepends=True)
         measurement = parse_sesans(lines)
+        # Metadata at the locations given in the configuration replaces what was found in the standard places
+        header_lines = list(takewhile(lambda line: not line.startswith("BEGIN_DATA"), lines))
+        self.config.apply_to_metadata(measurement.metadata, TextSource(header_lines))
         return {measurement.name: measurement}

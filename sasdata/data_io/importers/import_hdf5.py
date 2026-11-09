@@ -10,6 +10,7 @@ from h5py import Group as HDF5Group
 from sasdata.data import SasMeasurement
 from sasdata.data_backing import Dataset as SASDataDataset
 from sasdata.data_backing import Group as SASDataGroup
+from sasdata.data_io.config import Hdf5Source
 from sasdata.data_io.importer import SNIFF_SIZE, Importer, Source_Type, read_header
 from sasdata.dataset_types import one_dim, three_dim, two_dim
 from sasdata.metadata import (
@@ -455,6 +456,8 @@ class HDF5Importer(Importer):
                     logger.warning(f"Known keys: {[k for k in entry_keys]}")
 
                 metadata = parse_metadata(f[root_key])
+                # Metadata at the locations given in the configuration replaces what was found in the standard places
+                self.config.apply_to_metadata(metadata, Hdf5Source(entry))
 
                 for key in entry_keys:
                     component = entry[key]

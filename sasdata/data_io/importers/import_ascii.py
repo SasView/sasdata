@@ -12,6 +12,7 @@ from sasdata.ascii_reader_metadata import (
     pairings,
 )
 from sasdata.data import SasMeasurement
+from sasdata.data_io.config import ImporterConfig, TextSource
 from sasdata.data_io.importer import Importer, Path_Type, Source_Type, is_text, measurements_by_name, read_header
 from sasdata.dataset_types import DatasetType, one_dim, unit_kinds
 from sasdata.default_units import get_default_unit
@@ -186,11 +187,13 @@ def merge_uncertainties(quantities: dict[str, Quantity]) -> dict[str, Quantity]:
     return new_quantities
 
 
-def load_measurements(params: AsciiReaderParams) -> list[SasMeasurement]:
+def load_measurements(params: AsciiReaderParams, config: ImporterConfig | None = None) -> list[SasMeasurement]:
     """
     This loads a series of SasMeasurement objects based on the params.
     The amount of SasMeasurement objects loaded will depend on how many
     filenames are present in the list contained in the params.
+
+    If a configuration is given, the metadata it locates in the lines above the data is added to each measurement.
     """
     loaded_data: list[SasMeasurement] = []
     for filename in params.filenames:
@@ -207,6 +210,10 @@ def load_measurements(params: AsciiReaderParams) -> list[SasMeasurement]:
             magnetic=None,
             raw=raw_metadata,
         )
+        if config:
+            with open(filename, errors="replace") as header_file:
+                header_lines = header_file.readlines()[:params.starting_line]
+            config.apply_to_metadata(metadata, TextSource(header_lines))
         quantities = load_quantities(params, filename, metadata)
         data = SasMeasurement(
             path.basename(filename),
@@ -261,4 +268,4 @@ class AsciiImporter(Importer):
         else:
             filename = str(source)
             params = guess_params_from_filename(filename, guess_dataset_type(filename))
-        return measurements_by_name(load_measurements(params))
+        return measurements_by_name(load_measurements(params, self.config))

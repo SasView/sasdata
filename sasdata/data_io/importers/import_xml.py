@@ -7,6 +7,7 @@ from lxml import etree
 
 import sasdata.quantities.unit_parser as unit_parser
 from sasdata.data import SasMeasurement
+from sasdata.data_io.config import XmlSource
 from sasdata.data_io.importer import Importer, Path_Type, Source_Type, is_text, read_header
 from sasdata.dataset_types import one_dim
 from sasdata.metadata import (
@@ -351,6 +352,8 @@ class XmlImporter(Importer):
                 magnetic=None, # NOTE: Magnetic data isn't part of the XML format.
                 raw=load_raw(root, version),
             )
+            # Metadata at the locations given in the configuration replaces what was found in the standard places
+            self.config.apply_to_metadata(metadata, XmlSource(entry))
 
             data = {}
 
