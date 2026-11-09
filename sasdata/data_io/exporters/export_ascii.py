@@ -83,7 +83,7 @@ class DelimitedTextExporter(Exporter, register=False):
         Find the columns to write. Returns the column headings (name and units) and the values of each column, in the
         units given in the headings.
         """
-        contents = {name: quantity for name, quantity in datum.data_contents.items()}
+        contents = {name: quantity for name, quantity in datum._data_contents.items()}
         positional, extras = COLUMN_ORDERS[datum.dataset_type.name]
         available: dict[str, tuple[np.ndarray, Unit]] = {}
         for name, quantity in contents.items():

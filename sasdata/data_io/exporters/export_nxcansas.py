@@ -14,7 +14,7 @@ import h5py
 import numpy as np
 
 from sasdata.data import SasMeasurement
-from sasdata.data_io.exporter import Exporter, data_contents
+from sasdata.data_io.exporter import Exporter
 from sasdata.dataset_types import one_dim, three_dim, two_dim
 from sasdata.quantities.quantity import Quantity
 
@@ -86,7 +86,7 @@ class NXcanSASExporter(Exporter):
     @staticmethod
     def write_data(group: h5py.Group, datum: SasMeasurement):
         """Write the quantities of a dataset to a SASdata group."""
-        contents = data_contents(datum)
+        contents = {name: quantity for name, quantity in datum._data_contents.items()}
         axes = AXES[datum.dataset_type.name]
         shape = grid_shape(contents, axes)
 

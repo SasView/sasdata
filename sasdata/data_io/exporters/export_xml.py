@@ -11,7 +11,7 @@ from pathlib import Path
 from lxml import etree
 
 from sasdata.data import SasMeasurement
-from sasdata.data_io.exporter import Exporter, data_contents
+from sasdata.data_io.exporter import Exporter
 from sasdata.dataset_types import one_dim
 from sasdata.metadata import (
     Aperture,
@@ -128,7 +128,7 @@ class CanSASXmlExporter(Exporter):
 
     @staticmethod
     def write_data(entry: etree._Element, datum: SasMeasurement):
-        contents = data_contents(datum)
+        contents = {name: quantity for name, quantity in datum._data_contents.items()}
         q = contents["Q"]
         intensity = contents["I"]
         length = len(q.value)
