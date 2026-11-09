@@ -4,10 +4,9 @@ import pytest
 
 from sasdata.ascii_reader_metadata import AsciiMetadataCategory, AsciiReaderMetadata
 from sasdata.data_io.importers.import_ascii import (
+    AsciiImporter,
     AsciiReaderParams,
     guess_params_from_filename,
-    load_data,
-    load_data_default_params,
 )
 from sasdata.dataset_types import one_dim
 from sasdata.guess import guess_columns
@@ -42,7 +41,7 @@ def test_ascii_1():
         ("<ignore>", None),
         ("<ignore>", None),
     ]
-    loaded_data = load_data(params)[0]
+    loaded_data = list(AsciiImporter(params=params).load_data().values())[0]
     assert len(loaded_data._data_contents) > 0
     # Check the first, and last rows to see if they are correct.
     for name, datum in loaded_data._data_contents.items():
@@ -60,7 +59,7 @@ def test_ascii_1():
 
 def test_ascii_2():
     filename = find("test_3_columns.txt", "sasdataloader")
-    loaded_data = load_data_default_params(filename)[0]
+    loaded_data = AsciiImporter().load_data(filename)["test_3_columns.txt"]
     assert len(loaded_data._data_contents) > 0
     for name, datum in loaded_data._data_contents.items():
         match name:
@@ -81,7 +80,7 @@ def test_ascii_2():
 def test_ascii_2d():
     filename = find("detector_rectangular.DAT", "sasdataloader")
     # Make sure that the dataset type is guessed as 2D data.
-    loaded_data = load_data_default_params(filename)[0]
+    loaded_data = list(AsciiImporter().load_data(filename).values())[0]
     assert len(loaded_data._data_contents) > 0
 
     for name, datum in loaded_data._data_contents.items():
@@ -132,9 +131,9 @@ def test_mumag_metadata():
         separator_dict={"Comma": True, "Tab": True},
         metadata=metadata,
     )
-    data = load_data(params)
+    data = AsciiImporter(params=params).load_data()
     assert len(data) == len(filenames)
-    for datum in data:
+    for _, datum in data.items():
         # Each file has 60 rows of Q, I, dI data.
         assert len(datum._data_contents["Q"].value) == 60
         assert len(datum._data_contents["I"].value) == 60
@@ -169,7 +168,7 @@ def load_text(tmp_path, text: str, columns=Q_I_DI_COLUMNS, **kwargs) -> dict:
         separator_dict=ALL_SEPARATORS,
         **kwargs,
     )
-    return load_data(params)[0]._data_contents
+    return AsciiImporter(params=params).load_data()['data.txt']._data_contents
 
 
 # Line numbers in the comments are the (0-based) indices used for excluded_lines.

@@ -7,8 +7,10 @@ import os
 import unittest
 
 import numpy as np
+import pytest
 
 from sasdata.data_io.importer import Importer
+from sasdata.data_io.importers import AsciiImporter, HDF5Importer, SesansImporter, XmlImporter
 from sasdata.dataloader.data_info import Data1D, DataInfo, plottable_1D
 from sasdata.dataloader.filereader import FileReader
 from sasdata.dataloader.loader import Loader
@@ -24,7 +26,7 @@ def find(filename):
 class GenericFileReaderTests(unittest.TestCase):
 
     def setUp(self):
-        self.reader = TestFileReader()
+        self.reader = MockFileReader()
         self.bad_file = find("ACB123.txt")
         self.good_file = find("123ABC.txt")
         self.generic_reader = Loader()
@@ -92,7 +94,7 @@ class GenericFileReaderTests(unittest.TestCase):
         if os.path.isfile(self.good_file):
             os.remove(self.good_file)
 
-class TestFileReader(FileReader):
+class MockFileReader(FileReader):
     def get_file_contents(self):
         """
         Reader specific class to access the contents of the file
@@ -110,14 +112,60 @@ class TestImporterClass:
     def test_basic_import(self):
         file_list = [
             find("TestExtensions.xml"),
-            find("FEB18012.ASC"), # Silently Fails
-            find("Anton-Paar.pdh"),  # Silently Fails
-            find("ascii_test_1.txt"),  # Silently Fails
-            find("MAR07232_rest.h5"),  # Silently Fails
+            find("FEB18012.ASC"),
+            find("Anton-Paar.pdh"),
+            find("ascii_test_1.txt"),
+            find("MAR07232_rest.h5"),
             find("nans_in_2d_data.DAT")
         ]
         importer = Importer()
         imported_data, errors = importer.import_data(file_list)
-        assert len(imported_data) == 1
+        assert len(imported_data) == 6
         assert imported_data[0].name == "TK49 c10_SANS"
-        assert len(errors) == 2
+        assert imported_data[4].name == "MAR07232_rest_out.dat"
+        assert errors == []
+
+    def test_missing_file(self):
+        missing = find("ACB123.txt")
+        imported_data, errors = Importer().import_data([missing, find("TestExtensions.xml")])
+        assert len(imported_data) == 1
+        assert len(errors) == 1
+        assert "File does not exist" in errors[0]
+
+    @pytest.mark.parametrize("filename, expected_importer", [
+        ("TestExtensions.xml", XmlImporter),
+        ("FEB18012.ASC", AsciiImporter),
+        ("Anton-Paar.pdh", AsciiImporter),
+        ("ascii_test_1.txt", AsciiImporter),
+        ("MAR07232_rest.h5", HDF5Importer),
+        ("nans_in_2d_data.DAT", AsciiImporter),
+        ("ACB123.txt", None),
+    ])
+    def test_find_importer(self, filename, expected_importer):
+        assert Importer.find_importer(find(filename)) is expected_importer
+
+    @pytest.mark.parametrize("filename", [
+        "TestExtensions", "TestExtensions.asc", "TestExtensions.nxs", "TestExtensions.notxml", "TestExtensions.xml",
+    ])
+    def test_file_type_inferred_from_contents(self, filename):
+        """The file extension should not matter: the importer is chosen from the file contents"""
+        assert Importer.find_importer(find(filename)) is XmlImporter
+        data = Importer.load(find(filename))
+        assert list(data.keys()) == ["TK49 c10_SANS"]
+        measurement = data["TK49 c10_SANS"]
+        assert len(measurement.ordinate.value) == 138
+        assert measurement.metadata.sample.sample_id == "TK49 c10_SANS"
+
+    def test_registry(self):
+        importers = Importer.importers()
+        for importer in (HDF5Importer, XmlImporter, SesansImporter, AsciiImporter):
+            assert importer in importers
+            assert issubclass(importer, Importer)
+        # Check priorities are in proper order and the Ascii Importer is always a last resort
+        priorities = [importer.priority for importer in importers]
+        assert all(x < y for x, y in zip(priorities, priorities[1:]))
+        assert importers[-1] is AsciiImporter
+
+    def test_unknown_file_type(self):
+        with pytest.raises(ValueError):
+            Importer().load_data(find("ACB123.txt"))
