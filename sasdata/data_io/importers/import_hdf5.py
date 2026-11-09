@@ -107,8 +107,11 @@ def connected_data(node: SASDataGroup, name_prefix="", metadata=None) -> dict[st
             uncertainty_map[name] = uncertainty_name
             uncertainties.add(uncertainty_name)
         if "resolutions" in child.attributes:
-            resolutions_name = child.attributes["resolutions"]
-            resolutions.add(resolutions_name)
+            # A single name, or an array of names when there are several resolutions (e.g. slit smearing)
+            for resolutions_name in np.atleast_1d(child.attributes["resolutions"]):
+                if isinstance(resolutions_name, bytes):
+                    resolutions_name = resolutions_name.decode()
+                resolutions.add(str(resolutions_name))
 
         entries[name] = quantity
 
