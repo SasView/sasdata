@@ -133,7 +133,7 @@ def test_mumag_metadata():
     )
     data = AsciiImporter(params=params).load_data()
     assert len(data) == len(filenames)
-    for datum in data:
+    for _, datum in data.items():
         # Each file has 60 rows of Q, I, dI data.
         assert len(datum._data_contents["Q"].value) == 60
         assert len(datum._data_contents["I"].value) == 60
@@ -168,7 +168,7 @@ def load_text(tmp_path, text: str, columns=Q_I_DI_COLUMNS, **kwargs) -> dict:
         separator_dict=ALL_SEPARATORS,
         **kwargs,
     )
-    return load_data(params)[0]._data_contents
+    return AsciiImporter(params=params).load_data()['data.txt']._data_contents
 
 
 # Line numbers in the comments are the (0-based) indices used for excluded_lines.
