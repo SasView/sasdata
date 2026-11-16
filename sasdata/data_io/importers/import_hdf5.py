@@ -408,14 +408,27 @@ def parse_metadata(node : HDF5Group) -> Metadata:
     # load the entire node recursively into a raw object
     raw = load_raw(node)
 
-    return Metadata(process=process,
-                    instrument=instrument,
-                    sample=sample,
-                    title=title,
-                    run=run,
-                    definition=definition,
-                    magnetic=None, # NOTE: Magnetic is not in the CANSAS format so this is left to None.
-                    raw=raw)
+    # Clean out the data from the metadata
+    print("=======Contents=======")
+    for c in raw.contents:
+        if type(c) is MetaNode and type(c.contents) is list:
+            c.contents = [
+                n
+                for n in c.contents
+                if (type(n) is not MetaNode) or (n.name != "Q" and n.name != "I")
+            ]
+    print("======================")
+
+    return Metadata(
+        process=process,
+        instrument=instrument,
+        sample=sample,
+        title=title,
+        run=run,
+        definition=definition,
+        magnetic=None,  # NOTE: Magnetic is not in the CANSAS format so this is left to None.
+        raw=raw,
+    )
 
 
 # The HDF5 format signature. It is normally at the start of the file, but may be offset by a user block whose size is

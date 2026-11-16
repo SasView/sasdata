@@ -463,4 +463,5 @@ def test_clean_h5():
     data = HDF5Importer().load_data(local_data_finder("simpleexamplefile.h5"))[
         "sasentry01"
     ]
+    assert not data.metadata.raw.filter("Q")
     assert not data.metadata.raw.filter("I")
