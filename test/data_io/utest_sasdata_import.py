@@ -459,9 +459,8 @@ def test_infer_importer(filename: str, expected_importer: type[Importer]):
     assert [d.summary() for d in inferred.values()] == [d.summary() for d in direct.values()]
 
 
-def test_clean_h5():
-    data = HDF5Importer().load_data(local_data_finder("simpleexamplefile.h5"))[
-        "sasentry01"
-    ]
-    assert not data.metadata.raw.filter("Q")
-    assert not data.metadata.raw.filter("I")
+def test_clean_h5_metadata():
+    data = HDF5Importer().load_data(local_data_finder("simpleexamplefile.h5"))
+    for datum in data.values():
+        assert not datum.metadata.raw.filter("Q")
+        assert not datum.metadata.raw.filter("I")
