@@ -464,3 +464,9 @@ def test_clean_h5_metadata():
     for datum in data.values():
         assert not datum.metadata.raw.filter("Q")
         assert not datum.metadata.raw.filter("I")
+
+def test_clean_xml_metadata():
+    data = XmlImporter().load_data(local_data_finder("ISIS_1_1.xml"))
+    for datum in data.values():
+        assert not datum.metadata.raw.filter("Q")
+        assert not datum.metadata.raw.filter("I")
