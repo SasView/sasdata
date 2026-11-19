@@ -457,3 +457,16 @@ def test_infer_importer(filename: str, expected_importer: type[Importer]):
     direct = expected_importer().load_data(filename)
     assert list(inferred.keys()) == list(direct.keys())
     assert [d.summary() for d in inferred.values()] == [d.summary() for d in direct.values()]
+
+
+def test_clean_h5_metadata():
+    data = HDF5Importer().load_data(local_data_finder("simpleexamplefile.h5"))
+    for datum in data.values():
+        assert not datum.metadata.raw.filter("Q")
+        assert not datum.metadata.raw.filter("I")
+
+def test_clean_xml_metadata():
+    data = XmlImporter().load_data(local_data_finder("ISIS_1_1.xml"))
+    for datum in data.values():
+        assert not datum.metadata.raw.filter("Q")
+        assert not datum.metadata.raw.filter("I")
