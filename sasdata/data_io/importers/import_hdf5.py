@@ -408,14 +408,16 @@ def parse_metadata(node : HDF5Group) -> Metadata:
     # load the entire node recursively into a raw object
     raw = load_raw(node)
 
-    return Metadata(process=process,
-                    instrument=instrument,
-                    sample=sample,
-                    title=title,
-                    run=run,
-                    definition=definition,
-                    magnetic=None, # NOTE: Magnetic is not in the CANSAS format so this is left to None.
-                    raw=raw)
+    return Metadata(
+        process=process,
+        instrument=instrument,
+        sample=sample,
+        title=title,
+        run=run,
+        definition=definition,
+        magnetic=None,  # NOTE: Magnetic is not in the CANSAS format so this is left to None.
+        raw=raw,
+    )
 
 
 # The HDF5 format signature. It is normally at the start of the file, but may be offset by a user block whose size is
@@ -480,7 +482,22 @@ class HDF5Importer(Importer):
                 else:
                     dataset_type = one_dim
 
-                entry_key = entry.attrs["sasview_key"] if "sasview_key" in entry.attrs else root_key
+                # Clean out the data from the metadata
+                ignore_data_in_metadata = dataset_type.required + dataset_type.optional
+                for c in metadata.raw.contents:
+                    if type(c) is MetaNode and type(c.contents) is list:
+                        c.contents = [
+                            n
+                            for n in c.contents
+                            if type(n) is not MetaNode
+                            or n.name not in ignore_data_in_metadata
+                        ]
+
+                entry_key = (
+                    entry.attrs["sasview_key"]
+                    if "sasview_key" in entry.attrs
+                    else root_key
+                )
 
                 loaded_data[entry_key] = SasMeasurement(
                         name=metadata.title if metadata.title else entry_key,

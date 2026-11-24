@@ -361,6 +361,15 @@ class XmlImporter(Importer):
                 data = data_set
                 break
 
+            # Clean out the data from the metadata
+            for c in metadata.raw.contents:
+                if type(c) is MetaNode and type(c.contents) is list:
+                    c.contents = [
+                        n
+                        for n in c.contents
+                        if type(n) is not MetaNode or n.name != "SASdata"
+                    ]
+
             loaded_data[name] = SasMeasurement(
                 name=name,
                 dataset_type=one_dim,
